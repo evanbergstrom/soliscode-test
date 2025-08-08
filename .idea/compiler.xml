@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="soliscode" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel target="23">
+      <module name="collection" target="23" />
+      <module name="collection-test" target="23" />
+      <module name="core" target="23" />
+      <module name="quant" target="23" />
+      <module name="test" target="23" />
+    </bytecodeTargetLevel>
+  </component>
+</project>
