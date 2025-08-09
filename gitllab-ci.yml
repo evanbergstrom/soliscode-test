@@ -1,0 +1,39 @@
+# .gitlab-ci.yml
+stages: [build, test, release]
+
+default:
+  image: maven:3.9.9-eclipse-temurin-23
+  cache:
+    key: maven-repo
+    paths:
+      - .m2/repository
+  before_script:
+    - java -version
+    - mvn -v
+
+build:
+  stage: build
+  script:
+    - mvn -B -q -DskipTests package
+
+test:
+  stage: test
+  script:
+    - mvn -B -q verify
+
+release:
+  stage: release
+  image: node:20
+  needs: ["test"]
+  variables:
+    GIT_DEPTH: "0"    # full history + tags for semantic-release
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual     # show Play button; do not auto-run
+      allow_failure: false
+    - when: never      # hide on all other branches/sources
+  before_script:
+    - npm -v
+    - npm i -g semantic-release @semantic-release/{gitlab,git,exec,changelog,commit-analyzer,release-notes-generator}
+  script:
+    - semantic-release

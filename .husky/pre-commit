@@ -1,0 +1,1 @@
+mvn -q -DskipTests=true -DskipITs=true -T1C verify
