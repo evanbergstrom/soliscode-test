@@ -1,5 +1,9 @@
 # .gitlab-ci.yml
-stages: [build, test, release, publish]
+stages:
+  - build
+  - test
+  - release
+  - publish
 
 default:
   image: maven:3.9.9-eclipse-temurin-23
@@ -11,22 +15,25 @@ default:
     - java -version
     - mvn -v
 
+# ---------- Build (no tests) ----------
 build:
   stage: build
   script:
     - mvn -B -q -DskipTests package
 
+# ---------- Test (upload reports on failure) ----------
 test:
   stage: test
   artifacts:
     when: always
     paths:
       - target/surefire-reports/
+      - target/jacoco*.exec
     expire_in: 1 week
-    rules:
-      - if: '$CI_COMMIT_BRANCH == "main"'
-        when: manual
-      - when: never
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
+    - when: never
   variables:
     # keep GPG files isolated (optional, nice for debugging)
     GNUPGHOME: "$CI_PROJECT_DIR/.gnupg"
@@ -49,43 +56,72 @@ test:
   script:
     # Run your signed build/deploy; do NOT pass passphrase on CLI
     # maven-gpg-plugin will pick up MAVEN_GPG_PASSPHRASE from env
+    # Add -e/-X here if you need more detail; keep --batch-mode for CI
     - mvn -B -e q -s .mvn/settings.xml -DtrimStackTrace=false verify
 
+# ---------- Semantic-release (manual) ----------
+# Calculates next version from commits, updates pom.xml + CHANGELOG.md, creates tag + GitLab Release
 release:
   stage: release
   image: node:20
   needs: ["test"]
   variables:
-    GIT_DEPTH: "0"    # full history + tags for semantic-release
+    GIT_DEPTH: "0"   # semantic-release needs full history + tags
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
-      when: manual     # show Play button; do not auto-run
+      when: manual
       allow_failure: false
-    - when: never      # hide on all other branches/sources
+    - when: never
   before_script:
     - npm -v
     - npm i -g semantic-release @semantic-release/{gitlab,git,exec,changelog,commit-analyzer,release-notes-generator}
   script:
     - semantic-release
 
+# ---------- Publish to Maven Central (manual) ----------
+# Uses Sonatype Central Publisher (credentials come from CI variables below).
 publish:
   stage: publish
   image: maven:3.9.9-eclipse-temurin-23
-  needs: [ "release" ]
+  needs: ["release"]
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       when: manual
+      allow_failure: false
     - when: never
   before_script:
-    # Import private key from CI variable
+    # Import your ASCII-armored private key (stored base64-encoded in CI var)
     - echo "$GPG_PRIVATE_KEY_ARMOR" | base64 -d > /tmp/private.key
     - gpg --batch --import /tmp/private.key
     - rm -f /tmp/private.key
-    # Non-interactive gpg setup
+    # Non-interactive gpg
     - mkdir -p ~/.gnupg
     - echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
     - echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
-    - export GPG_TTY=$(tty)
+    - export GPG_TTY=$(tty) || true
+    # Write a Maven settings.xml with your Sonatype Central credentials (from CI vars)
+    - |
+      cat > /tmp/settings.xml <<EOF
+      <settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0 https://maven.apache.org/xsd/settings-1.2.0.xsd">
+        <servers>
+          <!-- Must match <publishingServerId> in central-publishing-maven-plugin config -->
+          <server>
+            <id>central</id>
+            <username>${CENTRAL_USERNAME}</username>
+            <password>${CENTRAL_PASSWORD}</password>
+          </server>
+        </servers>
+      </settings>
+      EOF
   script:
-    # Use your Maven settings that contain Sonatype 'central' credentials
-    - mvn -B -q -s .mvn/settings.xml -Dgpg.passphrase="$GPG_PASSPHRASE" deploy
+    # Deploy signed artifacts to Central (central-publishing-maven-plugin must be in your pom)
+    - mvn -B -q -s /tmp/settings.xml -Dgpg.passphrase="$GPG_PASSPHRASE" deploy
+  artifacts:
+    when: always
+    paths:
+      - target/*.jar
+      - target/*.asc
+      - target/*.pom
+    expire_in: 1 week
