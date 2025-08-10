@@ -52,7 +52,6 @@
     <allowscript.javadoc.qualifier>--allow-script-in-comments</allowscript.javadoc.qualifier>
     <doclint.javadoc.qualifier>-Xdoclint:all</doclint.javadoc.qualifier>
 
-
     <!-- compile dependency versions -->
     <junit-platform.version>1.10.1</junit-platform.version>
     <junit-jupiter.version>5.10.1</junit-jupiter.version>
@@ -79,7 +78,7 @@
     <jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
     <mdoclet-plugin.version>3.1.0</mdoclet-plugin.version>
     <flexmark-all.version>0.64.8</flexmark-all.version>
-    <dependency-check.version>9.2.0</dependency-check.version>
+    <dependency-check.version>12.1.3</dependency-check.version>
   </properties>
 
   <dependencies>
@@ -305,7 +304,11 @@
         <configuration>
           <nvdApiDelay>1000</nvdApiDelay>
           <name>Dependency Check</name>
-          <autoUpdate>false</autoUpdate>
+          <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+          <nodeAnalyzerEnabled>false</nodeAnalyzerEnabled>
+          <nodeAuditAnalyzerEnabled>false</nodeAuditAnalyzerEnabled>
+          <yarnAuditAnalyzerEnabled>false</yarnAuditAnalyzerEnabled>
+          <pnpmAuditAnalyzerEnabled>false</pnpmAuditAnalyzerEnabled>
         </configuration>
         <executions>
           <execution>
