@@ -32,7 +32,7 @@ test:
     expire_in: 1 week
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
-      when: manual
+      when: always
     - when: never
   variables:
     # keep GPG files isolated (optional, nice for debugging)
