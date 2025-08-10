@@ -22,42 +22,18 @@ build:
     - mvn -B -q -DskipTests package
 
 # ---------- Test (upload reports on failure) ----------
+# ---------- Test (upload reports on failure) ----------
 test:
   stage: test
+  script:
+    # Add -e/-X here if you need more detail; keep --batch-mode for CI
+    - mvn -B -e -DtrimStackTrace=false verify
   artifacts:
     when: always
     paths:
       - target/surefire-reports/
       - target/jacoco*.exec
     expire_in: 1 week
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      when: always
-    - when: never
-  variables:
-    # keep GPG files isolated (optional, nice for debugging)
-    GNUPGHOME: "$CI_PROJECT_DIR/.gnupg"
-  before_script:
-    # 1) Import armored, base64-encoded private key from CI var
-    - mkdir -p "$GNUPGHOME"
-    - echo "$GPG_PRIVATE_KEY_ARMOR" | base64 -d > /tmp/private.key
-    - gpg --batch --import /tmp/private.key
-    - rm -f /tmp/private.key
-
-    # 2) Non-interactive pinentry so Maven can pass the passphrase
-    - echo "pinentry-mode loopback" >> "$GNUPGHOME/gpg.conf"
-    - echo "allow-loopback-pinentry" >> "$GNUPGHOME/gpg-agent.conf"
-
-    # 3) (Optional) show that the key is present (prints only key IDs)
-    - gpg --list-secret-keys --keyid-format LONG
-
-    # If you know the exact key ID/fingerprint, export it for Maven:
-    # - export GPG_KEYID=YOURKEYIDHERE
-  script:
-    # Run your signed build/deploy; do NOT pass passphrase on CLI
-    # maven-gpg-plugin will pick up MAVEN_GPG_PASSPHRASE from env
-    # Add -e/-X here if you need more detail; keep --batch-mode for CI
-    - mvn -B -e q -s .mvn/settings.xml -DtrimStackTrace=false verify
 
 # ---------- Semantic-release (manual) ----------
 # Calculates next version from commits, updates pom.xml + CHANGELOG.md, creates tag + GitLab Release
