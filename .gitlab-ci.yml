@@ -19,7 +19,12 @@ build:
 test:
   stage: test
   script:
-    - mvn -B -q verify
+    - mvn -B -e -DtrimStackTrace=false verify
+  artifacts:
+    when: always
+    paths:
+      - target/surefire-reports/
+    expire_in: 1 week
 
 release:
   stage: release
