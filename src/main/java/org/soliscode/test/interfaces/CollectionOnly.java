@@ -11,25 +11,31 @@ import java.util.*;
 /// @param <E> the element type.
 /// @author evanbergstrom
 /// @since 1.0
-public class CollectionOnly<E> extends IterableOnly<E> implements Collection<E>{
+public class CollectionOnly<E> extends IterableOnly<E> implements Collection<E> {
 
     private final Collection<E> collection;
 
     /// Creates an empty collection.
     public CollectionOnly() {
-        super(collection = new ArrayList<>());
+        // super(collection = new ArrayList<>()); <-- This will work once Flexible Constructors are available
+        super(new ArrayList<>());
+        this.collection = (Collection<E>) iterable;
     }
 
     /// Creates a copy of a collection.
     /// @param other the instance of `Collection` to copy.
     public CollectionOnly(final CollectionOnly<E> other) {
-        super(collection = new ArrayList<>(other.collection));
+        // super(collection = new ArrayList<>(other.collection)); <-- This will work once Flexible Constructors are available
+        super(new ArrayList<>(other.collection));
+        this.collection = (Collection<E>) iterable;
     }
 
     /// Creates an instance of `CollectionOnly` from the collection provided.
     /// @param c The collection of elements.
     public CollectionOnly(final Collection<E> c) {
-        super (collection = c);
+        //super (collection = c); <-- This will work once Flexible Constructors are available
+        super (c);
+        this.collection = c;
     }
 
     @Override

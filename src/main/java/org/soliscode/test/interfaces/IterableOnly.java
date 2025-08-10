@@ -29,7 +29,7 @@ import java.util.*;
 /// @since 1.0
 public class IterableOnly<E> implements Iterable<E> {
 
-    private Iterable<E> iterable;
+    protected Iterable<E> iterable;
 
     /// Creates an empty iterable.
     public IterableOnly() {

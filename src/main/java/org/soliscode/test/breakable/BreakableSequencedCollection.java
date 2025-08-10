@@ -351,13 +351,17 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
 
         /// Create a builder initialized with the default values.
         public Builder() {
-            super(this.list = new ArrayList<>());
+            // super(this.list = new ArrayList<>()); <-- This will work once Flexible Constructors are available
+            super(new ArrayList<>());
+            this.list = (ArrayList<E>)elements;
         }
 
         /// Create a builder initialized with an element store.
         /// @param elements the element store to use.
         public Builder(final @NotNull List<E> elements) {
-            super(this.list = Objects.requireNonNull(elements));
+            // super(this.list = Objects.requireNonNull(elements));  <-- This will work once Flexible Constructors are available
+            super(Objects.requireNonNull(elements));
+            this.list = elements;
         }
 
         /// Create a builder initialized with the values copied from another builder.
