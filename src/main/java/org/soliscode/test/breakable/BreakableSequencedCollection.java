@@ -31,19 +31,19 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
 
     private final @NotNull List<E> sequenced;
 
-    /// The [addFirst][Collection#addFirst] method does not add an element.
+    /// The [addFirst][SequencedCollection#addFirst] method does not add an element.
     /// @see BreakableSequencedCollection#addFirst(Object)
     public static final Break ADD_FIRST_DOES_NOT_ADD_ELEMENT = new Break("addFirst does not add element");
 
-    /// The [addFirst][Collection#addFirst] method adds the element to the end of the collection.
+    /// The [addFirst][SequencedCollection#addFirst] method adds the element to the end of the collection.
     /// @see BreakableSequencedCollection#addFirst(Object)
     public static final Break ADD_FIRST_ADDS_TO_END = new Break("addFirst adds to the end");
 
-    /// The [addLast][Collection#addLast] method does not add an element.
+    /// The [addLast][SequencedCollection#addLast] method does not add an element.
     /// @see BreakableSequencedCollection#addLast(Object)
     public static final Break ADD_LAST_DOES_NOT_ADD_ELEMENT = new Break("addLast does not add element");
 
-    /// The [addLast][Collection#addLast] method adds the element to the front of the collection.
+    /// The [addLast][SequencedCollection#addLast] method adds the element to the front of the collection.
     /// @see BreakableSequencedCollection#addLast(Object)
     public static final Break ADD_LAST_ADDS_TO_FRONT = new Break("addLast adds to the beginning");
 
@@ -95,11 +95,11 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
     /// @see BreakableSequencedCollection#removeLast()
     public static final Break REMOVE_LAST_ALWAYS_THROWS = new Break("removeLast always throws");
 
-    /// The [reversed][java.util.Collection#reversed] method does not reverse the collection.
+    /// The [reversed][java.util.SequencedCollection#reversed] method does not reverse the collection.
     /// @see BreakableSequencedCollection#reversed()
     public static final Break REVERSED_DOES_NOT_REVERSE_COLLECTION = new Break("reversed() does not reverse elements");
 
-    /// The [reversed][java.util.Collection#reversed] method modifies the collection.
+    /// The [reversed][java.util.SequencedCollection#reversed] method modifies the collection.
     /// @see BreakableSequencedCollection#reversed()
     public static final Break REVERSED_MODIFIES_THE_COLLECTION = new Break("reversed() modifies the collection");
 
@@ -134,8 +134,8 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
 
     /// Implements the [reversed][SequencedCollection#reversed] method from the [SequencedCollection] interface. This
     /// method can be broken using the following collection breaks:
-    /// - [REVERSED_DOES_NOT_REVERSE_COLLECTION][BreakableSequencedCollection#REVERSED_DOES_NOT_REVERSE_COLLECTION]
-    /// - [REVERSED_MODIFIES_THE_COLLECTION][BreakableSequencedCollection#REVERSED_MODIFIES_THE_COLLECTION]
+    /// - REVERSED_DOES_NOT_REVERSE_COLLECTION
+    /// - REVERSED_MODIFIES_THE_COLLECTION
     ///
     /// A collection that has any of these breaks can be constructed using the builder:
     /// ```java
@@ -163,8 +163,8 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
 
     /// Implements the [addFirst][SequencedCollection#addFirst] method from the [SequencedCollection] interface. This
     /// method can be broken using the following collection breaks:
-    /// - [ADD_FIRST_DOES_NOT_ADD_ELEMENT][BreakableSequencedCollection#ADD_FIRST_DOES_NOT_ADD_ELEMENT]
-    /// - [ADD_FIRST_ADDS_TO_END][BreakableSequencedCollection#ADD_FIRST_ADDS_TO_END]
+    /// - ADD_FIRST_DOES_NOT_ADD_ELEMENT
+    /// - ADD_FIRST_ADDS_TO_END
     ///
     /// A collection that has any of these breaks can be constructed using the builder:
     /// ```java
@@ -191,8 +191,8 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
 
     /// Implements the [addLast][SequencedCollection#addLast] method from the [SequencedCollection] interface. This
     /// method can be broken using the following collection breaks:
-    /// - [ADD_LAST_DOES_NOT_ADD_ELEMENT][BreakableSequencedCollection#ADD_LAST_DOES_NOT_ADD_ELEMENT]
-    /// - [ADD_LAST_ADDS_TO_FRONT][BreakableSequencedCollection#ADD_LAST_ADDS_TO_FRONT]
+    /// - ADD_LAST_DOES_NOT_ADD_ELEMENT
+    /// - ADD_LAST_ADDS_TO_FRONT
     ///
     /// A collection that has any of these breaks can be constructed using the builder:
     /// ```java
@@ -219,9 +219,9 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
 
     /// Implements the [getFirst][SequencedCollection#getFirst] method from the [SequencedCollection] interface. This
     /// method can be broken using the following collection breaks:
-    /// - [GET_FIRST_RETURNS_NULL][BreakableSequencedCollection#GET_FIRST_RETURNS_NULL]
-    /// - [GET_FIRST_ALWAYS_THROWS][BreakableSequencedCollection#GET_FIRST_ALWAYS_THROWS]
-    /// - [GET_FIRST_SKIPS_FIRST_ELEMENT][BreakableSequencedCollection#GET_FIRST_SKIPS_FIRST_ELEMENT]
+    /// - GET_FIRST_RETURNS_NULL
+    /// - GET_FIRST_ALWAYS_THROWS
+    /// - GET_FIRST_SKIPS_FIRST_ELEMENT
     ///
     /// A collection that has any of these breaks can be constructed using the builder:
     /// ```java
@@ -253,9 +253,9 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
 
     /// Implements the [getLast][SequencedCollection#getLast] method from the [SequencedCollection] interface. This
     /// method can be broken using the following collection breaks:
-    /// - [GET_LAST_RETURNS_NULL][BreakableSequencedCollection#GET_LAST_RETURNS_NULL]
-    /// - [GET_LAST_ALWAYS_THROWS][BreakableSequencedCollection#GET_LAST_ALWAYS_THROWS]
-    /// - [GET_LAST_SKIPS_FIRST_ELEMENT][BreakableSequencedCollection#GET_LAST_SKIPS_FIRST_ELEMENT]
+    /// - GET_LAST_RETURNS_NULL
+    /// - GET_LAST_ALWAYS_THROWS
+    /// - GET_LAST_SKIPS_FIRST_ELEMENT
     ///
     /// A collection that has any of these breaks can be constructed using the builder:
     /// ```java
@@ -282,9 +282,9 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
 
     /// Implements the [removeFirst][SequencedCollection#removeFirst] method from the [SequencedCollection] interface. This
     /// method can be broken using the following collection breaks:
-    /// - [REMOVE_FIRST_DOES_NOT_REMOVE_ELEMENT][BreakableSequencedCollection#REMOVE_FIRST_DOES_NOT_REMOVE_ELEMENT]
-    /// - [REMOVE_FIRST_RETURNS_NULL][BreakableSequencedCollection#REMOVE_FIRST_RETURNS_NULL]
-    /// - [REMOVE_FIRST_ALWAYS_THROWS][BreakableSequencedCollection#REMOVE_FIRST_ALWAYS_THROWS]
+    /// - REMOVE_FIRST_DOES_NOT_REMOVE_ELEMENT
+    /// - REMOVE_FIRST_RETURNS_NULL
+    /// - REMOVE_FIRST_ALWAYS_THROWS
     ///
     /// A collection that has any of these breaks can be constructed using the builder:
     /// ```java
@@ -313,9 +313,9 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
 
     /// Implements the [removeLast][SequencedCollection#removeLast] method from the [SequencedCollection] interface. This
     /// method can be broken using the following collection breaks:
-    /// - [REMOVE_LAST_DOES_NOT_REMOVE_ELEMENT][BreakableSequencedCollection#REMOVE_LAST_DOES_NOT_REMOVE_ELEMENT]
-    /// - [REMOVE_LAST_RETURNS_NULL][BreakableSequencedCollection#REMOVE_LAST_RETURNS_NULL]
-    /// - [REMOVE_LAST_ALWAYS_THROWS][BreakableSequencedCollection#REMOVE_LAST_ALWAYS_THROWS]
+    /// - REMOVE_LAST_DOES_NOT_REMOVE_ELEMENT
+    /// - REMOVE_LAST_RETURNS_NULL
+    /// - REMOVE_LAST_ALWAYS_THROWS
     ///
     /// A collection that has any of these breaks can be constructed using the builder:
     /// ```java

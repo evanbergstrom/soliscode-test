@@ -4,8 +4,7 @@ import org.soliscode.test.OptionalMethod;
 import org.soliscode.test.contract.collection.CollectionContract;
 
 import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
+import java.util.function.*;
 
 /// Values used to identify collection class methods for use with the [CollectionContract#supportsMethod(OptionalMethod)]
 /// method.
@@ -71,7 +70,7 @@ public enum CollectionMethods implements OptionalMethod {
     /// The option al method [SequencedCollection#removeLast()].
     RemoveLast,
 
-    /// The option al method [List#replaceAll()].
+    /// The option al method [List#replaceAll(UnaryOperator)].
     ReplaceAll,
 
     /// The optional method [Collection#retainAll(Collection)].

@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
 /// collection.forEach(consumer);
 /// consumer.assertCheck();
 /// ```
-/// @param <T>
+/// @param <T> element type
 /// @author evanbergstrom
 /// @since 1.0
 /// @see AssertActions

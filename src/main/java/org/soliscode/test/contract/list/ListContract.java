@@ -6,7 +6,7 @@ import org.soliscode.test.contract.sequenced.SequencedCollectionContract;
 import java.util.List;
 
 /// Test suite for classes that implement the [List] interface. When implementing  this class, the only method that will
-///  need to be implemented is [org.soliscode.test.contract.support.CollectionContractSupport#collectionProvider()].
+///  need to be implemented is [org.soliscode.test.contract.support.CollectionContractSupport#provider()].
 ///
 /// @param <E> The type of the elements.
 /// @param <L> The type of the list.

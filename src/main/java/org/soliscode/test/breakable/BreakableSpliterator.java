@@ -26,10 +26,9 @@ import java.util.function.Consumer;
 /// Any breaks that are not listed in this class can be added to an instance of `BreakableSpliterator`, but will
 /// not have any impact on how it functions.
 ///
-/// /// @param <E> the element type.
+/// @param <E> the element type.
 /// @author evanbergstrom
 /// @since 1.0
-/// @see CollectionBreaks
 /// @see Spliterator
 public class BreakableSpliterator<E> extends AbstractBreakable implements Spliterator<E> {
     private final Spliterator<E> iterator;

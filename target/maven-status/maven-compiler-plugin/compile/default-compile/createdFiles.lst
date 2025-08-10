@@ -1,5 +1,4 @@
 org/soliscode/test/contract/sequenced/AddLastContract.class
-org/soliscode/test/util/IterableTestOps$1.class
 org/soliscode/test/interfaces/Interfaces.class
 org/soliscode/test/contract/package-info.class
 org/soliscode/test/contract/list/ListAddContract.class
@@ -108,6 +107,7 @@ org/soliscode/test/contract/list/RemoveAtPositionContract.class
 org/soliscode/test/provider/FloatProvider.class
 org/soliscode/test/assertions/collection/AssertEquals.class
 org/soliscode/test/contract/support/package-info.class
+org/soliscode/test/util/IterableTestOps$SkipLastIterator.class
 org/soliscode/test/assertions/collection/AssertSameSize.class
 org/soliscode/test/assertions/actions/AssertAction.class
 org/soliscode/test/contract/collection/ToArrayContract.class

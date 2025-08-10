@@ -24,7 +24,6 @@ import java.util.function.Supplier;
 /// called.
 ///
 /// @author evanbergstrom
-/// @see 1.0
 public class AlwaysThrows implements Comparable<AlwaysThrows> {
 
     private final Supplier<RuntimeException> exceptionSupplier;

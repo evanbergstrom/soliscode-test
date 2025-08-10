@@ -224,8 +224,10 @@ public class BreakableIterable<E> extends AbstractBreakable implements Iterable<
     }
 
     /// Utility class for use by subclasses of `BreakableIterator` to make implementing a builder class easier.
+    /// @param <B> builder type
+    /// @param <C> the subclass of BreakableIterable
+    /// @param <E> element type
     /// @author evanbergstrom
-    /// @since 1.0
     protected static abstract class AbstractBuilder<B extends AbstractBuilder<B, C, E>, C extends BreakableIterable<E>, E> {
 
         protected final @NotNull Collection<E> elements;

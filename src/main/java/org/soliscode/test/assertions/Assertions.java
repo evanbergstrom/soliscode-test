@@ -27,7 +27,6 @@ import java.util.function.Supplier;
 /// assertions provided in the [Assertions][org.junit.jupiter.api.Assertions] class provided by the JUnit library
 ///
 /// @author evanbergstrom
-/// @since 1.0
 /// @see org.junit.jupiter.api.Assertions
 public class Assertions {
 
@@ -144,7 +143,6 @@ public class Assertions {
     /// interfaces. This will only test for interfaces that the class of the object implements directly.
     /// @param expected the classes or interfaces that the object can be an instance of.
     /// @param actual The object being tested.
-    /// @param <T> The type that is not expected.
     public static void assertImplementsOnly(final Class<?> expected, final Object actual) {
         AssertImplementsOnly.assertImplementsOnly(List.of(expected), actual);
     }
@@ -153,7 +151,6 @@ public class Assertions {
     /// interfaces. This will only test for interfaces that the class of the object implements directly.
     /// @param expected the classes or interfaces that the object can be an instance of.
     /// @param actual The object being tested.
-    /// @param <T> The type that is not expected.
     public static void assertImplementsOnly(final Collection<Class<?>> expected, final Object actual) {
         AssertImplementsOnly.assertImplementsOnly(expected, actual);
     }

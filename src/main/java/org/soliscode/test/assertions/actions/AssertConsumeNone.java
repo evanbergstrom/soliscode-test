@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
 /// ```java
 /// Consumer<Integer> consumer = AssertActions.consumeNone();
 /// ```
-/// @param <T>
+/// @param <T> element type
 /// @author evanbergstrom
 /// @since 1.0
 /// @see AssertActions

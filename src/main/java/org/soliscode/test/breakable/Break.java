@@ -19,6 +19,7 @@ package org.soliscode.test.breakable;
 /// Breaks in classes used for testing the test contracts (*.e.g.* 'Breakable' classes). This interface has no methods
 /// and serves as a tag to identify break values.
 ///
+/// @param description a short description of how the break effects the collection
 /// @author Evan Bergstrom
 /// @since 1.0
 /// @see AbstractBreakable

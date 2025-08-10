@@ -57,54 +57,54 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
         this.list = Objects.requireNonNull(c);
     }
 
-    /// The [addAll][List#addAll(int, Collection)] method always return a result of `true`, even if the
+    /// The [addAll][List#addAll(int,Collection)] method always return a result of `true`, even if the
     /// element is not added.
-    /// @see BreakableList#addAll(int, Collection)
+    /// @see BreakableList#addAll(int,Collection)
     public static final Break ADD_ALL_AT_INDEX_ALWAYS_RETURNS_TRUE = new Break("addAll(int, Collection) always returns true");
 
-    /// The [addAll][List#addAll(int, Collection)] method always return a result of `false`, even if the
+    /// The [addAll][List#addAll(int,Collection)] method always return a result of `false`, even if the
     /// element is added.
-    /// @see BreakableList#addAll(int, Collection)
+    /// @see BreakableList#addAll(int,Collection)
     public static final Break ADD_ALL_AT_INDEX_ALWAYS_RETURNS_FALSE = new Break("addAll(int, Collection) always returns false");
 
-    /// The [addAll][List#addAll(int, Collection)] method always returns the opposite of the appropriate result.
+    /// The [addAll][List#addAll(int,Collection)] method always returns the opposite of the appropriate result.
     /// @see BreakableList#addAll(int, Collection)
     public static final Break ADD_ALL_AT_INDEX_ALWAYS_RETURNS_OPPOSITE_VALUE = new Break("addAll(int, Collection) always returns opposite value");
 
-    /// The [addAll][List#addAll(int, Collection)] method adds to the end of the collection.
-    /// @see BreakableList#addAll(int, Collection)
+    /// The [addAll][List#addAll(int,Collection)] method adds to the end of the collection.
+    /// @see BreakableList#addAll(int,Collection)
     public static final Break ADD_ALL_AT_INDEX_ADDS_TO_THE_END = new Break("addAll(int, Collection) adds to the end");
 
-    /// The [addAll][List#addAll(int, Collection)] method method throws the wrong exception when the index is out of bounds.
-    /// @see BreakableList#addAll(int, Collection)
+    /// The [addAll][List#addAll(int,Collection)] method method throws the wrong exception when the index is out of bounds.
+    /// @see BreakableList#addAll(int,Collection)
     public static final Break ADD_ALL_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX = new Break("addAll(int, Collection) throws wrong exception on bad index");
 
-    /// The [addAll][List#addAll(int, Collection)] method method throws the wrong exception if it is not supported.
-    /// @see BreakableList#addAll(int, Collection)
+    /// The [addAll][List#addAll(int,Collection)] method method throws the wrong exception if it is not supported.
+    /// @see BreakableList#addAll(int,Collection)
     public static final Break ADD_ALL_AT_INDEX_THROWS_WRONG_EXCEPTION_IF_NOT_SUPPORTED = new Break("addAll(int, Collection) throws wrong exception if not supported");
 
-    /// The [addAll][List#addAll(int, Collection)] method method throws the wrong exception if the argument is null.
-    /// @see BreakableList#addAll(int, Collection)
+    /// The [addAll][List#addAll(int,Collection)] method method throws the wrong exception if the argument is null.
+    /// @see BreakableList#addAll(int,Collection)
     public static final Break ADD_ALL_AT_INDEX_THROWS_WRONG_EXCEPTION_WHEN_ARGUMENT_IS_NULL = new Break("addAll(int, Collection) throws wrong exception when argument is null");
 
-    /// The [addAll][List#addAll(int, Collection)] method will not add any elements to the collection
-    /// @see BreakableList#addAll(int, Collection)
+    /// The [addAll][List#addAll(int,Collection)] method will not add any elements to the collection
+    /// @see BreakableList#addAll(int,Collection)
     public static final Break ADD_ALL_AT_INDEX_DOES_NOT_ADD_ANY_ELEMENTS = new Break("addAll(int, Collection) does not add elements");
 
-    /// The [add][List#add(int, Object)] method will not add an element to the collection
-    /// @see BreakableList#add(int, Object)
-    public static final Break ADD_AT_INDEX_DOES_NOT_ADD_THE_ELEMENT = new Break("");
+    /// The [add][List#add(int,Object)] method will not add an element to the collection
+    /// @see BreakableList#add(int,Object)
+    public static final Break ADD_AT_INDEX_DOES_NOT_ADD_THE_ELEMENT = new Break("add(int, Object) does not add elements");
 
-    /// The [add][List#add(int, Object)] method adds the element at the next position.
-    /// @see BreakableList#add(int, Object)
+    /// The [add][List#add(int,Object)] method adds the element at the next position.
+    /// @see BreakableList#add(int,Object)
     public static final Break ADD_AT_INDEX_ADDS_AT_NEXT_POSITION = new Break("");
 
-    /// The [add][List#add(int, Object)] method adds the element at the previous position.
-    /// @see BreakableList#add(int, Object)
+    /// The [add][List#add(int,Object)] method adds the element at the previous position.
+    /// @see BreakableList#add(int,Object)
     public static final Break ADD_AT_INDEX_ADDS_AT_PREVIOUS_POSITION = new Break("");
 
-    /// The [add][List#add(int, Object)] method throws the wrong exception when the index is out of bounds.
-    /// @see BreakableList#add(int, Object)
+    /// The [add][List#add(int,Object)] method throws the wrong exception when the index is out of bounds.
+    /// @see BreakableList#add(int,Object)
     public static final Break ADD_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX = new Break("");
 
     /// The [get][List#get(int)] method always returns `null`
@@ -159,51 +159,51 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     /// @see BreakableList#remove(int)
     public static final Break REMOVE_AT_INDEX_ALWAYS_RETURNS_NULL = new Break("");
 
-    /// The [replaceAll][List#replaceAll()] method does not replace any elements
+    /// The [replaceAll][List#replaceAll(UnaryOperator)] method does not replace any elements
     /// @see BreakableList#replaceAll(UnaryOperator)
     public static final Break REPLACE_ALL_DOES_NOT_REPLACE_ELEMENTS = new Break("");
 
-    /// The [replaceAll][List#replaceAll()] method skips the first element.
+    /// The [replaceAll][List#replaceAll(UnaryOperator)] method skips the first element.
     /// @see BreakableList#replaceAll(UnaryOperator)
     public static final Break REPLACE_ALL_SKIPS_FIRST_ELEMENT = new Break("");
 
-    /// The [replaceAll][List#replaceAll()] method skips the last element
+    /// The [replaceAll][List#replaceAll(UnaryOperator)] method skips the last element
     /// @see BreakableList#replaceAll(UnaryOperator)
     public static final Break REPLACE_ALL_SKIPS_LAST_ELEMENT = new Break("");
 
-    /// The [set][List#set(int)] method does not change the element.
-    /// @see BreakableList#set(int, Object)
+    /// The [set][List#set(int,Object)] method does not change the element.
+    /// @see BreakableList#set(int,Object)
     public static final Break SET_DOES_NOT_CHANGE_THE_ELEMENT = new Break("");
 
-    /// The [set][List#set(int)] method always returns `null`
-    /// @see BreakableList#set(int, Object)
+    /// The [set][List#set(int,Object)] method always returns `null`
+    /// @see BreakableList#set(int,Object)
     public static final Break SET_ALWAYS_RETURNS_NULL = new Break("");
 
-    /// The [set][List#set(int)] method changes the next element (*i.e.* at index + 1).
-    /// @see BreakableList#set(int, Object)
+    /// The [set][List#set(int,Object)] method changes the next element (*i.e.* at index + 1).
+    /// @see BreakableList#set(int,Object)
     public static final Break SET_CHANGES_THE_NEXT_ELEMENT = new Break("");
 
-    /// The [set][List#set(int)] method changes the previous element (*i.e.* at index - 1).
-    /// @see BreakableList#set(int, Object)
+    /// The [set][List#set(int,Object)] method changes the previous element (*i.e.* at index - 1).
+    /// @see BreakableList#set(int,Object)
     public static final Break SET_CHANGES_THE_PREVIOUS_ELEMENT = new Break("");
 
-    /// The [set][List#set(int)] method returns `null` on a bad index instead of throwing en exception.
+    /// The [set][List#set(int,Object)] method returns `null` on a bad index instead of throwing en exception.
     /// @see BreakableList#set(int, Object)
     public static final Break SET_RETURNS_NULL_ON_BAD_INDEX = new Break("");
 
-    /// The [set][List#set(int)] method throws the wrong exception on a bad index.
+    /// The [set][List#set(int,Object)] method throws the wrong exception on a bad index.
     /// @see BreakableList#set(int, Object)
     public static final Break SET_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX = new Break("");
 
-    /// The [sort][List#sort()] method sorts the elements in the reverse order.
+    /// The [sort][List#sort(Comparator)] method sorts the elements in the reverse order.
     /// @see BreakableList#sort(Comparator)
     public static final Break SORT_REVERSES_THE_ORDER = new Break("");
     
-    /// The [sort][List#sort()] method throws a `NullPointerException` if the argument is `null`.
+    /// The [sort][List#sort(Comparator)] method throws a `NullPointerException` if the argument is `null`.
     /// @see BreakableList#sort(Comparator)
     public static final Break SORT_THROWS_ON_NULL_ARGUMENT = new Break("");
 
-    /// The [sort][List#sort()] method does not sort the elements.
+    /// The [sort][List#sort(Comparator)] method does not sort the elements.
     /// @see BreakableList#sort(Comparator)
     public static final Break SORT_DOES_NOT_SORT_THE_ELEMENTS  = new Break("");
 

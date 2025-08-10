@@ -492,9 +492,9 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// ```
     /// @return An array with the elements from the collection, or some other value if the collection is broken.
     /// @see Collection#toArray(Object[])
-    @SuppressWarnings({"DataFlowIssue", "NullableProblems"})
+    @SuppressWarnings("DataFlowIssue")
     @Override
-    public <T> T[] toArray(@NotNull T @NotNull [] a) {
+    public <T> T @NotNull [] toArray(@NotNull T @NotNull [] a) {
         if (hasBreak(TO_ARRAY_STORE_RETURNS_NULL)) {
             return null;
         } else if (hasBreak(TO_ARRAY_STORE_DOES_NOT_COPY_ELEMENTS)) {
@@ -1090,6 +1090,7 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
 
     /// Mixin interface that adds an implementation of the `provider()` method that provides instances of
     /// `BreakableCollection` that do not have any breaks applied.
+    /// @param <E> element type
     public interface WithProvider<E> extends CollectionProviderSupport<E, BreakableCollection<E>> {
         @Override
         default @NotNull CollectionProvider<E, BreakableCollection<E>> provider() {

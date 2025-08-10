@@ -26,8 +26,8 @@ import java.util.stream.Stream;
 ///
 /// @implSpec
 /// Implementations of this interface must provide two methods:
-/// - [createObject(int)][#createObject(int)]
-/// - [copyObject()][#copyObject()]
+/// - [createInstance(int)][#createInstance(int)]
+/// - [copyInstance()][#copyInstance(T)]
 ///
 /// @param <T> the type being tested.
 /// @author evanbergstrom
@@ -160,7 +160,7 @@ public interface ObjectProvider<T> {
     /// Creates a [Supplier] that will generate random instances of the class being provided. This should be used where
     /// the individual values of the instances is not important, such here we are testing for performance of some part
     /// of the implementation, but where creating instances with successive seed values might bias the algorithm (_e.g._
-    /// hash code distribution). In most cases, the methods [#uniqueObjectSupplier] should be
+    /// hash code distribution). In most cases, the methods {@link #uniqueInstanceSupplier()} should be
     /// preferred so that the test data is stable across executions.
     ///
     /// @implSpec
@@ -219,8 +219,8 @@ public interface ObjectProvider<T> {
 
     /// Creates multiple instances of class being tested with random values. This should be used where the individual
     /// values of the instances is not important, such as here we are testing for performance of some part of the
-    /// implementation (_e.g._ hash code distribution). In most cases, the method [#createUniqueObjects] should be
-    /// preferred so that the test data is stable across executions.
+    /// implementation (_e.g._ hash code distribution). In most cases, the method {@link #createUniqueInstances(int)}
+    /// should be preferred so that the test data is stable across executions.
     ///
     /// @param size the number of instances to create.
     /// @return a list of the created instances.

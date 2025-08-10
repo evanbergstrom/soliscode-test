@@ -43,43 +43,43 @@ public class BreakableIterator<E> extends AbstractBreakable implements Iterator<
     public static final Break ITERATOR_SKIPS_FIRST_ELEMENT = new Break("iterator skips the first element.");
 
     /// The iterator `hasNext` method will always return a true.
-    /// @see BreakableIterator#hasNext();
+    /// @see BreakableIterator#hasNext()
     public static final Break ITERATOR_HAS_NEXT_ALWAYS_RETURNS_TRUE = new Break("iterator hasNext always returns true.");
 
     /// The iterator `hasNext` method will always return a false.
-    /// @see BreakableIterator#hasNext();
+    /// @see BreakableIterator#hasNext()
     public static final Break ITERATOR_HAS_NEXT_ALWAYS_RETURNS_FALSE = new Break("iterator hasNext always returns false.");
 
     /// The iterator `hasNext` method will always return the opposite value
-    /// @see BreakableIterator#hasNext();
+    /// @see BreakableIterator#hasNext()
     public static final Break ITERATOR_HAS_NEXT_RETURNS_OPPOSITE_VALUE = new Break("iterator hasNext always returns opposite value");
 
     /// The iterator `next` method will always return `null`
-    /// @see BreakableIterator#next();
+    /// @see BreakableIterator#next()
     public static final Break ITERATOR_NEXT_ALWAYS_RETURNS_NULL = new Break("iterator next method returns null");
 
     /// The iterator `next` method will always return `null`
-    /// @see BreakableIterator#next();
+    /// @see BreakableIterator#next()
     public static final Break ITERATOR_NEXT_THROWS_WRONG_EXCEPTION = new Break("iterator next method always returns null");
 
     /// The iterator 'remove' method does not remove the element at the current iterator position.
-    /// @see BreakableIterator#remove();
+    /// @see BreakableIterator#remove()
     public static final Break ITERATOR_REMOVE_DOES_NOT_REMOVE_ELEMENT = new Break("iterator remove does not remove elements");
 
     /// The iterator 'remove' method throws the wrong exception for an illegal state
-    /// @see BreakableIterator#remove();
+    /// @see BreakableIterator#remove()
     public static final Break ITERATOR_REMOVE_THROWS_WRONG_EXCEPTION_FOR_ILLEGAL_STATE = new Break("iterator remove throws wrong exception for illegal state");
 
     /// The iterator 'remove' method throws the wrong exception nif it is not supported.
-    /// @see BreakableIterator#remove();
+    /// @see BreakableIterator#remove()
     public static final Break ITERATOR_REMOVE_THROWS_WRONG_EXCEPTION_IF_NOT_SUPPORTED = new Break("iterator remove method throws wrong exception if not supported.");
 
     /// The iterator 'forEachRemaining' does not call the action
-    /// @see BreakableIterator#forEachRemaining(Consumer);
+    /// @see BreakableIterator#forEachRemaining(Consumer)
     public static final Break ITERATOR_FOR_EACH_REMAINING_DOES_NOT_CALL_ACTION = new Break("iterator forEachRemaining does not call action");
 
     /// The iterator 'forEachRemaining' throws the wrong exception for a `null` argument.
-    /// @see BreakableIterator#forEachRemaining(Consumer);
+    /// @see BreakableIterator#forEachRemaining(Consumer)
     public static final Break ITERATOR_FOR_EACH_REMAINING_THROWS_WRONG_EXCEPTION_FOR_NULL_ARGUMENT = new Break("iterator forEachRemaining throws wrong exception for null argument.");
 
     /// Constructs a breakable iterator from a iterator that will provide the implementation.
