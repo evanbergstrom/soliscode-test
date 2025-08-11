@@ -63,7 +63,8 @@ version_info:
   script:
     - MVN_VERSION=$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive org.codehaus.mojo:exec-maven-plugin:3.5.0:exec)
     - echo "PROJECT_VERSION=$MVN_VERSION" >> version.env
-    - echo "Computed project version: $MVN_VERSION"
+    - >
+      echo "Computed project version: $MVN_VERSION"
   artifacts:
     reports: { dotenv: version.env }
     expire_in: 1 week
