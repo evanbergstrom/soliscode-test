@@ -182,7 +182,8 @@ deploy_github_pages:
     - rsync -a --delete "${CI_PROJECT_DIR}/${SITE_DIR}/" .
     - touch .nojekyll   # prevents GitHub Pages/Jekyll from interfering with Maven site output
     - git add -A
-    - git commit -m "Publish Maven site: ${CI_COMMIT_SHORT_SHA}" || echo "No changes"
+    - >
+      git commit -m "Publish Maven site: ${CI_COMMIT_SHORT_SHA}" || echo "No changes"
     - git push -f origin gh-pages
   artifacts:
     when: on_failure
