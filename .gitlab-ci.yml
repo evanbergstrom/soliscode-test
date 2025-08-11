@@ -6,6 +6,9 @@ stages:
   - publish
   - site
 
+variables:
+  SITE_DIR: "target/staging"
+
 default:
   image: maven:3.9.9-eclipse-temurin-23
   cache:
@@ -161,17 +164,20 @@ generate_site:
     - mvn -B -ntp site site:stage
   artifacts:
     paths:
-      - $SITE_DIR
+      - target/staging
     expire_in: 1 week
 
 deploy_github_pages:
   stage: site
   image: alpine:3.20
-  needs: [ "generate_site" ]
+  needs: ["generate_site"]
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
   before_script:
     - apk add --no-cache git rsync
+    # Guard: fail fast if vars are missing
+    - test -n "${GITHUB_REPO}" || { echo "GITHUB_REPO is empty (expected org/repo)"; exit 1; }
+    - test -n "${GITHUB_PAT}"  || { echo "GITHUB_PAT is empty"; exit 1; }
     - git config --global user.email "${GITHUB_EMAIL:-ci@users.noreply.github.com}"
     - git config --global user.name  "${GITHUB_NAME:-gitlab-ci}"
     - mkdir gh-pages && cd gh-pages
@@ -180,13 +186,9 @@ deploy_github_pages:
     - git fetch origin gh-pages || true
     - git checkout -B gh-pages
   script:
-    - rsync -a --delete "${CI_PROJECT_DIR}/${SITE_DIR}/" .
-    - touch .nojekyll   # prevents GitHub Pages/Jekyll from interfering with Maven site output
+    - rsync -a --delete --exclude ".git" "${CI_PROJECT_DIR}/${SITE_DIR}/" .
+    - touch .nojekyll
     - git add -A
     - >
       git commit -m "Publish Maven site: ${CI_COMMIT_SHORT_SHA}" || echo "No changes"
     - git push -f origin gh-pages
-  artifacts:
-    when: on_failure
-    paths: [ gh-pages ]
-    expire_in: 1 week
