@@ -56,7 +56,7 @@ release:
     - semantic-release
 
 # Helper: compute Maven version once (after release job has updated pom.xml)
-.version:
+version_info:
   image: maven:3.9.9-eclipse-temurin-23
   stage: publish
   needs: ["release"]
@@ -76,7 +76,7 @@ release:
 publish:release:
   stage: publish
   image: maven:3.9.9-eclipse-temurin-23
-  needs: ["release", ".version"]
+  needs: ["release", "version_info"]
   rules:
     - if: '$CI_COMMIT_BRANCH == "main" && $PROJECT_VERSION !~ /-SNAPSHOT$/'
       when: manual
@@ -115,7 +115,7 @@ publish:release:
 publish:snapshot:
   stage: publish
   image: maven:3.9.9-eclipse-temurin-23
-  needs: ["release", ".version"]
+  needs: ["release", "version_info"]
   rules:
     - if: '$CI_COMMIT_BRANCH == "main" && $PROJECT_VERSION =~ /-SNAPSHOT$/'
       when: on_success
