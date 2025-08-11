@@ -183,7 +183,8 @@ deploy_github_pages:
     - mkdir gh-pages && cd gh-pages
     - git init
     - git remote add origin "https://x-access-token:${GITHUB_PAT}@github.com/${GITHUB_REPO}.git"
-    - git fetch origin gh-pages || true
+    - >
+      git fetch origin gh-pages || true
     - git checkout -B gh-pages
   script:
     - rsync -a --delete --exclude ".git" "${CI_PROJECT_DIR}/${SITE_DIR}/" .
