@@ -72,14 +72,17 @@ semantic_release:
   variables:
     GIT_DEPTH: "0"         # semantic-release needs full history/tags
   before_script:
-    # Install Node/npm for semantic-release on top of the Maven image
-    - apt-get update && apt-get install -y nodejs npm gnupg
     # Git identity for release commits (fallbacks if not provided by GitLab)
     - git config --global user.email "${GITLAB_USER_EMAIL:-ci@users.noreply.gitlab.com}"
     - git config --global user.name  "${GITLAB_USER_NAME:-gitlab-ci}"
+    # Install Node 22.x (required by semantic-release v24+)
+    - apt-get update && apt-get install -y curl ca-certificates gnupg
+    - curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+    - apt-get install -y nodejs
+    - node -v && npm -v
     # Install semantic-release + plugins (plugin list matches .releaserc)
     - npm i -g semantic-release semantic-release-maven @semantic-release/gitlab @semantic-release/git @semantic-release/changelog
-    # Optional: import GPG so the publish step can sign if needed
+    # Import GPG so the publish step can sign
     - |
       if [ -n "$GPG_PRIVATE_KEY_ARMOR" ]; then
         echo "$GPG_PRIVATE_KEY_ARMOR" | base64 -d > /tmp/private.key
