@@ -22,82 +22,135 @@ default:
 # ---------- Build (no tests) ----------
 build:
   stage: build
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: on_success
+    - if: '$CI_COMMIT_BRANCH'
+      when: on_success
+    - when: never
   script:
     - mvn -B -q -DskipTests package
-
-# ---------- Test (upload reports on failure) ----------
-# ---------- Test (upload reports on failure) ----------
-test:
-  stage: test
-  script:
-    # Add -e/-X here if you need more detail; keep --batch-mode for CI
-    - mvn -B -e -DtrimStackTrace=false verify
   artifacts:
     when: always
     paths:
-      - target/surefire-reports/
-      - target/jacoco*.exec
+      - target/*.jar
+      - target/*.pom
     expire_in: 1 week
 
-# ---------- Semantic-release (manual) ----------
-# Calculates next version from commits, updates pom.xml + CHANGELOG.md, creates tag + GitLab Release
-release:
-  stage: release
-  image: node:20
-  needs: ["test"]
-  variables:
-    GIT_DEPTH: "0"   # semantic-release needs full history + tags
+# ---------- Test (upload reports on failure) ----------
+test:
+  stage: test
+  needs: [ "build" ]
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      when: manual
-      allow_failure: false
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: on_success
+    - if: '$CI_COMMIT_BRANCH'
+      when: on_success
     - when: never
-  before_script:
-    - npm -v
-    - npm i -g semantic-release @semantic-release/{gitlab,git,exec,changelog,commit-analyzer,release-notes-generator}
   script:
-    - semantic-release
-
-# Helper: compute Maven version once (after release job has updated pom.xml)
-version_info:
-  image: maven:3.9.9-eclipse-temurin-23
-  stage: publish
-  needs: ["release"]
-  script:
-    - MVN_VERSION=$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive org.codehaus.mojo:exec-maven-plugin:3.5.0:exec)
-    - echo "PROJECT_VERSION=$MVN_VERSION" >> version.env
-    - >
-      echo "Computed project version: $MVN_VERSION"
+    - mvn -B -q verify
   artifacts:
-    reports: { dotenv: version.env }
+    when: always
+    reports:
+      junit: target/surefire-reports/*.xml
     expire_in: 1 week
+
+  # -----------------------------
+  # Manual Release (semantic-release)
+  # - Computes version, updates changelog, tags, creates GitLab Release
+  # - Uses a dedicated job that you trigger manually
+  # - Cannot use "release" keyword. GitLAb release keyword schema requires 'description' and 'tag_name' properties
+  #   and those will be provided by semantic release.
+  # -----------------------------
+  semantic_release:
+    stage: release
+    rules:
+      - if: '$CI_COMMIT_BRANCH == "main"'
+        when: manual
+        allow_failure: false
+      - when: never
+    variables:
+      GIT_DEPTH: "0"         # semantic-release needs full history/tags
+    before_script:
+      # Install Node/npm for semantic-release on top of the Maven image
+      - apt-get update && apt-get install -y nodejs npm gnupg
+      # Git identity for release commits (fallbacks if not provided by GitLab)
+      - git config --global user.email "${GITLAB_USER_EMAIL:-ci@users.noreply.gitlab.com}"
+      - git config --global user.name  "${GITLAB_USER_NAME:-gitlab-ci}"
+      # Install semantic-release + plugins (plugin list matches .releaserc)
+      - npm i -g semantic-release \
+        maven-semantic-release \
+        @semantic-release/gitlab \
+        @semantic-release/git \
+        @semantic-release/changelog \
+        @semantic-release/commit-analyzer \
+        @semantic-release/release-notes-generator
+      # Optional: import GPG so the publish step can sign if needed
+      - |
+        if [ -n "$GPG_PRIVATE_KEY_ARMOR" ]; then
+          echo "$GPG_PRIVATE_KEY_ARMOR" | base64 -d > /tmp/private.key
+          gpg --batch --import /tmp/private.key || true
+          mkdir -p ~/.gnupg
+          echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
+          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+          export GPG_TTY=$(tty) || true
+        fi
+      # Write a minimal settings.xml for Central (used by the publish step)
+      - |
+        cat > /tmp/settings.xml <<EOF
+        <settings xmlns="https://maven.apache.org/SETTINGS/1.2.0">
+          <servers>
+            <server>
+              <id>central</id>
+              <username>${CENTRAL_USERNAME}</username>
+              <password>${CENTRAL_PASSWORD}</password>
+            </server>
+          </servers>
+        </settings>
+        EOF
+      - export MAVEN_SETTINGS=/tmp/settings.xml
+    script:
+      # semantic-release will:
+      #  - analyze commits (Conventional Commits)
+      #  - update CHANGELOG.md and pom.xml (via maven-semantic-release)
+      #  - commit, tag, and create a GitLab Release
+      #  - (plugin can also bump to the next -SNAPSHOT)
+      - semantic-release
+    dependencies: [ ]
+    artifacts:
+      when: always
+      expire_in: 1 week
+      paths:
+        - CHANGELOG.md
+
+
+# -----------------------------
+# Publish the tagged release to Central
+# - Checks out the tag created by semantic-release and deploys it
+# -----------------------------
+
+publish:release:
+  stage: publish
+  needs: ["semantic_release"]
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       when: on_success
     - when: never
-
-# --- Publish RELEASES (non-SNAPSHOT) to Maven Central via Central Publisher
-publish:release:
-  stage: publish
-  image: maven:3.9.9-eclipse-temurin-23
-  needs: ["release", "version_info"]
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main" && $PROJECT_VERSION !~ /-SNAPSHOT$/'
-      when: manual
-      allow_failure: false
-    - when: never
   before_script:
-    # Import signing key
-    - echo "$GPG_PRIVATE_KEY_ARMOR" | base64 -d > /tmp/private.key
-    - gpg --batch --import /tmp/private.key && rm -f /tmp/private.key
-    - mkdir -p ~/.gnupg
-    - echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
-    - echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
-    - export GPG_TTY=$(tty) || true
-    # Write settings.xml for Sonatype Central
+    # GPG for signing (recommended/required for releases on Central)
+    - |
+      if [ -n "$GPG_PRIVATE_KEY_ARMOR" ]; then
+        echo "$GPG_PRIVATE_KEY_ARMOR" | base64 -d > /tmp/private.key
+        gpg --batch --import /tmp/private.key || true
+        mkdir -p ~/.gnupg
+        echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
+        echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+        export GPG_TTY=$(tty) || true
+      fi
+    # Central credentials
     - |
       cat > /tmp/settings.xml <<EOF
-      <settings xmlns="http://maven.apache.org/SETTINGS/1.2.0">
+      <settings xmlns="https://maven.apache.org/SETTINGS/1.2.0">
         <servers>
           <server>
             <id>central</id>
@@ -108,88 +161,105 @@ publish:release:
       </settings>
       EOF
   script:
-    # Deploy to Central (central-publishing-maven-plugin must be in your pom)
-    - mvn -B -q -s /tmp/settings.xml -Dgpg.passphrase="$GPG_PASSPHRASE" deploy
+    # Fetch the new tag created by semantic-release, check it out, and deploy
+    - |
+      git fetch --tags --force
+      REL_TAG="$(git describe --tags --abbrev=0)"
+      echo "Deploying release at tag: ${REL_TAG}"
+      git checkout "${REL_TAG}"
+      mvn -B -q -s /tmp/settings.xml -Dgpg.passphrase="$GPG_PASSPHRASE" -DskipTests deploy
   artifacts:
     when: always
-    paths: [ target/*.jar, target/*.pom, target/*.asc ]
     expire_in: 1 week
+    paths:
+      - target/*
 
-# --- Publish SNAPSHOTS to OSSRH Snapshots
+# -----------------------------
+# Snapshot publishing on every push to main
+# - Uses the Central Publishing Maven Plugin to deploy snapshots
+# -----------------------------
+
 publish:snapshot:
   stage: publish
-  image: maven:3.9.9-eclipse-temurin-23
-  needs: ["release", "version_info"]
+  needs: ["test"]
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main" && $PROJECT_VERSION =~ /-SNAPSHOT$/'
+    - if: '$CI_COMMIT_BRANCH == "main"'
       when: on_success
     - when: never
   before_script:
-    # (Signing is optional for snapshots; keep it if you want consistent signing)
-    - echo "$GPG_PRIVATE_KEY_ARMOR" | base64 -d > /tmp/private.key
-    - gpg --batch --import /tmp/private.key && rm -f /tmp/private.key
-    - mkdir -p ~/.gnupg
-    - echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
-    - echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
-    - export GPG_TTY=$(tty) || true
-    # Write settings.xml for OSSRH snapshots credentials
+    # Optional: sign snapshots for consistency
+    - |
+      if [ -n "$GPG_PRIVATE_KEY_ARMOR" ]; then
+        echo "$GPG_PRIVATE_KEY_ARMOR" | base64 -d > /tmp/private.key
+        gpg --batch --import /tmp/private.key || true
+        mkdir -p ~/.gnupg
+        echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
+        echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+        export GPG_TTY=$(tty) || true
+      fi
+    # Central credentials
     - |
       cat > /tmp/settings.xml <<EOF
-      <settings xmlns="http://maven.apache.org/SETTINGS/1.2.0">
+      <settings xmlns="https://maven.apache.org/SETTINGS/1.2.0">
         <servers>
           <server>
-            <id>ossrh-snapshots</id>
-            <username>${OSSRH_USERNAME}</username>
-            <password>${OSSRH_PASSWORD}</password>
+            <id>central</id>
+            <username>${CENTRAL_USERNAME}</username>
+            <password>${CENTRAL_PASSWORD}</password>
           </server>
         </servers>
       </settings>
       EOF
   script:
-    # Standard Maven snapshot deploy (requires <snapshotRepository> in pom)
+    # With a -SNAPSHOT version in pom.xml, the Central Publishing plugin
+    # deploys to Central's snapshot repository automatically.
     - mvn -B -q -s /tmp/settings.xml -Dgpg.passphrase="$GPG_PASSPHRASE" -DskipTests deploy
   artifacts:
     when: always
-    paths: [ target/*.jar, target/*.pom, target/*.asc ]
     expire_in: 1 week
+    paths:
+      - target/*
 
-generate_site:
+
+# -----------------------------
+# Maven Site (optional)
+# -----------------------------
+
+site:build:
   stage: site
-  image: maven:3.9-eclipse-temurin-23
-  needs: ["test"]
+  needs: []
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
+    - when: never
   script:
-    # Builds site for single or multi-module projects and stages it under target/staging
-    - mvn -B -ntp site site:stage
+    - mvn -B -q -DskipTests site site:stage
   artifacts:
     paths:
-      - target/staging
+      - ${SITE_DIR}
     expire_in: 1 week
 
-deploy_github_pages:
+site:deploy:gh-pages:
   stage: site
-  image: alpine:3.20
-  needs: ["generate_site"]
+  needs: ["site:build"]
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
+    - when: never
   before_script:
-    - apk add --no-cache git rsync
-    # Guard: fail fast if vars are missing
-    - test -n "${GITHUB_REPO}" || { echo "GITHUB_REPO is empty (expected org/repo)"; exit 1; }
-    - test -n "${GITHUB_PAT}"  || { echo "GITHUB_PAT is empty"; exit 1; }
-    - git config --global user.email "${GITHUB_EMAIL:-ci@users.noreply.github.com}"
-    - git config --global user.name  "${GITHUB_NAME:-gitlab-ci}"
-    - mkdir gh-pages && cd gh-pages
-    - git init
-    - git remote add origin "https://x-access-token:${GITHUB_PAT}@github.com/${GITHUB_REPO}.git"
-    - >
+    - |
+      apt-get update && apt-get install -y git rsync
+      git config --global user.email "${GITHUB_EMAIL:-ci@users.noreply.github.com}"
+      git config --global user.name  "${GITHUB_NAME:-gitlab-ci}"
+      mkdir gh-pages && cd gh-pages
+      git init
+      git remote add origin "https://x-access-token:${GITHUB_PAT}@github.com/${GITHUB_REPO}.git"
       git fetch origin gh-pages || true
-    - git checkout -B gh-pages
+      git checkout -B gh-pages
   script:
-    - rsync -a --delete --exclude ".git" "${CI_PROJECT_DIR}/${SITE_DIR}/" .
-    - touch .nojekyll
-    - git add -A
-    - >
+    - |
+      rsync -a --delete --exclude ".git" "${CI_PROJECT_DIR}/${SITE_DIR}/" .
+      touch .nojekyll
+      git add -A
       git commit -m "Publish Maven site: ${CI_COMMIT_SHORT_SHA}" || echo "No changes"
-    - git push -f origin gh-pages
+      git push -f origin gh-pages

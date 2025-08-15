@@ -1,8 +1,8 @@
-# SoolisCode Test
+# SolisCode Test
 
 [![Maven Central](https://img.shields.io/maven-central/v/soliscode/soliscode-test.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/GROUP_ID/ARTIFACT_ID)
-[![Javadoc](https://javadoc.io/badge2d/org.soliscode/soliscode-test/label.svg)](https://evanbergstrom.github.io/soliscode-test/apidocs)
-[![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](#license)
+[![javadoc](https://javadoc.io/badge2/org.soliscode/soliscode-test/javadoc.svg)](https://javadoc.io/doc/org.soliscode/soliscode-test)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](./LICENSE.txt)
 
 SolisCode Test is a Java library that provides tests of classes that implement the standard 
 interfaces in the JDK. this includes all of the collection classes, numeric classes, as well as
