@@ -78,13 +78,7 @@ semantic_release:
     - git config --global user.email "${GITLAB_USER_EMAIL:-ci@users.noreply.gitlab.com}"
     - git config --global user.name  "${GITLAB_USER_NAME:-gitlab-ci}"
     # Install semantic-release + plugins (plugin list matches .releaserc)
-    - npm i -g semantic-release \
-      maven-semantic-release \
-      @semantic-release/gitlab \
-      @semantic-release/git \
-      @semantic-release/changelog \
-      @semantic-release/commit-analyzer \
-      @semantic-release/release-notes-generator
+    - npm i -g semantic-release semantic-release-maven @semantic-release/gitlab @semantic-release/git @semantic-release/changelog
     # Optional: import GPG so the publish step can sign if needed
     - |
       if [ -n "$GPG_PRIVATE_KEY_ARMOR" ]; then

@@ -6,14 +6,18 @@
     "@semantic-release/release-notes-generator",
     ["@semantic-release/changelog", { "changelogFile": "CHANGELOG.md" }],
 
-    ["maven-semantic-release", {
-      "updateSnapshot": true
+    ["semantic-release-maven", {
+      "serverId": "central"
     }],
 
     ["@semantic-release/git", {
       "assets": ["pom.xml", "CHANGELOG.md"],
       "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
     }],
-    "@semantic-release/gitlab"
+    "@semantic-release/gitlab",
+
+    ["@semantic-release/exec", {
+      "successCmd": "mvn -B -q versions:set -DnextSnapshot=true -DgenerateBackupPoms=false && git add pom.xml && git commit -m \"chore: set next snapshot version [skip ci]\" && git push"
+    }]
   ]
 }
