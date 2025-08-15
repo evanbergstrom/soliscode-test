@@ -206,7 +206,9 @@ publish:snapshot:
   script:
     # With a -SNAPSHOT version in pom.xml, the Central Publishing plugin
     # deploys to Central's snapshot repository automatically.
-    - mvn -B -q -s /tmp/settings.xml -Dgpg.passphrase="$GPG_PASSPHRASE" -DskipTests deploy
+    - |
+      mvn -q help:evaluate -Dexpression=project.version -DforceStdout
+      mvn -B -q -s /tmp/settings.xml -Dgpg.passphrase="$GPG_PASSPHRASE" -DskipTests deploy
   artifacts:
     when: always
     expire_in: 1 week

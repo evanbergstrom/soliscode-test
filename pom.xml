@@ -6,7 +6,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.soliscode</groupId>
-  <artifactId>soliscode</artifactId>
+  <artifactId>soliscode-test</artifactId>
   <version>0.0.0-SNAPSHOT</version> <!-- placeholder; semantic-release overwrites -->
   <packaging>jar</packaging>
 
