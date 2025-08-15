@@ -156,7 +156,7 @@ publish:snapshot:
 generate_site:
   stage: site
   image: maven:3.9-eclipse-temurin-23
-  needs: ["build"]
+  needs: ["test"]
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
   script:
