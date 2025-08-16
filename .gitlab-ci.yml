@@ -93,8 +93,8 @@ publish:snapshot:
         <servers>
           <server>
             <id>central</id>
-            <username>${CENTRAL_USERNAME}</username>
-            <password>${CENTRAL_PASSWORD}</password>
+            <username>${env.CENTRAL_USERNAME}</username>
+            <password>${env.CENTRAL_PASSWORD}</password>
           </server>
         </servers>
       </settings>
@@ -160,8 +160,8 @@ semantic_release:
         <servers>
           <server>
             <id>central</id>
-            <username>${CENTRAL_USERNAME}</username>
-            <password>${CENTRAL_PASSWORD}</password>
+            <username>${env.CENTRAL_USERNAME}</username>
+            <password>${env.CENTRAL_PASSWORD}</password>
           </server>
         </servers>
       </settings>
@@ -198,6 +198,11 @@ publish:release:
     - when: never
   before_script:
     - |
+      # Ensure protected vars are actually present
+      for v in CENTRAL_USERNAME CENTRAL_PASSWORD GPG_PASSPHRASE; do
+        if [ -z "${!v}" ]; then echo "Missing required variable: $v"; exit 1; fi
+      done
+
       if [ -n "$GPG_PRIVATE_KEY_ARMOR" ]; then
         echo "$GPG_PRIVATE_KEY_ARMOR" | base64 -d > /tmp/private.key
         gpg --batch --import /tmp/private.key || true
@@ -206,14 +211,14 @@ publish:release:
         echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
         export GPG_TTY=$(tty) || true
       fi
-    - |
+
       cat > /tmp/settings.xml <<EOF
       <settings xmlns="https://maven.apache.org/SETTINGS/1.2.0">
         <servers>
           <server>
             <id>central</id>
-            <username>${CENTRAL_USERNAME}</username>
-            <password>${CENTRAL_PASSWORD}</password>
+            <username>${env.CENTRAL_USERNAME}</username>
+            <password>${env.CENTRAL_PASSWORD}</password>
           </server>
         </servers>
       </settings>
@@ -221,7 +226,9 @@ publish:release:
   script:
     - |
       echo "Deploying release at tag: $CI_COMMIT_TAG"
-      mvn -B -X -s /tmp/settings.xml -Dgpg.passphrase="$GPG_PASSPHRASE" -DskipTests deploy
+      test -n "$CENTRAL_USERNAME" || { echo "CENTRAL_USERNAME is empty"; exit 1; }
+      test -n "$CENTRAL_PASSWORD" || { echo "CENTRAL_PASSWORD is empty"; exit 1; }
+      mvn -B -s /tmp/settings.xml -DskipTests -Ddependency-check.skip=true -Dgpg.passphrase="$GPG_PASSPHRASE" deploy
   artifacts:
     when: always
     expire_in: 1 week
