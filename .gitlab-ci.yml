@@ -81,7 +81,7 @@ semantic_release:
     - apt-get install -y nodejs
     - node -v && npm -v
     # Install semantic-release + plugins (plugin list matches .releaserc)
-    - npm i -g semantic-release semantic-release-maven @semantic-release/gitlab @semantic-release/git @semantic-release/changelog
+    - npm i -g semantic-release semantic-release-maven @semantic-release/gitlab @semantic-release/git @semantic-release/changelog @semantic-release/exec
     # Import GPG so the publish step can sign
     - |
       if [ -n "$GPG_PRIVATE_KEY_ARMOR" ]; then
