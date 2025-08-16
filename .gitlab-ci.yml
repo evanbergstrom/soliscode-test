@@ -71,6 +71,11 @@ semantic_release:
     - when: never
   variables:
     GIT_DEPTH: "0"         # semantic-release needs full history/tags
+    SERVER_USERNAME: "$CENTRAL_USERNAME"
+    SERVER_PASSWORD: "$CENTRAL_PASSWORD"
+    GPG_PRIVATE_KEY: "$GPG_PRIVATE_KEY_ARMOR"
+    GPG_PASSPHRASE: "$GPG_PASSPHRASE"
+  cache: {}
   before_script:
     # Git identity for release commits (fallbacks if not provided by GitLab)
     - git config --global user.email "${GITLAB_USER_EMAIL:-ci@users.noreply.gitlab.com}"
@@ -80,7 +85,7 @@ semantic_release:
     - curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
     - apt-get install -y nodejs
     - node -v && npm -v
-    # Install semantic-release + plugins (plugin list matches .releaserc)
+    # Install semantic-release + plugins (plugin list matches .releaserc.json)
     - npm i -g semantic-release semantic-release-maven @semantic-release/gitlab @semantic-release/git @semantic-release/changelog @semantic-release/exec
     # Import GPG so the publish step can sign
     - |
@@ -144,7 +149,7 @@ publish:release:
       fi
     - |
       cat > /tmp/settings.xml <<EOF
-      <settings xmlns="http://maven.apache.org/SETTINGS/1.2.0">
+      <settings xmlns="https://maven.apache.org/SETTINGS/1.2.0">
         <servers>
           <server>
             <id>central</id>
