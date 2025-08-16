@@ -7,7 +7,7 @@
 
   <groupId>org.soliscode</groupId>
   <artifactId>soliscode-test</artifactId>
-  <version>0.0.0-SNAPSHOT</version> <!-- placeholder; semantic-release overwrites -->
+  <version>1.0.0</version> <!-- placeholder; semantic-release overwrites -->
   <packaging>jar</packaging>
 
   <name>SolisCode Test</name>
