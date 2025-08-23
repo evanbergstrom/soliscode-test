@@ -91,7 +91,7 @@ publish:snapshot:
       fi
     # Central credentials
     - |
-      cat > /tmp/settings.xml <<EOF
+      cat > /tmp/settings.xml <<'EOF'
       <settings xmlns="https://maven.apache.org/SETTINGS/1.2.0">
         <servers>
           <server>
@@ -159,7 +159,7 @@ semantic_release:
       fi
     # Write a minimal settings.xml for Central (used by the publish step)
     - |
-      cat > /tmp/settings.xml <<EOF
+      cat > /tmp/settings.xml <<'EOF'
       <settings xmlns="https://maven.apache.org/SETTINGS/1.2.0">
         <servers>
           <server>
@@ -218,7 +218,7 @@ publish:release:
         export GPG_TTY=$(tty) || true
       fi
 
-      cat > /tmp/settings.xml <<EOF
+      cat > /tmp/settings.xml <<'EOF'
       <settings xmlns="https://maven.apache.org/SETTINGS/1.2.0">
         <servers>
           <server>
