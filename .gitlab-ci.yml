@@ -107,6 +107,9 @@ publish:snapshot:
     # deploys to Central's snapshot repository automatically.
     - |
       mvn -q help:evaluate -Dexpression=project.version -DforceStdout
+      test -n "$CENTRAL_USERNAME" || { echo "CENTRAL_USERNAME is empty"; exit 1; }
+      test -n "$CENTRAL_PASSWORD" || { echo "CENTRAL_PASSWORD is empty"; exit 1; }
+      mvn -s /tmp/settings.xml help:effective-settings -DforceStdout | sed -n '1,200p'
       mvn -s /tmp/settings.xml $MAVEN_CLI_OPTS -Dgpg.sign=true -Dgpg.passphrase="$GPG_PASSPHRASE" deploy
   artifacts:
     when: always
