@@ -2,12 +2,14 @@
 stages:
   - build
   - test
-  - release
-  - publish
+  - release  # semantic-release (creates tag + release notes)
+  - publish  # deploy to Central (snapshots and releases)
   - site
 
+# Project-level variables are set in GitLab → CI/CD → Variables
 variables:
   SITE_DIR: "target/staging"
+  MAVEN_CLI_OPTS: "-B -q -DskipTests -Ddependency-check.skip=true". #speed up build while working on CI/CD
 
 default:
   image: maven:3.9.9-eclipse-temurin-23
@@ -36,7 +38,7 @@ build:
       when: on_success
     - when: never
   script:
-    - mvn -B -X -DskipTests package
+    - mvn $MAVEN_CLI_OPTS -DskipTests package
   artifacts:
     when: always
     paths:
@@ -56,7 +58,7 @@ test:
     - when: never
   script:
     # skipping tests while working out ci/cd bugs
-    - mvn -B -X -DskipTests verify
+    - mvn $MAVEN_CLI_OPTS -DskipTests verify
   artifacts:
     when: always
     reports:
@@ -80,7 +82,8 @@ publish:snapshot:
     - |
       if [ -n "$GPG_PRIVATE_KEY_ARMOR" ]; then
         echo "$GPG_PRIVATE_KEY_ARMOR" | base64 -d > /tmp/private.key
-        gpg --batch --import /tmp/private.key || true
+        gpg --batch --import /tmp/private.key
+        gpg --list-secret-keys --keyid-format LONG
         mkdir -p ~/.gnupg
         echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
         echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
@@ -104,7 +107,7 @@ publish:snapshot:
     # deploys to Central's snapshot repository automatically.
     - |
       mvn -q help:evaluate -Dexpression=project.version -DforceStdout
-      mvn -B -X -s /tmp/settings.xml -Dgpg.passphrase="$GPG_PASSPHRASE" -DskipTests deploy
+      mvn -s /tmp/settings.xml $MAVEN_CLI_OPTS -Dgpg.sign=true -Dgpg.passphrase="$GPG_PASSPHRASE" deploy
   artifacts:
     when: always
     expire_in: 1 week
@@ -147,7 +150,8 @@ semantic_release:
     - |
       if [ -n "$GPG_PRIVATE_KEY_ARMOR" ]; then
         echo "$GPG_PRIVATE_KEY_ARMOR" | base64 -d > /tmp/private.key
-        gpg --batch --import /tmp/private.key || true
+        gpg --batch --import /tmp/private.key
+        gpg --list-secret-keys --keyid-format LONG
         mkdir -p ~/.gnupg
         echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
         echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
@@ -202,10 +206,12 @@ publish:release:
       for v in CENTRAL_USERNAME CENTRAL_PASSWORD GPG_PASSPHRASE; do
         if [ -z "${!v}" ]; then echo "Missing required variable: $v"; exit 1; fi
       done
+      test -n "$GPG_PRIVATE_KEY_ARMOR" || { echo "Missing GPG_PRIVATE_KEY_ARMOR"; exit 1; }
 
       if [ -n "$GPG_PRIVATE_KEY_ARMOR" ]; then
         echo "$GPG_PRIVATE_KEY_ARMOR" | base64 -d > /tmp/private.key
-        gpg --batch --import /tmp/private.key || true
+        gpg --batch --import /tmp/private.key
+        gpg --list-secret-keys --keyid-format LONG
         mkdir -p ~/.gnupg
         echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
         echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
@@ -228,7 +234,7 @@ publish:release:
       echo "Deploying release at tag: $CI_COMMIT_TAG"
       test -n "$CENTRAL_USERNAME" || { echo "CENTRAL_USERNAME is empty"; exit 1; }
       test -n "$CENTRAL_PASSWORD" || { echo "CENTRAL_PASSWORD is empty"; exit 1; }
-      mvn -B -s /tmp/settings.xml -DskipTests -Ddependency-check.skip=true -Dgpg.passphrase="$GPG_PASSPHRASE" deploy
+      mvn -s /tmp/settings.xml $MAVEN_CLI_OPTS -Dgpg.sign=true -Dgpg.passphrase="$GPG_PASSPHRASE" deploy
   artifacts:
     when: always
     expire_in: 1 week
