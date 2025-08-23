@@ -333,7 +333,7 @@
         <configuration>
           <publishingServerId>central</publishingServerId>
           <autoPublish>true</autoPublish>
-          <waitUntil>closed</waitUntil>
+          <waitUntil>validated</waitUntil>
         </configuration>
       </plugin>
 
