@@ -9,7 +9,7 @@ stages:
 # Project-level variables are set in GitLab → CI/CD → Variables
 variables:
   SITE_DIR: "target/staging"
-  MAVEN_CLI_OPTS: "-B -q -DskipTests -Ddependency-check.skip=true". #speed up build while working on CI/CD
+  MAVEN_CLI_OPTS: "-B -q -DskipTests -Ddependency-check.skip=true" #speed up build while working on CI/CD
 
 default:
   image: maven:3.9.9-eclipse-temurin-23
