@@ -7,20 +7,6 @@
     "commit": "cz",
     "release": "semantic-release"
   },
-  "release": {
-    "branches": ["main"],
-    "plugins": [
-      "@semantic-release/commit-analyzer",
-      "@semantic-release/release-notes-generator",
-      "@semantic-release/changelog",
-      ["@semantic-release/exec", { "prepareCmd": "./scripts/set-version.sh ${nextRelease.version}" }],
-      ["@semantic-release/git", {
-        "assets": ["pom.xml", "CHANGELOG.md"],
-        "message": "chore(release): ${nextRelease.version} [skip ci]"
-      }],
-      ["@semantic-release/gitlab", { }]
-    ]
-  },
   "devDependencies": {
     "@commitlint/cli": "^19.3.0",
     "@commitlint/config-conventional": "^19.2.2",
