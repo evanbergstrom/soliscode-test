@@ -1,3 +1,10 @@
+## [1.0.1](https://gitlab.com/soliscode/soliscode-test/compare/v1.0.0...v1.0.1) (2025-08-24)
+
+
+### Bug Fixes
+
+* correct snapshot publishing flow ([b2ba5d2](https://gitlab.com/soliscode/soliscode-test/commit/b2ba5d2f42ddc7058f4dde4c373028aee11cb979))
+
 # 1.0.0 (2025-08-16)
 
 
