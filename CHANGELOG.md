@@ -1,3 +1,10 @@
+## [1.0.3](https://gitlab.com/soliscode/soliscode-test/compare/v1.0.2...v1.0.3) (2025-08-24)
+
+
+### Bug Fixes
+
+* remove skip ci from semantic release commit message ([3ef6c4d](https://gitlab.com/soliscode/soliscode-test/commit/3ef6c4d4735d514ceddf8660e242f40d4d32daac))
+
 ## [1.0.2](https://gitlab.com/soliscode/soliscode-test/compare/v1.0.1...v1.0.2) (2025-08-24)
 
 
