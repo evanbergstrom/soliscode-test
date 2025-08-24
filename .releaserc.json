@@ -4,20 +4,18 @@
   "plugins": [
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
-    ["@semantic-release/changelog", { "changelogFile": "CHANGELOG.md" }],
-
+    ["@semantic-release/changelog", {
+      "changelogFile": "CHANGELOG.md"
+    }],
     ["semantic-release-maven", {
       "serverId": "central"
     }],
-
-    ["@semantic-release/git", {
-      "assets": ["pom.xml", "CHANGELOG.md"],
-      "message": "chore(release): ${nextRelease.version}\n\n${nextRelease.notes}"
+    ["@semantic-release/exec", {
+      "prepareCmd": "git add pom.xml CHANGELOG.md && git commit -m \"chore(release): ${nextRelease.version}\n\n${nextRelease.notes}\""
     }],
     "@semantic-release/gitlab",
-
     ["@semantic-release/exec", {
-      "successCmd": "mvn -B versions:set -DnextSnapshot=true -DgenerateBackupPoms=false && git add pom.xml && git commit -m \"chore: next snapshot after ${nextRelease.version}\" && git push origin HEAD:main"
+      "successCmd": "mvn -B versions:set -DnextSnapshot -DgenerateBackupPoms=false && git add pom.xml && git commit -m \"chore: next snapshot after ${nextRelease.version}\" && git push origin HEAD:main"
     }]
   ]
 }
