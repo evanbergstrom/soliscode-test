@@ -78,18 +78,21 @@ publish:snapshot:
       when: on_success
     - when: never
   before_script:
-    # Optional: sign snapshots for consistency
+    - set -euo pipefail
+    # Import GPG (optional for snapshots, recommended)
     - |
-      if [ -n "$GPG_PRIVATE_KEY_ARMOR" ]; then
-        echo "$GPG_PRIVATE_KEY_ARMOR" | base64 -d > /tmp/private.key
-        gpg --batch --import /tmp/private.key
-        gpg --list-secret-keys --keyid-format LONG
-        mkdir -p ~/.gnupg
-        echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
-        echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
-        export GPG_TTY=$(tty) || true
+      if [ -n "${GPG_PRIVATE_KEY_ARMOR:-}" ]; then
+         echo "$GPG_PRIVATE_KEY_ARMOR" | base64 -d > /tmp/private.key
+         gpg --batch --import /tmp/private.key
+         gpg --list-secret-keys --keyid-format LONG
+         mkdir -p ~/.gnupg
+         echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
+         echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+         export GPG_TTY=$(tty) || true
+        # derive fingerprint as the key name used by the plugin (reliable in CI)
+        export GPG_KEY_ID="$(gpg --batch --with-colons --list-secret-keys | awk -F: '/^fpr:/ {print $10; exit}')"
       fi
-    # Central credentials
+    # Central credentials for the Central Publishing plugin
     - |
       cat > /tmp/settings.xml <<'EOF'
       <settings xmlns="https://maven.apache.org/SETTINGS/1.2.0">
@@ -103,14 +106,28 @@ publish:snapshot:
       </settings>
       EOF
   script:
-    # With a -SNAPSHOT version in pom.xml, the Central Publishing plugin
-    # deploys to Central's snapshot repository automatically.
+    # Ensure we're actually on a -SNAPSHOT version
     - |
-      mvn -q help:evaluate -Dexpression=project.version -DforceStdout
-      test -n "$CENTRAL_USERNAME" || { echo "CENTRAL_USERNAME is empty"; exit 1; }
-      test -n "$CENTRAL_PASSWORD" || { echo "CENTRAL_PASSWORD is empty"; exit 1; }
-      mvn -s /tmp/settings.xml help:effective-settings -DforceStdout | sed -n '1,200p'
-      mvn -s /tmp/settings.xml $MAVEN_CLI_OPTS -Dgpg.sign=true -Dgpg.passphrase="$GPG_PASSPHRASE" deploy
+      VER="$(mvn -q help:evaluate -Dexpression=project.version -DforceStdout)"
+      case "$VER" in
+        *-SNAPSHOT) echo "Publishing snapshot $VER" ;;
+        *) echo "Not a -SNAPSHOT version ($VER); skipping snapshot publish"; exit 0 ;;
+      esac
+    # Sanity checks for creds
+    - test -n "${CENTRAL_USERNAME:-}" || { echo "CENTRAL_USERNAME is empty"; exit 1; }
+    - test -n "${CENTRAL_PASSWORD:-}" || { echo "CENTRAL_PASSWORD is empty"; exit 1; }
+    # Show effective settings briefly (helpful while tuning)
+    - mvn -s /tmp/settings.xml -q help:effective-settings -DforceStdout | sed -n '1,80p'
+    # Sign first, then deploy (so *.asc exist when Central publishes)
+    - |
+      if [ -n "${GPG_KEY_ID:-}" ] && [ -n "${GPG_PASSPHRASE:-}" ]; then
+        mvn -s /tmp/settings.xml -B \
+          -Dgpg.sign=true -Dgpg.passphrase="$GPG_PASSPHRASE" \
+          gpg:sign
+      fi
+    - mvn -s /tmp/settings.xml -B $MAVEN_CLI_OPTS deploy
+    # (optional) verify signatures exist in target/
+    - ls -1 target/*.{jar,pom}.*asc || true
   artifacts:
     when: always
     expire_in: 1 week
@@ -219,6 +236,8 @@ publish:release:
         echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
         echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
         export GPG_TTY=$(tty) || true
+        # set GPG_KEY_ID so the maven-gpg-plugin finds the key
+        export GPG_KEY_ID="$(gpg --batch --with-colons --list-secret-keys | awk -F: '/^fpr:/ {print $10; exit}')"
       fi
 
       cat > /tmp/settings.xml <<'EOF'
@@ -237,6 +256,7 @@ publish:release:
       echo "Deploying release at tag: $CI_COMMIT_TAG"
       test -n "$CENTRAL_USERNAME" || { echo "CENTRAL_USERNAME is empty"; exit 1; }
       test -n "$CENTRAL_PASSWORD" || { echo "CENTRAL_PASSWORD is empty"; exit 1; }
+      # Create signatures at deploy phase (profile) and publish via Central
       mvn -s /tmp/settings.xml $MAVEN_CLI_OPTS -Dgpg.sign=true -Dgpg.passphrase="$GPG_PASSPHRASE" deploy
   artifacts:
     when: always

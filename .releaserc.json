@@ -17,7 +17,7 @@
     "@semantic-release/gitlab",
 
     ["@semantic-release/exec", {
-      "successCmd": "mvn -B -q versions:set -DnextSnapshot=true -DgenerateBackupPoms=false && git add pom.xml && git commit -m \"chore: set next snapshot version [skip ci]\" && git push"
+      "successCmd": "mvn -B versions:set -DnextSnapshot=true -DgenerateBackupPoms=false && git add pom.xml && git commit -m \"chore: next snapshot after ${nextRelease.version}\" && git push origin HEAD:main"
     }]
   ]
 }
