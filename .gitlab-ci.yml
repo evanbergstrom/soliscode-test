@@ -138,6 +138,7 @@ publish:snapshot:
   # Manual Release (semantic-release)
   # - Computes version, updates changelog, tags, creates GitLab Release
   # - Uses a dedicated job that you trigger manually
+  # - Will trigger a publish:reelase job if semantic-release decides a new tag is warranted.
   # - Cannot use "release" keyword. GitLAb release keyword schema requires 'description' and 'tag_name' properties
   #   and those will be provided by semantic release.
   # -----------------------------
