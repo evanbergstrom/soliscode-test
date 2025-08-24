@@ -1,3 +1,10 @@
+## [1.0.2](https://gitlab.com/soliscode/soliscode-test/compare/v1.0.1...v1.0.2) (2025-08-24)
+
+
+### Bug Fixes
+
+* trigger publish ([e3f038c](https://gitlab.com/soliscode/soliscode-test/commit/e3f038cbc05fa324f11060c87ada8da8de79b37b))
+
 ## [1.0.1](https://gitlab.com/soliscode/soliscode-test/compare/v1.0.0...v1.0.1) (2025-08-24)
 
 
