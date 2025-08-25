@@ -134,12 +134,10 @@ publish:snapshot:
     - test -n "${CENTRAL_PASSWORD:-}" || { echo "CENTRAL_PASSWORD is empty"; exit 1; }
     # Show effective settings briefly (helpful while tuning)
     - mvn $MAVEN_CLI_OPTS -DskipTests help:effective-settings -DforceStdout | sed -n '1,80p'
-    # Sign first, then deploy (so *.asc exist when Central publishes)
     - |
-      if [ -n "${GPG_KEY_ID:-}" ] && [ -n "${GPG_PASSPHRASE:-}" ]; then
-        mvn $MAVEN_CLI_OPTS -DskipTests -Dgpg.sign=true -Dgpg.passphrase="$GPG_PASSPHRASE" gpg:sign
-      fi
-    - mvn $MAVEN_CLI_OPTS -DskipTests deploy
+      mvn $MAVEN_CLI_OPTS -DskipTests \
+        -Dgpg.skip=false -Dgpg.keyname="$GPG_KEY_ID" -Dgpg.passphrase="$GPG_PASSPHRASE" \
+        clean deploy
     # (optional) verify signatures exist in target/
     - ls -1 target/*.{jar,pom}.*asc || true
   artifacts:
