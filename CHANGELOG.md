@@ -1,3 +1,10 @@
+## [1.0.7](https://gitlab.com/soliscode/soliscode-test/compare/v1.0.6...v1.0.7) (2025-08-25)
+
+
+### Bug Fixes
+
+* fixed error in publish release ([91e1aa6](https://gitlab.com/soliscode/soliscode-test/commit/91e1aa6815f97651c177bc278f4bae8730df2c66))
+
 ## [1.0.6](https://gitlab.com/soliscode/soliscode-test/compare/v1.0.5...v1.0.6) (2025-08-25)
 
 
