@@ -1,3 +1,10 @@
+## [1.0.8](https://gitlab.com/soliscode/soliscode-test/compare/v1.0.7...v1.0.8) (2025-08-25)
+
+
+### Bug Fixes
+
+* sign during deploy ([5807f26](https://gitlab.com/soliscode/soliscode-test/commit/5807f26855288baba848cd66f6a6f33668959835))
+
 ## [1.0.7](https://gitlab.com/soliscode/soliscode-test/compare/v1.0.6...v1.0.7) (2025-08-25)
 
 

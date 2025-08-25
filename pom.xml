@@ -9,7 +9,7 @@
   <artifactId>soliscode-test</artifactId>
   <!-- Keep development on a SNAPSHOT so publish:snapshot has something to push.
        semantic-release will set a non-SNAPSHOT for releases, then bump back. -->
-  <version>1.0.7</version>
+  <version>1.0.8</version>
   <packaging>jar</packaging>
 
   <name>SolisCode Test</name>
