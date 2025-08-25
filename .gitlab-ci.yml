@@ -9,7 +9,7 @@ stages:
 # Project-level variables are set in GitLab → CI/CD → Variables
 variables:
   SITE_DIR: "target/staging"
-  MAVEN_CLI_OPTS: "-B -q -DskipTests -Ddependency-check.skip=true" #speed up build while working on CI/CD
+  MAVEN_CLI_OPTS: "-B -q -s /tmp/settings.xml -DskipTests -Ddependency-check.skip=true" #speed up build while working on CI/CD
 
 default:
   image: maven:3.9.9-eclipse-temurin-23
@@ -19,13 +19,41 @@ default:
       - .m2/repository
   before_script:
     - java -version
-    - mvn -v
+    - mvn $MAVEN_CLI_OPTS -v
+    # Create once for every job; secrets are NOT expanded here (single-quoted heredoc)
+    - |
+      cat > /tmp/settings.xml <<'EOF'
+      <settings xmlns="https://maven.apache.org/SETTINGS/1.2.0">
+        <servers>
+          <server>
+            <!-- must match <publishingServerId> in your POM (central) -->
+            <id>central</id>
+            <username>${env.CENTRAL_USERNAME}</username>
+            <password>${env.CENTRAL_PASSWORD}</password>
+          </server>
+        </servers>
+      </settings>
+      EOF
 
 workflow:
   rules:
-    - if: '$CI_COMMIT_TAG'                       # allow tag pipelines
+    # Run for release tags (adjust regex if your tag format differs)
+    - if: '$CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+(?:[-+].*)?$/'
+      when: always
+
+    # Run for merge requests
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_BRANCH'                    # allow branch pipelines
+      when: always
+
+    # Suppress the branch pipeline on main for the release commit
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "main" && $CI_COMMIT_MESSAGE =~ /^chore\(release\):/'
+      when: never
+
+    # Run for pushes to main (normal dev & bump-back to -SNAPSHOT)
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "main"'
+      when: always
+
+    # Block everything else (feature branches, schedules, etc.)
     - when: never
 
 # ---------- Build (no tests) ----------
@@ -38,7 +66,7 @@ build:
       when: on_success
     - when: never
   script:
-    - mvn $MAVEN_CLI_OPTS -DskipTests package
+    - mvn $MAVEN_CLI_OPTS package
   artifacts:
     when: always
     paths:
@@ -53,12 +81,12 @@ test:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       when: on_success
-    - if: '$CI_COMMIT_BRANCH'
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "main"'
       when: on_success
     - when: never
   script:
     # skipping tests while working out ci/cd bugs
-    - mvn $MAVEN_CLI_OPTS -DskipTests verify
+    - mvn $MAVEN_CLI_OPTS verify
   artifacts:
     when: always
     reports:
@@ -74,7 +102,7 @@ publish:snapshot:
   stage: publish
   needs: ["test"]
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "main"'
       when: on_success
     - when: never
   before_script:
@@ -92,23 +120,10 @@ publish:snapshot:
         # derive fingerprint as the key name used by the plugin (reliable in CI)
         export GPG_KEY_ID="$(gpg --batch --with-colons --list-secret-keys | awk -F: '/^fpr:/ {print $10; exit}')"
       fi
-    # Central credentials for the Central Publishing plugin
-    - |
-      cat > /tmp/settings.xml <<'EOF'
-      <settings xmlns="https://maven.apache.org/SETTINGS/1.2.0">
-        <servers>
-          <server>
-            <id>central</id>
-            <username>${env.CENTRAL_USERNAME}</username>
-            <password>${env.CENTRAL_PASSWORD}</password>
-          </server>
-        </servers>
-      </settings>
-      EOF
   script:
     # Ensure we're actually on a -SNAPSHOT version
     - |
-      VER="$(mvn -q help:evaluate -Dexpression=project.version -DforceStdout)"
+      VER="$(mvn $MAVEN_CLI_OPTS help:evaluate -Dexpression=project.version -DforceStdout)"
       case "$VER" in
         *-SNAPSHOT) echo "Publishing snapshot $VER" ;;
         *) echo "Not a -SNAPSHOT version ($VER); skipping snapshot publish"; exit 0 ;;
@@ -117,15 +132,13 @@ publish:snapshot:
     - test -n "${CENTRAL_USERNAME:-}" || { echo "CENTRAL_USERNAME is empty"; exit 1; }
     - test -n "${CENTRAL_PASSWORD:-}" || { echo "CENTRAL_PASSWORD is empty"; exit 1; }
     # Show effective settings briefly (helpful while tuning)
-    - mvn -s /tmp/settings.xml -q help:effective-settings -DforceStdout | sed -n '1,80p'
+    - mvn $MAVEN_CLI_OPTS help:effective-settings -DforceStdout | sed -n '1,80p'
     # Sign first, then deploy (so *.asc exist when Central publishes)
     - |
       if [ -n "${GPG_KEY_ID:-}" ] && [ -n "${GPG_PASSPHRASE:-}" ]; then
-        mvn -s /tmp/settings.xml -B \
-          -Dgpg.sign=true -Dgpg.passphrase="$GPG_PASSPHRASE" \
-          gpg:sign
+        mvn $MAVEN_CLI_OPTS -Dgpg.sign=true -Dgpg.passphrase="$GPG_PASSPHRASE" gpg:sign
       fi
-    - mvn -s /tmp/settings.xml -B $MAVEN_CLI_OPTS deploy
+    - mvn $MAVEN_CLI_OPTS deploy
     # (optional) verify signatures exist in target/
     - ls -1 target/*.{jar,pom}.*asc || true
   artifacts:
@@ -178,19 +191,6 @@ semantic_release:
         echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
         export GPG_TTY=$(tty) || true
       fi
-    # Write a minimal settings.xml for Central (used by the publish step)
-    - |
-      cat > /tmp/settings.xml <<'EOF'
-      <settings xmlns="https://maven.apache.org/SETTINGS/1.2.0">
-        <servers>
-          <server>
-            <id>central</id>
-            <username>${env.CENTRAL_USERNAME}</username>
-            <password>${env.CENTRAL_PASSWORD}</password>
-          </server>
-        </servers>
-      </settings>
-      EOF
     - export MAVEN_SETTINGS=/tmp/settings.xml
   script:
     # semantic-release will:
@@ -205,10 +205,6 @@ semantic_release:
     expire_in: 1 week
     paths:
       - CHANGELOG.md
-
-
-
-
 
 # -----------------------------
 # Publish the tagged release to Central
@@ -240,25 +236,15 @@ publish:release:
         # set GPG_KEY_ID so the maven-gpg-plugin finds the key
         export GPG_KEY_ID="$(gpg --batch --with-colons --list-secret-keys | awk -F: '/^fpr:/ {print $10; exit}')"
       fi
-
-      cat > /tmp/settings.xml <<'EOF'
-      <settings xmlns="https://maven.apache.org/SETTINGS/1.2.0">
-        <servers>
-          <server>
-            <id>central</id>
-            <username>${env.CENTRAL_USERNAME}</username>
-            <password>${env.CENTRAL_PASSWORD}</password>
-          </server>
-        </servers>
-      </settings>
-      EOF
   script:
-    - |
+    - | 
       echo "Deploying release at tag: $CI_COMMIT_TAG"
-      test -n "$CENTRAL_USERNAME" || { echo "CENTRAL_USERNAME is empty"; exit 1; }
-      test -n "$CENTRAL_PASSWORD" || { echo "CENTRAL_PASSWORD is empty"; exit 1; }
+      : "${CENTRAL_USERNAME:?missing}"
+      : "${CENTRAL_PASSWORD:?missing}"
+      : "${GPG_PRIVATE_KEY_ARMOR:?missing}"
+      : "${GPG_PASSPHRASE:?missing}"
       # Create signatures at deploy phase (profile) and publish via Central
-      mvn -s /tmp/settings.xml $MAVEN_CLI_OPTS -Dgpg.sign=true -Dgpg.passphrase="$GPG_PASSPHRASE" deploy
+      mvn $MAVEN_CLI_OPTS -s -Dgpg.sign=true -Dgpg.passphrase="$GPG_PASSPHRASE" deploy
   artifacts:
     when: always
     expire_in: 1 week
@@ -271,39 +257,45 @@ publish:release:
 
 site:build:
   stage: site
-  needs: []
+  needs: ["publish:release"]                # wait for the release to publish
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      when: manual
+    # run only for release tags like v1.2.3 (also matches v1.2.3-rc.1, v1.2.3+build)
+    - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+(?:[-+].*)?$/'
+      when: on_success
     - when: never
   script:
-    - mvn -B -X -DskipTests site site:stage
+    # build + stage the Maven site (uses SITE_DIR=target/site by default)
+    - mvn ${MAVEN_CLI_OPTS:-} site site:stage
   artifacts:
     paths:
-      - ${SITE_DIR}
+      - ${SITE_DIR:-target/site}
     expire_in: 1 week
 
 site:deploy:gh-pages:
   stage: site
   needs: ["site:build"]
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      when: manual
+    # run only for the same release tags
+    - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+(?:[-+].*)?$/'
+      when: on_success
     - when: never
   before_script:
-    - |
-      apt-get update && apt-get install -y git rsync
-      git config --global user.email "${GITHUB_EMAIL:-ci@users.noreply.github.com}"
-      git config --global user.name  "${GITHUB_NAME:-gitlab-ci}"
-      mkdir gh-pages && cd gh-pages
-      git init
-      git remote add origin "https://x-access-token:${GITHUB_PAT}@github.com/${GITHUB_REPO}.git"
-      git fetch origin gh-pages || true
-      git checkout -B gh-pages
+    - : "${GITHUB_PAT:?missing GITHUB_PAT}"
+    - : "${GITHUB_REPO:?missing GITHUB_REPO}"   # e.g. owner/repo
+    - : "${GITHUB_EMAIL:=soliscode-bot@users.noreply.github.com}"
+    - : "${GITHUB_NAME:=soliscode-bot}"
+    - apt-get update && apt-get install -y git rsync
+    - git config --global user.email "$GITHUB_EMAIL"
+    - git config --global user.name  "$GITHUB_NAME"
+    - mkdir gh-pages && cd gh-pages
+    - git init
+    - git remote add origin "https://x-access-token:${GITHUB_PAT}@github.com/${GITHUB_REPO}.git"
+    - git fetch origin gh-pages || true
+    - git checkout -B gh-pages
   script:
+    - rsync -a --delete --exclude ".git" "${CI_PROJECT_DIR}/${SITE_DIR:-target/site}/" .
+    - touch .nojekyll
+    - git add -A
     - |
-      rsync -a --delete --exclude ".git" "${CI_PROJECT_DIR}/${SITE_DIR}/" .
-      touch .nojekyll
-      git add -A
-      git commit -m "Publish Maven site: ${CI_COMMIT_SHORT_SHA}" || echo "No changes"
-      git push -f origin gh-pages
+      git commit -m "Publish Maven site: ${CI_COMMIT_TAG}" || echo "No changes"
+    - git push -f origin gh-pages
