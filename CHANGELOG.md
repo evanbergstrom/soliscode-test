@@ -1,3 +1,12 @@
+## [1.0.5](https://gitlab.com/soliscode/soliscode-test/compare/v1.0.4...v1.0.5) (2025-08-25)
+
+
+### Bug Fixes
+
+* pipeline only runs on main and releases ([f7b5d1c](https://gitlab.com/soliscode/soliscode-test/commit/f7b5d1c79dd1c70e13f7a53d5f87117f55aee8b8))
+* pipeline only runs on main and releases ([27966e0](https://gitlab.com/soliscode/soliscode-test/commit/27966e02c39a9e6d285e0a0e2489c56fa8d323f2))
+* pipeline only runs on main and releases ([f396679](https://gitlab.com/soliscode/soliscode-test/commit/f396679fffa44b2112916bf4fa4c2e50e0542a8d))
+
 ## [1.0.4](https://gitlab.com/soliscode/soliscode-test/compare/v1.0.3...v1.0.4) (2025-08-25)
 
 
