@@ -9,7 +9,7 @@ stages:
 # Project-level variables are set in GitLab → CI/CD → Variables
 variables:
   SITE_DIR: "target/staging"
-  MAVEN_CLI_OPTS: "-B -q -s /tmp/settings.xml -DskipTests -Ddependency-check.skip=true" #speed up build while working on CI/CD
+  MAVEN_CLI_OPTS: "-B -q -s /tmp/settings.xml -Ddependency-check.skip=true" #speed up build while working on CI/CD
 
 default:
   image: maven:3.9.9-eclipse-temurin-23
@@ -66,7 +66,7 @@ build:
       when: on_success
     - when: never
   script:
-    - mvn $MAVEN_CLI_OPTS package
+    - mvn -DskipTests $MAVEN_CLI_OPTS package
   artifacts:
     when: always
     paths:
@@ -86,7 +86,7 @@ test:
     - when: never
   script:
     # skipping tests while working out ci/cd bugs
-    - mvn $MAVEN_CLI_OPTS verify
+    - mvn $MAVEN_CLI_OPTS -DskipTests verify
   artifacts:
     when: always
     reports:
@@ -124,7 +124,7 @@ publish:snapshot:
   script:
     # Ensure we're actually on a -SNAPSHOT version
     - |
-      VER="$(mvn $MAVEN_CLI_OPTS help:evaluate -Dexpression=project.version -DforceStdout)"
+      VER="$(mvn $MAVEN_CLI_OPTS -DskipTests help:evaluate -Dexpression=project.version -DforceStdout)"
       case "$VER" in
         *-SNAPSHOT) echo "Publishing snapshot $VER" ;;
         *) echo "Not a -SNAPSHOT version ($VER); skipping snapshot publish"; exit 0 ;;
@@ -133,13 +133,13 @@ publish:snapshot:
     - test -n "${CENTRAL_USERNAME:-}" || { echo "CENTRAL_USERNAME is empty"; exit 1; }
     - test -n "${CENTRAL_PASSWORD:-}" || { echo "CENTRAL_PASSWORD is empty"; exit 1; }
     # Show effective settings briefly (helpful while tuning)
-    - mvn $MAVEN_CLI_OPTS help:effective-settings -DforceStdout | sed -n '1,80p'
+    - mvn $MAVEN_CLI_OPTS -DskipTests help:effective-settings -DforceStdout | sed -n '1,80p'
     # Sign first, then deploy (so *.asc exist when Central publishes)
     - |
       if [ -n "${GPG_KEY_ID:-}" ] && [ -n "${GPG_PASSPHRASE:-}" ]; then
-        mvn $MAVEN_CLI_OPTS -Dgpg.sign=true -Dgpg.passphrase="$GPG_PASSPHRASE" gpg:sign
+        mvn $MAVEN_CLI_OPTS -DskipTests -Dgpg.sign=true -Dgpg.passphrase="$GPG_PASSPHRASE" gpg:sign
       fi
-    - mvn $MAVEN_CLI_OPTS deploy
+    - mvn $MAVEN_CLI_OPTS -DskipTests deploy
     # (optional) verify signatures exist in target/
     - ls -1 target/*.{jar,pom}.*asc || true
   artifacts:
@@ -220,34 +220,45 @@ publish:release:
       when: on_success
     - when: never
   before_script:
-    - !reference [ default, before_script ]   # <-- ensures /tmp/settings.xml exists
+    - !reference [ default, before_script ]
     - |
       # Ensure protected vars are actually present
       for v in CENTRAL_USERNAME CENTRAL_PASSWORD GPG_PASSPHRASE; do
         if [ -z "${!v}" ]; then echo "Missing required variable: $v"; exit 1; fi
       done
       test -n "$GPG_PRIVATE_KEY_ARMOR" || { echo "Missing GPG_PRIVATE_KEY_ARMOR"; exit 1; }
+      
+      # Import GPG key and prep loopback
+      echo "$GPG_PRIVATE_KEY_ARMOR" | base64 -d > /tmp/private.key
+      gpg --batch --import /tmp/private.key
+      gpg --list-secret-keys --keyid-format LONG
+      mkdir -p ~/.gnupg
+      echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
+      echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+      export GPG_TTY=$(tty) || true
+      
+      # Expose fingerprint for the maven-gpg-plugin (<keyname>${env.GPG_KEY_ID}</keyname>)
+      export GPG_KEY_ID="$(gpg --batch --with-colons --list-secret-keys | awk -F: '/^fpr:/ {print $10; exit}')"
 
-      if [ -n "$GPG_PRIVATE_KEY_ARMOR" ]; then
-        echo "$GPG_PRIVATE_KEY_ARMOR" | base64 -d > /tmp/private.key
-        gpg --batch --import /tmp/private.key
-        gpg --list-secret-keys --keyid-format LONG
-        mkdir -p ~/.gnupg
-        echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
-        echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
-        export GPG_TTY=$(tty) || true
-        # set GPG_KEY_ID so the maven-gpg-plugin finds the key
-        export GPG_KEY_ID="$(gpg --batch --with-colons --list-secret-keys | awk -F: '/^fpr:/ {print $10; exit}')"
-      fi
   script:
-    - | 
+    - |
       echo "Deploying release at tag: $CI_COMMIT_TAG"
       : "${CENTRAL_USERNAME:?missing}"
       : "${CENTRAL_PASSWORD:?missing}"
       : "${GPG_PRIVATE_KEY_ARMOR:?missing}"
       : "${GPG_PASSPHRASE:?missing}"
-      # Create signatures at deploy phase (profile) and publish via Central
-      mvn $MAVEN_CLI_OPTS -Dgpg.sign=true -Dgpg.passphrase="$GPG_PASSPHRASE" deploy
+    # 1) Build + sign so *.asc are produced & attached to all artifacts (pom, jar, sources, javadoc)
+    - |
+      mvn $MAVEN_CLI_OPTS -DskiptTests 
+        -Dgpg.sign=true -Dgpg.keyname="$GPG_KEY_ID" -Dgpg.passphrase="$GPG_PASSPHRASE" 
+        verify gpg:sign
+    # 2) Sanity check that signatures exist (fail fast if not)
+    - ls -1 target/*.{pom,jar}.*asc
+    # 3) Publish to Central (signing remains enabled; artifacts already have *.asc)
+    - | 
+      mvn $MAVEN_CLI_OPTS -DskipTests 
+        -Dgpg.sign=true -Dgpg.keyname="$GPG_KEY_ID" -Dgpg.passphrase="$GPG_PASSPHRASE" 
+        deploy
   artifacts:
     when: always
     expire_in: 1 week
