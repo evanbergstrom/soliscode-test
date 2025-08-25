@@ -1,3 +1,10 @@
+## [1.0.9](https://gitlab.com/soliscode/soliscode-test/compare/v1.0.8...v1.0.9) (2025-08-25)
+
+
+### Bug Fixes
+
+* make sure source plugin only runs once ([921380d](https://gitlab.com/soliscode/soliscode-test/commit/921380d4f002f9aad4602a739f139a9a3981a369))
+
 ## [1.0.8](https://gitlab.com/soliscode/soliscode-test/compare/v1.0.7...v1.0.8) (2025-08-25)
 
 
