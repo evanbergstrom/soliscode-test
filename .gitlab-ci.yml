@@ -280,18 +280,20 @@ site:deploy:gh-pages:
       when: on_success
     - when: never
   before_script:
-    - : "${GITHUB_PAT:?missing GITHUB_PAT}"
-    - : "${GITHUB_REPO:?missing GITHUB_REPO}"   # e.g. owner/repo
-    - : "${GITHUB_EMAIL:=soliscode-bot@users.noreply.github.com}"
-    - : "${GITHUB_NAME:=soliscode-bot}"
-    - apt-get update && apt-get install -y git rsync
-    - git config --global user.email "$GITHUB_EMAIL"
-    - git config --global user.name  "$GITHUB_NAME"
-    - mkdir gh-pages && cd gh-pages
-    - git init
-    - git remote add origin "https://x-access-token:${GITHUB_PAT}@github.com/${GITHUB_REPO}.git"
-    - git fetch origin gh-pages || true
-    - git checkout -B gh-pages
+    - | 
+      echo "Deploying site to GitHub" 
+      : "${GITHUB_PAT:?missing GITHUB_PAT}"
+      : "${GITHUB_REPO:?missing GITHUB_REPO}"   # e.g. owner/repo
+      : "${GITHUB_EMAIL:=soliscode-bot@users.noreply.github.com}"
+      : "${GITHUB_NAME:=soliscode-bot}"
+      apt-get update && apt-get install -y git rsync
+      git config --global user.email "$GITHUB_EMAIL"
+      git config --global user.name  "$GITHUB_NAME"
+      mkdir gh-pages && cd gh-pages
+      git init
+      git remote add origin "https://x-access-token:${GITHUB_PAT}@github.com/${GITHUB_REPO}.git"
+      git fetch origin gh-pages || true
+      git checkout -B gh-pages
   script:
     - rsync -a --delete --exclude ".git" "${CI_PROJECT_DIR}/${SITE_DIR:-target/site}/" .
     - touch .nojekyll
