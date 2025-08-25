@@ -1,3 +1,10 @@
+## [1.0.4](https://gitlab.com/soliscode/soliscode-test/compare/v1.0.3...v1.0.4) (2025-08-25)
+
+
+### Bug Fixes
+
+* remove semantic release config from package json ([724b9fd](https://gitlab.com/soliscode/soliscode-test/commit/724b9fd418991890cd623036b4e0c86dbc2c71b9))
+
 ## [1.0.3](https://gitlab.com/soliscode/soliscode-test/compare/v1.0.2...v1.0.3) (2025-08-24)
 
 
