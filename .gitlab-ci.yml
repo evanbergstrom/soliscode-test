@@ -137,7 +137,7 @@ publish:snapshot:
     - |
       mvn $MAVEN_CLI_OPTS -DskipTests \
         -Dgpg.skip=false -Dgpg.keyname="$GPG_KEY_ID" -Dgpg.passphrase="$GPG_PASSPHRASE" \
-        clean deploy
+        deploy
     # (optional) verify signatures exist in target/
     - ls -1 target/*.{jar,pom}.*asc || true
   artifacts:
@@ -255,7 +255,7 @@ publish:release:
     - |
       mvn $MAVEN_CLI_OPTS -DskipTests \
         -Dgpg.sign=true -Dgpg.keyname="$GPG_KEY_ID" -Dgpg.passphrase="$GPG_PASSPHRASE" \
-        package gpg:sign deploy
+        deploy
   artifacts:
     when: always
     expire_in: 1 week
