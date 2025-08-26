@@ -174,7 +174,7 @@ semantic_release:
     - git config --global user.email "${GITLAB_USER_EMAIL:-ci@users.noreply.gitlab.com}"
     - git config --global user.name  "${GITLAB_USER_NAME:-gitlab-ci}"
     # Require a token with write_repository
-    - : "${GL_TOKEN:?missing GL_TOKEN (PAT/Project Access Token with write_repository)}"
+    - ': "${GL_TOKEN:?missing GL_TOKEN (PAT/Project Access Token with write_repository)}"'
 
     # Install Node 22.x (required by semantic-release v24+)
     - apt-get update && apt-get install -y curl ca-certificates gnupg
