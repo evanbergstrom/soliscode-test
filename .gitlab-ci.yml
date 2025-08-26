@@ -173,6 +173,9 @@ semantic_release:
     # Git identity for release commits (fallbacks if not provided by GitLab)
     - git config --global user.email "${GITLAB_USER_EMAIL:-ci@users.noreply.gitlab.com}"
     - git config --global user.name  "${GITLAB_USER_NAME:-gitlab-ci}"
+    # Require a token with write_repository
+    - : "${GL_TOKEN:?missing GL_TOKEN (PAT/Project Access Token with write_repository)}"
+
     # Install Node 22.x (required by semantic-release v24+)
     - apt-get update && apt-get install -y curl ca-certificates gnupg
     - curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
@@ -199,6 +202,14 @@ semantic_release:
       fi
     - export MAVEN_SETTINGS=/tmp/settings.xml
   script:
+    # Authenticate origin for push
+    - git remote set-url origin "https://oauth2:${GL_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"
+
+    # Ensure we’re on the actual branch (not detached)
+    - git fetch origin "${CI_DEFAULT_BRANCH}" --depth=0
+    - git checkout -B "${CI_DEFAULT_BRANCH}" "origin/${CI_DEFAULT_BRANCH}"
+    - git pull --ff-only origin "${CI_DEFAULT_BRANCH}"
+
     # semantic-release will:
     #  - analyze commits (Conventional Commits)
     #  - update CHANGELOG.md and pom.xml (via maven-semantic-release)
