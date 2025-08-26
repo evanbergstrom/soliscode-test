@@ -1,3 +1,12 @@
+## [1.0.11](https://gitlab.com/soliscode/soliscode-test/compare/v1.0.10...v1.0.11) (2025-08-26)
+
+
+### Bug Fixes
+
+* parsing error in ci file ([a860f63](https://gitlab.com/soliscode/soliscode-test/commit/a860f63ae4ec477e1349b02165fe9b9142c9e5cf))
+* parsing error in ci file ([d7983d7](https://gitlab.com/soliscode/soliscode-test/commit/d7983d70413a97d33f4a224920791fb9759266fd))
+* semantic release needs a git push token ([f5278d9](https://gitlab.com/soliscode/soliscode-test/commit/f5278d9f4b0875c91e915f50ff857b1eecfe9429))
+
 ## [1.0.10](https://gitlab.com/soliscode/soliscode-test/compare/v1.0.9...v1.0.10) (2025-08-26)
 
 
