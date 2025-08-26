@@ -1,3 +1,10 @@
+## [1.0.10](https://gitlab.com/soliscode/soliscode-test/compare/v1.0.9...v1.0.10) (2025-08-26)
+
+
+### Bug Fixes
+
+* fixed duplicate source artifact creation ([8084e08](https://gitlab.com/soliscode/soliscode-test/commit/8084e085d7e27137f700ecbed09a3d451a45f919))
+
 ## [1.0.9](https://gitlab.com/soliscode/soliscode-test/compare/v1.0.8...v1.0.9) (2025-08-25)
 
 
