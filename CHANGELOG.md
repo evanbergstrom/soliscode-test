@@ -1,3 +1,10 @@
+## [1.0.13](https://gitlab.com/soliscode/soliscode-test/compare/v1.0.12...v1.0.13) (2025-08-26)
+
+
+### Bug Fixes
+
+* sync gpg signing for snapshot and release ([3ef8850](https://gitlab.com/soliscode/soliscode-test/commit/3ef885058b3601ac855113f9ac206359c5c9e948))
+
 ## [1.0.12](https://gitlab.com/soliscode/soliscode-test/compare/v1.0.11...v1.0.12) (2025-08-26)
 
 
