@@ -1,3 +1,10 @@
+## [1.0.14](https://gitlab.com/soliscode/soliscode-test/compare/v1.0.13...v1.0.14) (2025-08-26)
+
+
+### Bug Fixes
+
+* enable signing in publish release job ([fd0c9df](https://gitlab.com/soliscode/soliscode-test/commit/fd0c9df568fb5e6ce582f48922528140e2cdfa62))
+
 ## [1.0.13](https://gitlab.com/soliscode/soliscode-test/compare/v1.0.12...v1.0.13) (2025-08-26)
 
 
