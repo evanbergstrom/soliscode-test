@@ -1,0 +1,7 @@
+org.soliscode.test.assertions
+org.soliscode.test.breakable
+org.soliscode.test.collection
+org.soliscode.test.contract
+org.soliscode.test.interfaces
+org.soliscode.test.numeric
+org.soliscode.test.object

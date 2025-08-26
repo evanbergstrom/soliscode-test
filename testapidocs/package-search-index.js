@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"org.soliscode.test.assertions"},{"l":"org.soliscode.test.breakable"},{"l":"org.soliscode.test.collection"},{"l":"org.soliscode.test.contract"},{"l":"org.soliscode.test.interfaces"},{"l":"org.soliscode.test.numeric"},{"l":"org.soliscode.test.object"}];updateSearchResults();

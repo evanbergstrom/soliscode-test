@@ -1,0 +1,16 @@
+org.soliscode.test
+org.soliscode.test.assertions
+org.soliscode.test.assertions.actions
+org.soliscode.test.assertions.collection
+org.soliscode.test.breakable
+org.soliscode.test.contract
+org.soliscode.test.contract.collection
+org.soliscode.test.contract.iterable
+org.soliscode.test.contract.list
+org.soliscode.test.contract.numeric
+org.soliscode.test.contract.object
+org.soliscode.test.contract.sequenced
+org.soliscode.test.contract.support
+org.soliscode.test.interfaces
+org.soliscode.test.provider
+org.soliscode.test.util
