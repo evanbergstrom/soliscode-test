@@ -206,7 +206,7 @@ semantic_release:
     - git remote set-url origin "https://oauth2:${GL_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"
 
     # Ensure we’re on the actual branch (not detached)
-    - git fetch origin "${CI_DEFAULT_BRANCH}" --depth=0
+    - git fetch --prune --tags origin "${CI_DEFAULT_BRANCH}"
     - git checkout -B "${CI_DEFAULT_BRANCH}" "origin/${CI_DEFAULT_BRANCH}"
     - git pull --ff-only origin "${CI_DEFAULT_BRANCH}"
 
