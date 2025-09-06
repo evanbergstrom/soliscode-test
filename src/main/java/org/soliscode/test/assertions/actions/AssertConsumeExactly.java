@@ -21,7 +21,6 @@ import org.jetbrains.annotations.Nullable;
 import org.soliscode.test.util.IterableTestOps;
 
 import java.util.Collection;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
@@ -43,7 +42,7 @@ import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
 /// @author evanbergstrom
 /// @since 1.0
 /// @see AssertActions
-/// @see Consumer
+/// @see java.util.function.Consumer
 public class AssertConsumeExactly<T> implements AssertConsumer<T> {
 
     private final @NotNull Collection<T> expected;
@@ -75,7 +74,7 @@ public class AssertConsumeExactly<T> implements AssertConsumer<T> {
     }
 
     @Override
-    public void accept(T e) {
+    public void accept(final T e) {
         if (expected.contains(e)) {
             expected.remove(e);
         } else {

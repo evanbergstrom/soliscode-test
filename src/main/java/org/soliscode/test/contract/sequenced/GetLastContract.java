@@ -5,7 +5,9 @@ import org.junit.jupiter.api.Test;
 import org.soliscode.test.contract.CollectionMethods;
 import org.soliscode.test.contract.support.CollectionContractSupport;
 
-import java.util.*;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.SequencedCollection;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;

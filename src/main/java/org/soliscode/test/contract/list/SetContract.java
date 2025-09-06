@@ -2,13 +2,14 @@ package org.soliscode.test.contract.list;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.opentest4j.AssertionFailedError;
 import org.soliscode.test.contract.CollectionMethods;
 import org.soliscode.test.contract.support.CollectionContractSupport;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /// This interface tests if a list class has implemented the [set][List#set] method correctly.
 ///
@@ -20,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public interface SetContract<E, L extends List<E>> extends CollectionContractSupport<E, L> {
 
     /// Tests that the [set][List#set] method works.
-    /// @throws AssertionFailedError if the test fails.
+    /// @throws org.opentest4j.AssertionFailedError if the test fails.
     @Test
     @DisplayName("Test that the set method works")
     default void testSet() {
@@ -41,7 +42,7 @@ public interface SetContract<E, L extends List<E>> extends CollectionContractSup
     }
 
     /// Tests that the [set][List#set] method works on an empty list.
-    /// @throws AssertionFailedError if the test fails.
+    /// @throws org.opentest4j.AssertionFailedError if the test fails.
     @Test
     @DisplayName("Test that the set method works on an empty list")
     default void testSetWithEmptyCollection() {
@@ -53,7 +54,7 @@ public interface SetContract<E, L extends List<E>> extends CollectionContractSup
     }
 
     /// Tests that the [set][List#set] method throws for an invalid index.
-    /// @throws AssertionFailedError if the test fails.
+    /// @throws org.opentest4j.AssertionFailedError if the test fails.
     @Test
     @DisplayName("Test that the set method throws for invalid index")
     default void testSetThrowsForInvalidIndex() {
@@ -67,7 +68,7 @@ public interface SetContract<E, L extends List<E>> extends CollectionContractSup
     }
 
     /// Tests that the [set][List#set] method works with a null element.
-    /// @throws AssertionFailedError if the test fails.
+    /// @throws org.opentest4j.AssertionFailedError if the test fails.
     @Test
     @DisplayName("Test that the set method works with a null element")
     default void testSetWithNullElement() {

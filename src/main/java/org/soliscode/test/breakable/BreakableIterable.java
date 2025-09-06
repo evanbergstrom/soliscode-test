@@ -18,10 +18,18 @@ package org.soliscode.test.breakable;
 import org.jetbrains.annotations.NotNull;
 import org.soliscode.test.OptionalMethod;
 import org.soliscode.test.contract.support.CollectionProviderSupport;
-import org.soliscode.test.provider.*;
+import org.soliscode.test.provider.CollectionProvider;
+import org.soliscode.test.provider.CollectionProviders;
+import org.soliscode.test.provider.ObjectProvider;
 import org.soliscode.test.util.IterableTestOps;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.Spliterator;
 import java.util.function.Consumer;
 
 /// An iterable that can be broken in well-defined ways in order to test collection utilities or testing classes.
@@ -49,26 +57,34 @@ import java.util.function.Consumer;
 /// @since 1.0
 public class BreakableIterable<E> extends AbstractBreakable implements Iterable<E> {
 
+    /// The default capacity used for operations that need a constant size value.
     protected static final int DEFAULT_CAPACITY = 10;
 
+    /// The underlying iterable that stores the actual elements.
     private final @NotNull Iterable<E> iterable;
+
+    /// The characteristics flags for the spliterator created by this iterable.
     private final int characteristics;
 
     /// The method `forEach` does not call the action on any of the elements.
     /// @see BreakableIterable#forEach(Consumer)
-    public static final Break FOR_EACH_DOES_NOT_CALL_ACTION = new Break("The method `forEach` does not call the action on any of the elements");
+    public static final Break FOR_EACH_DOES_NOT_CALL_ACTION =
+            new Break("The method `forEach` does not call the action on any of the elements");
 
     /// The `forEach` method does not call the action on the first element.
     /// @see BreakableIterable#forEach(Consumer)
-    public static final Break FOR_EACH_SKIPS_FIRST_ELEMENT = new Break("The `forEach` method does not call the action on the first element");
+    public static final Break FOR_EACH_SKIPS_FIRST_ELEMENT =
+            new Break("The `forEach` method does not call the action on the first element");
 
     /// The method `forEach` does not call the action on the last element.
     /// @see BreakableIterable#forEach(Consumer)
-    public static final Break FOR_EACH_SKIPS_LAST_ELEMENT = new Break("The method `forEach` does not call the action on the last element.");
+    public static final Break FOR_EACH_SKIPS_LAST_ELEMENT =
+            new Break("The method `forEach` does not call the action on the last element.");
 
     /// The method `forEach` throws the wrong exception when passes a `null` action argument.
     /// @see BreakableIterable#forEach(Consumer)
-    public static final Break FOR_EACH_THROWS_WRONG_EXCEPTION_FOR_NULL_ARGUMENT = new Break("The method `forEach` throws the wrong exception when passes a `null` action argument.");
+    public static final Break FOR_EACH_THROWS_WRONG_EXCEPTION_FOR_NULL_ARGUMENT =
+            new Break("The method `forEach` throws the wrong exception when passes a `null` action argument.");
 
     /// Creates and empty breakable iterable with no breaks. The spliterator for this iterable will have no
     /// characteristics set.
@@ -112,7 +128,7 @@ public class BreakableIterable<E> extends AbstractBreakable implements Iterable<
 
     /// {@inheritDoc}
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(final Object obj) {
         if (obj == this) {
             return true;
         } else if (obj instanceof BreakableIterable<?> other) {
@@ -213,7 +229,7 @@ public class BreakableIterable<E> extends AbstractBreakable implements Iterable<
     /// ```
     /// @return a `Spliterator` over the elements in this collection.Ø
     @Override
-    public Spliterator<E> spliterator() {
+    public @NotNull Spliterator<E> spliterator() {
         return new BreakableSpliterator<>(iterable.spliterator(), breaks(), characteristics);
     }
 
@@ -228,17 +244,31 @@ public class BreakableIterable<E> extends AbstractBreakable implements Iterable<
     /// @param <C> the subclass of BreakableIterable
     /// @param <E> element type
     /// @author evanbergstrom
-    protected static abstract class AbstractBuilder<B extends AbstractBuilder<B, C, E>, C extends BreakableIterable<E>, E> {
+    // CHECKSTYLE:OFF: VisibilityModifier
+    protected abstract static class AbstractBuilder<B extends AbstractBuilder<B, C, E>,
+            C extends BreakableIterable<E>, E> {
 
+        /// The collection of elements that will be used to create the breakable iterable.
         protected final @NotNull Collection<E> elements;
+
+        /// The set of breaks that will be applied to the breakable iterable.
         protected final @NotNull Set<Break> breaks;
+
+        /// The set of optional methods that will not be supported by the breakable iterable.
         protected final @NotNull Set<OptionalMethod> unsupportedMethods;
+
+        /// The characteristics flags that will be applied to the spliterator.
         protected int characteristics;
 
+        /// Default constructor that creates an empty builder.
+        /// @see AbstractBuilder(Collection)
         public AbstractBuilder() {
             this(new ArrayList<>());
         }
 
+        /// Creates a builder with the specified initial elements.
+        /// @param elements the initial elements for the builder
+        /// @throws NullPointerException if elements is null
         public AbstractBuilder(final @NotNull Collection<E> elements) {
             this.elements = elements;
             this.breaks = new HashSet<>();
@@ -246,6 +276,9 @@ public class BreakableIterable<E> extends AbstractBreakable implements Iterable<
             this.characteristics = 0;
         }
 
+        /// Copy constructor that creates a builder from another builder.
+        /// @param other the builder to copy from
+        /// @throws NullPointerException if other is null
         protected AbstractBuilder(final @NotNull AbstractBuilder<B, C, E> other) {
             this.elements = new ArrayList<>(other.elements);
             this.breaks = new HashSet<>(other.breaks);
@@ -253,40 +286,68 @@ public class BreakableIterable<E> extends AbstractBreakable implements Iterable<
             this.characteristics = other.characteristics;
         }
 
-        abstract public B self();
+        /// Returns this builder instance for method chaining.
+        /// @return this builder instance
+        public abstract B self();
 
-        abstract public B copy();
+        /// Creates a copy of this builder.
+        /// @return a new builder instance that is a copy of this one
+        public abstract B copy();
 
-        abstract public C build();
+        /// Builds the breakable iterable with the current configuration.
+        /// @return a new breakable iterable instance
+        public abstract C build();
 
+        /// Adds a break to this builder.
+        /// @param aBreak the break to add
+        /// @return this builder for method chaining
+        /// @throws NullPointerException if aBreak is null
         public final B addBreak(final @NotNull Break aBreak) {
             breaks.add(aBreak);
             return self();
         }
 
-        public final B setCharacteristics(final int characteristics) {
-            this.characteristics = this.characteristics | characteristics;
+        /// Sets the characteristics for the spliterator using bitwise OR with existing characteristics.
+        /// @param newCharacteristics the characteristics to add
+        /// @return this builder for method chaining
+        /// @see Spliterator
+        public final B setCharacteristics(final int newCharacteristics) {
+            this.characteristics = this.characteristics | newCharacteristics;
             return self();
         }
 
+        /// Adds all elements from the specified iterable to this builder.
+        /// @param i the iterable containing elements to add
+        /// @return this builder for method chaining
+        /// @throws NullPointerException if i is null
         public final B addElements(final @NotNull Iterable<E> i) {
-            for(E e : i) {
+            for (E e : i) {
                 elements.add(e);
             }
             return self();
         }
 
+        /// Adds the specified elements to this builder.
+        /// @param e the elements to add
+        /// @return this builder for method chaining
+        /// @throws NullPointerException if e is null
         @SafeVarargs
-        public final B addElements(E... e) {
+        public final @NotNull B addElements(final @NotNull E... e) {
             Collections.addAll(elements, e);
             return self();
         }
 
-        public final B doesNotSupport(final @NotNull OptionalMethod method) {
+        /// Configures the builder so that the resulting iterable does not support the specified method.
+        /// @param method the optional method that should not be supported
+        /// @return this builder for method chaining
+        /// @throws NullPointerException if method is null
+        public final @NotNull B doesNotSupport(final @NotNull OptionalMethod method) {
             unsupportedMethods.add(method);
             return self();
         }
     }
+    // CHECKSTYLE:ON: VisibilityModifier
+
 
     /// Builder class for `BreakableIterator`.
     /// @param <E> The type of the elements.
@@ -317,6 +378,8 @@ public class BreakableIterable<E> extends AbstractBreakable implements Iterable<
             return new Builder<>(this);
         }
 
+        /// Builds a new BreakableIterable instance with the current configuration.
+        /// @return a new BreakableIterable instance
         @Override
         public BreakableIterable<E> build() {
             BreakableIterable<E> iterator = new BreakableIterable<>(elements, breaks, characteristics);
@@ -325,7 +388,13 @@ public class BreakableIterable<E> extends AbstractBreakable implements Iterable<
         }
     }
 
-    public static <E> @NotNull CollectionProvider<E, BreakableIterable<E>> iterableProvider(final @NotNull ObjectProvider<E> elementProvider) {
+    /// Creates a collection provider for instances of BreakableIterable, given an element provider.
+    /// @param <E> the element type
+    /// @param elementProvider the element provider to use
+    /// @return a collection provider for breakable iterables
+    /// @throws NullPointerException if elementProvider is null
+    public static <E> @NotNull CollectionProvider<E, BreakableIterable<E>> iterableProvider(
+            final @NotNull ObjectProvider<E> elementProvider) {
         return CollectionProviders.from(
                 BreakableIterable::new,
                 BreakableIterable::new,
@@ -334,6 +403,12 @@ public class BreakableIterable<E> extends AbstractBreakable implements Iterable<
         );
     }
 
+    /// Creates a collection provider for instances of BreakableIterable with specific breaks applied.
+    /// @param <E> the element type
+    /// @param elementProvider the element provider to use
+    /// @param breaks the breaks to apply to each instance of BreakableIterable
+    /// @return a collection provider for breakable iterables
+    /// @throws NullPointerException if elementProvider or breaks is null
     public static <E> @NotNull CollectionProvider<E, BreakableIterable<E>> iterableProvider(
             final @NotNull ObjectProvider<E> elementProvider,
             final @NotNull Set<Break> breaks) {
@@ -345,9 +420,14 @@ public class BreakableIterable<E> extends AbstractBreakable implements Iterable<
         );
     }
 
+    /// Mixin interface that adds an implementation of the `provider()` method that provides instances of
+    /// `BreakableIterable` that do not have any breaks applied.
+    /// @param <E> element type
     public interface WithProvider<E> extends CollectionProviderSupport<E, BreakableIterable<E>>  {
+        /// Provides a collection provider for BreakableIterable instances.
+        /// @return a collection provider for breakable iterables
         @Override
-        public default @NotNull CollectionProvider<E, BreakableIterable<E>> provider() {
+        default @NotNull CollectionProvider<E, BreakableIterable<E>> provider() {
             return BreakableIterable.iterableProvider(elementProvider());
         }
     }

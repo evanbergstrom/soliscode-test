@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Assertions;
 /// @since 1.0.0
 public final class ArrayAssertions {
 
-    private ArrayAssertions() {}
+    private ArrayAssertions() { }
 
     /// Assert that an array has an expected length.
     /// @param expected the expected length of the array

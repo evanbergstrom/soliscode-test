@@ -23,7 +23,7 @@ import org.jetbrains.annotations.NotNull;
 /// @since 1.0
 public final class Providers {
 
-    private Providers() {}
+    private Providers() { }
 
     /// Creates a provider for the [Integer] class.
     /// @return a provider of [Integer] objects.

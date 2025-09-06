@@ -27,6 +27,9 @@ import java.util.Objects;
 /// @see String
 public class StringProvider implements ObjectProvider<String> {
 
+    ///  Default constructor.
+    public StringProvider() { }
+
     @Override
     public @NotNull String defaultInstance() {
         return "";
@@ -38,7 +41,7 @@ public class StringProvider implements ObjectProvider<String> {
     /// @param seed a primitive integer value.
     /// @return an instance of the `String` class
     @Override
-    public @NotNull String createInstance(int seed) {
+    public @NotNull String createInstance(final int seed) {
         return String.valueOf(seed);
     }
 

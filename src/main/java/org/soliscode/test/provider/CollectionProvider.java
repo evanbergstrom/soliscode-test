@@ -23,7 +23,7 @@ public interface CollectionProvider<E, I extends Iterable<E>> extends ObjectProv
     /// Creates an instance of iterable with the same elements as in the specified collection.
     /// @param c the elements to use for the iterable.
     /// @return an instance of the iterable.
-    @NotNull I createInstance(final @NotNull Collection<E> c);
+    @NotNull I createInstance(@NotNull Collection<E> c);
 
     /// Creates an instance of iterable being tested based upon an integer seed value. Two iterables created with the
     /// same seed value should have the same number of elements and the elements in the same iteration position should

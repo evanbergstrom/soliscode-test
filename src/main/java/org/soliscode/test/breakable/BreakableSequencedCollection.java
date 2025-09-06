@@ -3,7 +3,15 @@ package org.soliscode.test.breakable;
 import org.jetbrains.annotations.NotNull;
 import org.soliscode.test.contract.CollectionMethods;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.SequencedCollection;
 
 /// A sequenced collection that can be broken in well-defined ways in order to test collection utilities or testing
 /// classes.
@@ -14,8 +22,8 @@ import java.util.*;
 /// [BreakableCollection] classes. Any iterator or spliterator breaks that are added to this collection will be passes
 /// along to iterator or spliterator instances that are created.
 ///
-/// Any breaks that are not listed in the supported classes can be added to an instance of `BreakableSequencedCollection`,
-/// but will not have any impact on how it functions.
+/// Any breaks that are not listed in the supported classes can be added to an instance of
+/// `BreakableSequencedCollection`, but will not have any impact on how it functions.
 ///
 /// Builder methods are provided to make declaring a broken sequenced collection easier, for example:
 /// ```java
@@ -127,7 +135,8 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
     /// @param breaks          the breaks for the collection.
     /// @param characteristics the characteristics for the collection.
     /// @throws NullPointerException if either the `c` or the `breaks` parameters are null.
-    public BreakableSequencedCollection(@NotNull List<E> c, @NotNull Collection<Break> breaks, int characteristics) {
+    public BreakableSequencedCollection(final @NotNull List<E> c, final @NotNull Collection<Break> breaks,
+                                        final int characteristics) {
         super(c, breaks, characteristics);
         this.sequenced = Objects.requireNonNull(c);
     }
@@ -176,10 +185,10 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
     /// @throws NullPointerException if the element is null and this collection does not permit null elements.
     /// @see SequencedCollection#addFirst
     @Override
-    public void addFirst(E e) {
+    public void addFirst(final E e) {
         if (supportsMethod(CollectionMethods.AddFirst)) {
             checkNewElement(e);
-            if(hasBreak(ADD_FIRST_ADDS_TO_END)) {
+            if (hasBreak(ADD_FIRST_ADDS_TO_END)) {
                 sequenced.addLast(e);
             } else if (!hasBreak(ADD_FIRST_DOES_NOT_ADD_ELEMENT)) {
                 sequenced.addFirst(e);
@@ -204,10 +213,10 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
     /// @throws NullPointerException if the element is null and this collection does not permit null elements.
     /// @see SequencedCollection#addLast
     @Override
-    public void addLast(E e) {
+    public void addLast(final E e) {
         if (supportsMethod(CollectionMethods.AddLast)) {
             checkNewElement(e);
-            if(hasBreak(ADD_LAST_ADDS_TO_FRONT)) {
+            if (hasBreak(ADD_LAST_ADDS_TO_FRONT)) {
                 sequenced.addFirst(e);
             } else if (!hasBreak(ADD_LAST_DOES_NOT_ADD_ELEMENT)) {
                 sequenced.addLast(e);
@@ -280,8 +289,8 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
         }
     }
 
-    /// Implements the [removeFirst][SequencedCollection#removeFirst] method from the [SequencedCollection] interface. This
-    /// method can be broken using the following collection breaks:
+    /// Implements the [removeFirst][SequencedCollection#removeFirst] method from the [SequencedCollection] interface.
+    /// This method can be broken using the following collection breaks:
     /// - REMOVE_FIRST_DOES_NOT_REMOVE_ELEMENT
     /// - REMOVE_FIRST_RETURNS_NULL
     /// - REMOVE_FIRST_ALWAYS_THROWS
@@ -311,8 +320,8 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
         }
     }
 
-    /// Implements the [removeLast][SequencedCollection#removeLast] method from the [SequencedCollection] interface. This
-    /// method can be broken using the following collection breaks:
+    /// Implements the [removeLast][SequencedCollection#removeLast] method from the [SequencedCollection] interface.
+    /// This method can be broken using the following collection breaks:
     /// - REMOVE_LAST_DOES_NOT_REMOVE_ELEMENT
     /// - REMOVE_LAST_RETURNS_NULL
     /// - REMOVE_LAST_ALWAYS_THROWS
@@ -353,13 +362,14 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
         public Builder() {
             // super(this.list = new ArrayList<>()); <-- This will work once Flexible Constructors are available
             super(new ArrayList<>());
-            this.list = (ArrayList<E>)elements;
+            this.list = (ArrayList<E>) elements;
         }
 
         /// Create a builder initialized with an element store.
         /// @param elements the element store to use.
         public Builder(final @NotNull List<E> elements) {
-            // super(this.list = Objects.requireNonNull(elements));  <-- This will work once Flexible Constructors are available
+            // super(this.list = Objects.requireNonNull(elements));  <-- This will work once Flexible Constructors
+            // are available
             super(Objects.requireNonNull(elements));
             this.list = elements;
         }

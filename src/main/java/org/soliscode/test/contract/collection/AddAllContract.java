@@ -4,10 +4,15 @@ import org.junit.jupiter.api.Test;
 import org.soliscode.test.contract.CollectionMethods;
 import org.soliscode.test.contract.support.CollectionContractSupport;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.soliscode.test.assertions.collection.CollectionAssertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.soliscode.test.assertions.collection.CollectionAssertions.assertContainsAll;
+import static org.soliscode.test.assertions.collection.CollectionAssertions.assertContainsSameByIdentity;
 
 /// This interface tests if a collection class has implemented the `addAll()` method correctly. This is a "mix-in"
 /// interface that is added to a test class.

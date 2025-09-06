@@ -20,7 +20,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.soliscode.test.util.IterableTestOps;
 
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
@@ -42,7 +41,7 @@ import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
 /// @author evanbergstrom
 /// @since 1.0
 /// @see AssertActions
-/// @see Consumer
+/// @see java.util.function.Consumer
 public class AssertConsumeOnly<T> implements AssertConsumer<T> {
 
     private final @NotNull Iterable<T> expected;

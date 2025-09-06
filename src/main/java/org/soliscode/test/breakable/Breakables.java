@@ -24,7 +24,7 @@ import java.util.Collection;
 /// @since 1.0
 public final class Breakables {
 
-    private Breakables() {}
+    private Breakables() { }
 
     /// Creates a builder for a `BreakableIterable`.
     /// @param <E> the type of the elements.
@@ -39,7 +39,7 @@ public final class Breakables {
     /// @param e the elements to add to the iterable.
     /// @return a builder.
     @SafeVarargs
-    public static <E> BreakableIterable.Builder<E> buildIterable(final E...e) {
+    public static <E> BreakableIterable.Builder<E> buildIterable(final @NotNull E... e) {
         return new BreakableIterable.Builder<E>()
                 .addElements(e);
     }
@@ -83,6 +83,7 @@ public final class Breakables {
 
     /// Makes sure that the iterator is not a broken iterator. If the argument is an instance of `BreakableIterator`
     /// then the underlying iterator used as the element store is returned.
+    /// @param <E> the type of the elements.
     /// @param i an instance of iterator.
     /// @return an unbroken iterator.
     public static <E> Iterable<E> ensureUnbroken(final @NotNull Iterable<E> i) {
@@ -93,8 +94,9 @@ public final class Breakables {
         }
     }
 
-    /// Makes sure that the collection is not a broken collection. If the argument is an instance of `BreakableCollection`
-    /// then the underlying collection used as the element store is returned.
+    /// Makes sure that the collection is not a broken collection. If the argument is an instance of
+    /// BreakableCollection` then the underlying collection used as the element store is returned.
+    /// @param <E> the type of the elements.
     /// @param i an instance of collection.
     /// @return an unbroken collection.
     public static <E> Collection<E> ensureUnbroken(final @NotNull Collection<E> i) {

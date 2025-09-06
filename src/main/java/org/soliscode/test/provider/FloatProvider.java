@@ -24,6 +24,9 @@ import org.jetbrains.annotations.NotNull;
 /// @since 1.0.0
 public class FloatProvider implements DoubleNumberProvider<Float> {
 
+    ///  Default constructor.
+    public FloatProvider() { }
+
     /// Creates an instance of the [Float] class with a numeric value equal to the
     /// primitive float value.
     ///
@@ -31,6 +34,6 @@ public class FloatProvider implements DoubleNumberProvider<Float> {
     /// @return an instance of the `Float` class.
     @Override
     public @NotNull Float createValue(final double value) {
-        return (float)value;
+        return (float) value;
     }
 }

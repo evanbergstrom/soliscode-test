@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
 /// @since 1.0
 public final class AssertThrowsAny {
 
-    private AssertThrowsAny() {}
+    private AssertThrowsAny() { }
 
     /// Asserts that the executable will throw one of a list of possible exception types.
     /// @param expectedTypes the exception types that the executable should throw.
@@ -63,8 +63,7 @@ public final class AssertThrowsAny {
                                        final @NotNull Executable executable, final Object messageOrSupplier) {
         try {
             executable.execute();
-        }
-        catch (Throwable actualException) {
+        }  catch (Throwable actualException) {
             for (Class<?> expectedType : expectedTypes) {
                 if (expectedType.isInstance(actualException)) {
                     return;

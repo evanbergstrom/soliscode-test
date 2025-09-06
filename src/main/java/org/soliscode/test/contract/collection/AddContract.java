@@ -8,8 +8,10 @@ import org.soliscode.test.contract.support.CollectionContractSupport;
 import java.util.Collection;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /// This interface tests if a collection class has implemented the [add][Collection#add] method
 /// correctly.

@@ -19,13 +19,29 @@ package org.soliscode.test.contract.iterable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Spliterator;
 
-import static java.util.Spliterator.*;
+import static java.util.Spliterator.CONCURRENT;
+import static java.util.Spliterator.DISTINCT;
+import static java.util.Spliterator.IMMUTABLE;
+import static java.util.Spliterator.NONNULL;
+import static java.util.Spliterator.SIZED;
+import static java.util.Spliterator.SORTED;
+import static java.util.Spliterator.SUBSIZED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertIterableEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.soliscode.test.assertions.Assertions.assertLessThan;
-import static org.soliscode.test.assertions.collection.CollectionAssertions.*;
+import static org.soliscode.test.assertions.collection.CollectionAssertions.assertContainsSameByIdentity;
+import static org.soliscode.test.assertions.collection.CollectionAssertions.assertEqualsByIdentity;
+import static org.soliscode.test.assertions.collection.CollectionAssertions.assertIsEmpty;
+import static org.soliscode.test.assertions.collection.CollectionAssertions.assertSameSize;
 import static org.soliscode.test.util.IterableTestOps.contains;
 import static org.soliscode.test.util.IterableTestOps.size;
 
@@ -41,7 +57,7 @@ import static org.soliscode.test.util.IterableTestOps.size;
 public interface SpliteratorContract<E, I extends Iterable<E>> extends IteratorContract<E, I> {
 
     /// The full list of supported Spliterator characteristics.
-    int [] CHARACTERISTIC_VALUES = { SIZED, SUBSIZED, SORTED, CONCURRENT,  DISTINCT, IMMUTABLE, NONNULL };
+    int[] CHARACTERISTIC_VALUES = {SIZED, SUBSIZED, SORTED, CONCURRENT,  DISTINCT, IMMUTABLE, NONNULL};
 
     /// Tests that the [Spliterator#hasCharacteristics(int)] method works.
     @Test

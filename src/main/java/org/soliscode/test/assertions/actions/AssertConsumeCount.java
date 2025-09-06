@@ -18,7 +18,6 @@ package org.soliscode.test.assertions.actions;
 
 import org.jetbrains.annotations.Nullable;
 
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
@@ -39,7 +38,7 @@ import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
 /// @author evanbergstrom
 /// @since 1.0
 /// @see AssertActions
-/// @see Consumer
+/// @see java.util.function.Consumer
 public class AssertConsumeCount<T> implements AssertConsumer<T> {
 
     private final int expected;
@@ -74,7 +73,7 @@ public class AssertConsumeCount<T> implements AssertConsumer<T> {
     /// Increments the count of the number of times the consumer has been used.
     /// @param obj the object that is being consumed.
     @Override
-    public void accept(@Nullable T obj) {
+    public void accept(@Nullable final T obj) {
         actual++;
     }
 

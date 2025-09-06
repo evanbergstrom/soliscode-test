@@ -25,12 +25,15 @@ import org.jetbrains.annotations.NotNull;
 /// @see Short
 public class ShortProvider implements IntegerNumberProvider<Short> {
 
+    ///  Default constructor.
+    public ShortProvider() { }
+
     /// Creates an instance of the [Short] class with a numeric value equal to the primitive short value.
     ///
     /// @param value the primitive short value.
     /// @return an instance of the `Short` class.
     @Override
     public @NotNull Short createValue(final int value) {
-        return (short)(value % Short.MAX_VALUE);
+        return (short) (value % Short.MAX_VALUE);
     }
 }

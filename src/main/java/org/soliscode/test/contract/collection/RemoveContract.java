@@ -9,7 +9,9 @@ import org.soliscode.test.util.MatchNothing;
 import java.util.Collection;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /// This interface tests if a collection class has implemented the `remove` method correctly.
 ///

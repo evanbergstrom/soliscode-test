@@ -26,7 +26,7 @@ import java.util.Collection;
 /// @since 1.0
 public final class Interfaces {
 
-    private Interfaces() {}
+    private Interfaces() { }
 
     /// Wraps the object so that only the methods in the [Object] interface are available.
     /// @param obj the object to wrap.

@@ -73,7 +73,8 @@ final class AssertEqualsByIdentity extends IterableAssertion {
     /// @param message   The message to supply if the assertion fails.
     /// @throws AssertionFailedError if the iterable does not contain all the elements or if either of the iterable
     ///                              arguments is null.
-    public static void assertEqualsByIdentity(final Iterable<?> expected, final Iterable<?> actual, final String message) {
+    public static void assertEqualsByIdentity(final Iterable<?> expected, final Iterable<?> actual,
+                                              final String message) {
         checkEquals(expected, actual, message);
     }
 

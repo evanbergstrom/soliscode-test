@@ -107,7 +107,7 @@ public interface EqualsContract<T> extends ContractSupport<T> {
         if (supportsMethod(ObjectMethods.Equals)) {
             T x = provider().createInstance();
             T y = provider().copyInstance(x);
-            for (int i=0; i < 10; i++) {
+            for (int i = 0; i < CONSISTENCY_REPEATS; i++) {
                 assertEquals(x, y);
             }
         }

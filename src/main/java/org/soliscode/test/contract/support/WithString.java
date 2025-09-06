@@ -35,3 +35,4 @@ public interface WithString extends ObjectContract<String> {
         return new StringProvider();
     }
 }
+

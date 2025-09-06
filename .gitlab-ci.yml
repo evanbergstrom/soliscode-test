@@ -1,71 +1,29 @@
 # .gitlab-ci.yml
-stages:
-  - build
-  - test
-  - release  # semantic-release (creates tag + release notes)
-  - publish  # deploy to Central (snapshots and releases)
-  - site
 
-# Project-level variables are set in GitLab → CI/CD → Variables
-variables:
-  SITE_DIR: "target/staging"
-  MAVEN_CLI_OPTS: "-B -q -s /tmp/settings.xml -Ddependency-check.skip=true" #speed up build while working on CI/CD
+# Include shared CI/CD templates from soliscode-parent
+include:
+  - project: 'soliscode/soliscode-parent'
+    file: '/.gitlab-ci.yml'
 
+# Use parent defaults and workflow rules
 default:
-  image: maven:3.9.9-eclipse-temurin-23
-  cache:
-    key: maven-repo
-    paths:
-      - .m2/repository
-  before_script:
-    - java -version
-    - mvn $MAVEN_CLI_OPTS -v
-    # Create once for every job; secrets are NOT expanded here (single-quoted heredoc)
-    - |
-      cat > /tmp/settings.xml <<'EOF'
-      <settings xmlns="https://maven.apache.org/SETTINGS/1.2.0">
-        <servers>
-          <server>
-            <!-- must match <publishingServerId> in your POM (central) -->
-            <id>central</id>
-            <username>${env.CENTRAL_USERNAME}</username>
-            <password>${env.CENTRAL_PASSWORD}</password>
-          </server>
-        </servers>
-      </settings>
-      EOF
+  extends: .soliscode_defaults
 
 workflow:
-  rules:
-    # Run for release tags (adjust regex if your tag format differs)
-    - if: '$CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+(?:[-+].*)?$/'
-      when: always
+  extends: .soliscode_workflow_rules
 
-    # Run for merge requests
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: always
+# Project-specific variables (parent provides common ones)
+variables:
+  SITE_DIR: "target/staging"
+  MAVEN_CLI_OPTS: "-B -s /tmp/settings.xml -Ddependency-check.skip=true" #speed up build while working on CI/CD
 
-    # Suppress the branch pipeline on main for the release commit
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "main" && $CI_COMMIT_MESSAGE =~ /^chore\(release\):/'
-      when: never
-
-    # Run for pushes to main (normal dev & bump-back to -SNAPSHOT)
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "main"'
-      when: always
-
-    # Block everything else (feature branches, schedules, etc.)
-    - when: never
-
-# ---------- Build (no tests) ----------
+# ---------- Build ----------
 build:
-  stage: build
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: on_success
-    - if: '$CI_COMMIT_BRANCH'
-      when: on_success
-    - when: never
+  extends:
+    - .build_template
+    - .soliscode_workflow_rules
   script:
+    # Override to skip tests and package instead of just compile
     - mvn -DskipTests $MAVEN_CLI_OPTS package
   artifacts:
     when: always
@@ -74,234 +32,59 @@ build:
       - target/*.pom
     expire_in: 1 week
 
-# ---------- Test (upload reports on failure) ----------
+# ---------- Test ----------
 test:
-  stage: test
-  needs: [ "build" ]
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: on_success
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "main"'
-      when: on_success
-    - when: never
+  extends:
+    - .test_template
+    - .soliscode_workflow_rules
+  needs: ["build"]
   script:
-    # skipping tests while working out ci/cd bugs
+    # Temporarily skip tests while working out CI/CD bugs
     - mvn $MAVEN_CLI_OPTS -DskipTests verify
-  artifacts:
-    when: always
-    reports:
-      junit: target/surefire-reports/*.xml
-    expire_in: 1 week
 
-# -----------------------------
-# Snapshot publishing on every push to main
-# - Uses the Central Publishing Maven Plugin to deploy snapshots
-# -----------------------------
-
+# ---------- Snapshot Publishing ----------
 publish:snapshot:
-  stage: publish
+  extends: .snapshot_template
   needs: ["test"]
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "main"'
-      when: on_success
-    - when: never
-  before_script:
-    - !reference [ default, before_script ]   # <-- ensures /tmp/settings.xml exists
-    - set -euo pipefail
-    # Import GPG (optional for snapshots, recommended)
-    - |
-      if [ -n "${GPG_PRIVATE_KEY_ARMOR:-}" ]; then
-         echo "$GPG_PRIVATE_KEY_ARMOR" | base64 -d > /tmp/private.key
-         gpg --batch --import /tmp/private.key
-         gpg --list-secret-keys --keyid-format LONG
-         mkdir -p ~/.gnupg
-         echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
-         echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
-         export GPG_TTY=$(tty) || true
-        # derive fingerprint as the key name used by the plugin (reliable in CI)
-        export GPG_KEY_ID="$(gpg --batch --with-colons --list-secret-keys | awk -F: '/^fpr:/ {print $10; exit}')"
-      fi
-  script:
-    # Ensure we're actually on a -SNAPSHOT version
-    - |
-      VER="$(mvn $MAVEN_CLI_OPTS -DskipTests help:evaluate -Dexpression=project.version -DforceStdout)"
-      case "$VER" in
-        *-SNAPSHOT) echo "Publishing snapshot $VER" ;;
-        *) echo "Not a -SNAPSHOT version ($VER); skipping snapshot publish"; exit 0 ;;
-      esac
-    # Sanity checks for creds
-    - test -n "${CENTRAL_USERNAME:-}" || { echo "CENTRAL_USERNAME is empty"; exit 1; }
-    - test -n "${CENTRAL_PASSWORD:-}" || { echo "CENTRAL_PASSWORD is empty"; exit 1; }
-    # Show effective settings briefly (helpful while tuning)
-    - mvn $MAVEN_CLI_OPTS -DskipTests help:effective-settings -DforceStdout | sed -n '1,80p'
-    - |
-      mvn $MAVEN_CLI_OPTS -DskipTests \
-        -Dgpg.skip=false -Dgpg.keyname="$GPG_KEY_ID" -Dgpg.passphrase="$GPG_PASSPHRASE" \
-        deploy
-    # (optional) verify signatures exist in target/
-    - ls -1 target/*.{jar,pom}.*asc || true
-  artifacts:
-    when: always
-    expire_in: 1 week
-    paths:
-      - target/*
 
-  # -----------------------------
-  # Manual Release (semantic-release)
-  # - Computes version, updates changelog, tags, creates GitLab Release
-  # - Uses a dedicated job that you trigger manually
-  # - Will trigger a publish:reelase job if semantic-release decides a new tag is warranted.
-  # - Cannot use "release" keyword. GitLAb release keyword schema requires 'description' and 'tag_name' properties
-  #   and those will be provided by semantic release.
-  # -----------------------------
+# ---------- Semantic Release ----------
 semantic_release:
-  stage: release
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      when: manual
-      allow_failure: false
-    - when: never
+  extends: .semantic_release_template
+  needs: ["test"]
   variables:
-    GIT_DEPTH: "0"         # semantic-release needs full history/tags
     SERVER_USERNAME: "$CENTRAL_USERNAME"
     SERVER_PASSWORD: "$CENTRAL_PASSWORD"
     GPG_PRIVATE_KEY: "$GPG_PRIVATE_KEY_ARMOR"
     GPG_PASSPHRASE: "$GPG_PASSPHRASE"
-  cache: {}
-  before_script:
-    - !reference [ default, before_script ]   # <-- ensures /tmp/settings.xml exists
-    # Git identity for release commits (fallbacks if not provided by GitLab)
-    - git config --global user.email "${GITLAB_USER_EMAIL:-ci@users.noreply.gitlab.com}"
-    - git config --global user.name  "${GITLAB_USER_NAME:-gitlab-ci}"
-    # Require a token with write_repository
-    - ': "${GL_TOKEN:?missing GL_TOKEN (PAT/Project Access Token with write_repository)}"'
-
-    # Install Node 22.x (required by semantic-release v24+)
-    - apt-get update && apt-get install -y curl ca-certificates gnupg
-    - curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
-    - apt-get install -y nodejs
-    - node -v && npm -v
-    # Install semantic-release + plugins (plugin list matches .releaserc.json)
-    - | 
-      npm i -g semantic-release \
-        semantic-release-maven \
-        @semantic-release/gitlab \
-        @semantic-release/git \
-        @semantic-release/changelog \
-        @semantic-release/exec
-    # Import GPG so the publish step can sign
-    - |
-      if [ -n "$GPG_PRIVATE_KEY_ARMOR" ]; then
-        echo "$GPG_PRIVATE_KEY_ARMOR" | base64 -d > /tmp/private.key
-        gpg --batch --import /tmp/private.key
-        gpg --list-secret-keys --keyid-format LONG
-        mkdir -p ~/.gnupg
-        echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
-        echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
-        export GPG_TTY=$(tty) || true
-      fi
-    - export MAVEN_SETTINGS=/tmp/settings.xml
-  script:
-    # Authenticate origin for push
-    - git remote set-url origin "https://oauth2:${GL_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"
-
-    # Ensure we’re on the actual branch (not detached)
-    - git fetch --prune --tags origin "${CI_DEFAULT_BRANCH}"
-    - git checkout -B "${CI_DEFAULT_BRANCH}" "origin/${CI_DEFAULT_BRANCH}"
-    - git pull --ff-only origin "${CI_DEFAULT_BRANCH}"
-
-    # semantic-release will:
-    #  - analyze commits (Conventional Commits)
-    #  - update CHANGELOG.md and pom.xml (via maven-semantic-release)
-    #  - commit, tag, and create a GitLab Release
-    #  - (plugin can also bump to the next -SNAPSHOT)
-    - semantic-release
-  dependencies: [ ]
   artifacts:
     when: always
     expire_in: 1 week
     paths:
       - CHANGELOG.md
 
-# -----------------------------
-# Publish the tagged release to Central
-# - Checks out the tag created by semantic-release and deploys it
-# - This job should run only on tag pipelines (created by semantic-release)
-# -----------------------------
+# ---------- Release Publishing ----------
 publish:release:
-  stage: publish
-  rules:
-    - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+(?:[-+].*)?$/'
-      when: on_success
-    - when: never
-  before_script:
-    - !reference [ default, before_script ]   # <-- ensures /tmp/settings.xml exists
-    - set -euo pipefail
-    # Import GPG (optional for snapshots, recommended)
-    - |
-      : "${GPG_PRIVATE_KEY_ARMOR:?missing}"
-      : "${GPG_PASSPHRASE:?missing}"
-      if [ -n "${GPG_PRIVATE_KEY_ARMOR:-}" ]; then
-         echo "$GPG_PRIVATE_KEY_ARMOR" | base64 -d > /tmp/private.key
-         gpg --batch --import /tmp/private.key
-         gpg --list-secret-keys --keyid-format LONG
-         mkdir -p ~/.gnupg
-         echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
-         echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
-         export GPG_TTY=$(tty) || true
-        # derive fingerprint as the key name used by the plugin (reliable in CI)
-        export GPG_KEY_ID="$(gpg --batch --with-colons --list-secret-keys | awk -F: '/^fpr:/ {print $10; exit}')"
-      fi
-  script:
-    - |
-      echo "Deploying release at tag: $CI_COMMIT_TAG"
-      test -n "${CENTRAL_USERNAME:-}" || { echo "CENTRAL_USERNAME is empty"; exit 1; }
-      test -n "${CENTRAL_PASSWORD:-}" || { echo "CENTRAL_PASSWORD is empty"; exit 1; }
+  extends: .release_deploy_template
 
-    # Show effective settings briefly (helpful while tuning)
-    - mvn $MAVEN_CLI_OPTS -DskipTests help:effective-settings -DforceStdout | sed -n '1,80p'
-
-    # 1) Build + sign + deploy so *.asc are produced & attached to all artifacts (pom, jar, sources, javadoc)
-    - |
-      mvn $MAVEN_CLI_OPTS -DskipTests \
-        -Dgpg.skip=false -Dgpg.keyname="$GPG_KEY_ID" -Dgpg.passphrase="$GPG_PASSPHRASE" \
-        deploy
-  artifacts:
-    when: always
-    expire_in: 1 week
-    paths:
-      - target/*
-
-# -----------------------------
-# Maven Site (optional)
-# -----------------------------
-
+# ---------- Site Generation ----------
 site:build:
-  stage: site
-  needs: ["publish:release"]                # wait for the release to publish
-  rules:
-    # run only for release tags like v1.2.3 (also matches v1.2.3-rc.1, v1.2.3+build)
-    - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+(?:[-+].*)?$/'
-      when: on_success
-    - when: never
-  script:
-    # build + stage the Maven site (uses SITE_DIR=target/site by default)
-    - mvn ${MAVEN_CLI_OPTS:-} site site:stage
-  artifacts:
-    paths:
-      - ${SITE_DIR:-target/site}
-    expire_in: 1 week
+  extends: .site_template
+  needs: ["publish:release"]
+  variables:
+    SITE_DIR: "target/staging"
 
 site:deploy:gh-pages:
+  extends: .soliscode_defaults
   stage: site
   needs: ["site:build"]
   rules:
-    # run only for the same release tags
     - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+(?:[-+].*)?$/'
       when: on_success
     - when: never
+  variables:
+    SITE_DIR: "target/staging"
   before_script:
-    - | 
+    - |
       echo "Deploying site to GitHub" 
       : "${GITHUB_PAT:?missing GITHUB_PAT}"
       : "${GITHUB_REPO:?missing GITHUB_REPO}"   # e.g. owner/repo

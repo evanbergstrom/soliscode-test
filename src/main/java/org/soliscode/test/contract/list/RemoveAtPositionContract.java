@@ -2,7 +2,6 @@ package org.soliscode.test.contract.list;
 
 import org.soliscode.test.contract.support.CollectionContractSupport;
 
-import java.util.Comparator;
 import java.util.List;
 
 /// This interface tests if a list class has implemented the [remove][List#remove(int)] method correctly.
@@ -11,7 +10,7 @@ import java.util.List;
 /// @param <L> The list type being tested.
 /// @author evanbergstrom
 /// @since 1.0
-/// @see List#sort(Comparator)
+/// @see List#sort(java.util.Comparator)
 public interface RemoveAtPositionContract<E, L extends List<E>> extends CollectionContractSupport<E, L> {
 
     // TODO: Implement tests for the List::remove(int) method.

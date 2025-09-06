@@ -5,9 +5,13 @@ import org.junit.jupiter.api.Test;
 import org.soliscode.test.assertions.Assertions;
 import org.soliscode.test.contract.support.CollectionContractSupport;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /// This interface tests if a collection class has implemented the `toArray` method
 /// correctly.

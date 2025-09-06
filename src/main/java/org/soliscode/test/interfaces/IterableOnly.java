@@ -18,7 +18,11 @@ package org.soliscode.test.interfaces;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Spliterator;
 
 /// An iterable that is provided for tests that only implement the [Iterable] interface. If the code that is
 /// being tested tries to detect the kind of iterable to optimize the algorithm, it will be forced to use only the
@@ -29,7 +33,11 @@ import java.util.*;
 /// @since 1.0
 public class IterableOnly<E> implements Iterable<E> {
 
+    /// The iterable that is being wrapped.
+    // We can make this variable private once flexible constructor bodies (JEP 513 / JDK 25) are supported.
+    // CHECKSTYLE:OFF: VisibilityModifier
     protected Iterable<E> iterable;
+    // CHECKSTYLE:ON: VisibilityModifier
 
     /// Creates an empty iterable.
     public IterableOnly() {
@@ -81,7 +89,7 @@ public class IterableOnly<E> implements Iterable<E> {
 
     /// {@inheritDoc}
     @Override
-    public Spliterator<E> spliterator() {
+    public @NotNull Spliterator<E> spliterator() {
         return iterable.spliterator();
     }
 

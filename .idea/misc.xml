@@ -14,15 +14,6 @@
         <option value="$PROJECT_DIR$/pom.xml" />
       </list>
     </option>
-    <option name="ignoredFiles">
-      <set>
-        <option value="$PROJECT_DIR$/collection-test/pom.xml" />
-        <option value="$PROJECT_DIR$/collection/pom.xml" />
-        <option value="$PROJECT_DIR$/core/pom.xml" />
-        <option value="$PROJECT_DIR$/quant/pom.xml" />
-        <option value="$PROJECT_DIR$/test/pom.xml" />
-      </set>
-    </option>
   </component>
   <component name="ProjectResources">
     <resource url="https://checkstyle.org/dtds/suppressions_1_2.dtd" location="$PROJECT_DIR$" />

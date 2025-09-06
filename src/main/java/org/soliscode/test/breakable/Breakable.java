@@ -17,7 +17,8 @@ package org.soliscode.test.breakable;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Set;
 
 /// Interface for classes that can be "broken" programmatically to test contract classes. Classes implementing
 /// this interface can use the utility class [AbstractBreakable] to simplify the implementation.
@@ -31,7 +32,7 @@ public interface Breakable {
     /// `false`.
     /// @param aBreak The break to determine if ti has been added to this instance.
     /// @return 'true' if the break has been added, 'false' if it has not.
-    boolean hasBreak(final @NotNull Break aBreak);
+    boolean hasBreak(@NotNull Break aBreak);
 
     /// Returns all of the breaks that have been added to this object.
     /// @return The set of breaks that have ben added.
@@ -39,5 +40,5 @@ public interface Breakable {
 
     /// Adds a set of breaks to this object.
     /// @param breaks the breaks to add.
-    void addBreaks(final @NotNull Collection<Break> breaks);
+    void addBreaks(@NotNull Collection<Break> breaks);
 }

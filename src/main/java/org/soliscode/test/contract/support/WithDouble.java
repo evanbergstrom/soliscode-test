@@ -17,7 +17,6 @@
 package org.soliscode.test.contract.support;
 
 import org.jetbrains.annotations.NotNull;
-import org.soliscode.test.contract.object.ObjectContract;
 import org.soliscode.test.provider.DoubleProvider;
 import org.soliscode.test.provider.ObjectProvider;
 
@@ -28,7 +27,7 @@ import org.soliscode.test.provider.ObjectProvider;
 /// ```
 ///
 /// @author evanbergstrom
-/// @see ObjectContract
+/// @see org.soliscode.test.contract.object.ObjectContract
 /// @see DoubleProvider
 /// @since 1.0
 public interface WithDouble extends ContractSupport<Double> {

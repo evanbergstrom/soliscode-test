@@ -19,3 +19,4 @@ public interface WithIntegerElement extends ElementProviderSupport<Integer> {
         return new IntegerProvider();
     }
 }
+

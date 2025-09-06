@@ -24,6 +24,9 @@ import org.jetbrains.annotations.NotNull;
 /// @since 1.0.0
 public class DoubleProvider implements DoubleNumberProvider<Double> {
 
+    ///  Default Constructor
+    public DoubleProvider() { }
+
     /// Creates an instance of the [Integer] class with a numeric value equal to the
     /// primitive double value.
     ///

@@ -1,22 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.soliscode</groupId>
+  <parent>
+    <groupId>org.soliscode</groupId>
+    <artifactId>soliscode-parent</artifactId>
+    <version>1.0.5</version>
+  </parent>
+
+  <!-- Project Coordinates -->
   <artifactId>soliscode-test</artifactId>
   <!-- Keep development on a SNAPSHOT so publish:snapshot has something to push.
        semantic-release will set a non-SNAPSHOT for releases, then bump back. -->
   <version>1.0.14-SNAPSHOT</version>
   <packaging>jar</packaging>
 
+  <!-- Project Information -->
   <name>SolisCode Test</name>
   <description>Library for writing unit tests for classes that implement standard interfaces</description>
   <url>https://soliscode.org</url>
   <inceptionYear>2025</inceptionYear>
 
+  <!-- Legal Information -->
   <licenses>
     <license>
       <name>The Apache License, Version 2.0</name>
@@ -24,6 +32,7 @@
     </license>
   </licenses>
 
+  <!-- People and Contributors -->
   <developers>
     <developer>
       <id>evanbergstrom</id>
@@ -39,6 +48,7 @@
     </developer>
   </developers>
 
+  <!-- Source Control -->
   <scm>
     <connection>scm:git@gitlab.com:soliscode/soliscode-test.git</connection>
     <developerConnection>scm:git:ssh://git@gitlab.com:soliscode/soliscode-test.git</developerConnection>
@@ -46,71 +56,15 @@
     <url>https://gitlab.com/soliscode/soliscode-test.git</url>
   </scm>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <java.version>23</java.version>
-    <java.vendor>oracle</java.vendor>
+  <!-- Continuous Integration -->
+  <ciManagement>
+    <system>GitLab CI</system>
+    <url>https://gitlab.com/soliscode/soliscode-test/-/pipelines</url>
+  </ciManagement>
 
-    <javaDocStylesheetPath>${basedir}/src/main/javadoc/stylesheet.css</javaDocStylesheetPath>
-
-    <maven.plugin.validation>verbose</maven.plugin.validation>
-
-    <math.mathjax.url>https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js</math.mathjax.url>
-    <allowscript.javadoc.qualifier>--allow-script-in-comments</allowscript.javadoc.qualifier>
-    <doclint.javadoc.qualifier>-Xdoclint:all</doclint.javadoc.qualifier>
-
-    <!-- compile dependency versions -->
-    <junit-platform.version>1.10.1</junit-platform.version>
-    <junit-jupiter.version>5.10.1</junit-jupiter.version>
-    <assertj-core.version>3.24.2</assertj-core.version>
-    <jetbrains-annotations.version>24.1.0</jetbrains-annotations.version>
-
-    <!-- plugin versions -->
-    <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
-    <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
-    <maven-surefire-plugin.version>3.5.3</maven-surefire-plugin.version>
-    <maven-site-plugin.version>3.12.1</maven-site-plugin.version>
-    <maven-surefire-report-plugin.version>3.1.2</maven-surefire-report-plugin.version>
-    <maven-project-info-reports-plugin.version>3.4.5</maven-project-info-reports-plugin.version>
-    <maven-javadoc-plugin.version>3.4.1</maven-javadoc-plugin.version>
-    <maven-checkstyle-plugin.version>3.3.0</maven-checkstyle-plugin.version>
-    <maven-jxr-plugin.version>3.3.0</maven-jxr-plugin.version>
-    <maven-surefire-junit5-tree-reporter.verison>1.4.0</maven-surefire-junit5-tree-reporter.verison>
-    <maven-gpg-plugin.version>3.2.7</maven-gpg-plugin.version>
-
-    <!-- build plugin dependencies -->
-    <central-publishing-maven-plugin.version>0.8.0</central-publishing-maven-plugin.version>
-    <jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
-    <dependency-check.version>12.1.3</dependency-check.version>
-
-    <!-- default: don’t sign unless CI flips this -->
-    <gpg.skip>true</gpg.skip>
-  </properties>
-
-  <dependencies>
-    <dependency>
-      <groupId>org.jetbrains</groupId>
-      <artifactId>annotations</artifactId>
-      <version>${jetbrains-annotations.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter</artifactId>
-      <version>${junit-jupiter.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-api</artifactId>
-      <version>${junit-jupiter.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.platform</groupId>
-      <artifactId>junit-platform-testkit</artifactId>
-      <version>${junit-platform.version}</version>
-    </dependency>
-  </dependencies>
-
+  <!-- Distribution Management -->
   <distributionManagement>
+    <!-- release repository and snapshot repository managed by parent -->
     <site>
       <id>${project.artifactId}-site</id>
       <name>SolisCode Test Site</name>
@@ -118,248 +72,80 @@
     </site>
   </distributionManagement>
 
+  <!-- Properties -->
+  <properties>
+    <!-- Only project-specific properties that aren't inherited from parent -->
+    <javaDocStylesheetPath>${basedir}/src/main/javadoc/stylesheet.css</javaDocStylesheetPath>
+    <!-- Override checkstyle version to match parent resources -->
+    <soliscode.checkstyle.version> ${project.parent.version}</soliscode.checkstyle.version>
+  </properties>
+
+  <!-- Dependency Management -->
+  <dependencies>
+    <!-- Versions managed by parent pom dependencyManagement -->
+    <dependency>
+      <groupId>org.jetbrains</groupId>
+      <artifactId>annotations</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-testkit</artifactId>
+    </dependency>
+  </dependencies>
+
+
   <build>
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>${maven-compiler-plugin.version}</version>
-        <configuration>
-          <debug>true</debug>
-          <debuglevel>lines,vars,source</debuglevel>
-          <release>${java.version}</release>
-          <!-- Need the source and target properties so maven-javadoc-plugin will find maven-compile-plugin -->
-          <source>${java.version}</source>
-          <target>${java.version}</target>
-        </configuration>
-      </plugin>
-
-      <plugin>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>${maven-surefire-plugin.version}</version>
-        <dependencies>
-          <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-            <version>${junit-jupiter.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>me.fabriciorby</groupId>
-            <artifactId>maven-surefire-junit5-tree-reporter</artifactId>
-            <version>${maven-surefire-junit5-tree-reporter.verison}</version>
-          </dependency>
-        </dependencies>
-        <configuration>
-          <reportFormat>plain</reportFormat>
-          <useModulePath>false</useModulePath>
-          <consoleOutputReporter>
-            <disable>true</disable>
-          </consoleOutputReporter>
-          <includes>
-            <include>**/*Test.java</include>
-            <exclude>**/Test*.java</exclude>
-          </includes>
-          <statelessTestsetReporter implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5Xml30StatelessReporter">
-            <disable>false</disable>
-            <version>3.0</version>
-            <usePhrasedFileName>false</usePhrasedFileName>
-            <usePhrasedTestSuiteClassName>true</usePhrasedTestSuiteClassName>
-            <usePhrasedTestCaseClassName>true</usePhrasedTestCaseClassName>
-            <usePhrasedTestCaseMethodName>true</usePhrasedTestCaseMethodName>
-          </statelessTestsetReporter>
-          <statelessTestsetInfoReporter implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5StatelessTestsetInfoTreeReporter">
-            <disable>false</disable>
-            <usePhrasedFileName>false</usePhrasedFileName>
-            <usePhrasedClassNameInRunning>true</usePhrasedClassNameInRunning>
-            <usePhrasedClassNameInTestCaseSummary>true</usePhrasedClassNameInTestCaseSummary>
-          </statelessTestsetInfoReporter>
-        </configuration>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>${maven-checkstyle-plugin.version}</version>
-        <configuration>
-          <configLocation>checkstyle.xml</configLocation>
-          <consoleOutput>true</consoleOutput>
-          <failsOnError>false</failsOnError>
-          <linkXRef>false</linkXRef>
-          <includeTestSourceDirectory>false</includeTestSourceDirectory>
-          <suppressionsLocation>checkstyle-suppressions.xml</suppressionsLocation>
-        </configuration>
-        <executions>
-          <execution>
-            <phase>verify</phase>
-            <goals>
-              <goal>check</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-
-      <plugin>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
-        <version>${jacoco-maven-plugin.version}</version>
-        <executions>
-          <execution>
-            <id>default-prepare-agent</id>
-            <goals>
-              <goal>prepare-agent</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>report-aggregate</id>
-            <phase>verify</phase>
-            <inherited>false</inherited>
-            <goals>
-              <goal>report-aggregate</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-
-      <plugin>
-        <groupId>org.owasp</groupId>
-        <artifactId>dependency-check-maven</artifactId>
-        <version>${dependency-check.version}</version>
-        <configuration>
-          <nvdApiDelay>1000</nvdApiDelay>
-          <name>Dependency Check</name>
-          <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
-          <nodeAnalyzerEnabled>false</nodeAnalyzerEnabled>
-          <nodeAuditAnalyzerEnabled>false</nodeAuditAnalyzerEnabled>
-          <yarnAuditAnalyzerEnabled>false</yarnAuditAnalyzerEnabled>
-          <pnpmAuditAnalyzerEnabled>false</pnpmAuditAnalyzerEnabled>
-        </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>check</goal>
-            </goals>
-            <phase>verify</phase>
-          </execution>
-        </executions>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-source-plugin</artifactId>
-        <version>${maven-source-plugin.version}</version>
-        <executions>
-          <execution>
-            <id>attach-sources</id>
-            <phase>package</phase>
-            <goals><goal>jar-no-fork</goal></goals>
-          </execution>
-        </executions>
-      </plugin>
+      <!-- Most plugins are fully configured in parent pom pluginManagement -->
+      <!-- Only include plugins that need project-specific configuration -->
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>${maven-javadoc-plugin.version}</version>
+        <configuration>
+          <failOnError>true</failOnError>           <!-- default: true -->
+          <failOnWarnings>true</failOnWarnings>     <!-- default: false -->
+          <doclint>all</doclint>                    <!-- treat warnings as errors -->
+          <additionalOptions>
+            <additionalOption>-Werror</additionalOption>
+          </additionalOptions>
+        </configuration>
+      </plugin>
+
+      <!-- JaCoCo with project-specific report-aggregate execution -->
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>attach-javadocs</id>
-            <phase>package</phase>
+            <id>report</id>
+            <phase>verify</phase>
+            <inherited>false</inherited>
             <goals>
-              <goal>jar</goal>
+              <goal>report</goal>
             </goals>
           </execution>
         </executions>
-        <configuration>
-          <defaultAuthor>Evan Bergstrom</defaultAuthor>
-          <defaultVersion>${project.version}</defaultVersion>
-          <version>true</version>
-          <author>true</author>
-          <quiet>true</quiet>
-          <name>Documentation</name>
-          <docfilessubdirs>true</docfilessubdirs>
-          <additionalJOptions>
-            <additionalJOption>-J--add-exports=jdk.javadoc/jdk.javadoc.internal.tool=ALL-UNNAMED</additionalJOption>
-            <additionalJOption>-J--add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED</additionalJOption>
-          </additionalJOptions>
-          <additionalOptions>-stylesheetfile ${javaDocStylesheetPath} ${doclint.javadoc.qualifier} ${allowscript.javadoc.qualifier} -header '&lt;script src="https://polyfill.io/v3/polyfill.min.js?features=es6"&gt;&lt;/script&gt;&lt;script type="text/javascript" async src="${math.mathjax.url}"&gt;&lt;/script&gt;'</additionalOptions>
-          <tags>
-            <tag>
-              <name>apiNote</name>
-              <placement>a</placement>
-              <head>API Note:</head>
-            </tag>
-            <tag>
-              <name>implSpec</name>
-              <placement>a</placement>
-              <head>Implementation Requirements:</head>
-            </tag>
-            <tag>
-              <name>implNote</name>
-              <placement>a</placement>
-              <head>Implementation Note:</head>
-            </tag>
-            <tag>
-              <name>complexity</name>
-              <placement>m</placement>
-              <head>Complexity:</head>
-            </tag>
-          </tags>
-        </configuration>
       </plugin>
 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-project-info-reports-plugin</artifactId>
-        <version>${maven-project-info-reports-plugin.version}</version>
-      </plugin>
-
-      <plugin>
-        <artifactId>maven-site-plugin</artifactId>
-        <version>${maven-site-plugin.version}</version>
-        <configuration>
-          <locales>en</locales>
-        </configuration>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-report-plugin</artifactId>
-        <version>${maven-surefire-report-plugin.version}</version>
-      </plugin>
-
-      <!-- GPG (deploy only; runs before Central) -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-gpg-plugin</artifactId>
-        <version>3.2.7</version>
-        <executions>
-          <execution>
-            <id>sign-at-deploy</id>
-            <phase>deploy</phase>
-            <goals><goal>sign</goal></goals>
-          </execution>
-        </executions>
-        <configuration>
-          <keyname>${env.GPG_KEY_ID}</keyname>
-          <skip>${gpg.skip}</skip>
-          <gpgArguments>
-            <arg>--pinentry-mode</arg>
-            <arg>loopback</arg>
-          </gpgArguments>
-        </configuration>
-      </plugin>
-
+      <!-- Central Publishing Plugin (project-specific configuration) -->
       <plugin>
         <groupId>org.sonatype.central</groupId>
         <artifactId>central-publishing-maven-plugin</artifactId>
-        <version>${central-publishing-maven-plugin.version}</version> <!-- or latest -->
         <extensions>true</extensions>
         <configuration>
           <publishingServerId>central</publishingServerId>
           <autoPublish>true</autoPublish>
           <waitUntil>validated</waitUntil>
-          <!-- Explicit snapshots endpoint (so we never fall back to legacy settings) -->
-           <centralSnapshotsUrl>https://central.sonatype.com/repository/maven-snapshots/</centralSnapshotsUrl>
+          <centralSnapshotsUrl>https://central.sonatype.com/repository/maven-snapshots/</centralSnapshotsUrl>
         </configuration>
       </plugin>
 
@@ -368,68 +154,29 @@
 
   <reporting>
     <plugins>
+      <!-- Only project-specific reporting configuration -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-site-plugin</artifactId>
-        <version>${maven-site-plugin.version}</version>
+        <artifactId>maven-surefire-report-plugin</artifactId>
         <configuration>
-            <locales>en</locales>
+          <aggregate>true</aggregate>
+          <linkXRef>true</linkXRef>
         </configuration>
       </plugin>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>${maven-javadoc-plugin.version}</version>
-        <configuration>
-          <defaultAuthor>Evan Bergstrom</defaultAuthor>
-          <defaultVersion>${project.version}</defaultVersion>
-          <version>true</version>
-          <author>true</author>
-          <quiet>true</quiet>
-          <name>Documentation</name>
-          <docfilessubdirs>true</docfilessubdirs>
-          <additionalJOptions>
-            <additionalJOption>-J--add-exports=jdk.javadoc/jdk.javadoc.internal.tool=ALL-UNNAMED</additionalJOption>
-            <additionalJOption>-J--add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED</additionalJOption>
-          </additionalJOptions>
-          <additionalOptions>-stylesheetfile ${javaDocStylesheetPath} ${doclint.javadoc.qualifier} ${allowscript.javadoc.qualifier} -header '&lt;script src="https://polyfill.io/v3/polyfill.min.js?features=es6"&gt;&lt;/script&gt;&lt;script type="text/javascript" async src="${math.mathjax.url}"&gt;&lt;/script&gt;'</additionalOptions>
-          <tags>
-            <tag>
-              <name>apiNote</name>
-              <placement>a</placement>
-              <head>API Note:</head>
-            </tag>
-            <tag>
-              <name>implSpec</name>
-              <placement>a</placement>
-              <head>Implementation Requirements:</head>
-            </tag>
-            <tag>
-              <name>implNote</name>
-              <placement>a</placement>
-              <head>Implementation Note:</head>
-            </tag>
-            <tag>
-              <name>complexity</name>
-              <placement>m</placement>
-              <head>Complexity:</head>
-            </tag>
-          </tags>
-        </configuration>
-      </plugin>
-      <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-surefire-report-plugin</artifactId>
-          <version>${maven-surefire-report-plugin.version}</version>
-          <configuration>
-            <aggregate>true</aggregate>
-            <linkXRef>true</linkXRef>
-          </configuration>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <reportSets>
+          <reportSet>
+            <reports>
+              <report>report</report>
+            </reports>
+          </reportSet>
+        </reportSets>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jxr-plugin</artifactId>
-        <version>${maven-jxr-plugin.version}</version>
         <reportSets>
           <reportSet>
             <id>aggregate</id>
@@ -441,51 +188,16 @@
         </reportSets>
       </plugin>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>${maven-checkstyle-plugin.version}</version>
-        <reportSets>
-          <reportSet>
-            <id>aggregate-checkstyle-report</id>
-            <reports>
-              <report>checkstyle-aggregate</report>
-            </reports>
-          </reportSet>
-        </reportSets>
-        <configuration>
-          <configLocation>checkstyle.xml</configLocation>
-          <includeTestSourceDirectory>false</includeTestSourceDirectory>
-          <linkXRef>false</linkXRef>
-        </configuration>
-      </plugin>
-      <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>${jacoco-maven-plugin.version}</version>
         <reportSets>
           <reportSet>
             <id>report-aggregate</id>
             <inherited>false</inherited>
             <reports>
               <report>report-aggregate</report>
-          </reports>
+            </reports>
           </reportSet>
-        </reportSets>
-      </plugin>
-      <plugin>
-        <groupId>org.owasp</groupId>
-        <artifactId>dependency-check-maven</artifactId>
-        <version>${dependency-check.version}</version>
-        <configuration>
-          <nvdApiDelay>1000</nvdApiDelay>
-          <name>Dependency Check</name>
-        </configuration>
-        <reportSets>
-            <reportSet>
-                <reports>
-                    <report>aggregate</report>
-                </reports>
-            </reportSet>
         </reportSets>
       </plugin>
     </plugins>

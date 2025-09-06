@@ -2,7 +2,11 @@ package org.soliscode.test.util;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.AbstractSet;
+import java.util.Collection;
+import java.util.IdentityHashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 /// An Set that checks for elements by identity rather han by equality. This class is used to implement
 /// assertions that are checking for element identity.

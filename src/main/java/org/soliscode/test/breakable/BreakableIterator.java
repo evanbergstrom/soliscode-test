@@ -15,10 +15,12 @@
  */
 package org.soliscode.test.breakable;
 
-import org.jetbrains.annotations.Contract;
 import org.soliscode.test.contract.CollectionMethods;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 
 /// An iterator that can be broken in well-defined ways in order to test collection utilities or testing classes.
@@ -37,50 +39,62 @@ public class BreakableIterator<E> extends AbstractBreakable implements Iterator<
     private final Iterator<E> iterator;
 
     /// The iterator will always have no elements
-    public static final Break ITERATOR_IS_ALWAYS_EMPTY = new Break("iterator has no elements");
+    public static final Break ITERATOR_IS_ALWAYS_EMPTY =
+            new Break("iterator has no elements");
 
     /// The iterator will skip the first element.
-    public static final Break ITERATOR_SKIPS_FIRST_ELEMENT = new Break("iterator skips the first element.");
+    public static final Break ITERATOR_SKIPS_FIRST_ELEMENT =
+            new Break("iterator skips the first element.");
 
     /// The iterator `hasNext` method will always return a true.
     /// @see BreakableIterator#hasNext()
-    public static final Break ITERATOR_HAS_NEXT_ALWAYS_RETURNS_TRUE = new Break("iterator hasNext always returns true.");
+    public static final Break ITERATOR_HAS_NEXT_ALWAYS_RETURNS_TRUE =
+            new Break("iterator hasNext always returns true.");
 
     /// The iterator `hasNext` method will always return a false.
     /// @see BreakableIterator#hasNext()
-    public static final Break ITERATOR_HAS_NEXT_ALWAYS_RETURNS_FALSE = new Break("iterator hasNext always returns false.");
+    public static final Break ITERATOR_HAS_NEXT_ALWAYS_RETURNS_FALSE =
+            new Break("iterator hasNext always returns false.");
 
     /// The iterator `hasNext` method will always return the opposite value
     /// @see BreakableIterator#hasNext()
-    public static final Break ITERATOR_HAS_NEXT_RETURNS_OPPOSITE_VALUE = new Break("iterator hasNext always returns opposite value");
+    public static final Break ITERATOR_HAS_NEXT_RETURNS_OPPOSITE_VALUE =
+            new Break("iterator hasNext always returns opposite value");
 
     /// The iterator `next` method will always return `null`
     /// @see BreakableIterator#next()
-    public static final Break ITERATOR_NEXT_ALWAYS_RETURNS_NULL = new Break("iterator next method returns null");
+    public static final Break ITERATOR_NEXT_ALWAYS_RETURNS_NULL =
+            new Break("iterator next method returns null");
 
     /// The iterator `next` method will always return `null`
     /// @see BreakableIterator#next()
-    public static final Break ITERATOR_NEXT_THROWS_WRONG_EXCEPTION = new Break("iterator next method always returns null");
+    public static final Break ITERATOR_NEXT_THROWS_WRONG_EXCEPTION =
+            new Break("iterator next method always returns null");
 
     /// The iterator 'remove' method does not remove the element at the current iterator position.
     /// @see BreakableIterator#remove()
-    public static final Break ITERATOR_REMOVE_DOES_NOT_REMOVE_ELEMENT = new Break("iterator remove does not remove elements");
+    public static final Break ITERATOR_REMOVE_DOES_NOT_REMOVE_ELEMENT =
+            new Break("iterator remove does not remove elements");
 
     /// The iterator 'remove' method throws the wrong exception for an illegal state
     /// @see BreakableIterator#remove()
-    public static final Break ITERATOR_REMOVE_THROWS_WRONG_EXCEPTION_FOR_ILLEGAL_STATE = new Break("iterator remove throws wrong exception for illegal state");
+    public static final Break ITERATOR_REMOVE_THROWS_WRONG_EXCEPTION_FOR_ILLEGAL_STATE =
+            new Break("iterator remove throws wrong exception for illegal state");
 
     /// The iterator 'remove' method throws the wrong exception nif it is not supported.
     /// @see BreakableIterator#remove()
-    public static final Break ITERATOR_REMOVE_THROWS_WRONG_EXCEPTION_IF_NOT_SUPPORTED = new Break("iterator remove method throws wrong exception if not supported.");
+    public static final Break ITERATOR_REMOVE_THROWS_WRONG_EXCEPTION_IF_NOT_SUPPORTED =
+            new Break("iterator remove method throws wrong exception if not supported.");
 
     /// The iterator 'forEachRemaining' does not call the action
     /// @see BreakableIterator#forEachRemaining(Consumer)
-    public static final Break ITERATOR_FOR_EACH_REMAINING_DOES_NOT_CALL_ACTION = new Break("iterator forEachRemaining does not call action");
+    public static final Break ITERATOR_FOR_EACH_REMAINING_DOES_NOT_CALL_ACTION =
+            new Break("iterator forEachRemaining does not call action");
 
     /// The iterator 'forEachRemaining' throws the wrong exception for a `null` argument.
     /// @see BreakableIterator#forEachRemaining(Consumer)
-    public static final Break ITERATOR_FOR_EACH_REMAINING_THROWS_WRONG_EXCEPTION_FOR_NULL_ARGUMENT = new Break("iterator forEachRemaining throws wrong exception for null argument.");
+    public static final Break ITERATOR_FOR_EACH_REMAINING_THROWS_WRONG_EXCEPTION_FOR_NULL_ARGUMENT =
+            new Break("iterator forEachRemaining throws wrong exception for null argument.");
 
     /// Constructs a breakable iterator from a iterator that will provide the implementation.
     ///
@@ -118,7 +132,6 @@ public class BreakableIterator<E> extends AbstractBreakable implements Iterator<
     /// @return 'true' or 'false' depending on the state of the iterator and the breaks.
     /// @see Iterator#hasNext
     @Override
-    @Contract(pure=true)
     public boolean hasNext() {
         if (hasBreak(ITERATOR_HAS_NEXT_ALWAYS_RETURNS_TRUE)) {
             return true;
@@ -148,7 +161,6 @@ public class BreakableIterator<E> extends AbstractBreakable implements Iterator<
     /// @throws NoSuchElementException if the iteration has no more elements
     /// @see Iterator#next
     @Override
-    @Contract(mutates="this")
     public E next() {
         try {
             E element = iterator.next();

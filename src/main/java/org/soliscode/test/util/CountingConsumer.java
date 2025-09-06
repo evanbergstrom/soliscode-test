@@ -11,6 +11,9 @@ public class CountingConsumer<T> implements Consumer<T> {
 
     private int count = 0;
 
+    ///  Default constructor
+    public CountingConsumer() { }
+
     /// Counts each time this method is called.
     /// @param t This parameter is ignored.
     @Override

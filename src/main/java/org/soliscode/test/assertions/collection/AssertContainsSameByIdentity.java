@@ -76,7 +76,7 @@ public final class AssertContainsSameByIdentity extends IterableAssertion {
         if (actualList.size() != expectedList.size()) {
             throw buildException(expected, actual, messageOrSupplier);
         }
-        while(!actualList.isEmpty() && !expectedList.isEmpty()) {
+        while (!actualList.isEmpty() && !expectedList.isEmpty()) {
             Object o = actualList.getFirst();
             if (!IterableTestOps.containsByIdentity(expectedList, o)) {
                 throw buildException(expected, actual, messageOrSupplier);

@@ -2,12 +2,13 @@ package org.soliscode.test.contract.list;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.opentest4j.AssertionFailedError;
 import org.soliscode.test.assertions.collection.CollectionAssertions;
 import org.soliscode.test.contract.collection.ToArrayContract;
 import org.soliscode.test.contract.support.CollectionContractSupport;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -17,12 +18,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /// @param <L> The list type being tested.
 /// @author evanbergstrom
 /// @since 1.0
-/// @see List#sort(Comparator)
-public interface ListToArrayContract<E, L extends List<E>> extends ToArrayContract<E, L>, CollectionContractSupport<E, L> {
+/// @see List#sort(java.util.Comparator)
+public interface ListToArrayContract<E, L extends List<E>>
+        extends ToArrayContract<E, L>, CollectionContractSupport<E, L> {
 
 
     /// Tests that the `toArray()` method works for a collection with elements.
-    /// @throws AssertionFailedError if the test fails.
+    /// @throws org.opentest4j.AssertionFailedError if the test fails.
     @Test
     @DisplayName("The toArray method works on a container with elements")
     default void testToArray() {
@@ -34,7 +36,7 @@ public interface ListToArrayContract<E, L extends List<E>> extends ToArrayContra
 
     /// Tests that the `toArray()` method returns a safe array that can be modified without changing the
     /// elements of the container.
-    /// @throws AssertionFailedError if the test fails.
+    /// @throws org.opentest4j.AssertionFailedError if the test fails.
     @Test
     @DisplayName("The toArray method returns a safe array")
     default void testToArrayIsSafe() {

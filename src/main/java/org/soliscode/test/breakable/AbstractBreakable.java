@@ -18,7 +18,11 @@ package org.soliscode.test.breakable;
 import org.jetbrains.annotations.NotNull;
 import org.soliscode.test.OptionalMethodSupport;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 
 /// Utility class for implementing the [Breakable] interface.
 ///
@@ -59,7 +63,7 @@ public abstract class AbstractBreakable extends OptionalMethodSupport implements
     }
 
     @Override
-    public void addBreaks(final @NotNull Collection<Break> breaks) {
-        this.breaks.addAll(breaks);
+    public void addBreaks(final @NotNull Collection<Break> newBreaks) {
+        this.breaks.addAll(newBreaks);
     }
 }

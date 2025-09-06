@@ -25,6 +25,9 @@ import org.jetbrains.annotations.NotNull;
 /// @see Integer
 public class IntegerProvider implements IntegerNumberProvider<Integer> {
 
+    ///  Default constructor.
+    public IntegerProvider() { }
+
     /// Creates an instance of the [Integer] class with a numeric value equal to the
     /// primitive integer value.
     ///

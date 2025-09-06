@@ -26,6 +26,9 @@ import org.jetbrains.annotations.NotNull;
  */
 public class MatchEverything implements Comparable<MatchEverything> {
 
+    ///  Default constructor.
+    public MatchEverything() { }
+
     /**
      * Always returns {@code true}.
      * @param obj The object to compare for equality (not used).

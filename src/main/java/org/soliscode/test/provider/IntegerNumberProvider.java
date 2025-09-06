@@ -39,7 +39,7 @@ public interface IntegerNumberProvider<T extends Number> extends NumberProvider<
     T createValue(int value);
 
     @Override
-    default @NotNull T createInstance(int seed) {
+    default @NotNull T createInstance(final int seed) {
         return createValue(seed);
     }
 

@@ -31,9 +31,9 @@ import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
 ///
 /// @author evanbergstrom
 /// @since 1.0
-public class AssertThrowsDifferent {
+public final class AssertThrowsDifferent {
 
-    private AssertThrowsDifferent() {}
+    private AssertThrowsDifferent() { }
 
     /// Asserts that the executable will throw an exception that is not one of a list of prohibited exception types.
     /// @param prohibitedTypes the exception types that should not be thrown.
@@ -93,8 +93,7 @@ public class AssertThrowsDifferent {
                                              final @NotNull Executable executable, final Object messageOrSupplier) {
         try {
             executable.execute();
-        }
-        catch (Throwable actualException) {
+        } catch (Throwable actualException) {
             for (Class<?> expectedType : prohibitedTypes) {
                 if (expectedType.isInstance(actualException)) {
                     throw assertionFailure()

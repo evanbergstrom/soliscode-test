@@ -28,9 +28,9 @@ import java.util.function.Supplier;
 ///
 /// @author evanbergstrom
 /// @see org.junit.jupiter.api.Assertions
-public class Assertions {
+public final class Assertions {
 
-    private Assertions() {}
+    private Assertions() { }
 
     /// Asserts that the executable will throw one of a list of possible exception types.
     /// @param expectedTypes the exception types that the executable should throw.
@@ -54,7 +54,7 @@ public class Assertions {
     /// @param executable the executable to test.
     /// @param messageSupplier the supplier of the message to include in the exception if the assertions fails.
     public static void assertThrowsAny(final @NotNull Collection<Class<? extends Throwable>> expectedTypes,
-                                       final @NotNull Executable executable, Supplier<String> messageSupplier) {
+                                       final @NotNull Executable executable, final Supplier<String> messageSupplier) {
         AssertThrowsAny.assertThrowsAny(expectedTypes, executable, messageSupplier);
     }
 
@@ -97,7 +97,8 @@ public class Assertions {
     /// @param executable the executable to test.
     /// @param messageSupplier the supplier of the message to include in the exception if the assertions fails.
     public static void assertThrowsDifferent(final @NotNull Collection<Class<? extends Throwable>> prohibitedTypes,
-                                             final @NotNull Executable executable, Supplier<String> messageSupplier) {
+                                             final @NotNull Executable executable,
+                                             final Supplier<String> messageSupplier) {
         AssertThrowsDifferent.assertThrowsDifferent(prohibitedTypes, executable, messageSupplier);
     }
 
@@ -106,7 +107,8 @@ public class Assertions {
     /// @param executable the executable to test.
     /// @param messageSupplier the supplier of the message to include in the exception if the assertions fails.
     public static void assertThrowsDifferent(final @NotNull Class<? extends Throwable> prohibitedType,
-                                             final @NotNull Executable executable, Supplier<String> messageSupplier) {
+                                             final @NotNull Executable executable,
+                                             final Supplier<String> messageSupplier) {
         AssertThrowsDifferent.assertThrowsDifferent(prohibitedType, executable, messageSupplier);
     }
 
@@ -195,15 +197,66 @@ public class Assertions {
         AssertImplementsOnly.assertImplementsOnly(expected, actual, messageSupplier);
     }
 
-    public static <T extends Comparable<T>> void assertLessThan(T first, T second) {
+    /// Asserts that the first comparable value is less than the second comparable value.
+    /// This method performs a comparison using the natural ordering of the comparable objects
+    /// by invoking `second.compareTo(first)`. The assertion fails if the first value
+    /// is greater than or equal to the second value.
+    /// ```java
+    /// // Example with integers
+    /// assertLessThan(3, 5); // Passes: 3 < 5
+    ///
+    /// // Example with strings (alphabetical ordering)
+    /// assertLessThan("apple", "banana"); // Passes: "apple" < "banana"
+    ///
+    /// // Example with doubles
+    /// assertLessThan(2.5, 3.0); // Passes: 2.5 < 3.0
+    ///
+    /// // Example that would fail
+    /// assertLessThan(10, 5); // Throws AssertionFailedError: 10 >= 5
+    /// ```
+    /// @param <T> the type of comparable values being compared
+    /// @param first the value that should be less than the second value
+    /// @param second the value that the first value should be less than
+    /// @throws org.opentest4j.AssertionFailedError if `first >= second`
+    ///
+    /// @see java.lang.Comparable#compareTo(Object)
+    /// @since 1.0.0
+    public static <T extends Comparable<T>> void assertLessThan(final T first, final T second) {
         AssertLessThan.assertLessThan(first, second);
     }
 
-    public static <T extends Comparable<T>> void assertLessThan(T first, T second, String message) {
+    /// Asserts that the first comparable value is less than the second comparable value.
+    /// This method performs a comparison using the natural ordering of the comparable objects
+    /// by invoking `second.compareTo(first)`. The assertion fails if the first value
+    /// is greater than or equal to the second value.
+    ///
+    /// @param <T> the type of comparable values being compared
+    /// @param first the value that should be less than the second value
+    /// @param second the value that the first value should be less than
+    /// @param message the message to include in the exception if the assertion fails
+    /// @throws org.opentest4j.AssertionFailedError if `first >= second`
+    ///
+    /// @see java.lang.Comparable#compareTo(Object)
+    /// @since 1.0.0
+    public static <T extends Comparable<T>> void assertLessThan(final T first, final T second, final String message) {
         AssertLessThan.assertLessThan(first, second, message);
     }
 
-    public static <T extends Comparable<T>> void assertLessThan(T first, T second, final Supplier<String> messageSupplier) {
+    /// Asserts that the first comparable value is less than the second comparable value.
+    /// This method performs a comparison using the natural ordering of the comparable objects
+    /// by invoking `second.compareTo(first)`. The assertion fails if the first value
+    /// is greater than or equal to the second value.
+    ///
+    /// @param <T> the type of comparable values being compared
+    /// @param first the value that should be less than the second value
+    /// @param second the value that the first value should be less than
+    /// @param messageSupplier the supplier of the message to include in the exception if the assertion fails
+    /// @throws org.opentest4j.AssertionFailedError if `first >= second`
+    ///
+    /// @see java.lang.Comparable#compareTo(Object)
+    /// @since 1.0.0
+    public static <T extends Comparable<T>> void assertLessThan(final T first, final T second,
+                                                                final Supplier<String> messageSupplier) {
         AssertLessThan.assertLessThan(first, second, messageSupplier);
     }
 }

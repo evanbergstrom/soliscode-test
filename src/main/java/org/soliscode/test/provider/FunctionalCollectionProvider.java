@@ -2,7 +2,10 @@ package org.soliscode.test.provider;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -65,7 +68,7 @@ public class FunctionalCollectionProvider<E, I extends Iterable<E>> extends Func
     }
 
     @Override
-    public @NotNull I createInstance(int seed) {
+    public @NotNull I createInstance(final int seed) {
         return createInstance(elementProvider().createUniqueInstances(DEFAULT_SIZE, seed));
     }
 
@@ -78,7 +81,7 @@ public class FunctionalCollectionProvider<E, I extends Iterable<E>> extends Func
     /// @param e the element for the iterable.
     /// @return and instance of iterable.
     @Override
-    public @NotNull I createSingleton(E e) {
+    public @NotNull I createSingleton(final E e) {
         return createInstance(Collections.singleton(e));
     }
 
@@ -87,7 +90,7 @@ public class FunctionalCollectionProvider<E, I extends Iterable<E>> extends Func
     /// @return and instance of iterable.
     /// @throws NullPointerException if the argument is `null`.
     @Override
-    public  @NotNull I createInstance(@NotNull E[] elements) {
+    public  @NotNull I createInstance(final @NotNull E[] elements) {
         return createInstance(Arrays.asList(elements));
     }
 
@@ -97,12 +100,12 @@ public class FunctionalCollectionProvider<E, I extends Iterable<E>> extends Func
     }
 
     @Override
-    public @NotNull I createInstanceWithUniqueElements(int size) {
+    public @NotNull I createInstanceWithUniqueElements(final int size) {
         return createInstance(elementProvider.createUniqueInstances(size));
     }
 
     @Override
-    public @NotNull I createInstanceWithUniqueElements(int size, int seed) {
+    public @NotNull I createInstanceWithUniqueElements(final int size, final int seed) {
         return createInstance(elementProvider.createUniqueInstances(size, seed));
     }
 
@@ -121,6 +124,7 @@ public class FunctionalCollectionProvider<E, I extends Iterable<E>> extends Func
             final @NotNull Function<I, I> copyConstructor,
             final @NotNull Function<Collection<E>, I> collectionConstructor,
             final @NotNull ObjectProvider<E> elementProvider) {
-        return new FunctionalCollectionProvider<>(defaultConstructor, copyConstructor, collectionConstructor, elementProvider);
+        return new FunctionalCollectionProvider<>(defaultConstructor, copyConstructor, collectionConstructor,
+                elementProvider);
     }
 }

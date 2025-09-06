@@ -3,7 +3,13 @@ package org.soliscode.test.util;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.TypeVariable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 
@@ -16,14 +22,21 @@ import java.util.stream.Collectors;
 /// @since 1.0.0
 public final class CollectionTestOps {
 
+    /// Private constructor to prevent instantiation.
+    /// This utility class contains only static methods and should not be instantiated.
     private CollectionTestOps() {
     }
 
-    /// Removed all the elements in a collection that have the same identity as the elements in another collection.
-    /// @param <E> the element type.
+    /// Removes all the elements in a collection that have the same identity as the elements in another collection.
+    /// This method uses identity comparison (==) rather than equality comparison (equals()) to determine
+    /// which elements to remove. This is useful for testing scenarios where object identity matters.
+    ///
+    /// @param <E> the element type
     /// @param c the collection to remove the elements from
-    /// @param e the collection of elements to remove.
-    /// @return the collection without the removed elements.
+    /// @param e the collection of elements to remove by identity
+    /// @return the collection with matching identity elements removed
+    /// @throws NullPointerException if either collection is null
+    /// @see IdentitySet
     public static <E> Collection<E> removeAllByIdentity(final Collection<E> c, final Collection<?> e) {
         final Set<Object> s = new IdentitySet<>(e);
         c.removeIf(s::contains);
@@ -31,10 +44,15 @@ public final class CollectionTestOps {
     }
 
     /// Creates a collection backed by the provided collection that does not accept null values as elements.
+    /// The returned collection will throw a NullPointerException when attempting to add, check for,
+    /// or remove null values. This is useful for testing collection implementations that should
+    /// not permit null values.
     ///
-    /// @param <E> The element type of the collection
-    /// @param c The collection.
-    /// @return A collection that does not accept null values.
+    /// @param <E> the element type of the collection
+    /// @param c the backing collection
+    /// @return a collection wrapper that rejects null values
+    /// @throws NullPointerException if the backing collection is null
+    /// @see PreventNullsCollection
     public static <E> Collection<E> preventNulls(final Collection<E> c) {
         return new PreventNullsCollection<>(c);
     }
@@ -131,25 +149,35 @@ public final class CollectionTestOps {
             }
 
             @Override
-            public String toString() {
+            public @NotNull String toString() {
                 return collection.toString();
             }
 
-        @Override
-            public boolean equals(Object obj) {
-                if (obj instanceof PreventNullsCollection<?> prevent) {
-                    return collection.equals(prevent.collection);
+            @Override
+            public boolean equals(final Object obj) {
+                if (obj instanceof PreventNullsCollection<?>(Collection<?> collection1)) {
+                    return collection.equals(collection1);
                 } else {
                     return false;
                 }
             }
-        }
 
-    /// Creates a collection backed by the provided collection that does not accept null values as elements.
+        @Override
+        public int hashCode() {
+            return collection.hashCode();
+        }
+    }
+
+    /// Creates a list backed by the provided list that does not accept null values as elements.
+    /// The returned list will throw a NullPointerException when attempting to add, set, or
+    /// insert null values. This is useful for testing list implementations that should
+    /// not permit null values.
     ///
-    /// @param <E> The element type of the collection
-    /// @param c The collection.
-    /// @return A collection that does not accept null values.
+    /// @param <E> the element type of the list
+    /// @param c the backing list
+    /// @return a list wrapper that rejects null values
+    /// @throws NullPointerException if the backing list is null
+    /// @see PreventNullsList
     public static <E> List<E> preventNulls(final List<E> c) {
         return new PreventNullsList<>(c);
     }
@@ -217,7 +245,7 @@ public final class CollectionTestOps {
             }
 
             @Override
-            public boolean addAll(int index, Collection<? extends E> c) {
+            public boolean addAll(final int index, final @NotNull Collection<? extends E> c) {
                 if (c.contains(null)) {
                     throw new NullPointerException();
                 }
@@ -240,17 +268,17 @@ public final class CollectionTestOps {
             }
 
             @Override
-            public String toString() {
+            public @NotNull String toString() {
                 return list.toString();
             }
 
         @Override
-            public E get(int index) {
+            public E get(final int index) {
                 return list.get(index);
             }
 
             @Override
-            public E set(int index, E element) {
+            public E set(final int index, final E element) {
                 if (element == null) {
                     throw new NullPointerException();
                 }
@@ -258,7 +286,7 @@ public final class CollectionTestOps {
             }
 
             @Override
-            public void add(int index, E element) {
+            public void add(final int index, final E element) {
                 if (element == null) {
                     throw new NullPointerException();
                 }
@@ -266,17 +294,17 @@ public final class CollectionTestOps {
             }
 
             @Override
-            public E remove(int index) {
+            public E remove(final int index) {
                 return list.remove(index);
             }
 
             @Override
-            public int indexOf(Object o) {
+            public int indexOf(final Object o) {
                 return list.indexOf(o);
             }
 
             @Override
-            public int lastIndexOf(Object o) {
+            public int lastIndexOf(final Object o) {
                 return list.lastIndexOf(o);
             }
 
@@ -288,29 +316,43 @@ public final class CollectionTestOps {
 
             @Override
             @NotNull
-            public ListIterator<E> listIterator(int index) {
+            public ListIterator<E> listIterator(final int index) {
                 return list.listIterator(index);
             }
 
             @Override
             @NotNull
-            public List<E> subList(int fromIndex, int toIndex) {
+            public List<E> subList(final int fromIndex, final int toIndex) {
                 return list.subList(fromIndex, toIndex);
             }
 
             @Override
-            public boolean equals(Object obj) {
+            public boolean equals(final Object obj) {
                 if (obj == this) {
                     return true;
-                } else if (obj instanceof PreventNullsList<?> prevent) {
-                    return list.equals(prevent.list);
+                } else if (obj instanceof PreventNullsList<?>(List<?> list1)) {
+                    return list.equals(list1);
                 } else {
                     return false;
                 }
             }
-        }
 
-    public static <E> List<E> listOf(E e1, E e2, E e3)   {
+        @Override
+        public int hashCode() {
+            return list.hashCode();
+        }
+    }
+
+    /// Creates a mutable list containing exactly three elements.
+    /// This is a convenience method for creating small test lists with known elements.
+    /// Unlike List.of(), this method returns a mutable ArrayList.
+    ///
+    /// @param <E> the element type
+    /// @param e1 the first element
+    /// @param e2 the second element
+    /// @param e3 the third element
+    /// @return a mutable ArrayList containing the three elements
+    public static <E> List<E> listOf(final E e1, final E e2, final E e3)   {
         List<E> l = new ArrayList<>();
         l.add(e1);
         l.add(e2);
@@ -318,18 +360,33 @@ public final class CollectionTestOps {
         return l;
     }
 
-    /// Gets the class of the a generic parameter form an instance of the generic class.
-    /// @param o an instance of a generic class.
-    /// @param parameter the index of the generic parameter to get the class for.
-    /// @return the class object fo the generic parameter.
+    /// Gets the class of a generic parameter from an instance of the generic class.
+    /// This method uses reflection to extract the type information from the generic
+    /// class declaration. Note that due to type erasure, this may not always work
+    /// as expected at runtime.
+    ///
+    /// @param o an instance of a generic class
+    /// @param parameter the index of the generic parameter to get the class for (currently unused)
+    /// @return the class object for the generic parameter
+    /// @throws NullPointerException if o is null
+    /// @throws ArrayIndexOutOfBoundsException if the class has no type parameters
     @SuppressWarnings("unchecked")
-    public static Class<?> getGenericParameter(@NotNull Object o, int parameter) {
-        TypeVariable<Class<?>> var = (TypeVariable<Class<?>>) Arrays.stream(o.getClass().getTypeParameters()).toArray()[0];
+    public static Class<?> getGenericParameter(final @NotNull Object o, final int parameter) {
+        TypeVariable<Class<?>> var =
+                (TypeVariable<Class<?>>) Arrays.stream(o.getClass().getTypeParameters()).toArray()[0];
         return var.getGenericDeclaration();
     }
 
 
-    public static String toCSVString(Collection<?> collection) {
+    /// Converts a collection to a comma-separated string representation.
+    /// The elements are converted to strings using their toString() method and
+    /// joined with ", " (comma and space). The result is enclosed in square brackets.
+    ///
+    /// @param collection the collection to convert to a CSV string
+    /// @return a string representation with comma-separated elements enclosed in square brackets
+    /// @throws NullPointerException if collection is null
+    /// @see Collectors#joining(CharSequence)
+    public static String toCSVString(final Collection<?> collection) {
         return "[" + collection.stream()
                 .map(Object::toString)
                 .collect(Collectors.joining(", ")) + "]";

@@ -8,7 +8,9 @@ import org.soliscode.test.contract.support.CollectionContractSupport;
 import java.util.List;
 import java.util.SequencedCollection;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /// This interface tests if a class has implemented the `addLast()` method correctly based upon the specification in the
 /// [SequencedCollection] class. This contract class can be used individually by a test class, but it is normally used
@@ -17,8 +19,9 @@ import static org.junit.jupiter.api.Assertions.*;
 /// public class MyCollectionTest extends SequencedCollectionContract<Integer, MyCollection<Integer>> {
 /// }
 /// ```
-/// If a test is using the SequencedCollectionContract class, but the class being tested does not implement the `addLast`
-/// method based upon the specification in the `SequencedCollection` class, then it can be omitted from the tests using the
+/// If a test is using the SequencedCollectionContract class, but the class being tested does not implement the
+/// `addLast` method based upon the specification in the `SequencedCollection` class, then it can be omitted from the
+/// tests using the
 /// `doesNotSupportMethod()` method:
 /// ```java
 /// public class MyCollectionTest extends SequencedCollectionContract<Integer, MyCollection<Integer>> {
@@ -52,7 +55,8 @@ public interface AddLastContract<E, C extends SequencedCollection<E>> extends Co
                 assertEquals(collection.getLast(), element);
             }
         } else {
-            assertThrows(UnsupportedOperationException.class, () -> collection.addLast(elementProvider().createInstance()));
+            assertThrows(UnsupportedOperationException.class, () ->
+                    collection.addLast(elementProvider().createInstance()));
         }
     }
 

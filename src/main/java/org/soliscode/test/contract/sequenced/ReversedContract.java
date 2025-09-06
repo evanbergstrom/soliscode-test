@@ -1,10 +1,14 @@
 package org.soliscode.test.contract.sequenced;
 
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.soliscode.test.contract.CollectionMethods;
 import org.soliscode.test.contract.support.CollectionContractSupport;
 
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
+import java.util.SequencedCollection;
 
 /// Test for the reversed method in the [SequencedCollection] interface. This contract class can be used individually
 /// by a test class, but it is normally used through the [SequencedCollectionContract] class:

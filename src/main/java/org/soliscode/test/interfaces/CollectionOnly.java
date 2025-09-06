@@ -2,7 +2,9 @@ package org.soliscode.test.interfaces;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /// An collection that is provided for tests that only implement the [Collection] interface. If the code that is
 /// being tested tries to detect the kind of collection to optimize the algorithm, it will be forced to use only the
@@ -25,7 +27,8 @@ public class CollectionOnly<E> extends IterableOnly<E> implements Collection<E> 
     /// Creates a copy of a collection.
     /// @param other the instance of `Collection` to copy.
     public CollectionOnly(final CollectionOnly<E> other) {
-        // super(collection = new ArrayList<>(other.collection)); <-- This will work once Flexible Constructors are available
+        // super(collection = new ArrayList<>(other.collection)); <-- This will work once Flexible Constructors are
+        // available
         super(new ArrayList<>(other.collection));
         this.collection = (Collection<E>) iterable;
     }
@@ -34,7 +37,7 @@ public class CollectionOnly<E> extends IterableOnly<E> implements Collection<E> 
     /// @param c The collection of elements.
     public CollectionOnly(final Collection<E> c) {
         //super (collection = c); <-- This will work once Flexible Constructors are available
-        super (c);
+        super(c);
         this.collection = c;
     }
 
@@ -49,7 +52,7 @@ public class CollectionOnly<E> extends IterableOnly<E> implements Collection<E> 
     }
 
     @Override
-    public boolean contains(Object o) {
+    public boolean contains(final Object o) {
         return collection.contains(o);
     }
 
@@ -59,37 +62,37 @@ public class CollectionOnly<E> extends IterableOnly<E> implements Collection<E> 
     }
 
     @Override
-    public @NotNull <T> T @NotNull [] toArray(@NotNull T @NotNull [] a) {
+    public @NotNull <T> T @NotNull [] toArray(final @NotNull T @NotNull [] a) {
         return collection.toArray(a);
     }
 
     @Override
-    public boolean add(E e) {
+    public boolean add(final E e) {
         return collection.add(e);
     }
 
     @Override
-    public boolean remove(Object o) {
+    public boolean remove(final Object o) {
         return collection.remove(o);
     }
 
     @Override
-    public boolean containsAll(@NotNull Collection<?> c) {
+    public boolean containsAll(final @NotNull Collection<?> c) {
         return collection.containsAll(c);
     }
 
     @Override
-    public boolean addAll(@NotNull Collection<? extends E> c) {
+    public boolean addAll(final @NotNull Collection<? extends E> c) {
         return collection.addAll(c);
     }
 
     @Override
-    public boolean removeAll(@NotNull Collection<?> c) {
+    public boolean removeAll(final @NotNull Collection<?> c) {
         return collection.removeAll(c);
     }
 
     @Override
-    public boolean retainAll(@NotNull Collection<?> c) {
+    public boolean retainAll(final @NotNull Collection<?> c) {
         return collection.retainAll(c);
     }
 

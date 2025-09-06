@@ -24,11 +24,14 @@ import org.jetbrains.annotations.NotNull;
 /// @see Long
 public class LongProvider implements IntegerNumberProvider<Long> {
 
+    ///  Default constructor.
+    public LongProvider() { }
+
     /// Creates an instance of the [Long] class with a numeric value equal to the primitive long value.
     /// @param value the primitive long value.
     /// @return an instance of the `Long` class.
     @Override
     public @NotNull Long createValue(final int value) {
-        return (long)value;
+        return (long) value;
     }
 }

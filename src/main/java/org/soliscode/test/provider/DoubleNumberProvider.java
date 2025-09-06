@@ -40,13 +40,13 @@ public interface DoubleNumberProvider<T extends Number> extends NumberProvider<T
 
     /// {@inheritDoc}
     @Override
-    default @NotNull T createInstance(int seed) {
+    default @NotNull T createInstance(final int seed) {
         return createValue(seed);
     }
 
     /// {@inheritDoc}
     @Override
-    default @NotNull T copyInstance(@NotNull T o) {
+    default @NotNull T copyInstance(final @NotNull T o) {
         return createValue(o.doubleValue());
     }
 

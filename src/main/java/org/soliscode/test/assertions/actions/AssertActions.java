@@ -28,7 +28,7 @@ import java.util.function.Supplier;
 /// @since 1.o
 public final class AssertActions {
 
-    private AssertActions() {}
+    private AssertActions() { }
 
     /// Creates a consumer that checks that it only consumes objects from a specified set of objects.
     /// @param <T> the type of object being consumed.

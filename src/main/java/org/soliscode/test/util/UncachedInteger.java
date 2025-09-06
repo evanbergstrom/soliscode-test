@@ -16,7 +16,9 @@
 
 package org.soliscode.test.util;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * An integer class that does not use cached values. This class is used for testing methods that match
@@ -27,6 +29,7 @@ import java.util.*;
  */
 public class UncachedInteger extends Number implements Comparable<UncachedInteger> {
 
+    /// The value of the integer
     private final int value;
 
     /**

@@ -51,6 +51,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /// @since 1.0
 public interface HashCodeContract<T> extends ContractSupport<T> {
 
+    /// The amount to allow the load factor of a hash table to exceed the target.
+    double LOAD_FACTOR_ALLOWANCE = 0.10;
+
     /// Tests that the `hashCode()` method consistently returns the same integer value over multiple
     /// invocations.
     ///
@@ -102,6 +105,7 @@ public interface HashCodeContract<T> extends ContractSupport<T> {
     ///
     /// @throws org.opentest4j.AssertionFailedError if the test fails.
     /// @see Object#hashCode()
+    @SuppressWarnings("checkstyle:MagicNumber")
     @Test
     @DisplayName("hashCode() returns integer that have a uniform distribution.")
     default void testHashCodeDistribution() {
@@ -120,7 +124,7 @@ public interface HashCodeContract<T> extends ContractSupport<T> {
             });
 
             double actualLLoadFactor = Arrays.stream(table).sum() / hashTableSize;
-            assertTrue(actualLLoadFactor - expectedLoadFactor < 0.10);
+            assertTrue(actualLLoadFactor - expectedLoadFactor < LOAD_FACTOR_ALLOWANCE);
         }
     }
 }

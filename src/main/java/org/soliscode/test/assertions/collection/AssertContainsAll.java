@@ -20,7 +20,9 @@ import org.junit.platform.commons.util.StringUtils;
 import org.opentest4j.AssertionFailedError;
 import org.soliscode.test.util.IterableTestOps;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;

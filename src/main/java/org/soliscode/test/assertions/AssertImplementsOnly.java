@@ -1,6 +1,10 @@
 package org.soliscode.test.assertions;
 
-import java.util.*;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
@@ -13,7 +17,7 @@ import static org.soliscode.test.util.CollectionTestOps.toCSVString;
 /// @since 1.0.0
 public final class AssertImplementsOnly {
 
-    private AssertImplementsOnly() {}
+    private AssertImplementsOnly() { }
 
     static void assertImplementsOnly(final Collection<Class<?>> expected, final Object actual) {
         checkImplementsOnly(expected, actual, null);
@@ -38,15 +42,18 @@ public final class AssertImplementsOnly {
         }
     }
 
-    private static void failImplementsOnly(Collection<Class<?>> expected, Object actual, Object messageOrSupplier) {
+    private static void failImplementsOnly(final @NotNull Collection<Class<?>> expected, final @NotNull Object actual,
+                                           final Object messageOrSupplier) {
+        Object message = messageOrSupplier;
         if (messageOrSupplier == null) {
-            Collection<Class<?>> unexpectedInterfaces = new ArrayList<>(Arrays.asList(actual.getClass().getInterfaces()));
+            Collection<Class<?>> unexpectedInterfaces =
+                    new ArrayList<>(Arrays.asList(actual.getClass().getInterfaces()));
             unexpectedInterfaces.removeAll(expected);
-            messageOrSupplier = actual.getClass() + " is expected to only be an instance of " + toCSVString(expected) +
-                    " but is an instance of " + toCSVString(unexpectedInterfaces);
+            message = actual.getClass() + " is expected to only be an instance of " + toCSVString(expected)
+                    + " but is an instance of " + toCSVString(unexpectedInterfaces);
         }
         assertionFailure()
-                .message(messageOrSupplier)
+                .message(message)
                 .expected(expected)
                 .actual(actual)
                 .buildAndThrow();

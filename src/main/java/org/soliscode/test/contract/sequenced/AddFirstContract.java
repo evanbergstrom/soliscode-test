@@ -8,18 +8,20 @@ import org.soliscode.test.contract.support.CollectionContractSupport;
 import java.util.List;
 import java.util.SequencedCollection;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/// This interface tests if a class has implemented the `addFirst()` method correctly based upon the specification in the
-/// [SequencedCollection] class. This contract class can be used individually by a test class, but it is normally used
-/// through the [SequencedCollectionContract] class:
+/// This interface tests if a class has implemented the `addFirst()` method correctly based upon the specification in
+/// the [SequencedCollection] class. This contract class can be used individually by a test class, but it is normally
+/// used through the [SequencedCollectionContract] class:
 /// ```java
 /// public class MyCollectionTest extends SequencedCollectionContract<Integer, MyCollection<Integer>> {
 /// }
 /// ```
-/// If a test is using the SequencedCollectionContract class, but the class being tested does not implement the `addFirst`
-/// method based upon the specification in the `SequencedCollection` class, then it can be omitted from the tests using the
-/// `doesNotSupportMethod()` method:
+/// If a test is using the SequencedCollectionContract class, but the class being tested does not implement the
+/// `addFirst` method based upon the specification in the `SequencedCollection` class, then it can be omitted from the
+/// tests using the `doesNotSupportMethod()` method:
 /// ```java
 /// public class MyCollectionTest extends SequencedCollectionContract<Integer, MyCollection<Integer>> {
 ///     public MyCollectionTest() {
@@ -53,7 +55,8 @@ public interface AddFirstContract<E, C extends SequencedCollection<E>> extends C
             }
         } else {
             SequencedCollection<E> collection = provider().emptyInstance();
-            assertThrows(UnsupportedOperationException.class, () -> collection.addFirst(elementProvider().createInstance()));
+            assertThrows(UnsupportedOperationException.class, () ->
+                    collection.addFirst(elementProvider().createInstance()));
         }
     }
 

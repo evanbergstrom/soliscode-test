@@ -18,7 +18,10 @@ package org.soliscode.test.provider;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -27,7 +30,7 @@ import java.util.function.Supplier;
 /// @since 1.0
 public final class CollectionProviders {
 
-    private CollectionProviders() {}
+    private CollectionProviders() { }
 
     /// Create an instance of this collection provider that uses the methods and element provider specified in the
     /// arguments for its implementation.
@@ -45,10 +48,11 @@ public final class CollectionProviders {
     /// @param elementProvider the element provider.
     /// @return the collection provider.
     /// @throws NullPointerException if any of the arguments are `null`
-    public static <E, C extends Iterable<E>> CollectionProvider<E, C> from(final @NotNull Supplier<C> defaultConstructor,
-                                                final @NotNull Function<C, C> copyConstructor,
-                                                final @NotNull Function<Collection<E>, C> collectionConstructor,
-                                                final @NotNull ObjectProvider<E> elementProvider) {
+    public static <E, C extends Iterable<E>> CollectionProvider<E, C> from(
+            final @NotNull Supplier<C> defaultConstructor,
+            final @NotNull Function<C, C> copyConstructor,
+            final @NotNull Function<Collection<E>, C> collectionConstructor,
+            final @NotNull ObjectProvider<E> elementProvider) {
         return new FunctionalCollectionProvider<>(defaultConstructor, copyConstructor, collectionConstructor,
                 elementProvider);
     }
@@ -57,7 +61,8 @@ public final class CollectionProviders {
     /// @param elementProvider the provider to use to create the elements.
     /// @param <E> The type of the elements
     /// @return the collection provider.
-    public static <E> @NotNull CollectionProvider<E, ArrayList<E>> provideArrayList(final @NotNull ObjectProvider<E> elementProvider) {
+    public static <E> @NotNull CollectionProvider<E, ArrayList<E>> provideArrayList(
+            final @NotNull ObjectProvider<E> elementProvider) {
         return CollectionProviders.from(ArrayList::new, ArrayList::new, ArrayList::new, elementProvider);
     }
 
@@ -65,7 +70,8 @@ public final class CollectionProviders {
     /// @param elementProvider the provider to use to create the elements.
     /// @param <E> The type of the elements
     /// @return the collection provider.
-    public static <E> CollectionProvider<E, LinkedList<E>> provideLinkedList(final @NotNull ObjectProvider<E> elementProvider) {
+    public static <E> CollectionProvider<E, LinkedList<E>> provideLinkedList(
+            final @NotNull ObjectProvider<E> elementProvider) {
         return CollectionProviders.from(LinkedList::new, LinkedList::new, LinkedList::new, elementProvider);
     }
 
@@ -73,7 +79,8 @@ public final class CollectionProviders {
     /// @param elementProvider the provider to use to create the elements.
     /// @param <E> The type of the elements
     /// @return the collection provider.
-    public static <E> CollectionProvider<E, HashSet<E>> provideHashSet(final @NotNull ObjectProvider<E> elementProvider) {
+    public static <E> CollectionProvider<E, HashSet<E>> provideHashSet(
+            final @NotNull ObjectProvider<E> elementProvider) {
         return CollectionProviders.from(HashSet::new, HashSet::new, HashSet::new, elementProvider);
     }
 
@@ -85,7 +92,7 @@ public final class CollectionProviders {
     /// @param wrapper the function used to wrap the provided collection.
     /// @return the wrapped collection.
     public static <E, C extends Collection<E>, W extends Collection<E>>
-        CollectionProvider<E, W> wrap(CollectionProvider<E,C> provider, Function<C,W> wrapper)  {
+        CollectionProvider<E, W> wrap(final CollectionProvider<E, C> provider, final Function<C, W> wrapper)  {
         return new WrappedCollectionProvider<>(provider, wrapper);
     }
 
@@ -109,16 +116,16 @@ public final class CollectionProviders {
             }
 
             @Override
-            public @NotNull W copyInstance(@NotNull W ws) {
+            public @NotNull W copyInstance(final @NotNull W ws) {
                 return wrapper.apply(provider.createInstance(ws));
             }
 
-            public @NotNull W createInstance(@NotNull Collection<E> c) {
+            public @NotNull W createInstance(final @NotNull Collection<E> c) {
                 return wrapper.apply(provider.createInstance(c));
             }
 
             @Override
-            public @NotNull W createInstance(int seed) {
+            public @NotNull W createInstance(final int seed) {
                 return wrapper.apply(provider.createInstance(seed));
             }
 
@@ -133,22 +140,22 @@ public final class CollectionProviders {
             }
 
             @Override
-            public @NotNull W createInstanceWithUniqueElements(int size) {
+            public @NotNull W createInstanceWithUniqueElements(final int size) {
                 return wrapper.apply(provider.createInstanceWithUniqueElements(size));
             }
 
             @Override
-            public @NotNull W createInstanceWithUniqueElements(int size, int seed) {
+            public @NotNull W createInstanceWithUniqueElements(final int size, final int seed) {
                 return wrapper.apply(provider.createInstanceWithUniqueElements(size, seed));
             }
 
             @Override
-            public @NotNull W createInstance(@NotNull E[] elements) {
+            public @NotNull W createInstance(final @NotNull E[] elements) {
                 return wrapper.apply(provider.createInstance(elements));
             }
 
             @Override
-            public @NotNull W createSingleton(E e) {
+            public @NotNull W createSingleton(final E e) {
                 return wrapper.apply(provider.createSingleton(e));
             }
         }

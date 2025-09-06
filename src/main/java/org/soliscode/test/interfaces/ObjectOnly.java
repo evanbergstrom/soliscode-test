@@ -42,7 +42,8 @@ public class ObjectOnly {
         this.obj = 0;
     }
 
-    // Copies and instance of ObjectOnly.
+    /// Copies and instance of ObjectOnly.
+    /// @param other the instance to copy.
     public ObjectOnly(final @NotNull ObjectOnly other) {
         this.obj = Objects.requireNonNull(other).obj;
     }
@@ -61,7 +62,7 @@ public class ObjectOnly {
 
     /// {@inheritDoc}
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (o instanceof ObjectOnly only) {
             return obj.equals(only.obj);
         } else {

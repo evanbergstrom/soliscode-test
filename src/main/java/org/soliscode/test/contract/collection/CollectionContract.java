@@ -4,19 +4,19 @@ import org.soliscode.test.OptionalMethod;
 import org.soliscode.test.contract.CollectionContractConfig;
 import org.soliscode.test.contract.CollectionMethods;
 import org.soliscode.test.contract.iterable.IterableContract;
-import org.soliscode.test.contract.support.CollectionContractSupport;
 
 import java.util.Collection;
-import java.util.Iterator;
 
 /// Test suite for classes that implement the {@link Collection} interface. When implementing  this class, the only
-/// method that will need to be implemented is [CollectionContractSupport#provider()]. Also, the following methods
-/// will allow the tests to be configured based upon the desired behavior of the collection class being tested:
+/// method that will need to be implemented is
+/// [CollectionContractSupport.provider\(\)][org.soliscode.test.contract.support.CollectionContractSupport#provider()].
+/// Also, the following methods will allow the tests to be configured based upon the desired behavior of the collection
+/// class being tested:
 ///
-/// - [permitNulls][CollectionContractConfig#permitNulls]: Specifies if the collection permits null value elements.
-/// - [permitDuplicates][CollectionContractConfig#permitDuplicates]: Specifies if the collection permits duplicate values.
-/// - [permitIncompatibleTypes][CollectionContractConfig#permitIncompatibleTypes]: Specifies if the collection allows the
-///       search for incompatible values.
+/// - [permitNulls][CollectionContractConfig#permitNulls]: Specifies the collection permits null value elements.
+/// - [permitDuplicates][CollectionContractConfig#permitDuplicates]: Specifies the collection permits duplicate values.
+/// - [permitIncompatibleTypes][CollectionContractConfig#permitIncompatibleTypes]: Specifies if the collection allows
+///       the search for incompatible values.
 ///
 /// For example, most of the collections from the JDK permit null values, permit duplicate values, and permit the
 /// search for incompatible types. To create a test class for ArrayList, the following constructor would be
@@ -41,8 +41,8 @@ import java.util.Iterator;
 /// @since 1.0
 public interface CollectionContract<E, C extends Collection<E>> extends IterableContract<E, C>,
         CollectionContractConfig,
-        AddContract<E,C>,
-        AddAllContract<E,C>,
+        AddContract<E, C>,
+        AddAllContract<E, C>,
         ClearContract<E, C>,
         ContainsContract<E, C>,
         ContainsAllContract<E, C>,
@@ -56,23 +56,23 @@ public interface CollectionContract<E, C extends Collection<E>> extends Iterable
         ToArrayContract<E, C> {
 
     @Override
-    boolean supportsMethod(final OptionalMethod method);
+    boolean supportsMethod(OptionalMethod method);
 
     /// Used to indicate that the class being tested does not support an optional method.
     /// @param method the method that the class being tested does not support.
-    void doesNotSupportMethod(final OptionalMethod method);
+    void doesNotSupportMethod(OptionalMethod method);
 
     /// Specific if the test collection supports the methods that allow modification. It is a convenience function to
     /// set the support state for all the modification methods at once. These methods are:
     ///
-    /// - [Collection#add(Object)]
-    /// - [Collection#addAll(Collection)]
-    /// - [Collection#clear]
-    /// - [Collection#remove(Object)]
-    /// - [Collection#removeAll(Collection)]
-    /// - [Collection#removeIf(java.util.function.Predicate)]
-    /// - [Collection#retainAll(Collection)]
-    /// - [Iterator#remove()]
+    /// - [add\(Object\)][Collection#add(Object)]
+    /// - [addAll\(Collection\)][Collection#addAll(Collection)]
+    /// - [clear\(\)][Collection#clear]
+    /// - [remove\(Object\)][Collection#remove(Object)]
+    /// - [removeAll\(Collection\)][Collection#removeAll(Collection)]
+    /// - [removeIf\(Predicate\)][Collection#removeIf(java.util.function.Predicate)]
+    /// - [retainAll\(Collection\)][Collection#retainAll(Collection)]
+    /// - [Iterator.remove\(\)][java.util.Iterator#remove()]
     default void doesNotSupportModification() {
         doesNotSupportMethod(CollectionMethods.Add);
         doesNotSupportMethod(CollectionMethods.AddAll);

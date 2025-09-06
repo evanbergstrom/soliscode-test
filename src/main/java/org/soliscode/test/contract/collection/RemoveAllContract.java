@@ -7,9 +7,13 @@ import org.soliscode.test.contract.CollectionMethods;
 import org.soliscode.test.contract.support.CollectionContractSupport;
 import org.soliscode.test.util.MatchNothing;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.soliscode.test.assertions.collection.CollectionAssertions.assertContainsNone;
 import static org.soliscode.test.assertions.collection.CollectionAssertions.assertDoesNotContain;
 

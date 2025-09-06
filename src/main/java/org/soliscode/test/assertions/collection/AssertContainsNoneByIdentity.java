@@ -38,8 +38,8 @@ public final class AssertContainsNoneByIdentity extends IterableAssertion {
     private AssertContainsNoneByIdentity() {
     }
 
-    /// Test if an iterable contains no element from a set of elements. Two elements are only considered the same is they
-    /// have the same identity (*i.e* they are the same object).
+    /// Test if an iterable contains no element from a set of elements. Two elements are only considered the same is
+    /// they have the same identity (*i.e* they are the same object).
     ///
     /// @param excluded  The elements the iterable must not contain.
     /// @param actual    The iterable that should not contain the elements.
@@ -49,8 +49,8 @@ public final class AssertContainsNoneByIdentity extends IterableAssertion {
         checkContainsNoneByIdentity(excluded, actual, null);
     }
 
-    /// Test if an iterable contains no element from a set of elements. Two elements are only considered the same is they
-    /// have the same identity (*i.e* they are the same object).
+    /// Test if an iterable contains no element from a set of elements. Two elements are only considered the same is
+    /// they have the same identity (*i.e* they are the same object).
     ///
     /// @param excluded  The elements the iterable must not contain.
     /// @param actual    The iterable that should not contain the elements.
@@ -61,8 +61,8 @@ public final class AssertContainsNoneByIdentity extends IterableAssertion {
         checkContainsNoneByIdentity(excluded, actual, message);
     }
 
-    /// Test if an iterable contains no element from a set of elements. Two elements are only considered the same is they
-    /// have the same identity (*i.e* they are the same object).
+    /// Test if an iterable contains no element from a set of elements. Two elements are only considered the same is
+    /// they have the same identity (*i.e* they are the same object).
     ///
     /// @param excluded          The elements the iterable must not contain.
     /// @param actual            The iterable that should not contain the elements.

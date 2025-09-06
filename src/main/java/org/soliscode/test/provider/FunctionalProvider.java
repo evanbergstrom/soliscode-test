@@ -62,7 +62,7 @@ public class FunctionalProvider<T> implements ObjectProvider<T> {
     }
 
     @Override
-    public @NotNull T createInstance(int seed) {
+    public @NotNull T createInstance(final int seed) {
         if (seedConstructor != null) {
             return seedConstructor.apply(seed);
         } else {

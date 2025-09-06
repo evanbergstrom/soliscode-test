@@ -15,7 +15,11 @@
  */
 package org.soliscode.test.breakable;
 
-import java.util.*;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Spliterator;
 import java.util.function.Consumer;
 
 /// An Spliterator that can be broken in well-defined ways in order to test collection utilities or testing classes.
@@ -31,71 +35,84 @@ import java.util.function.Consumer;
 /// @since 1.0
 /// @see Spliterator
 public class BreakableSpliterator<E> extends AbstractBreakable implements Spliterator<E> {
-    private final Spliterator<E> iterator;
-    private final int characteristics;
-
     /// The spliterator always has no elements.
-    public static final Break SPLITERATOR_IS_ALWAYS_EMPTY = new Break("spliterator always has no elements");
+    public static final Break SPLITERATOR_IS_ALWAYS_EMPTY =
+            new Break("spliterator always has no elements");
 
     /// The spliterator that skips the first element.
-    public static final Break SPLITERATOR_SKIPS_FIRST_ELEMENT = new Break("spliterator skips the first element");
+    public static final Break SPLITERATOR_SKIPS_FIRST_ELEMENT =
+            new Break("spliterator skips the first element");
 
     /// The 'forEachRemaining' method on the spliterator does not call the action.
     /// @see BreakableSpliterator#forEachRemaining(Consumer)
-    public static final Break SPLITERATOR_FOR_EACH_REMAINING_DOES_NOT_CALL_ACTION = new Break("spliterator forEachRemaining does not call action");
+    public static final Break SPLITERATOR_FOR_EACH_REMAINING_DOES_NOT_CALL_ACTION =
+            new Break("spliterator forEachRemaining does not call action");
 
     /// The 'trySplit' method on the spliterator always returns `null`.
     /// @see BreakableSpliterator#trySplit()
-    public static final Break SPLITERATOR_TRY_SPLIT_ALWAYS_RETURNS_NULL = new Break("spliterator trySplit always returns null");
+    public static final Break SPLITERATOR_TRY_SPLIT_ALWAYS_RETURNS_NULL =
+            new Break("spliterator trySplit always returns null");
 
     /// The 'tryAdvance' method on the spliterator does not call the action.
     /// @see BreakableSpliterator#tryAdvance(Consumer)
-    public static final Break SPLITERATOR_TRY_ADVANCE_DOES_NOT_CALL_ACTION = new Break("spliterator tryAdvance does not call action");
+    public static final Break SPLITERATOR_TRY_ADVANCE_DOES_NOT_CALL_ACTION =
+            new Break("spliterator tryAdvance does not call action");
 
     /// The 'tryAdvance' method always returns true.
     /// @see BreakableSpliterator#tryAdvance(Consumer)
     /// SPLITERATOR_TRY_ADVANCE_ALWAYS_RETURNS_TRUE,
-    public static final Break SPLITERATOR_TRY_ADVANCE_ALWAYS_RETURNS_TRUE = new Break("spliterator tryAdvance always returns true");
+    public static final Break SPLITERATOR_TRY_ADVANCE_ALWAYS_RETURNS_TRUE =
+            new Break("spliterator tryAdvance always returns true");
 
     /// The 'tryAdvance' method always returns false.
     /// @see BreakableSpliterator#tryAdvance(Consumer)
-    public static final Break SPLITERATOR_TRY_ADVANCE_ALWAYS_RETURNS_FALSE = new Break("spliterator tryAdvance always returns false");
+    public static final Break SPLITERATOR_TRY_ADVANCE_ALWAYS_RETURNS_FALSE =
+            new Break("spliterator tryAdvance always returns false");
 
     /// The `estimateSize` method always returns the max value.
     /// @see BreakableSpliterator#estimateSize()
-    public static final Break SPLITERATOR_ESTIMATE_SIZE_ALWAYS_RETURNS_MAX_VALUE = new Break("spliterator estimateSize always returns the max value.");
+    public static final Break SPLITERATOR_ESTIMATE_SIZE_ALWAYS_RETURNS_MAX_VALUE =
+            new Break("spliterator estimateSize always returns the max value.");
 
     /// The `estimateSize` method always returns zero.
     /// @see BreakableSpliterator#estimateSize()
-    public static final Break SPLITERATOR_ESTIMATE_SIZE_ALWAYS_RETURNS_ZERO = new Break("spliterator estimateSize` always returns zero.");
+    public static final Break SPLITERATOR_ESTIMATE_SIZE_ALWAYS_RETURNS_ZERO =
+            new Break("spliterator estimateSize` always returns zero.");
 
     /// The `getExactSizeIfKnown` method always returns negative one (-1).
     /// @see BreakableSpliterator#getExactSizeIfKnown()
-    public static final Break SPLITERATOR_GET_EXACT_SIZE_IF_KNOWN_ALWAYS_RETURNS_NEGATIVE_ONE = new Break("");
+    public static final Break SPLITERATOR_GET_EXACT_SIZE_IF_KNOWN_ALWAYS_RETURNS_NEGATIVE_ONE =
+            new Break("");
 
     /// The `characteristics` method always returns zero (0).
     /// @see BreakableSpliterator#characteristics()
-    public static final Break SPLITERATOR_CHARACTERISTICS_ALWAYS_RETURNS_ZERO = new Break("spliterator getExactSizeIfKnown always returns -1");
+    public static final Break SPLITERATOR_CHARACTERISTICS_ALWAYS_RETURNS_ZERO =
+            new Break("spliterator getExactSizeIfKnown always returns -1");
 
     /// The `hasCharacteristics` method always returns `true`.
     /// @see BreakableSpliterator#hasCharacteristics(int)
-    public static final Break SPLITERATOR_HAS_CHARACTERISTIC_ALWAYS_RETURNS_TRUE = new Break("spliterator hasCharacteristics always returns true");
+    public static final Break SPLITERATOR_HAS_CHARACTERISTIC_ALWAYS_RETURNS_TRUE =
+            new Break("spliterator hasCharacteristics always returns true");
 
     /// The `hasCharacteristics` method always returns `false`.
     /// @see BreakableSpliterator#hasCharacteristics(int)
-    public static final Break SPLITERATOR_HAS_CHARACTERISTIC_ALWAYS_RETURNS_FALSE = new Break("spliterator hasCharacteristics always returns false");
+    public static final Break SPLITERATOR_HAS_CHARACTERISTIC_ALWAYS_RETURNS_FALSE =
+            new Break("spliterator hasCharacteristics always returns false");
 
     /// The `getComparator` method always return `null`.
     /// @see BreakableSpliterator#getComparator()
-    public static final Break SPLITERATOR_GET_COMPARATOR_ALWAYS_RETURNS_NULL = new Break("spliterator getComparator always returns null");
+    public static final Break SPLITERATOR_GET_COMPARATOR_ALWAYS_RETURNS_NULL = new
+            Break("spliterator getComparator always returns null");
 
+    private final @NotNull Spliterator<E> iterator;
+    private final int characteristics;
 
     /// Constructs a breakable spliterator from a spliterator that will provide the implementation.
-    ///
     /// @param iterator The spliterator that will provide the implementation
     /// @param breaks The breaks that define how the iterator is broken.
     /// @param characteristics A mask that indicates the characteristics of the iterator.
-    public BreakableSpliterator(final Spliterator<E> iterator, final Collection<Break> breaks, final int characteristics) {
+    public BreakableSpliterator(final @NotNull Spliterator<E> iterator, final Collection<Break> breaks,
+                                final int characteristics) {
         super(breaks);
         this.iterator = iterator;
         this.characteristics = characteristics;
@@ -116,7 +133,7 @@ public class BreakableSpliterator<E> extends AbstractBreakable implements Splite
     /// ```
     /// @param action The action to run on the remaining elements.
     @Override
-    public void forEachRemaining(Consumer<? super E> action) {
+    public void forEachRemaining(final @NotNull Consumer<? super E> action) {
         if (!hasBreak(SPLITERATOR_FOR_EACH_REMAINING_DOES_NOT_CALL_ACTION)) {
             iterator.forEachRemaining(action);
         }
@@ -166,11 +183,11 @@ public class BreakableSpliterator<E> extends AbstractBreakable implements Splite
     /// @param action The action to perform on the element
     /// @return `false` if no remaining elements existed upon entry to this method, else `true`.
     @Override
-    public boolean tryAdvance(Consumer<? super E> action) {
+    public boolean tryAdvance(final Consumer<? super E> action) {
         if (hasBreak(SPLITERATOR_IS_ALWAYS_EMPTY)) {
             return false;
         } else if (hasBreak(SPLITERATOR_TRY_ADVANCE_DOES_NOT_CALL_ACTION)) {
-            return iterator.tryAdvance((e) -> {});
+            return iterator.tryAdvance((e) -> { });
         } else if (hasBreak(SPLITERATOR_TRY_ADVANCE_ALWAYS_RETURNS_TRUE)) {
             iterator.tryAdvance(action);
             return true;
@@ -278,13 +295,13 @@ public class BreakableSpliterator<E> extends AbstractBreakable implements Splite
     /// ```
     /// @return a representation of characteristics, or possibly zero if the spliterator is broken.
     @Override
-    public boolean hasCharacteristics(int characteristics) {
+    public boolean hasCharacteristics(final int characteristicsToCheck) {
         if (hasBreak(SPLITERATOR_HAS_CHARACTERISTIC_ALWAYS_RETURNS_TRUE)) {
             return true;
         } else if (hasBreak(SPLITERATOR_HAS_CHARACTERISTIC_ALWAYS_RETURNS_FALSE)) {
             return false;
         } else {
-            return (characteristics() & characteristics) == characteristics;
+            return (characteristics() & characteristicsToCheck) == characteristicsToCheck;
         }
     }
 

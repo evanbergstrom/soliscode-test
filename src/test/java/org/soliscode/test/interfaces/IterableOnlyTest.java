@@ -11,7 +11,6 @@ import org.soliscode.test.provider.CollectionProvider;
 import org.soliscode.test.provider.FunctionalCollectionProvider;
 
 import java.util.ArrayList;
-import java.util.Collection;
 
 
 /// Tests for the [IterableOnly] class.

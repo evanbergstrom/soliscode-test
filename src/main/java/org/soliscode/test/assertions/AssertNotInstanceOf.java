@@ -8,9 +8,9 @@ import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
 ///
 /// @author evanbergstrom
 /// @since 1.0.0
-public class AssertNotInstanceOf {
+public final class AssertNotInstanceOf {
 
-    private AssertNotInstanceOf() {}
+    private AssertNotInstanceOf() { }
 
     static void assertNotInstanceOf(final Class<?> expectedType, final Object actual) {
         assertNotInstanceOf(expectedType, actual, (Object) null);
@@ -20,11 +20,13 @@ public class AssertNotInstanceOf {
         assertNotInstanceOf(expectedType, actual, (Object) message);
     }
 
-    static void assertNotInstanceOf(final Class<?> expectedType, final Object actual, final Supplier<String> messageSupplier) {
+    static void assertNotInstanceOf(final Class<?> expectedType, final Object actual,
+                                    final Supplier<String> messageSupplier) {
         assertNotInstanceOf(expectedType, actual, (Object) messageSupplier);
     }
 
-    private static void assertNotInstanceOf(final Class<?> expectedType, final Object actual, final Object messageOrSupplier) {
+    private static void assertNotInstanceOf(final Class<?> expectedType, final Object actual,
+                                            final Object messageOrSupplier) {
         if (expectedType.isInstance(actual)) {
             assertionFailure()
                     .message(messageOrSupplier)

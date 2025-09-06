@@ -5,7 +5,10 @@ import org.soliscode.test.contract.support.CollectionContractSupport;
 import org.soliscode.test.util.CollectionTestOps;
 import org.soliscode.test.util.MatchNothing;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -54,7 +57,6 @@ public interface ContainsAllContract<E, C extends Collection<E>> extends Collect
     }
 
     /// Tests that the `containsAll()` method works for a collection with null elements.
-    @SuppressWarnings("DataFlowIssue")
     @Test
     default void testContainsAllOnCollectionWithNulls() {
         List<E> values = elementProvider().createUniqueInstances(2);

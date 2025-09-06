@@ -2,8 +2,15 @@ package org.soliscode.test.util;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
-import java.util.function.Consumer;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.Set;
 
 import static org.soliscode.test.breakable.Breakables.ensureUnbroken;
 
@@ -16,13 +23,13 @@ import static org.soliscode.test.breakable.Breakables.ensureUnbroken;
 /// @since 1.0.0
 public final class IterableTestOps {
 
-    private IterableTestOps() {}
+    private IterableTestOps() { }
 
     /// Returns `true` if the iterable contains no elements.
     ///
     /// @param i The iterable.
     /// @return `true` if the iterable contains no elements, `false` otherwise.
-    public static boolean isEmpty(final Iterable<?> i) {
+    public static boolean isEmpty(final @NotNull Iterable<?> i) {
         if (i instanceof Collection<?> c) {
             return ensureUnbroken(c).isEmpty();
         } else {
@@ -35,7 +42,7 @@ public final class IterableTestOps {
     ///
     /// @param i The iterable.
     /// @return the number of elements in this iterable.
-    public static int size(final Iterable<?> i) {
+    public static int size(final @NotNull Iterable<?> i) {
         if (i instanceof Collection<?> c) {
             return ensureUnbroken(c).size();
         } else {
@@ -55,7 +62,7 @@ public final class IterableTestOps {
     /// @return {@code true} if this iterable contains the specified element, `false` otherwise.
     /// @throws ClassCastException if the type of the specified element is incompatible with this collection
     /// @throws NullPointerException if the specified element is null and this iterable does not permit null elements
-    public static boolean contains(final Iterable<?> i, final Object o) {
+    public static boolean contains(final @NotNull Iterable<?> i, final Object o) {
         if (i instanceof Collection<?> c) {
             return ensureUnbroken(c).contains(o);
         } else {
@@ -76,7 +83,7 @@ public final class IterableTestOps {
     /// @return `true` if this iterable contains the specified element, `false` otherwise.
     /// @throws ClassCastException if the type of the specified element is incompatible with this collection
     /// @throws NullPointerException if the specified element is null and this iterable does not permit null elements
-    public static boolean containsByIdentity(final Iterable<?> i, final Object o) {
+    public static boolean containsByIdentity(final @NotNull Iterable<?> i, final Object o) {
         for (Object e : ensureUnbroken(i)) {
             if (e == o) {
                 return true;
@@ -93,11 +100,11 @@ public final class IterableTestOps {
     }
 
 
-    // Compare the elements in two iterables for equality.
+    /// Compare the elements in two iterables for equality.
     /// @param iterable1 The first iterable to compare for equality.
     /// @param iterable2 The second iterable to compare for equality.
     /// @return `true` if the iterables contain elements that are equal at each position.
-    public static boolean equals(final Iterable<?> iterable1, final Iterable<?> iterable2) {
+    public static boolean equals(final @NotNull Iterable<?> iterable1, final @NotNull Iterable<?> iterable2) {
         Iterator<?> i1 = ensureUnbroken(iterable1).iterator();
         Iterator<?> i2 = ensureUnbroken(iterable2).iterator();
         while (i1.hasNext() && i2.hasNext()) {
@@ -108,7 +115,7 @@ public final class IterableTestOps {
         return !(i1.hasNext() || i2.hasNext());
     }
 
-    private static class EmptyIterable<E> implements Iterable<E> {
+    private static final class EmptyIterable<E> implements Iterable<E> {
         @Override
         @NotNull
         public Iterator<E> iterator() {
@@ -174,11 +181,11 @@ public final class IterableTestOps {
     /// @param iterable the iterable to copy.
     /// @param n the number of elements to copy.
     /// @return a copy of the original iterable.
-    public static <E> Iterable<E> copyFirst(final Iterable<E> iterable, int n) {
+    public static <E> Iterable<E> copyFirst(final @NotNull Iterable<E> iterable, final int n) {
         List<E> list = new ArrayList<>();
         int i = 0;
         Iterator<E> iter = ensureUnbroken(iterable).iterator();
-        while(i < n && iter.hasNext()) {
+        while (i < n && iter.hasNext()) {
             list.add(iter.next());
             i++;
         }
@@ -223,7 +230,7 @@ public final class IterableTestOps {
         private boolean canRemove = false;      // Whether remove() is allowed
         private boolean removePending = false;  // Whether remove() should be executed
 
-        public SkipLastIterator(Iterator<T> source) {
+        SkipLastIterator(final @NotNull Iterator<T> source) {
             this.source = Objects.requireNonNull(source);
             prefetch();
         }
@@ -277,9 +284,9 @@ public final class IterableTestOps {
 
         @Override
         public void remove() {
-            if (!canRemove)
+            if (!canRemove) {
                 throw new IllegalStateException("remove() must follow next(), and only once per element");
-
+            }
             // Defer the actual remove to the next call of next()
             removePending = true;
             canRemove = false;

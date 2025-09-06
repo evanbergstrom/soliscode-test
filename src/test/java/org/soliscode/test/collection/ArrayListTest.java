@@ -7,7 +7,8 @@ import org.soliscode.test.AbstractTest;
 import org.soliscode.test.contract.DoesNotPermitIncompatibleTypes;
 import org.soliscode.test.contract.DoesNotPermitNulls;
 import org.soliscode.test.contract.list.ListContract;
-import org.soliscode.test.contract.support.*;
+import org.soliscode.test.contract.support.WithArrayList;
+import org.soliscode.test.contract.support.WithIntegerElement;
 import org.soliscode.test.provider.*;
 import org.soliscode.test.util.CollectionTestOps;
 
