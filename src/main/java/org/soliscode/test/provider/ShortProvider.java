@@ -16,7 +16,7 @@
 
 package org.soliscode.test.provider;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 /// Provides instances of an [Short] for the purposes of testing.
 ///
@@ -33,7 +33,25 @@ public class ShortProvider implements IntegerNumberProvider<Short> {
     /// @param value the primitive short value.
     /// @return an instance of the `Short` class.
     @Override
-    public @NotNull Short createValue(final int value) {
-        return (short) (value % Short.MAX_VALUE);
+    public @NonNull Short createValue(final long value) {
+        if (value < Short.MIN_VALUE || value > Short.MAX_VALUE) {
+            throw new IllegalArgumentException("value (" + value + ") is not a valid Short value");
+        }
+        return (short) value;
+    }
+
+    /// {@inheritDoc}
+    /// @return This method will return `Integer.MAX_VALUE`.
+    @Override
+    public long maxIntegerValue() {
+        return Short.MAX_VALUE;
+    }
+
+
+    /// {@inheritDoc}
+    /// @return This method will return `Integer.MIN_VALUE`.
+    @Override
+    public long minIntegerValue() {
+        return Short.MIN_VALUE;
     }
 }

@@ -16,7 +16,7 @@
 
 package org.soliscode.test.provider;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -49,10 +49,10 @@ public final class CollectionProviders {
     /// @return the collection provider.
     /// @throws NullPointerException if any of the arguments are `null`
     public static <E, C extends Iterable<E>> CollectionProvider<E, C> from(
-            final @NotNull Supplier<C> defaultConstructor,
-            final @NotNull Function<C, C> copyConstructor,
-            final @NotNull Function<Collection<E>, C> collectionConstructor,
-            final @NotNull ObjectProvider<E> elementProvider) {
+            final @NonNull Supplier<C> defaultConstructor,
+            final @NonNull Function<C, C> copyConstructor,
+            final @NonNull Function<Collection<E>, C> collectionConstructor,
+            final @NonNull ObjectProvider<E> elementProvider) {
         return new FunctionalCollectionProvider<>(defaultConstructor, copyConstructor, collectionConstructor,
                 elementProvider);
     }
@@ -61,8 +61,8 @@ public final class CollectionProviders {
     /// @param elementProvider the provider to use to create the elements.
     /// @param <E> The type of the elements
     /// @return the collection provider.
-    public static <E> @NotNull CollectionProvider<E, ArrayList<E>> provideArrayList(
-            final @NotNull ObjectProvider<E> elementProvider) {
+    public static <E> @NonNull CollectionProvider<E, ArrayList<E>> provideArrayList(
+            final @NonNull ObjectProvider<E> elementProvider) {
         return CollectionProviders.from(ArrayList::new, ArrayList::new, ArrayList::new, elementProvider);
     }
 
@@ -71,7 +71,7 @@ public final class CollectionProviders {
     /// @param <E> The type of the elements
     /// @return the collection provider.
     public static <E> CollectionProvider<E, LinkedList<E>> provideLinkedList(
-            final @NotNull ObjectProvider<E> elementProvider) {
+            final @NonNull ObjectProvider<E> elementProvider) {
         return CollectionProviders.from(LinkedList::new, LinkedList::new, LinkedList::new, elementProvider);
     }
 
@@ -80,7 +80,7 @@ public final class CollectionProviders {
     /// @param <E> The type of the elements
     /// @return the collection provider.
     public static <E> CollectionProvider<E, HashSet<E>> provideHashSet(
-            final @NotNull ObjectProvider<E> elementProvider) {
+            final @NonNull ObjectProvider<E> elementProvider) {
         return CollectionProviders.from(HashSet::new, HashSet::new, HashSet::new, elementProvider);
     }
 
@@ -97,65 +97,65 @@ public final class CollectionProviders {
     }
 
     private record WrappedCollectionProvider<E, C extends Collection<E>, W extends Collection<E>>(
-            @NotNull CollectionProvider<E, C> provider, @NotNull Function<C, W> wrapper)
+            @NonNull CollectionProvider<E, C> provider, @NonNull Function<C, W> wrapper)
                 implements CollectionProvider<E, W> {
 
         @Override
-            public @NotNull ObjectProvider<E> elementProvider() {
+            public @NonNull ObjectProvider<E> elementProvider() {
                 return provider.elementProvider();
             }
 
         @Override
-        public @NotNull W defaultInstance() {
+        public @NonNull W defaultInstance() {
             return wrapper.apply(provider.defaultInstance());
         }
 
         @Override
-            public @NotNull W emptyInstance() {
+            public @NonNull W emptyInstance() {
                 return wrapper.apply(provider.emptyInstance());
             }
 
             @Override
-            public @NotNull W copyInstance(final @NotNull W ws) {
+            public @NonNull W copyInstance(final @NonNull W ws) {
                 return wrapper.apply(provider.createInstance(ws));
             }
 
-            public @NotNull W createInstance(final @NotNull Collection<E> c) {
+            public @NonNull W createInstance(final @NonNull Collection<E> c) {
                 return wrapper.apply(provider.createInstance(c));
             }
 
             @Override
-            public @NotNull W createInstance(final int seed) {
+            public @NonNull W createInstance(final long seed) {
                 return wrapper.apply(provider.createInstance(seed));
             }
 
             @Override
-            public @NotNull W createSingleton() {
+            public @NonNull W createSingleton() {
                 return wrapper.apply(provider.createSingleton());
             }
 
             @Override
-            public @NotNull W createInstanceWithUniqueElements() {
+            public @NonNull W createInstanceWithUniqueElements() {
                 return wrapper.apply(provider.createInstanceWithUniqueElements());
             }
 
             @Override
-            public @NotNull W createInstanceWithUniqueElements(final int size) {
+            public @NonNull W createInstanceWithUniqueElements(final int size) {
                 return wrapper.apply(provider.createInstanceWithUniqueElements(size));
             }
 
             @Override
-            public @NotNull W createInstanceWithUniqueElements(final int size, final int seed) {
+            public @NonNull W createInstanceWithUniqueElements(final int size, final int seed) {
                 return wrapper.apply(provider.createInstanceWithUniqueElements(size, seed));
             }
 
             @Override
-            public @NotNull W createInstance(final @NotNull E[] elements) {
+            public @NonNull W createInstance(final @NonNull E[] elements) {
                 return wrapper.apply(provider.createInstance(elements));
             }
 
             @Override
-            public @NotNull W createSingleton(final E e) {
+            public @NonNull W createSingleton(final E e) {
                 return wrapper.apply(provider.createSingleton(e));
             }
         }

@@ -1,6 +1,6 @@
 package org.soliscode.test.interfaces;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.soliscode.test.AbstractTest;
@@ -17,7 +17,7 @@ import org.soliscode.test.provider.ObjectProvider;
 public class ObjectOnlyTest extends AbstractTest implements ObjectContract<ObjectOnly> {
 
     @Override
-    public @NotNull ObjectProvider<ObjectOnly> provider() {
+    public @NonNull ObjectProvider<ObjectOnly> provider() {
         return new FunctionalProvider<>(ObjectOnly::new, ObjectOnly::new, ObjectOnly::new);
     }
 

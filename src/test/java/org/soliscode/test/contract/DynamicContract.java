@@ -1,6 +1,6 @@
 package org.soliscode.test.contract;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.soliscode.test.AbstractTest;
 import org.soliscode.test.breakable.Break;
 import org.soliscode.test.contract.support.CollectionContractSupport;
@@ -23,7 +23,7 @@ public abstract class DynamicContract<E,C extends Iterable<E>> extends AbstractT
     }
 
     @Override
-    public @NotNull CollectionProvider<E, C> provider() {
+    public @NonNull CollectionProvider<E, C> provider() {
         return providerCreator.apply(elementProvider(), breaks);
     }
 }

@@ -1,6 +1,6 @@
 package org.soliscode.test.breakable;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.soliscode.test.contract.CollectionMethods;
 
 import java.util.ArrayList;
@@ -30,7 +30,7 @@ import java.util.function.UnaryOperator;
 /// @since 1.0.0
 public class BreakableList<E> extends BreakableSequencedCollection<E> implements List<E> {
 
-    private final @NotNull List<E> list;
+    private final @NonNull List<E> list;
 
     /// Creates an empty list that has no breaks.
     public BreakableList() {
@@ -39,13 +39,13 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
 
     /// Creates a breakable sequenced collection from an existing instance.
     /// @param other the breakable collection to copy.
-    public BreakableList(final @NotNull BreakableList<E> other) {
+    public BreakableList(final @NonNull BreakableList<E> other) {
         this(other.list, new HashSet<>(), 0);
     }
 
     /// Creates a breakable iterable from an iterable.
     /// @param collection the iterator to use for the elements.
-    public BreakableList(final @NotNull List<E> collection) {
+    public BreakableList(final @NonNull List<E> collection) {
         this(collection, new HashSet<>(), 0);
     }
 
@@ -56,7 +56,7 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     /// @param breaks          the breaks for the collection.
     /// @param characteristics the characteristics for the collection.
     /// @throws NullPointerException if either the `c` or the `breaks` parameters are null.
-    public BreakableList(final @NotNull List<E> c, final @NotNull Collection<Break> breaks, final int characteristics) {
+    public BreakableList(final @NonNull List<E> c, final @NonNull Collection<Break> breaks, final int characteristics) {
         super(c, breaks, characteristics);
         this.list = Objects.requireNonNull(c);
     }
@@ -112,107 +112,107 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     /// The [add][List#add(int,Object)] method adds the element at the next position.
     /// @see BreakableList#add(int,Object)
     public static final Break ADD_AT_INDEX_ADDS_AT_NEXT_POSITION =
-            new Break("");
+            new Break("add(int,Object) method will not add an element to the collection");
 
     /// The [add][List#add(int,Object)] method adds the element at the previous position.
     /// @see BreakableList#add(int,Object)
     public static final Break ADD_AT_INDEX_ADDS_AT_PREVIOUS_POSITION =
-            new Break("");
+            new Break("add(int,Object) method adds the element at the previous position");
 
     /// The [add][List#add(int,Object)] method throws the wrong exception when the index is out of bounds.
     /// @see BreakableList#add(int,Object)
     public static final Break ADD_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX =
-            new Break("");
+            new Break("add(int,Object) method throws the wrong exception when the index is out of bounds");
 
     /// The [get][List#get(int)] method always returns `null`
     /// @see BreakableList#get(int)
     public static final Break GET_ALWAYS_RETURNS_NULL =
-            new Break("");
+            new Break("get(int) method always returns null");
 
     /// The [get][List#get(int)] method always returns the first element.
     /// @see BreakableList#get(int)
     public static final Break GET_ALWAYS_RETURNS_THE_FIRST_ELEMENT =
-            new Break("");
+            new Break("get(int) method always returns the first element");
 
     /// The [get][List#get(int)] method always returns the last element.
     /// @see BreakableList#get(int)
     public static final Break GET_ALWAYS_RETURNS_THE_LAST_ELEMENT =
-            new Break("");
+            new Break("get(int) method always returns the last element");
 
     /// The [get][List#get(int)] method returns the next element (*i.e.* at index + 1).
     /// @see BreakableList#get(int)
     public static final Break GET_RETURNS_THE_NEXT_ELEMENT =
-            new Break("");
+            new Break("get(int) method returns the next element (*i.e.* at index + 1)");
 
     /// The [get][List#get(int)] method returns the previous element.
     /// @see BreakableList#get(int)
     public static final Break GET_RETURNS_THE_PREVIOUS_ELEMENT =
-            new Break("");
+            new Break("get(int) method returns the previous element");
 
     /// The [get][List#get(int)] method returns `null` on a bad index instead of throwing en exception.
     /// @see BreakableList#get(int)
     public static final Break GET_RETURNS_NULL_ON_BAD_INDEX =
-            new Break("");
+            new Break("get(int) method returns null on a bad index instead of throwing en exception");
 
     /// The [get][List#get(int)] method throws the wrong exception on a bad index.
     /// @see BreakableList#get(int)
     public static final Break GET_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX =
-            new Break("");
+            new Break("get(int) method throws the wrong exception on a bad index");
 
     /// The [remove][List#remove(int)] method does not remove the element.
     /// @see BreakableList#remove(int)
     public static final Break REMOVE_AT_INDEX_DOES_NOT_REMOVE_THE_ELEMENT =
-            new Break("");
+            new Break("remove(int) method does not remove the element");
 
     /// The [remove][List#remove(int)] method removes the next element.
     /// @see BreakableList#remove(int)
     public static final Break REMOVE_AT_INDEX_REMOVES_THE_NEXT_ELEMENT =
-            new Break("");
+            new Break("remove(int) method removes the next element");
 
     /// The [remove][List#remove(int)] method removes the previous element
     /// @see BreakableList#remove(int)
     public static final Break REMOVE_AT_INDEX_REMOVES_THE_PREVIOUS_ELEMENT =
-            new Break("");
+            new Break("remove(int) method removes the previous element");
 
     /// The [remove][List#remove(int)] method returns `null` when the index is out of bounds.
     /// @see BreakableList#remove(int)
     public static final Break REMOVE_AT_INDEX_RETURNS_NULL_ON_BAD_INDEX =
-            new Break("");
+            new Break("remove(int)] method returns null when the index is out of bound");
 
     /// The [remove][List#remove(int)] method throws the wrong exception when the index is out of bounds.
     /// @see BreakableList#remove(int)
     public static final Break REMOVE_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX =
-            new Break("");
+            new Break("remove(int) method throws the wrong exception when the index is out of bounds");
 
     /// The [remove][List#remove(int)] method always returns `null`
     /// @see BreakableList#remove(int)
     public static final Break REMOVE_AT_INDEX_ALWAYS_RETURNS_NULL =
-            new Break("");
+            new Break("remove(int) method always returns null");
 
     /// The [replaceAll][List#replaceAll(UnaryOperator)] method does not replace any elements
     /// @see BreakableList#replaceAll(UnaryOperator)
     public static final Break REPLACE_ALL_DOES_NOT_REPLACE_ELEMENTS =
-            new Break("");
+            new Break("replaceAll(UnaryOperator) method does not replace any elements");
 
     /// The [replaceAll][List#replaceAll(UnaryOperator)] method skips the first element.
     /// @see BreakableList#replaceAll(UnaryOperator)
     public static final Break REPLACE_ALL_SKIPS_FIRST_ELEMENT =
-            new Break("");
+            new Break("replaceAll(UnaryOperator) method skips the first element");
 
     /// The [replaceAll][List#replaceAll(UnaryOperator)] method skips the last element
     /// @see BreakableList#replaceAll(UnaryOperator)
     public static final Break REPLACE_ALL_SKIPS_LAST_ELEMENT =
-            new Break("");
+            new Break("replaceAll(UnaryOperator) method skips the last element");
 
     /// The [set][List#set(int,Object)] method does not change the element.
     /// @see BreakableList#set(int,Object)
     public static final Break SET_DOES_NOT_CHANGE_THE_ELEMENT =
-            new Break("");
+            new Break("set(int,Object) method does not change the element");
 
     /// The [set][List#set(int,Object)] method always returns `null`
     /// @see BreakableList#set(int,Object)
     public static final Break SET_ALWAYS_RETURNS_NULL =
-            new Break("");
+            new Break("set(int,Object) method always returns null");
 
     /// The [set][List#set(int,Object)] method changes the next element (*i.e.* at index + 1).
     /// @see BreakableList#set(int,Object)
@@ -222,29 +222,32 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     /// The [set][List#set(int,Object)] method changes the previous element (*i.e.* at index - 1).
     /// @see BreakableList#set(int,Object)
     public static final Break SET_CHANGES_THE_PREVIOUS_ELEMENT =
-            new Break("");
+            new Break("set(int,Object) method changes the previous element (*i.e.* at index - 1)");
 
     /// The [set][List#set(int,Object)] method returns `null` on a bad index instead of throwing en exception.
     /// @see BreakableList#set(int, Object)
     public static final Break SET_RETURNS_NULL_ON_BAD_INDEX =
-            new Break("");
+            new Break("set(int,Object) method returns null on a bad index instead of throwing en exception");
 
     /// The [set][List#set(int,Object)] method throws the wrong exception on a bad index.
     /// @see BreakableList#set(int, Object)
     public static final Break SET_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX =
-            new Break("");
+            new Break("set(int,Object) method throws the wrong exception on a bad index");
 
     /// The [sort][List#sort(Comparator)] method sorts the elements in the reverse order.
     /// @see BreakableList#sort(Comparator)
     public static final Break SORT_REVERSES_THE_ORDER =
-            new Break("");
+            new Break("sort(Comparator) method sorts the elements in the reverse order");
+
     /// The [sort][List#sort(Comparator)] method throws a `NullPointerException` if the argument is `null`
     /// @see BreakableList#sort(Comparator)
-    public static final Break SORT_THROWS_ON_NULL_ARGUMENT = new Break("");
+    public static final Break SORT_THROWS_ON_NULL_ARGUMENT =
+            new Break("sort(Comparator) method throws a NullPointerException if the argument is `null`");
 
     /// The [sort][List#sort(Comparator)] method does not sort the elements.
     /// @see BreakableList#sort(Comparator)
-    public static final Break SORT_DOES_NOT_SORT_THE_ELEMENTS  = new Break("");
+    public static final Break SORT_DOES_NOT_SORT_THE_ELEMENTS  =
+            new Break("sort(Comparator) method does not sort the elements");
 
     @Override
     public List<E> reversed() {
@@ -285,7 +288,7 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     /// @see List#addAll(int, Collection)
     @SuppressWarnings("ConstantValue")
     @Override
-    public boolean addAll(final int index, final @NotNull Collection<? extends E> c) {
+    public boolean addAll(final int index, final @NonNull Collection<? extends E> c) {
         if (supportsMethod(CollectionMethods.AddAll)) {
             if ((index < 0 || index >= list.size()) && hasBreak(ADD_ALL_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX)) {
                 throw new RuntimeException();
@@ -342,7 +345,7 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     ///         this list does not permit null elements.
     /// @see List#replaceAll(UnaryOperator)
     @Override
-    public void replaceAll(final @NotNull UnaryOperator<E> operator) {
+    public void replaceAll(final @NonNull UnaryOperator<E> operator) {
         if (supportsMethod(CollectionMethods.ReplaceAll)) {
             int start = 0;
             int end = list.size();
@@ -613,17 +616,61 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     }
 
     @Override
-    public @NotNull ListIterator<E> listIterator() {
+    public @NonNull ListIterator<E> listIterator() {
         return list.listIterator();
     }
 
     @Override
-    public @NotNull ListIterator<E> listIterator(final int index) {
+    public @NonNull ListIterator<E> listIterator(final int index) {
         return list.listIterator(index);
     }
 
     @Override
-    public @NotNull List<E> subList(final int fromIndex, final int toIndex) {
+    public @NonNull List<E> subList(final int fromIndex, final int toIndex) {
         return list.subList(fromIndex, toIndex);
+    }
+
+    /// Builder for creating BreakableList instances.
+    /// @param <E> the element type for the list
+    public static class Builder<E>
+            extends AbstractBuilder<BreakableList.Builder<E>, BreakableList<E>, E> {
+
+        private final List<E> list;
+
+        /// Create a builder initialized with the default values.
+        public Builder() {
+            super(new ArrayList<>());
+            this.list = (ArrayList<E>) elements;
+        }
+
+        /// Create a builder initialized with an element store.
+        /// @param elements the element store to use.
+        public Builder(final @NonNull List<E> elements) {
+            super(Objects.requireNonNull(elements));
+            this.list = elements;
+        }
+
+        /// Create a builder initialized with the values copied from another builder.
+        /// @param other the builder to copy the values from.
+        public Builder(final BreakableList.Builder<E> other) {
+            super(other);
+            this.list = other.list;
+        }
+
+        @Override
+        public Builder<E> self() {
+            return this;
+        }
+
+        @Override
+        public BreakableList.Builder<E> copy() {
+            return new BreakableList.Builder<>(this);
+        }
+
+        /// Build a BreakableList object using the values from the builder.
+        /// @return a new BreakableList object.
+        public BreakableList<E> build() {
+            return new BreakableList<>(list, breaks, characteristics);
+        }
     }
 }

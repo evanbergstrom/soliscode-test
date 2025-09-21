@@ -1,6 +1,6 @@
 package org.soliscode.test.provider;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -31,8 +31,8 @@ public class FunctionalCollectionProvider<E, I extends Iterable<E>> extends Func
     /// Default number of elements to use for a test.
     private static final int DEFAULT_SIZE = 10;
 
-    private final @NotNull Function<Collection<E>, I> collectionConstructor;
-    private final @NotNull ObjectProvider<E> elementProvider;
+    private final @NonNull Function<Collection<E>, I> collectionConstructor;
+    private final @NonNull ObjectProvider<E> elementProvider;
 
     /// Create an instance of this collection provider that uses the methods and element provider specified in the
     /// arguments for its implementation.
@@ -41,39 +41,39 @@ public class FunctionalCollectionProvider<E, I extends Iterable<E>> extends Func
     /// @param collectionConstructor the function to use to create an instance from another collection.
     /// @param elementProvider the element provider.
     /// @throws NullPointerException if any of the arguments are `null`
-    public FunctionalCollectionProvider(final @NotNull Supplier<I> defaultConstructor,
-                                        final @NotNull Function<I, I> copyConstructor,
-                                        final @NotNull Function<Collection<E>, I> collectionConstructor,
-                                        final @NotNull ObjectProvider<E> elementProvider) {
+    public FunctionalCollectionProvider(final @NonNull Supplier<I> defaultConstructor,
+                                        final @NonNull Function<I, I> copyConstructor,
+                                        final @NonNull Function<Collection<E>, I> collectionConstructor,
+                                        final @NonNull ObjectProvider<E> elementProvider) {
         super(defaultConstructor, copyConstructor);
         this.collectionConstructor = Objects.requireNonNull(collectionConstructor);
         this.elementProvider = Objects.requireNonNull(elementProvider);
     }
 
     @Override
-    public @NotNull ObjectProvider<E> elementProvider() {
+    public @NonNull ObjectProvider<E> elementProvider() {
         return elementProvider;
     }
 
     /// Creates an instance of iterable with no elements.
     /// @return and instance of iterable
     @Override
-    public @NotNull I emptyInstance() {
+    public @NonNull I emptyInstance() {
         return defaultInstance();
     }
 
     @Override
-    public @NotNull I createInstance(final @NotNull Collection<E> c) {
+    public @NonNull I createInstance(final @NonNull Collection<E> c) {
         return collectionConstructor.apply(c);
     }
 
     @Override
-    public @NotNull I createInstance(final int seed) {
+    public @NonNull I createInstance(final long seed) {
         return createInstance(elementProvider().createUniqueInstances(DEFAULT_SIZE, seed));
     }
 
     @Override
-    public @NotNull I createSingleton() {
+    public @NonNull I createSingleton() {
         return createInstance(Collections.singleton(elementProvider.createInstance()));
     }
 
@@ -81,7 +81,7 @@ public class FunctionalCollectionProvider<E, I extends Iterable<E>> extends Func
     /// @param e the element for the iterable.
     /// @return and instance of iterable.
     @Override
-    public @NotNull I createSingleton(final E e) {
+    public @NonNull I createSingleton(final E e) {
         return createInstance(Collections.singleton(e));
     }
 
@@ -90,22 +90,22 @@ public class FunctionalCollectionProvider<E, I extends Iterable<E>> extends Func
     /// @return and instance of iterable.
     /// @throws NullPointerException if the argument is `null`.
     @Override
-    public  @NotNull I createInstance(final @NotNull E[] elements) {
+    public  @NonNull I createInstance(final @NonNull E[] elements) {
         return createInstance(Arrays.asList(elements));
     }
 
     @Override
-    public @NotNull I createInstanceWithUniqueElements() {
+    public @NonNull I createInstanceWithUniqueElements() {
         return createInstance(elementProvider.createUniqueInstances(DEFAULT_SIZE));
     }
 
     @Override
-    public @NotNull I createInstanceWithUniqueElements(final int size) {
+    public @NonNull I createInstanceWithUniqueElements(final int size) {
         return createInstance(elementProvider.createUniqueInstances(size));
     }
 
     @Override
-    public @NotNull I createInstanceWithUniqueElements(final int size, final int seed) {
+    public @NonNull I createInstanceWithUniqueElements(final int size, final int seed) {
         return createInstance(elementProvider.createUniqueInstances(size, seed));
     }
 
@@ -120,10 +120,10 @@ public class FunctionalCollectionProvider<E, I extends Iterable<E>> extends Func
     /// @return the collection provider.
     /// @throws NullPointerException if any of the arguments are `null`
     public static <E, I extends Iterable<E>> FunctionalCollectionProvider<E, I> from(
-            final @NotNull Supplier<I> defaultConstructor,
-            final @NotNull Function<I, I> copyConstructor,
-            final @NotNull Function<Collection<E>, I> collectionConstructor,
-            final @NotNull ObjectProvider<E> elementProvider) {
+            final @NonNull Supplier<I> defaultConstructor,
+            final @NonNull Function<I, I> copyConstructor,
+            final @NonNull Function<Collection<E>, I> collectionConstructor,
+            final @NonNull ObjectProvider<E> elementProvider) {
         return new FunctionalCollectionProvider<>(defaultConstructor, copyConstructor, collectionConstructor,
                 elementProvider);
     }

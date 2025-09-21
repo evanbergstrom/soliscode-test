@@ -16,8 +16,10 @@
 
 package org.soliscode.test.assertions.actions;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
@@ -39,10 +41,10 @@ import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
 /// @since 1.0
 /// @see AssertActions
 /// @see java.util.function.Consumer
-public class AssertConsumeCount<T> implements AssertConsumer<T> {
+public class AssertConsumeCount<T> implements Consumer<T>, CheckableAction {
 
     private final int expected;
-    private int actual;
+    private final AtomicInteger actual = new AtomicInteger(0);
     private final @Nullable Object messageOrSupplier;
 
     /// Create a consumer that expect to consume a specified number of objects.
@@ -74,18 +76,27 @@ public class AssertConsumeCount<T> implements AssertConsumer<T> {
     /// @param obj the object that is being consumed.
     @Override
     public void accept(@Nullable final T obj) {
-        actual++;
+        actual.incrementAndGet();
+    }
+
+    /**
+     * Rreturns the number of abjects that have been accepted by the consumer.
+     * @return the number of objects accepted.
+     */
+    public int accepted() {
+        return actual.get();
     }
 
     /// Asserts that the consumer has been called the expected number of times.
     /// @throws org.opentest4j.AssertionFailedError if the consumer has not been called the expected number of times.
     @Override
     public void assertCheck() {
-        if (actual != expected) {
+        if (actual.get() != expected) {
             throw assertionFailure()
                     .message(messageOrSupplier)
                     .expected(expected)
                     .actual(actual)
+                    .reason("Expected to consume " + expected + " objects, actually consumed " + actual.get())
                     .build();
         }
     }

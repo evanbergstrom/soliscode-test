@@ -17,7 +17,7 @@
 package org.soliscode.test.assertions.collection;
 
 import org.opentest4j.AssertionFailedError;
-import org.soliscode.test.util.IterableTestOps;
+import org.soliscode.test.util.IterableTestUtils;
 
 import java.util.function.Supplier;
 
@@ -59,7 +59,7 @@ public final class AssertIsEmpty {
     }
 
     private static void checkIsEmpty(final Iterable<?> actual, final Object messageOrSupplier) {
-        if (!IterableTestOps.isEmpty(actual)) {
+        if (!IterableTestUtils.isEmpty(actual)) {
             throw buildException(actual, messageOrSupplier);
         }
     }
@@ -67,7 +67,7 @@ public final class AssertIsEmpty {
     private static AssertionFailedError buildException(final Iterable<?> actual, final Object messageOrSupplier) {
         return assertionFailure()
             .message(messageOrSupplier)
-            .expected(IterableTestOps.empty())
+            .expected(IterableTestUtils.empty())
             .actual(actual)
             .build();
     }

@@ -15,7 +15,7 @@
  */
 package org.soliscode.test.breakable;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Collection;
 
@@ -39,7 +39,7 @@ public final class Breakables {
     /// @param e the elements to add to the iterable.
     /// @return a builder.
     @SafeVarargs
-    public static <E> BreakableIterable.Builder<E> buildIterable(final @NotNull E... e) {
+    public static <E> BreakableIterable.Builder<E> buildIterable(final @NonNull E... e) {
         return new BreakableIterable.Builder<E>()
                 .addElements(e);
     }
@@ -81,12 +81,30 @@ public final class Breakables {
                 .addElements(e);
     }
 
+    /// Creates a builder for a `BreakableList`.
+    /// @param <E> the type of the elements.
+    /// @param c the class of the element for the list.
+    /// @return a builder.
+    public static <E> BreakableList.Builder<E> buildList(final Class<E> c) {
+        return new BreakableList.Builder<>();
+    }
+
+    /// Creates a builder for a `BreakableList` initialized with a set of elements.
+    /// @param <E> the type of the elements.
+    /// @param e the elements to add to the list.
+    /// @return a builder.
+    @SafeVarargs
+    public static <E> BreakableList.Builder<E> buildList(final E... e) {
+        return new BreakableList.Builder<E>()
+                .addElements(e);
+    }
+
     /// Makes sure that the iterator is not a broken iterator. If the argument is an instance of `BreakableIterator`
     /// then the underlying iterator used as the element store is returned.
     /// @param <E> the type of the elements.
     /// @param i an instance of iterator.
     /// @return an unbroken iterator.
-    public static <E> Iterable<E> ensureUnbroken(final @NotNull Iterable<E> i) {
+    public static <E> Iterable<E> ensureUnbroken(final @NonNull Iterable<E> i) {
         if (i instanceof BreakableIterable<E> b) {
             return b.unbroken();
         } else {
@@ -99,7 +117,7 @@ public final class Breakables {
     /// @param <E> the type of the elements.
     /// @param i an instance of collection.
     /// @return an unbroken collection.
-    public static <E> Collection<E> ensureUnbroken(final @NotNull Collection<E> i) {
+    public static <E> Collection<E> ensureUnbroken(final @NonNull Collection<E> i) {
         if (i instanceof BreakableCollection<E> b) {
             return b.unbroken();
         } else {

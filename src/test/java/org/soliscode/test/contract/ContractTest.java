@@ -1,6 +1,6 @@
 package org.soliscode.test.contract;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.DynamicTest;
 import org.opentest4j.AssertionFailedError;
 import org.soliscode.test.breakable.Break;
@@ -20,5 +20,5 @@ public abstract class ContractTest<E,C extends Iterable<E>> {
         });
     }
 
-    protected abstract <X extends DynamicContract<E,C>> @NotNull X createTest(final Break b);
+    protected abstract <X extends DynamicContract<E,C>> @NonNull X createTest(final Break b);
 }

@@ -71,7 +71,7 @@ public interface RemoveIfContract<E, C extends Collection<E>> extends Collection
     /// @implNote
     /// This test checks that the `removeIf` function throws the correct exception if it is called on a `null`
     /// value. IntelliJ will detect a problem when it is called with a null argument since the method declaration
-    /// has a NotNull annotation. Since this is what we are trying to test, the inspection is suppressed here.
+    /// has a NonNull annotation. Since this is what we are trying to test, the inspection is suppressed here.
     ///
     /// @throws org.opentest4j.AssertionFailedError if the test fails.
     @SuppressWarnings("DataFlowIssue")

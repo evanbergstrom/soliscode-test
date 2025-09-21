@@ -101,9 +101,9 @@ public interface ToArrayContract<E, C extends Collection<E>> extends CollectionC
     /// # Implementation Notes
     /// This test checks that the `toArray(T[])` function throws the correct exception if it is called on a null
     /// value. IntelliJ will detect a problem when it is called with a null argument since the method declaration
-    /// has a NotNull annotation. Since this is what we are trying to test, the inspection is suppressed here.
+    /// has a NonNull annotation. Since this is what we are trying to test, the inspection is suppressed here.
     ///
-    /// Any implementations that use the `NotNull` annotation for the collection parameter may throw an
+    /// Any implementations that use the `NonNull` annotation for the collection parameter may throw an
     /// `IllegalArgumentException` here, so either exception type is accepted.
     @Test
     @DisplayName("The toArray(T[]) method throws on a null array.")

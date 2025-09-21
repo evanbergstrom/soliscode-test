@@ -17,7 +17,7 @@
 package org.soliscode.test.assertions.collection;
 
 import org.opentest4j.AssertionFailedError;
-import org.soliscode.test.util.IterableTestOps;
+import org.soliscode.test.util.IterableTestUtils;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
 /// @author evanbergstrom
 /// @see CollectionAssertions#assertContainsSame
 /// @since 1.0.0
-public final class AssertContainsSame extends IterableAssertion {
+public final class AssertContainsSame {
 
     private AssertContainsSame() {
     }
@@ -80,9 +80,8 @@ public final class AssertContainsSame extends IterableAssertion {
 
     private static void checkContainsSame(final Iterable<?> expected, final Iterable<?> actual,
             final Object messageOrSupplier) {
-        assertIterablesNotNull(expected, actual, messageOrSupplier);
-        List<?> actualList = IterableTestOps.asList(actual);
-        List<?> expectedList = IterableTestOps.asList(expected);
+        List<?> actualList = IterableTestUtils.asList(actual);
+        List<?> expectedList = IterableTestUtils.asList(expected);
 
         if (actualList.size() != expectedList.size()) {
             throw buildException(expected, actual, messageOrSupplier);

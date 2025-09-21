@@ -16,19 +16,24 @@
 
 package org.soliscode.test.assertions.collection;
 
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.opentest4j.AssertionFailedError;
+import org.soliscode.test.util.IterableTestUtils;
 
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
+import static org.soliscode.test.util.IterableTestUtils.asIterable;
 
 /// `AssertEquals` is a collection of utility methods that support asserting that a collection
 /// contains specific elements in the expected order.
 ///
 /// @author evanbergstrom
 /// @since 1.0.0
-final class AssertEquals extends IterableAssertion {
+public final class AssertEquals {
     private AssertEquals() {
     }
 
@@ -39,29 +44,31 @@ final class AssertEquals extends IterableAssertion {
     /// @param actual    The iterable that should contain the elements.
     /// @throws AssertionFailedError if the iterable does not contain all the elements or if either of the iterable
     ///                              arguments is null.
-    public static void assertEquals(final Iterable<?> expected, final Iterable<?> actual) {
+    public static void assertEquals(final @NonNull Iterable<?> expected, final @NonNull Iterable<?> actual) {
         checkEquals(expected, actual, null);
     }
 
     /// Test if an iterable contains all of an array of elements in the same order. The elements are considered the same
     /// if the `equals` method returns true.
     ///
+    /// @param <E>       the element type
     /// @param expected  An array of the elements the iterable must contain.
     /// @param actual    The iterable that should contain the elements.
     /// @throws AssertionFailedError if the iterable does not contain all the elements or if either of the iterable
     ///                              arguments is null.
-    public static <E> void assertEquals(final E[] expected, final Iterable<?> actual) {
+    public static <E> void assertEquals(final @NonNull E[] expected, final @NonNull Iterable<?> actual) {
         checkEquals(asIterable(expected), actual, null);
     }
 
     /// Test if an array contains all of a list of elements in the same order. The elements are considered the same
     /// if the `equals` method returns true.
     ///
+    /// @param <E>       the element type
     /// @param expected  The elements the array must contain.
     /// @param actual    The array that should contain the elements.
     /// @throws AssertionFailedError if the array does not contain all the elements or if either of the
     ///                              arguments is null.
-    public static <E> void assertEquals(final Iterable<?> expected, final E[] actual) {
+    public static <E> void assertEquals(final @NonNull Iterable<?> expected, final @NonNull E[] actual) {
         checkEquals(expected, asIterable(actual), null);
     }
 
@@ -74,31 +81,36 @@ final class AssertEquals extends IterableAssertion {
     /// @param message   The message to supply if the assertion fails.
     /// @throws AssertionFailedError if the iterable does not contain all the elements or if either of the iterable
     ///                              arguments is null.
-    public static void assertEquals(final Iterable<?> expected, final Iterable<?> actual, final String message) {
+    public static void assertEquals(final @NonNull Iterable<?> expected, final @NonNull Iterable<?> actual,
+                                    final @Nullable String message) {
         checkEquals(expected, actual, message);
     }
 
     /// Test if an iterable contains all of an array of elements in the same order. The elements are considered the same
     /// if the `equals` method returns true.
     ///
+    /// @param <E>       the element type
     /// @param expected  An array of the elements the iterable must contain.
     /// @param actual    The iterable that should contain the elements.
     /// @param message   The message to supply if the assertion fails.
     /// @throws AssertionFailedError if the iterable does not contain all the elements or if either of the iterable
     ///                              arguments is `null`.
-    public static <E> void assertEquals(final E[] expected, final Iterable<?> actual, final String message) {
+    public static <E> void assertEquals(final @NonNull E[] expected, final @NonNull Iterable<?> actual,
+                                        final @Nullable String message) {
         checkEquals(asIterable(expected), actual, message);
     }
 
     /// Test if an array contains all of a set of elements in the same order. The elements are considered the same if
     ///  the `equals` method returns true.
     ///
+    /// @param <E>       the element type
     /// @param expected  The elements the array must contain.
     /// @param actual    The array that should contain the elements.
     /// @param message   The message to supply if the assertion fails.
     /// @throws AssertionFailedError if the iterable does not contain all the elements or if either of the iterable
     ///                              arguments is null.
-    public static <E> void assertEquals(final Iterable<?> expected, final E[] actual, final String message) {
+    public static <E> void assertEquals(final @NonNull Iterable<?> expected, final @NonNull E[] actual,
+                                        final @Nullable String message) {
         checkEquals(expected, asIterable(actual), message);
     }
 
@@ -110,47 +122,50 @@ final class AssertEquals extends IterableAssertion {
     /// @param messageSupplier   The supplier to call top generate  message to supply if the assertion fails.
     /// @throws AssertionFailedError if the iterable does not contain all the elements or if either of the iterable
     ///                              arguments is `null`.
-   public static void assertEquals(final Iterable<?> expected, final Iterable<?> actual,
-                                   final Supplier<String> messageSupplier) {
+   public static void assertEquals(final @NonNull Iterable<?> expected, final @NonNull Iterable<?> actual,
+                                   final @Nullable Supplier<String> messageSupplier) {
        checkEquals(expected, actual, messageSupplier);
    }
 
    /// Test if an iterable contains all of an array of elements in the same order. The elements are considered the same
    /// if the `equals` method returns true.
    ///
+   /// @param <E>       the element type
    /// @param expected  An array of the elements the iterable must contain.
    /// @param actual    The iterable that should contain the elements.
    /// @param messageSupplier   The supplier to call top generate  message to supply if the assertion fails.
    /// @throws AssertionFailedError if the iterable does not contain all the elements or if either of the
    ///                              arguments is null.
-   public static <E> void assertEquals(final E[] expected, final Iterable<?> actual,
-                                       final Supplier<String> messageSupplier) {
+   public static <E> void assertEquals(final @NonNull E[] expected, final @NonNull Iterable<?> actual,
+                                       final @Nullable Supplier<String> messageSupplier) {
         checkEquals(asIterable(expected), actual, messageSupplier);
    }
 
     /// Test if an array contains all of a set of elements in the same order. The elements are considered the same if
     /// the `equals` method returns true.
     ///
+    /// @param <E>       the element type
     /// @param expected  The elements the array must contain.
     /// @param actual    The array that should contain the elements.
     /// @param messageSupplier   The supplier to call top generate  message to supply if the assertion fails.
     /// @throws AssertionFailedError if the iterable does not contain all the elements or if either of the iterable
     ///                              arguments is `null`.
-    public static <E> void assertEquals(final Iterable<?> expected, final E[] actual,
-                                    final Supplier<String> messageSupplier) {
+    public static <E> void assertEquals(final @NonNull Iterable<?> expected, final @NonNull E[] actual,
+                                        final @Nullable Supplier<String> messageSupplier) {
         checkEquals(expected, asIterable(actual), messageSupplier);
     }
 
-    private static void checkEquals(final Iterable<?> expected, final Iterable<?> actual,
-                                   final Object messageOrSupplier) {
-       assertIterablesNotNull(expected, actual, messageOrSupplier);
+    private static void checkEquals(final @NonNull Iterable<?> expected, final @NonNull Iterable<?> actual,
+                                    final @Nullable Object messageOrSupplier) {
+       Objects.requireNonNull(expected);
+        Objects.requireNonNull(actual);
 
-       if (expected == actual) {
+        if (expected == actual) {
            return;
        }
 
        Iterator<?> expectedIterator = expected.iterator();
-       Iterator<?> actualIterator = expected.iterator();
+       Iterator<?> actualIterator = actual.iterator();
 
        while (expectedIterator.hasNext()) {
            if (!actualIterator.hasNext()) {
@@ -165,7 +180,8 @@ final class AssertEquals extends IterableAssertion {
        }
    }
 
-    private static AssertionFailedError buildException(final Iterable<?> expected, final Iterable<?> actual,
+    private static AssertionFailedError buildException(final @NonNull Iterable<?> expected,
+                                                       final @NonNull Iterable<?> actual,
            final Object messageOrSupplier) {
        return assertionFailure()
                .message(messageOrSupplier)

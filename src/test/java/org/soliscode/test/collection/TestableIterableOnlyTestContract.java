@@ -1,6 +1,6 @@
 package org.soliscode.test.collection;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.soliscode.test.AbstractTest;
@@ -21,7 +21,7 @@ public class TestableIterableOnlyTestContract extends AbstractTest
         implements IterableContract<Integer, Iterable<Integer>>, WithIntegerElement {
 
     @Override
-    public @NotNull CollectionProvider<Integer, Iterable<Integer>> provider() {
+    public @NonNull CollectionProvider<Integer, Iterable<Integer>> provider() {
         return new FunctionalCollectionProvider<>(IterableOnly::new, IterableOnly::new,
                 (c) -> new IterableOnly<>(new ArrayList<>(c)), elementProvider());
     }

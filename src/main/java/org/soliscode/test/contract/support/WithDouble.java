@@ -16,7 +16,7 @@
 
 package org.soliscode.test.contract.support;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.soliscode.test.provider.DoubleProvider;
 import org.soliscode.test.provider.ObjectProvider;
 
@@ -34,7 +34,7 @@ public interface WithDouble extends ContractSupport<Double> {
 
     /// Returns an instance of `ObjectProvider` that provides [Double] objects.
     /// @return an instance of [DoubleProvider].
-    default @NotNull ObjectProvider<Double> provider() {
+    default @NonNull ObjectProvider<Double> provider() {
         return new DoubleProvider();
     }
 }

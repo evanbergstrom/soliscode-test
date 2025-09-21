@@ -16,10 +16,11 @@
 
 package org.soliscode.test.assertions.actions;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.soliscode.test.util.IterableTestOps;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+import org.soliscode.test.util.IterableTestUtils;
 
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
@@ -30,26 +31,19 @@ import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
 /// ```java
 /// Consumer<Integer> consumer = AssertActions.consumeOnly(Set.of(1, 3, 5, 7));
 /// ```
-/// This assertion action must be checked after the method it is passed to has completed, so the [#assertCheck()] method
-/// will need to be explicitly called:
-/// ```java
-/// AssertConsumer<Integer> consumer = AssertActions.consumeOnly(Set.of(1, 3, 5, 7);
-/// collection.forEach(consumer);
-/// consumer.assertCheck();
-/// ```
 /// @param <T> element type
 /// @author evanbergstrom
 /// @since 1.0
 /// @see AssertActions
 /// @see java.util.function.Consumer
-public class AssertConsumeOnly<T> implements AssertConsumer<T> {
+public class AssertConsumeOnly<T> implements Consumer<T> {
 
-    private final @NotNull Iterable<T> expected;
+    private final @NonNull Iterable<T> expected;
     private final @Nullable Object messageOrSupplier;
 
     /// Creates a consumer that checks that it only consumes objects from a specified set of objects.
     /// @param expected the set of objects that should be consumed.
-    public AssertConsumeOnly(final @NotNull Iterable<T> expected) {
+    public AssertConsumeOnly(final @NonNull Iterable<T> expected) {
         this.expected = expected;
         this.messageOrSupplier = null;
     }
@@ -58,7 +52,7 @@ public class AssertConsumeOnly<T> implements AssertConsumer<T> {
     /// allows specification of a string to be included in the exception of the assertion fails.
     /// @param expected the set of objects that should be consumed.
     /// @param message the text to include in the exception.
-    public AssertConsumeOnly(final @NotNull Iterable<T> expected, final @Nullable String message) {
+    public AssertConsumeOnly(final @NonNull Iterable<T> expected, final @Nullable String message) {
         this.expected = expected;
         this.messageOrSupplier = message;
     }
@@ -67,14 +61,14 @@ public class AssertConsumeOnly<T> implements AssertConsumer<T> {
     /// allows specification of a supplier of a message to be included in the exception.
     /// @param expected the set of objects that should be consumed.
     /// @param messageSupplier the supplier of the text to include in the exception.
-    public AssertConsumeOnly(final @NotNull Iterable<T> expected, final @Nullable Supplier<String> messageSupplier) {
+    public AssertConsumeOnly(final @NonNull Iterable<T> expected, final @Nullable Supplier<String> messageSupplier) {
         this.expected = expected;
         this.messageOrSupplier = messageSupplier;
     }
 
     @Override
     public void accept(final T e) {
-        if (!IterableTestOps.contains(expected, e)) {
+        if (!IterableTestUtils.contains(expected, e)) {
             throw assertionFailure()
                 .message(messageOrSupplier)
                 .expected(expected)

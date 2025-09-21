@@ -202,7 +202,7 @@ public class BreakableIterator<E> extends AbstractBreakable implements Iterator<
             if (!hasBreak(ITERATOR_REMOVE_DOES_NOT_REMOVE_ELEMENT)) {
                 try {
                     iterator.remove();
-                } catch (UnsupportedOperationException e) {
+                } catch (IllegalStateException e) {
                     if (hasBreak(ITERATOR_REMOVE_THROWS_WRONG_EXCEPTION_FOR_ILLEGAL_STATE)) {
                         throw new RuntimeException();
                     } else {
@@ -237,15 +237,18 @@ public class BreakableIterator<E> extends AbstractBreakable implements Iterator<
     @Override
     public void forEachRemaining(final Consumer<? super E> action) {
         if (supportsMethod(CollectionMethods.IteratorForEachRemaining)) {
+            if (action == null) {
+                if (hasBreak(ITERATOR_FOR_EACH_REMAINING_THROWS_WRONG_EXCEPTION_FOR_NULL_ARGUMENT)) {
+                    throw new RuntimeException();
+                } else {
+                    throw new NullPointerException();
+                }
+            }
             if (!hasBreak(ITERATOR_FOR_EACH_REMAINING_DOES_NOT_CALL_ACTION)) {
                 iterator.forEachRemaining(action);
             }
         } else {
-            if (hasBreak(ITERATOR_FOR_EACH_REMAINING_THROWS_WRONG_EXCEPTION_FOR_NULL_ARGUMENT)) {
-                throw new RuntimeException();
-            } else {
-                throw new UnsupportedOperationException();
-            }
+            throw new UnsupportedOperationException();
         }
     }
 }

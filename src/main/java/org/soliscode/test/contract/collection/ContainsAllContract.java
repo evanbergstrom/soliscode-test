@@ -2,7 +2,7 @@ package org.soliscode.test.contract.collection;
 
 import org.junit.jupiter.api.Test;
 import org.soliscode.test.contract.support.CollectionContractSupport;
-import org.soliscode.test.util.CollectionTestOps;
+import org.soliscode.test.util.CollectionTestUtils;
 import org.soliscode.test.util.MatchNothing;
 
 import java.util.ArrayList;
@@ -60,7 +60,7 @@ public interface ContainsAllContract<E, C extends Collection<E>> extends Collect
     @Test
     default void testContainsAllOnCollectionWithNulls() {
         List<E> values = elementProvider().createUniqueInstances(2);
-        List<E> elements = CollectionTestOps.listOf(values.get(0), null, values.get(1));
+        List<E> elements = CollectionTestUtils.listOf(values.get(0), null, values.get(1));
         Collection<E> collection = provider().createInstance(elements);
         assertTrue(collection.containsAll(values));
         assertTrue(collection.contains(null));

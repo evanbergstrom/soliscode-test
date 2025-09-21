@@ -1,6 +1,6 @@
 package org.soliscode.test.contract;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.*;
 import org.soliscode.test.AbstractTest;
 import org.soliscode.test.breakable.Break;
@@ -41,14 +41,14 @@ public class IterableContractTest extends ContractTest<Integer, BreakableIterabl
 
     @SuppressWarnings("unchecked")
     @Override
-    protected @NotNull DynamicBrokenIterableContract createTest(Break b) {
+    protected @NonNull DynamicBrokenIterableContract createTest(Break b) {
         return new DynamicBrokenIterableContract(b);
     }
 
     /// Test factory for tests of the forEach() method that should fail for various breaks.
     /// @return a collection of dynamic tests of the forEach() method.
     @TestFactory
-    public @NotNull Collection<DynamicTest> dynamicTestsOfForEach() {
+    public @NonNull Collection<DynamicTest> dynamicTestsOfForEach() {
         return Arrays.asList(
                 failingTest("testForeEachOverCollectionWithElements() fails with FOR_EACH_DOES_NOT_CALL_ACTION break",
                         BreakableIterable.FOR_EACH_DOES_NOT_CALL_ACTION,

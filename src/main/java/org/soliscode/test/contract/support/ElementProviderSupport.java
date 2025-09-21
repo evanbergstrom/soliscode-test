@@ -1,6 +1,6 @@
 package org.soliscode.test.contract.support;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.soliscode.test.provider.ObjectProvider;
 
 /// Interface for contract classes that test iterables or collections with elements.
@@ -11,5 +11,5 @@ public interface ElementProviderSupport<E> {
 
     /// Returns the elements provider for the contract.
     /// @return the element provider.
-    @NotNull ObjectProvider<E> elementProvider();
+    @NonNull ObjectProvider<E> elementProvider();
 }

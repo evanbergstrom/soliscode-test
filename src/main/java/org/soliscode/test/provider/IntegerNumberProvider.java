@@ -16,7 +16,7 @@
 
 package org.soliscode.test.provider;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 /// Provides instances of a class that implements the [Number] interface that represent an integer value for the
 /// purposes of testing.
@@ -27,7 +27,7 @@ import org.jetbrains.annotations.NotNull;
 public interface IntegerNumberProvider<T extends Number> extends NumberProvider<T> {
 
     @Override
-    default @NotNull T defaultInstance() {
+    default @NonNull T defaultInstance() {
         return createValue(0);
     }
 
@@ -36,39 +36,43 @@ public interface IntegerNumberProvider<T extends Number> extends NumberProvider<
     ///
     /// @param value the primitive integer value.
     /// @return an instance of the integer class.
-    T createValue(int value);
+    T createValue(long value);
 
     @Override
-    default @NotNull T createInstance(final int seed) {
-        return createValue(seed);
+    default @NonNull T createInstance(final long seed) {
+        long value = seed;
+        if (seed < minIntegerValue() || seed > maxIntegerValue()) {
+            value = (seed > 0) ? seed % maxIntegerValue() : seed % minIntegerValue();
+        }
+        return createValue(value);
     }
 
     @Override
-    default @NotNull T copyInstance(final @NotNull T o) {
-        return createValue(o.intValue());
+    default @NonNull T copyInstance(final @NonNull T o) {
+        return createValue(o.longValue());
     }
 
     /// The maximum integer value that can be represented by the integer class.
     /// @return the maximum integer value.
     @SuppressWarnings("SameReturnValue")
-    default int maxIntegerValue() {
-        return Integer.MAX_VALUE;
+    default long maxIntegerValue() {
+        return Long.MAX_VALUE;
     }
 
     /// The minimum integer value that can be represented by the integer class.
     /// @return the minimum integer value.
     @SuppressWarnings("SameReturnValue")
-    default int minIntegerValue() {
-        return Integer.MIN_VALUE;
+    default long minIntegerValue() {
+        return Long.MIN_VALUE;
     }
 
     /// {@inheritDoc}
-    default @NotNull T maxValue() {
+    default @NonNull T maxValue() {
         return createValue(maxIntegerValue());
     }
 
     /// {@inheritDoc}
-    default @NotNull T minValue() {
+    default @NonNull T minValue() {
         return createValue(minIntegerValue());
     }
 }

@@ -1,6 +1,6 @@
 package org.soliscode.test.contract.support;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.soliscode.test.provider.CollectionProvider;
 
 
@@ -14,5 +14,5 @@ public interface CollectionProviderSupport<E, C extends Iterable<E>>
 
     /// Returns a collection provider that can be used to create instances of the collection class being tested.
     /// @return a collection provider.
-    @NotNull CollectionProvider<E, C> provider();
+    @NonNull CollectionProvider<E, C> provider();
 }

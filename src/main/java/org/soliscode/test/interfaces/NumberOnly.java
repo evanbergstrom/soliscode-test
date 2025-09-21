@@ -16,7 +16,7 @@
 
 package org.soliscode.test.interfaces;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +42,7 @@ public class NumberOnly extends Number {
     /// Creates an instance of `NumberOnly` that wraps an instance of `Number` and narrows the interface to only the
     /// methods available in the `Number` interface.
     /// @param number an instance of number to wrap.
-    public NumberOnly(final @NotNull Number number) {
+    public NumberOnly(final @NonNull Number number) {
         if (number instanceof NumberOnly other) {
             this.number = other.number;
         } else {

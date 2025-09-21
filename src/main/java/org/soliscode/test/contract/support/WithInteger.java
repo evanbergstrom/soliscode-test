@@ -16,7 +16,7 @@
 
 package org.soliscode.test.contract.support;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.soliscode.test.provider.IntegerNumberProvider;
 import org.soliscode.test.provider.IntegerProvider;
 
@@ -30,7 +30,7 @@ public interface WithInteger extends IntegerSupport<Integer> {
 
     /// Returns an instance of `NumberProvider` that provides [Integer] objects.
     /// @return an instance of [IntegerProvider].
-    default @NotNull IntegerNumberProvider<Integer> provider() {
+    default @NonNull IntegerNumberProvider<Integer> provider() {
         return new IntegerProvider();
     }
 }

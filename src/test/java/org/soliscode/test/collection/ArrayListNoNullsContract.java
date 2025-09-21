@@ -1,6 +1,6 @@
 package org.soliscode.test.collection;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Disabled;
 import org.soliscode.test.AbstractTest;
 import org.soliscode.test.contract.DoesNotPermitNulls;
@@ -16,7 +16,7 @@ public class ArrayListNoNullsContract extends AbstractTest
         implements ListContract<Integer, ArrayList<Integer>>, WithIntegerElement, DoesNotPermitNulls {
 
     @Override
-    public @NotNull CollectionProvider<Integer, ArrayList<Integer>> provider() {
+    public @NonNull CollectionProvider<Integer, ArrayList<Integer>> provider() {
         return CollectionProviders.provideArrayList(elementProvider());
     }
 

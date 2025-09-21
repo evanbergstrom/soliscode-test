@@ -16,6 +16,10 @@
 
 package org.soliscode.test.assertions.collection;
 
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+import org.opentest4j.AssertionFailedError;
+
 import java.util.function.Supplier;
 
 /// A collection of utility methods that support asserting conditions on collections in tests.
@@ -123,14 +127,44 @@ public final class CollectionAssertions {
         AssertContains.assertContains(expected, actual, messageSupplier);
     }
 
-    /// Test if an iterable contains all of a set of elements. The elements are considered the same if the
-    /// `equals` method returns true.
+    /// Tests if an [Iterable] contains all elements from another [Iterable].
     ///
-    /// @param expected  The elements the iterable must contain.
-    /// @param actual    The iterable that should contain the elements.
-    /// @throws org.opentest4j.AssertionFailedError if the iterable does not contain all the elements or if either of the iterable
-    ///                              arguments is null.
-    public static void assertContainsAll(final Iterable<?> expected, final Iterable<?> actual) {
+    /// Elements are compared using their [#equals(Object)] method. The assertion
+    /// **passes** when the actual iterable contains every element from the expected iterable.
+    ///
+    /// @param expected the elements that must be present in the actual iterable
+    /// @param actual   the iterable to test for containing all expected elements
+    /// @throws AssertionFailedError if the actual iterable does not contain all expected elements,
+    ///                              or if either parameter is `null`
+    public static void assertContainsAll(final @NonNull Iterable<?> expected, final @NonNull Iterable<?> actual) {
+        AssertContainsAll.assertContainsAll(expected, actual);
+    }
+
+    /// Tests if an [Iterable] contains all elements from an array.
+    ///
+    /// Elements are compared using their [#equals(Object)] method. The assertion
+    /// **passes** when the actual iterable contains every element from the expected array.
+    ///
+    /// @param <E>      the type of elements in the array
+    /// @param expected the array of elements that must be present in the actual iterable
+    /// @param actual   the iterable to test for containing all expected elements
+    /// @throws AssertionFailedError if the actual iterable does not contain all expected elements,
+    ///                              or if either parameter is `null`
+    public static <E> void assertContainsAll(final @NonNull E[] expected, final @NonNull Iterable<?> actual) {
+        AssertContainsAll.assertContainsAll(expected, actual);
+    }
+
+    /// Tests if an array contains all elements from an [Iterable].
+    ///
+    /// Elements are compared using their [#equals(Object)] method. The assertion
+    /// **passes** when the actual array contains every element from the expected iterable.
+    ///
+    /// @param <E>      the type of elements in the array
+    /// @param expected the iterable of elements that must be present in the actual array
+    /// @param actual   the array to test for containing all expected elements
+    /// @throws AssertionFailedError if the actual array does not contain all expected elements,
+    ///                              or if either parameter is `null`
+    public static <E> void assertContainsAll(final @NonNull Iterable<?> expected, final @NonNull E[] actual) {
         AssertContainsAll.assertContainsAll(expected, actual);
     }
 
@@ -147,6 +181,38 @@ public final class CollectionAssertions {
         AssertContainsAll.assertContainsAll(expected, actual, message);
     }
 
+    /// Tests if an [Iterable] contains all elements from from an array with a custom message.
+    ///
+    /// Elements are compared using their [#equals(Object)] method. The assertion
+    /// **passes** when the actual iterable contains every element from the expected iterable.
+    ///
+    /// @param <E>      the type of elements in the array
+    /// @param expected the array of elements that must be present in the actual iterable
+    /// @param actual   the iterable to test for containing all expected elements
+    /// @param message  the custom message to include in the failure exception
+    /// @throws AssertionFailedError if the actual iterable does not contain all expected elements,
+    ///                              or if either parameter is `null`
+    public static <E> void assertContainsAll(final @NonNull E[] expected, final @NonNull Iterable<?> actual,
+                                            final @Nullable String message) {
+        AssertContainsAll.assertContainsAll(expected, actual, message);
+    }
+
+    /// Tests if an array contains all elements from another [Iterable] with a custom message.
+    ///
+    /// Elements are compared using their [#equals(Object)] method. The assertion
+    /// **passes** when the actual array contains every element from the expected iterable.
+    ///
+    /// @param <E>      the type of elements in the array
+    /// @param expected the elements that must be present in the actual iterable
+    /// @param actual   the array to test for containing all expected elements
+    /// @param message  the custom message to include in the failure exception
+    /// @throws AssertionFailedError if the actual iterable does not contain all expected elements,
+    ///                              or if either parameter is `null`
+    public static <E> void assertContainsAll(final @NonNull Iterable<?> expected, final @NonNull E[] actual,
+                                         final @Nullable String message) {
+        AssertContainsAll.assertContainsAll(expected, actual, message);
+    }
+
     /// Test if an iterable contains all of a set of elements. The elements are considered the same if the
     /// `equals` method returns true.
     ///
@@ -160,6 +226,40 @@ public final class CollectionAssertions {
         AssertContainsAll.assertContainsAll(expected, actual, messageSupplier);
     }
 
+    /// Tests if an [Iterable] contains all elements from an array with a message supplier.
+    ///
+    /// Elements are compared using their [#equals(Object)] method. The assertion
+    /// **passes** when the actual iterable contains every element from the expected array.
+    /// The message supplier is only called if the assertion fails, enabling lazy message generation.
+    ///
+    /// @param <E>      the type of elements in the array
+    /// @param expected        the array of elements that must be present in the actual iterable
+    /// @param actual          the iterable to test for containing all expected elements
+    /// @param messageSupplier the supplier to generate a custom failure message
+    /// @throws AssertionFailedError if the actual array does not contain all expected elements,
+    ///                              or if either parameter is `null`
+    public static <E> void assertContainsAll(final E[] expected, final Iterable<?> actual,
+                                         final Supplier<String> messageSupplier) {
+        AssertContainsAll.assertContainsAll(expected, actual, messageSupplier);
+    }
+
+    /// Tests if an array contains all elements from an [Iterable] with a message supplier.
+    ///
+    /// Elements are compared using their [#equals(Object)] method. The assertion
+    /// **passes** when the actual array contains every element from the expected iterable.
+    /// The message supplier is only called if the assertion fails, enabling lazy message generation.
+    ///
+    /// @param <E>      the type of elements in the array
+    /// @param expected        the elements that must be present in the actual iterable
+    /// @param actual          the array to test for containing all expected elements
+    /// @param messageSupplier the supplier to generate a custom failure message
+    /// @throws AssertionFailedError if the actual iterable does not contain all expected elements,
+    ///                              or if either parameter is `null`
+    public static <E> void assertContainsAll(final Iterable<?> expected, final E[] actual,
+                                         final Supplier<String> messageSupplier) {
+        AssertContainsAll.assertContainsAll(expected, actual, messageSupplier);
+    }
+
     /// Test if an iterable contains all of a set of elements in the same order. The elements are considered the same if
     /// the `equals` method returns true.
     ///
@@ -167,7 +267,7 @@ public final class CollectionAssertions {
     /// @param actual    The iterable that should contain the elements.
     /// @throws org.opentest4j.AssertionFailedError if the iterable does not contain all the elements or if either of
     ///      the iterable arguments is null.
-    public static void assertEquals(final Iterable<?> expected, final Iterable<?> actual) {
+    public static void assertEquals(final @NonNull Iterable<?> expected, final @NonNull Iterable<?> actual) {
         AssertEquals.assertEquals(expected, actual);
     }
 
@@ -179,7 +279,7 @@ public final class CollectionAssertions {
     /// @param actual    The iterable that should contain the elements.
     /// @throws org.opentest4j.AssertionFailedError if the iterable does not contain all the elements or if either of
     ///      the iterable arguments is null.
-    public static <E> void assertEquals(final E[] expected, final Iterable<?> actual) {
+    public static <E> void assertEquals(final @NonNull E[] expected, final @NonNull Iterable<?> actual) {
         AssertEquals.assertEquals(expected, actual);
     }
 
@@ -191,7 +291,7 @@ public final class CollectionAssertions {
     /// @param actual    The array that should contain the elements.
     /// @throws org.opentest4j.AssertionFailedError if the array does not contain all the elements or if either of the
     ///                              arguments is null.
-    public static <E> void assertEquals(final Iterable<?> expected, final E[] actual) {
+    public static <E> void assertEquals(final @NonNull Iterable<?> expected, final @NonNull E[] actual) {
         AssertEquals.assertEquals(expected, actual);
     }
 
@@ -204,7 +304,8 @@ public final class CollectionAssertions {
     /// @param message   The message to supply if the assertion fails.
     /// @throws org.opentest4j.AssertionFailedError if the array does not contain all the elements or if either of the
     ///                              arguments is null.
-    public static <E> void assertEquals(final Iterable<?> expected, final E[] actual, final String message) {
+    public static <E> void assertEquals(final @NonNull Iterable<?> expected, final @NonNull E[] actual,
+                                        final @Nullable String message) {
         AssertEquals.assertEquals(expected, actual, message);
     }
 
@@ -217,8 +318,8 @@ public final class CollectionAssertions {
     /// @param messageSupplier   The supplier to call top generate  message to supply if the assertion fails.
     /// @throws org.opentest4j.AssertionFailedError if the array does not contain all the elements or if either of the
     ///                              arguments is null.
-    public static <E> void assertEquals(final Iterable<?> expected, final E[] actual,
-                                        final Supplier<String> messageSupplier) {
+    public static <E> void assertEquals(final @NonNull Iterable<?> expected, final @NonNull E[] actual,
+                                        final @Nullable Supplier<String> messageSupplier) {
         AssertEquals.assertEquals(expected, actual, messageSupplier);
     }
 
@@ -230,7 +331,8 @@ public final class CollectionAssertions {
     /// @param message   The message to supply if the assertion fails.
     /// @throws org.opentest4j.AssertionFailedError if the iterable does not contain all the elements or if either of
     ///      the iterable arguments is null.
-    public static void assertEquals(final Iterable<?> expected, final Iterable<?> actual, final String message) {
+    public static void assertEquals(final @NonNull Iterable<?> expected, final @NonNull Iterable<?> actual,
+                                    final @Nullable String message) {
         AssertEquals.assertEquals(expected, actual, message);
     }
 
@@ -243,7 +345,8 @@ public final class CollectionAssertions {
     /// @param message   The message to supply if the assertion fails.
     /// @throws org.opentest4j.AssertionFailedError if the iterable does not contain all the elements or if either of
     ///      the iterable arguments is `null`.
-    public static <E> void assertEquals(final E[] expected, final Iterable<?> actual, final String message) {
+    public static <E> void assertEquals(final @NonNull E[] expected, final @NonNull Iterable<?> actual,
+                                        final @Nullable String message) {
         AssertEquals.assertEquals(expected, actual, message);
     }
 
@@ -255,8 +358,8 @@ public final class CollectionAssertions {
     /// @param messageSupplier   The supplier to call top generate  message to supply if the assertion fails.
     /// @throws org.opentest4j.AssertionFailedError if the iterable does not contain all the elements or if either of
     ///      the iterable arguments is `null`.
-    public static void assertEquals(final Iterable<?> expected, final Iterable<?> actual,
-                                    final Supplier<String> messageSupplier) {
+    public static void assertEquals(final @NonNull Iterable<?> expected, final @NonNull Iterable<?> actual,
+                                    final @Nullable Supplier<String> messageSupplier) {
         AssertEquals.assertEquals(expected, actual, messageSupplier);
     }
 
@@ -269,16 +372,10 @@ public final class CollectionAssertions {
     /// @param messageSupplier   The supplier to call top generate  message to supply if the assertion fails.
     /// @throws org.opentest4j.AssertionFailedError if the iterable does not contain all the elements or if either of
     ///      the arguments is null.
-    public static <E> void assertEquals(final E[] expected, final Iterable<?> actual,
-                                        final Supplier<String> messageSupplier) {
+    public static <E> void assertEquals(final @NonNull E[] expected, final @NonNull Iterable<?> actual,
+                                        final @Nullable Supplier<String> messageSupplier) {
         AssertEquals.assertEquals(expected, actual, messageSupplier);
     }
-
-
-
-
-
-
 
     /// Test if an iterable contains all of a set of elements in the same order. The elements are considered the same if
     /// only if they same object.
@@ -468,6 +565,43 @@ public final class CollectionAssertions {
     public static void assertContainsNone(final Iterable<?> excluded, final Iterable<?> actual,
             final Supplier<String> messageSupplier) {
         AssertContainsNone.assertContainsNone(excluded, actual, messageSupplier);
+    }
+
+    /// Test if an iterable contains no element from a set of elements by identity. Two elements are only considered the same if
+    /// they have the same identity (*i.e* they are the same object).
+    ///
+    /// @param excluded  The elements the iterable must not contain.
+    /// @param actual    The iterable that should not contain the elements.
+    /// @throws org.opentest4j.AssertionFailedError if the iterable contains any of the elements or if either of the
+    ///     iterable arguments is null.
+    public static void assertContainsNoneByIdentity(final Iterable<?> excluded, final Iterable<?> actual) {
+        AssertContainsNoneByIdentity.assertContainsNoneByIdentity(excluded, actual);
+    }
+
+    /// Test if an iterable contains no element from a set of elements by identity. Two elements are only considered the same if
+    /// they have the same identity (*i.e* they are the same object).
+    ///
+    /// @param excluded  The elements the iterable must not contain.
+    /// @param actual    The iterable that should not contain the elements.
+    /// @param message   The message to supply if the assertion fails.
+    /// @throws org.opentest4j.AssertionFailedError if the iterable contains any of the elements or if either of the iterable
+    ///     arguments is null.
+    public static void assertContainsNoneByIdentity(final Iterable<?> excluded, final Iterable<?> actual,
+            final String message) {
+        AssertContainsNoneByIdentity.assertContainsNoneByIdentity(excluded, actual, message);
+    }
+
+    /// Test if an iterable contains no element from a set of elements by identity. Two elements are only considered the same if
+    /// they have the same identity (*i.e* they are the same object).
+    ///
+    /// @param excluded          The elements the iterable must not contain.
+    /// @param actual            The iterable that should not contain the elements.
+    /// @param messageSupplier   The supplier to call top generate  message to supply if the assertion fails.
+    /// @throws org.opentest4j.AssertionFailedError if the iterable contains any of the elements or if either of the iterable
+    ///    arguments is null.
+    public static void assertContainsNoneByIdentity(final Iterable<?> excluded, final Iterable<?> actual,
+            final Supplier<String> messageSupplier) {
+        AssertContainsNoneByIdentity.assertContainsNoneByIdentity(excluded, actual, messageSupplier);
     }
 
     /// A collection of utility methods that support asserting that two collections contain the same elements.

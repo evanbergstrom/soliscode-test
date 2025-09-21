@@ -25,13 +25,13 @@ import org.soliscode.test.contract.object.ObjectContract;
 /// @param <I> The iterator type being tested.
 ///
 /// @author evanbergstrom
-/// @see IteratorContract
-/// @see ForEachContract
-/// @see SpliteratorContract
+/// @see IteratorMethodContract
+/// @see ForEachMethodContract
+/// @see SpliteratorMethodContract
 /// @since 1.0
 public interface IterableContract<E, I extends Iterable<E>>
     extends ObjectContract<I>,
-        IteratorContract<E, I>,
-        ForEachContract<E, I>,
-        SpliteratorContract<E, I> {
+        IteratorMethodContract<E, I>,
+        ForEachMethodContract<E, I>,
+        SpliteratorMethodContract<E, I> {
 }

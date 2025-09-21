@@ -15,15 +15,15 @@
  */
 package org.soliscode.test.breakable;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.soliscode.test.OptionalMethod;
 import org.soliscode.test.contract.CollectionMethods;
 import org.soliscode.test.contract.support.CollectionProviderSupport;
 import org.soliscode.test.provider.CollectionProvider;
 import org.soliscode.test.provider.CollectionProviders;
 import org.soliscode.test.provider.ObjectProvider;
-import org.soliscode.test.util.CollectionTestOps;
-import org.soliscode.test.util.IterableTestOps;
+import org.soliscode.test.util.CollectionTestUtils;
+import org.soliscode.test.util.IterableTestUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -62,7 +62,7 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     private static final int DEFAULT_CAPACITY = 10;
 
     /// The underlying collection that stores the actual elements.
-    private final @NotNull Collection<E> collection;
+    private final @NonNull Collection<E> collection;
 
     /// Flag indicating whether this collection permits null elements.
     private boolean permitsNulls;
@@ -74,7 +74,7 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     private boolean permitsIncompatibleTypes;
 
     /// The compatible type for elements in this collection, derived from the generic parameter.
-    private final @NotNull Class<?> compatibleType;
+    private final @NonNull Class<?> compatibleType;
 
     /// The [add][Collection#add] method does not add an element to the collection
     /// @see BreakableCollection#add(Object)
@@ -359,7 +359,6 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     public static final Break TO_ARRAY_STORE_MISSING_LAST_ELEMENT =
             new Break("TO_ARRAY_STORE_MISSING_LAST_ELEMENT");
 
-
     /// Creates an empty collection that has no breaks.
     public BreakableCollection() {
         this(new ArrayList<>(), new HashSet<>(), 0);
@@ -367,13 +366,13 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
 
     /// Creates a breakable collection from an existing instance.
     /// @param other the breakable collection to copy.
-    public BreakableCollection(final @NotNull BreakableCollection<E> other) {
+    public BreakableCollection(final @NonNull BreakableCollection<E> other) {
         this(new ArrayList<>(other.collection), new HashSet<>(), 0);
     }
 
     /// Creates a breakable iterable from an iterable.
     /// @param collection the iterator to use for the elements.
-    public BreakableCollection(final @NotNull Collection<E> collection) {
+    public BreakableCollection(final @NonNull Collection<E> collection) {
         this(new ArrayList<>(collection), new HashSet<>(), 0);
     }
 
@@ -384,14 +383,14 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// @param breaks          the breaks for the collection.
     /// @param characteristics the characteristics for the collection.
     /// @throws NullPointerException if either the `c` or the `breaks` parameters are null.
-    public BreakableCollection(final @NotNull Collection<E> c, final @NotNull Collection<Break> breaks,
+    public BreakableCollection(final @NonNull Collection<E> c, final @NonNull Collection<Break> breaks,
                                final int characteristics) {
         super(c, breaks, characteristics);
         this.collection = Objects.requireNonNull(c);
         this.permitsNulls = true;
         this.permitsDuplicates = true;
         this.permitsIncompatibleTypes = true;
-        this.compatibleType = CollectionTestOps.getGenericParameter(this, 0);
+        this.compatibleType = CollectionTestUtils.getGenericParameter(this, 0);
     }
 
     /// Indicates if the collection permits null values as elements.
@@ -533,7 +532,7 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// @see Collection#toArray()
     @SuppressWarnings({"DataFlowIssue"})
     @Override
-    public Object @NotNull [] toArray() {
+    public Object @NonNull [] toArray() {
         if (hasBreak(TO_ARRAY_RETURNS_NULL)) {
             return null;
         }
@@ -569,7 +568,7 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// @see Collection#toArray(Object[])
     @SuppressWarnings("DataFlowIssue")
     @Override
-    public <T> T @NotNull [] toArray(final @NotNull T @NotNull [] a) {
+    public <T> T @NonNull [] toArray(final @NonNull T @NonNull [] a) {
         if (hasBreak(TO_ARRAY_STORE_RETURNS_NULL)) {
             return null;
         } else if (hasBreak(TO_ARRAY_STORE_DOES_NOT_COPY_ELEMENTS)) {
@@ -709,7 +708,7 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     ///         incompatible types.
     /// @see Collection#containsAll(Collection)
     @Override
-    public boolean containsAll(final @NotNull Collection<?> c) {
+    public boolean containsAll(final @NonNull Collection<?> c) {
         if (supportsMethod(CollectionMethods.Add)) {
             c.forEach(this::checkArgument);
             if (hasBreak(CONTAINS_ALL_ALWAYS_RETURNS_TRUE)) {
@@ -757,7 +756,7 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     ///                            not support incompatible types.
     /// @throws UnsupportedOperationException if this collection does not support this method.
     @Override
-    public boolean addAll(final @NotNull Collection<? extends E> c) {
+    public boolean addAll(final @NonNull Collection<? extends E> c) {
         if (supportsMethod(CollectionMethods.AddAll)) {
             boolean result = false;
             if (c.stream().allMatch(this::checkNewElement)) {
@@ -818,7 +817,7 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// @throws UnsupportedOperationException if this collection does not support this method.
     /// @see Collection#removeAll(Collection)
     @Override
-    public boolean removeAll(final @NotNull Collection<?> c) {
+    public boolean removeAll(final @NonNull Collection<?> c) {
         if (supportsMethod(CollectionMethods.RemoveAll)) {
             c.forEach(this::checkArgument);
             boolean result = false;
@@ -873,18 +872,18 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// @throws UnsupportedOperationException if the `removeIf` operation is not supported by this collection
     /// @see Collection#removeIf(Predicate)
     @Override
-    public boolean removeIf(final @NotNull Predicate<? super E> filter) {
+    public boolean removeIf(final @NonNull Predicate<? super E> filter) {
         if (supportsMethod(CollectionMethods.RemoveAll)) {
             boolean changed = false;
             if (hasBreak(REMOVE_IF_SKIPS_FIRST_ELEMENT)) {
-                Iterator<E> i = IterableTestOps.skipFirstIterator(collection);
+                Iterator<E> i = IterableTestUtils.skipFirstIterator(collection);
                 while (i.hasNext()) {
                     if (filter.test(i.next())) {
                         i.remove();
                     }
                 }
             } else if (hasBreak(REMOVE_IF_SKIPS_LAST_ELEMENT)) {
-                Iterator<E> i = IterableTestOps.skipLastIterator(collection);
+                Iterator<E> i = IterableTestUtils.skipLastIterator(collection);
                 while (i.hasNext()) {
                     if (filter.test(i.next())) {
                         i.remove();
@@ -939,7 +938,7 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     ///         not support incompatible types.
     /// @throws UnsupportedOperationException if this collection does not support this method.
     @Override
-    public boolean retainAll(final @NotNull Collection<?> c) {
+    public boolean retainAll(final @NonNull Collection<?> c) {
         if (supportsMethod(CollectionMethods.RetainAll)) {
             c.forEach(this::checkArgument);
             boolean result = false;
@@ -983,13 +982,13 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     public void clear() {
         if (supportsMethod(CollectionMethods.Clear)) {
             if (hasBreak(CLEAR_SKIPS_FIRST_ELEMENT)) {
-                Iterator<E> i = IterableTestOps.skipFirstIterator(collection);
+                Iterator<E> i = IterableTestUtils.skipFirstIterator(collection);
                 while (i.hasNext()) {
                     i.next();
                     i.remove();
                 }
             } else if (hasBreak(CLEAR_SKIPS_LAST_ELEMENT)) {
-                Iterator<E> i = IterableTestOps.skipLastIterator(collection);
+                Iterator<E> i = IterableTestUtils.skipLastIterator(collection);
                 while (i.hasNext()) {
                     i.next();
                     i.remove();
@@ -1004,7 +1003,7 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
 
     /// returns the elements as an unbroken instance of `Collection'
     /// @return an unbroken collection.
-    public @NotNull Collection<E> unbroken() {
+    public @NonNull Collection<E> unbroken() {
         return collection;
     }
 
@@ -1056,8 +1055,6 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
         /// Flag indicating whether the builder will create collections that permit incompatible types.
         protected boolean permitsIncompatibleTypes;
 
-        /// Collection of optional methods that will not be supported by the built collection.
-        protected final Collection<OptionalMethod> unsupportedMethods;
 
         /// Default constructor to be called by default constructors for subclasses.
         /// Initializes the builder with default values: permits nulls, duplicates, and incompatible types.
@@ -1069,9 +1066,8 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
         /// Initializes with default values: permits nulls, duplicates, and incompatible types.
         /// @param elements the initial elements for the builder
         /// @throws NullPointerException if elements is null
-        protected AbstractBuilder(final @NotNull Collection<E> elements) {
+        protected AbstractBuilder(final @NonNull Collection<E> elements) {
             super(elements);
-            this.unsupportedMethods = new ArrayList<>();
             this.permitsNulls = true;
             this.permitsDuplicates = true;
             this.permitsIncompatibleTypes = true;
@@ -1082,7 +1078,6 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
         /// @throws NullPointerException if the argument is `null`.
         protected AbstractBuilder(final AbstractBuilder<B, C, E> other) {
             super(other);
-            this.unsupportedMethods = new ArrayList<>(other.unsupportedMethods);
             this.permitsNulls = other.permitsNulls;
             this.permitsDuplicates = other.permitsDuplicates;
             this.permitsIncompatibleTypes = other.permitsIncompatibleTypes;
@@ -1165,8 +1160,8 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// @param <E> the element type.
     /// @param elementProvider the element provider to use.
     /// @return a collection provider for breakable collections.
-    public static <E> @NotNull CollectionProvider<E, BreakableCollection<E>> collectionProvider(
-            final @NotNull ObjectProvider<E> elementProvider) {
+    public static <E> @NonNull CollectionProvider<E, BreakableCollection<E>> collectionProvider(
+            final @NonNull ObjectProvider<E> elementProvider) {
         return CollectionProviders.from(
                 BreakableCollection::new,
                 BreakableCollection::new,
@@ -1181,13 +1176,13 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// @param elementProvider the element provider to use.
     /// @param breaks the breaks to apply to each instance of `BreakableCollection`.
     /// @return a collection provider for breakable collections.
-    public static <E> @NotNull CollectionProvider<E, BreakableCollection<E>> collectionProvider(
-            final @NotNull ObjectProvider<E> elementProvider,
-            final @NotNull Set<Break> breaks) {
+    public static <E> @NonNull CollectionProvider<E, BreakableCollection<E>> collectionProvider(
+            final @NonNull ObjectProvider<E> elementProvider,
+            final @NonNull Set<Break> breaks) {
         return CollectionProviders.from(
                 () -> new BreakableCollection<>(new ArrayList<>(), breaks, 0),
-                (o) -> new BreakableCollection<>(new ArrayList<>(o.collection), breaks, 0),
-                (c) -> new BreakableCollection<>(new ArrayList<>(c), breaks, 0),
+                (o) -> new BreakableCollection<>(new ArrayList<>(storage(o)), breaks, 0),
+                (c) -> new BreakableCollection<>(new ArrayList<>(storage(c)), breaks, 0),
                 elementProvider
         );
     }
@@ -1197,8 +1192,16 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// @param <E> element type
     public interface WithProvider<E> extends CollectionProviderSupport<E, BreakableCollection<E>> {
         @Override
-        default @NotNull CollectionProvider<E, BreakableCollection<E>> provider() {
+        default @NonNull CollectionProvider<E, BreakableCollection<E>> provider() {
             return BreakableCollection.collectionProvider(elementProvider());
+        }
+    }
+
+    private static <E> Collection<E> storage(final @NonNull Collection<E> c) {
+        if (c instanceof BreakableCollection<E> b) {
+            return b.collection;
+        } else {
+            return c;
         }
     }
 }

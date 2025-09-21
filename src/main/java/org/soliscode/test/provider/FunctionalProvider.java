@@ -1,6 +1,6 @@
 package org.soliscode.test.provider;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Objects;
 import java.util.function.Function;
@@ -21,9 +21,9 @@ import java.util.function.Supplier;
 /// @since 1.0
 public class FunctionalProvider<T> implements ObjectProvider<T> {
 
-    private final @NotNull Supplier<T> defaultConstructor;
-    private final @NotNull Function<T, T> copyConstructor;
-    private final Function<Integer, T> seedConstructor;
+    private final @NonNull Supplier<T> defaultConstructor;
+    private final @NonNull Function<T, T> copyConstructor;
+    private final Function<Long, T> seedConstructor;
 
     /// Create an instance of this collection provider that uses the methods and element provider specified in the
     /// arguments for its implementation.
@@ -31,9 +31,9 @@ public class FunctionalProvider<T> implements ObjectProvider<T> {
     /// @param copyConstructor the function to use to create a copy of the collection.
     /// @param seedConstructor the function to use to create an instance of the class from an integer seed value.
     /// @throws NullPointerException if any of the arguments are `null`
-    public FunctionalProvider(final @NotNull Supplier<T> defaultConstructor,
-                              final @NotNull Function<T, T> copyConstructor,
-                              final @NotNull Function<Integer, T> seedConstructor) {
+    public FunctionalProvider(final @NonNull Supplier<T> defaultConstructor,
+                              final @NonNull Function<T, T> copyConstructor,
+                              final @NonNull Function<Long, T> seedConstructor) {
         this.defaultConstructor = Objects.requireNonNull(defaultConstructor);
         this.copyConstructor = Objects.requireNonNull(copyConstructor);
         this.seedConstructor = Objects.requireNonNull(seedConstructor);
@@ -44,25 +44,25 @@ public class FunctionalProvider<T> implements ObjectProvider<T> {
     /// @param defaultConstructor the supplier to use to create default instances of the collection.
     /// @param copyConstructor the function to use to create a copy of the collection.
     /// @throws NullPointerException if any of the arguments are `null`
-    protected FunctionalProvider(final @NotNull Supplier<T> defaultConstructor,
-                                 final @NotNull Function<T, T> copyConstructor) {
+    protected FunctionalProvider(final @NonNull Supplier<T> defaultConstructor,
+                                 final @NonNull Function<T, T> copyConstructor) {
         this.defaultConstructor = Objects.requireNonNull(defaultConstructor);
         this.copyConstructor = Objects.requireNonNull(copyConstructor);
         this.seedConstructor = null;
     }
 
     @Override
-    public @NotNull T defaultInstance() {
+    public @NonNull T defaultInstance() {
         return defaultConstructor.get();
     }
 
     @Override
-    public @NotNull T copyInstance(final @NotNull T o) {
+    public @NonNull T copyInstance(final @NonNull T o) {
         return copyConstructor.apply(o);
     }
 
     @Override
-    public @NotNull T createInstance(final int seed) {
+    public @NonNull T createInstance(final long seed) {
         if (seedConstructor != null) {
             return seedConstructor.apply(seed);
         } else {

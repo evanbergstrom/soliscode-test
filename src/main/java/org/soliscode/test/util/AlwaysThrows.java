@@ -16,7 +16,7 @@
 
 package org.soliscode.test.util;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.function.Supplier;
 
@@ -58,7 +58,7 @@ public class AlwaysThrows implements Comparable<AlwaysThrows> {
     /// @param obj The object to compare (not used).
     /// @return Never returns a value
     @Override
-    public int compareTo(@NotNull final AlwaysThrows obj) {
+    public int compareTo(@NonNull final AlwaysThrows obj) {
         throw exceptionSupplier.get();
     }
 

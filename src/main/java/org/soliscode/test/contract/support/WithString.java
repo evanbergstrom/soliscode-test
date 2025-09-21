@@ -16,7 +16,7 @@
 
 package org.soliscode.test.contract.support;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.soliscode.test.contract.object.ObjectContract;
 import org.soliscode.test.provider.ObjectProvider;
 import org.soliscode.test.provider.StringProvider;
@@ -31,7 +31,7 @@ public interface WithString extends ObjectContract<String> {
 
     /// Returns an instance of `ObjectProvider` that provides [String] objects.
     /// @return an instance of [StringProvider].
-    default @NotNull ObjectProvider<String> provider() {
+    default @NonNull ObjectProvider<String> provider() {
         return new StringProvider();
     }
 }

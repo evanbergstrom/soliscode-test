@@ -1,6 +1,6 @@
 package org.soliscode.test.breakable;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.soliscode.test.AbstractTest;
@@ -26,9 +26,11 @@ public class BreakableCollectionTest extends AbstractTest
         implements CollectionContract<Integer, BreakableCollection<Integer>>, WithIntegerElement {
 
     @Override
-    public  @NotNull CollectionProvider<Integer, BreakableCollection<Integer>> provider() {
+    public  @NonNull CollectionProvider<Integer, BreakableCollection<Integer>> provider() {
         return BreakableCollection.collectionProvider(elementProvider());
     }
+
+    // ========== size Tests ==========
 
     /// Test that the `SIZE_ALWAYS_RETURNS_ZERO` break causes the `size` method to return zero.
     /// @see BreakableCollection#size()
@@ -52,6 +54,8 @@ public class BreakableCollectionTest extends AbstractTest
                 .build();
         assertNotEquals(3, collection.size());
     }
+
+    // ========== isEmpty Tests ==========
 
     /// Test that the `IS_EMPTY_ALWAYS_RETURNS_TRUE` break causes the `isEmpty` method to always return `true`.
     /// @see BreakableCollection#isEmpty()
@@ -96,6 +100,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertTrue(collection.isEmpty());
     }
 
+    // ========== contains Tests ==========
+
     /// Test that the `CONTAINS_ALWAYS_RETURNS_TRUE` break causes the `contains` method to always return `true`.
     /// @see BreakableCollection#contains(Object)
     @Test
@@ -132,6 +138,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertFalse(collection.contains(1));
         assertTrue(collection.contains(4));
     }
+
+    // ========== toArray Tests ==========
 
     /// Test that the `TO_ARRAY_RETURNS_NULL` break causes the `toArray()` method to always return `null`.`
     /// value.
@@ -252,6 +260,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertArrayEquals(new Object[]{0, 0, 0}, array);
     }
 
+    // ========== add Tests ==========
+
     /// Test that the `ADD_DOES_NOT_ADD_ELEMENT` break causes the `add(Object)` method to not add the element.
     /// @see BreakableCollection#add(Object)
     @Test
@@ -301,6 +311,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertFalse(collection.add(4));
     }
 
+    // ========== remove Tests ==========
+
     /// Test that the `REMOVE_DOES_NOT_REMOVE_ELEMENT` break causes the `remove(Object)` method to not remove the
     /// element.
     /// @see BreakableCollection#remove(Object)
@@ -349,6 +361,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertFalse(collection.remove(1));
         assertTrue(collection.remove(4));
     }
+
+    // ========== containsAll Tests ==========
 
     /// Test that the `CONTAINS_ALL_ALWAYS_RETURNS_TRUE` break causes the `containsAll` method to always return `true`.
     /// @see BreakableCollection#containsAll(Collection)

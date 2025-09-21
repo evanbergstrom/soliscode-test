@@ -16,8 +16,9 @@
 
 package org.soliscode.test.assertions.actions;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.function.Supplier;
 
@@ -35,7 +36,7 @@ public final class AssertActions {
     /// @param expected the set of objects that should be consumed.
     /// @return a consumer that expects a specific set of objects.
     /// @see AssertConsumeOnly
-    public static <T> @NotNull AssertConsumer<T> consumeOnly(final @NotNull Iterable<T> expected) {
+    public static <T> @NonNull AssertConsumeOnly<T> consumeOnly(final @NonNull Iterable<T> expected) {
         return new AssertConsumeOnly<>(expected);
     }
 
@@ -45,7 +46,7 @@ public final class AssertActions {
     /// @param expected the set of objects that should be consumed.
     /// @param message the text to include in the exception.
     /// @return a consumer that expects a specific set of objects.
-    public static <T> @NotNull AssertConsumer<T> consumeOnly(final @NotNull Iterable<T> expected,
+    public static <T> @NonNull AssertConsumeOnly<T> consumeOnly(final @NonNull Iterable<T> expected,
                                                              final @Nullable String message) {
         return new AssertConsumeOnly<>(expected, message);
     }
@@ -56,7 +57,7 @@ public final class AssertActions {
     /// @param expected the set of objects that should be consumed.
     /// @param messageSupplier the supplier of the text to include in the exception.
     /// @return a consumer that expects a specific set of objects.
-    public static <T> @NotNull AssertConsumer<T> consumeOnly(final @NotNull Iterable<T> expected,
+    public static <T> @NonNull AssertConsumeOnly<T> consumeOnly(final @NonNull Iterable<T> expected,
                                                              final @Nullable Supplier<String> messageSupplier) {
         return new AssertConsumeOnly<>(expected, messageSupplier);
     }
@@ -66,7 +67,7 @@ public final class AssertActions {
     /// @param expected the set of objects that should be consumed.
     /// @return a consumer that expects a specific set of objects.
     /// @see AssertConsumeExactly
-    public static <T> AssertConsumer<T> consumeExactly(final @NotNull Iterable<T> expected) {
+    public static <T> AssertConsumeExactly<T> consumeExactly(final @NonNull Iterable<T> expected) {
         return new AssertConsumeExactly<>(expected);
     }
 
@@ -77,7 +78,7 @@ public final class AssertActions {
     /// @param message the text to include in the exception.
     /// @return a consumer that expects a specific set of objects.
     /// @see AssertConsumeExactly
-    public static <T> AssertConsumer<T> consumeExactly(final @NotNull Iterable<T> expected,
+    public static <T> AssertConsumeExactly<T> consumeExactly(final @NonNull Iterable<T> expected,
                                                        final @Nullable String message) {
         return new AssertConsumeExactly<>(expected, message);
     }
@@ -89,7 +90,7 @@ public final class AssertActions {
     /// @param messageSupplier the supplier of the text to include in the exception.
     /// @return a consumer that expects a specific set of objects.
     /// @see AssertConsumeExactly
-    public static <T> AssertConsumer<T> consumeExactly(final @NotNull Iterable<T> expected,
+    public static <T> AssertConsumeExactly<T> consumeExactly(final @NonNull Iterable<T> expected,
                                                        final @Nullable Supplier<String> messageSupplier) {
         return new AssertConsumeExactly<>(expected, messageSupplier);
     }
@@ -99,7 +100,7 @@ public final class AssertActions {
     /// @param expected the number of objects to expect.
     /// @return a consumer that expects the specified number of objects.
     /// @see AssertConsumeCount
-    public static <T> AssertConsumer<T> consumeCount(final int expected) {
+    public static <T> AssertConsumeCount<T> consumeCount(final int expected) {
         return new AssertConsumeCount<>(expected);
     }
 
@@ -110,7 +111,7 @@ public final class AssertActions {
     /// @param message the text to include in the exception.
     /// @return a consumer that expects the specified number of objects.
     /// @see AssertConsumeCount
-    public static <T> AssertConsumer<T> consumeCount(final int expected,
+    public static <T> AssertConsumeCount<T> consumeCount(final int expected,
                                                      final @Nullable String message) {
         return new AssertConsumeCount<>(expected, message);
     }
@@ -122,7 +123,7 @@ public final class AssertActions {
     /// @param messageSupplier the supplier of the text to include in the exception.
     /// @return a consumer that expects the specified number of objects.
     /// @see AssertConsumeCount
-    public static <T> AssertConsumer<T> consumeCount(final int expected,
+    public static <T> AssertConsumeCount<T> consumeCount(final int expected,
                                                      final @Nullable Supplier<String> messageSupplier) {
         return new AssertConsumeCount<>(expected, messageSupplier);
     }
@@ -131,7 +132,7 @@ public final class AssertActions {
     /// @param <T> the type of object being consumed.
     /// @return a consumer that expects no objects.
     /// @see AssertConsumeNone
-    public static <T> AssertConsumer<T> assertConsumeNone() {
+    public static <T> AssertConsumeNone<T> consumeNone() {
         return new AssertConsumeNone<>();
     }
 
@@ -141,7 +142,7 @@ public final class AssertActions {
     /// @param message the text to include in the exception.
     /// @return a consumer that expects no objects.
     /// @see AssertConsumeNone
-    public static <T> AssertConsumer<T> assertConsumeNone(final @Nullable String message) {
+    public static <T> AssertConsumeNone<T> consumeNone(final @Nullable String message) {
         return new AssertConsumeNone<>(message);
     }
 
@@ -151,7 +152,7 @@ public final class AssertActions {
     /// @param messageSupplier the supplier of the text to include in the exception.
     /// @return a consumer that expects no objects.
     /// @see AssertConsumeNone
-    public static <T> AssertConsumer<T> assertConsumeNone(final @Nullable Supplier<String> messageSupplier) {
+    public static <T> AssertConsumeNone<T> consumeNone(final @Nullable Supplier<String> messageSupplier) {
         return new AssertConsumeNone<>(messageSupplier);
     }
 }

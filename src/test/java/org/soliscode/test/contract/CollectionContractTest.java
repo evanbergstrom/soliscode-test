@@ -1,6 +1,6 @@
 package org.soliscode.test.contract;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.*;
 import org.soliscode.test.AbstractTest;
 import org.soliscode.test.breakable.Break;
@@ -30,17 +30,18 @@ public class CollectionContractTest extends ContractTest<Integer, BreakableColle
     /// specified break. This contract will be expected to fail on certain tests depending on the specific break that
     /// is being used.
     @Disabled("Used only for dynamic test generation")
-    protected static class DynamicBrokenCollectionContract extends DynamicContract<Integer, BreakableCollection<Integer>>
+    protected static class DynamicBrokenCollectionContract
+            extends DynamicContract<Integer, BreakableCollection<Integer>>
             implements CollectionContract<Integer, BreakableCollection<Integer>>, WithIntegerElement {
 
-        protected DynamicBrokenCollectionContract(final @NotNull Break b) {
+        protected DynamicBrokenCollectionContract(final @NonNull Break b) {
             super(b, BreakableCollection::collectionProvider);
         }
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    protected @NotNull DynamicBrokenCollectionContract createTest(final @NotNull Break b) {
+    protected @NonNull DynamicBrokenCollectionContract createTest(final @NonNull Break b) {
         return new DynamicBrokenCollectionContract(b);
     }
 

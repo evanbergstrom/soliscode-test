@@ -38,10 +38,10 @@ package org.soliscode.test.contract.object;
 /// @author evanbergstrom
 /// @see Object
 /// @see ObjectMethods
-/// @see EqualsContract
-/// @see HashCodeContract
-/// @see ToStringContract
+/// @see EqualsMethodContract
+/// @see HashCodeMethodContract
+/// @see ToStringMethodContract
 /// @since 1.0
 public interface ObjectContract<T>
-    extends EqualsContract<T>, HashCodeContract<T>, ToStringContract<T> {
+    extends EqualsMethodContract<T>, HashCodeMethodContract<T>, ToStringMethodContract<T> {
 }

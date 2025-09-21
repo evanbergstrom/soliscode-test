@@ -1,6 +1,6 @@
 package org.soliscode.test.collection;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.soliscode.test.AbstractTest;
 import org.soliscode.test.contract.DoesNotPermitDuplicates;
 import org.soliscode.test.contract.collection.CollectionContract;
@@ -14,7 +14,7 @@ public class HashSetTest extends AbstractTest
         implements CollectionContract<Integer, HashSet<Integer>>, WithIntegerElement, DoesNotPermitDuplicates {
 
     @Override
-    public @NotNull CollectionProvider<Integer, HashSet<Integer>> provider() {
+    public @NonNull CollectionProvider<Integer, HashSet<Integer>> provider() {
         return CollectionProviders.from(HashSet::new, HashSet::new, HashSet::new, elementProvider());
     }
 }

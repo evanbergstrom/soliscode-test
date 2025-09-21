@@ -23,11 +23,27 @@ This library provides support for:\
 > This library is currently a work in progress. It currently supports testing for the following
 > interfaces:
 > - Object 
-> - Iterator 
-> - Iterable 
-> - Collection 
-> - SequencedCollection 
-> - List 
+>   - Iterator 
+>   - Iterable 
+>     - Collection 
+>       - SequencedCollection 
+>         - List 
+> 
+> Support for the following interfaces is planned:
+> - Map
+>   - SortedMap
+>     - NavigableMap
+>   - ConcurrentMap
+>     - ConcurrentNavigableMap
+> - Set
+>   - SortedSet
+>     - NavigableSet
+> - Queue
+>   - BlockingQueue
+>     - TransferQueue
+>   - Deque
+>     - BlockingDeque
+> - Comparable
 
 **Docs:** https://evanbergstrom.github.io/soliscode-test/
 
@@ -47,7 +63,7 @@ This library provides support for:\
 <dependency>
   <groupId>org.soliscode</groupId>
   <artifactId>soliscode</artifactId>
-  <version>0.0.0-SNAPSHOT</version>
+  <version>1.0.5</version>
   <scope>test</scope>
 </dependency>
 

@@ -17,10 +17,12 @@
 package org.soliscode.test.assertions.collection;
 
 import org.assertj.core.util.Lists;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.junit.platform.commons.util.StringUtils;
 import org.opentest4j.AssertionFailedError;
-import org.soliscode.test.util.CollectionTestOps;
-import org.soliscode.test.util.IterableTestOps;
+import org.soliscode.test.util.CollectionTestUtils;
+import org.soliscode.test.util.IterableTestUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,7 +35,7 @@ import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
 ///
 /// @author evanbergstrom
 /// @since 1.0.0
-public final class AssertContainsNoneByIdentity extends IterableAssertion {
+public final class AssertContainsNoneByIdentity {
 
     private AssertContainsNoneByIdentity() {
     }
@@ -45,7 +47,8 @@ public final class AssertContainsNoneByIdentity extends IterableAssertion {
     /// @param actual    The iterable that should not contain the elements.
     /// @throws AssertionFailedError if the iterable contains any of the elements or if either of the iterable
     ///    arguments is null.
-    public static void assertContainsNoneByIdentity(final Iterable<?> excluded, final Iterable<?> actual) {
+    public static void assertContainsNoneByIdentity(final @NonNull Iterable<?> excluded,
+                                                    final @NonNull Iterable<?> actual) {
         checkContainsNoneByIdentity(excluded, actual, null);
     }
 
@@ -56,8 +59,9 @@ public final class AssertContainsNoneByIdentity extends IterableAssertion {
     /// @param actual    The iterable that should not contain the elements.
     /// @param message   The message to supply if the assertion fails.
     /// @throws AssertionFailedError if the iterable does not contain all the elements.
-    public static void assertContainsNoneByIdentity(final Iterable<?> excluded, final Iterable<?> actual,
-            final String message) {
+    public static void assertContainsNoneByIdentity(final @NonNull Iterable<?> excluded,
+                                                    final @NonNull Iterable<?> actual,
+                                                    final @Nullable String message) {
         checkContainsNoneByIdentity(excluded, actual, message);
     }
 
@@ -68,17 +72,19 @@ public final class AssertContainsNoneByIdentity extends IterableAssertion {
     /// @param actual            The iterable that should not contain the elements.
     /// @param messageSupplier   The supplier to call top generate  message to supply if the assertion fails.
     /// @throws AssertionFailedError if the iterable does not contain all the elements.
-    public static void assertContainsNoneByIdentity(final Iterable<?> excluded, final Iterable<?> actual,
-            final Supplier<String> messageSupplier) {
+    public static void assertContainsNoneByIdentity(final @NonNull Iterable<?> excluded,
+                                                    final @NonNull Iterable<?> actual,
+                                                    final @Nullable Supplier<String> messageSupplier) {
         checkContainsNoneByIdentity(excluded, actual, messageSupplier);
     }
 
-    private static void checkContainsNoneByIdentity(final Iterable<?> excluded, final Iterable<?> actual,
-            final Object messageOrSupplier) {
-        assertIterablesNotNull(excluded, actual, messageOrSupplier);
+    private static void checkContainsNoneByIdentity(final @NonNull Iterable<?> excluded,
+                                                    final @NonNull Iterable<?> actual,
+                                                    final @Nullable Object messageOrSupplier) {
+
         Collection<Object> found = new ArrayList<>();
         for (Object e : excluded) {
-            if (IterableTestOps.containsByIdentity(actual, e)) {
+            if (IterableTestUtils.containsByIdentity(actual, e)) {
                 found.add(e);
             }
         }
@@ -87,10 +93,12 @@ public final class AssertContainsNoneByIdentity extends IterableAssertion {
         }
     }
 
-    private static AssertionFailedError buildException(final Iterable<?> excluded, final Iterable<?> actual,
-            final Collection<?> found, final Object messageOrSupplier) {
+    private static AssertionFailedError buildException(final @NonNull Iterable<?> excluded,
+                                                       final @NonNull Iterable<?> actual,
+                                                       final @NonNull Collection<?> found,
+                                                       final @Nullable Object messageOrSupplier) {
         Collection<?> expected = Lists.newArrayList(actual);
-        Collection<?> removed = CollectionTestOps.removeAllByIdentity(expected, found);
+        Collection<?> removed = CollectionTestUtils.removeAllByIdentity(expected, found);
 
         return assertionFailure()
             .message(messageOrSupplier)

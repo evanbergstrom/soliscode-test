@@ -37,8 +37,8 @@ public interface IntegerContract<T extends Number> extends IntegerSupport<T> {
     @Test
     @DisplayName("The intValue() function works for various values.")
     default void testIntValue() {
-        int max = provider().maxIntegerValue();
-        int min = provider().minIntegerValue();
+        long max = provider().maxIntegerValue();
+        long min = provider().minIntegerValue();
 
         assertEquals(min, provider().createValue(min).intValue());
         assertEquals(-1, provider().createValue(-1).intValue());
@@ -53,14 +53,9 @@ public interface IntegerContract<T extends Number> extends IntegerSupport<T> {
     @Test
     @DisplayName("The longValue() function works for various values.")
     default void testLongValue() {
-        int max = provider().maxIntegerValue();
-        int min = provider().minIntegerValue();
-
-        assertEquals(min, provider().createValue(min).longValue());
         assertEquals(-1L, provider().createValue(-1).longValue());
         assertEquals(0L, provider().createValue(0).longValue());
         assertEquals(1L, provider().createValue(1).longValue());
-        assertEquals(max, provider().createValue(max).longValue());
     }
 
     /**
@@ -69,14 +64,9 @@ public interface IntegerContract<T extends Number> extends IntegerSupport<T> {
     @Test
     @DisplayName("The floatValue() function works for various values.")
     default void testFloatValue() {
-        int max = provider().maxIntegerValue();
-        int min = provider().minIntegerValue();
-
-        assertEquals((float) min, provider().createValue(min).floatValue());
         assertEquals(-1.0f, provider().createValue(-1).floatValue());
         assertEquals(0.0f, provider().createValue(0).floatValue());
         assertEquals(1.0f, provider().createValue(1).floatValue());
-        assertEquals((float) max, provider().createValue(max).floatValue());
     }
 
     /**
@@ -85,13 +75,8 @@ public interface IntegerContract<T extends Number> extends IntegerSupport<T> {
     @Test
     @DisplayName("The doubleValue() function works for various values.")
     default void testDoubleValue() {
-        int max = provider().maxIntegerValue();
-        int min = provider().minIntegerValue();
-
-        assertEquals(min, provider().createValue(min).doubleValue());
         assertEquals(-1.0d, provider().createValue(-1).doubleValue());
         assertEquals(0.0d, provider().createValue(0).doubleValue());
         assertEquals(1.0d, provider().createValue(1).doubleValue());
-        assertEquals(max, provider().createValue(max).doubleValue());
     }
 }

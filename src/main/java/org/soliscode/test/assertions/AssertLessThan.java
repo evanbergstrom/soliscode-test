@@ -1,6 +1,6 @@
 package org.soliscode.test.assertions;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.function.Supplier;
 
@@ -44,8 +44,8 @@ public final class AssertLessThan {
     ///
     /// @see java.lang.Comparable#compareTo(Object)
     /// @since 1.0.0
-    public static <T extends Comparable<T>> void assertLessThan(final @NotNull T first, final @NotNull T second) {
-        if (second.compareTo(first) >= 0) {
+    public static <T extends Comparable<T>> void assertLessThan(final @NonNull T first, final @NonNull T second) {
+        if (first.compareTo(second) >= 0) {
             failLessThan(first, second, expectedLessThanMessage(first, second));
         }
     }
@@ -72,9 +72,9 @@ public final class AssertLessThan {
     ///
     /// @see java.lang.Comparable#compareTo(Object)
     /// @since 1.0.0
-    public static <T extends Comparable<T>> void assertLessThan(final @NotNull T first, final @NotNull T second,
+    public static <T extends Comparable<T>> void assertLessThan(final @NonNull T first, final @NonNull T second,
                                                                 final String message) {
-        if (second.compareTo(first) >= 0) {
+        if (first.compareTo(second) >= 0) {
             failLessThan(first, second, message);
         }
     }
@@ -102,15 +102,15 @@ public final class AssertLessThan {
     ///
     /// @see java.lang.Comparable#compareTo(Object)
     /// @since 1.0.0
-    public static <T extends Comparable<T>> void assertLessThan(final @NotNull T first, final @NotNull T second,
+    public static <T extends Comparable<T>> void assertLessThan(final @NonNull T first, final @NonNull T second,
                                                                 final Supplier<String> messageSupplier) {
-        if (second.compareTo(first) >= 0) {
+        if (first.compareTo(second) >= 0) {
             failLessThan(first, second, messageSupplier);
         }
     }
 
     private static String expectedLessThanMessage(final Object first, final Object second) {
-        return "Expected " + second + " to be less than " + first;
+        return "Expected " + first + " to be less than " + second;
     }
 
     private static void failLessThan(final Object first, final Object second, final Object messageOrSupplier) {

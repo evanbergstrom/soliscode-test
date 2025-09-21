@@ -16,7 +16,7 @@
 
 package org.soliscode.test.interfaces;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Collection;
 
@@ -31,7 +31,7 @@ public final class Interfaces {
     /// Wraps the object so that only the methods in the [Object] interface are available.
     /// @param obj the object to wrap.
     /// @return the wrapped object.
-    public static ObjectOnly narrowToObject(final @NotNull Object obj) {
+    public static ObjectOnly narrowToObject(final @NonNull Object obj) {
         return new ObjectOnly(obj);
     }
 

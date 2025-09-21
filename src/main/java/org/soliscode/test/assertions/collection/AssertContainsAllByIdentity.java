@@ -16,9 +16,11 @@
 
 package org.soliscode.test.assertions.collection;
 
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.junit.platform.commons.util.StringUtils;
 import org.opentest4j.AssertionFailedError;
-import org.soliscode.test.util.IterableTestOps;
+import org.soliscode.test.util.IterableTestUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,7 +34,7 @@ import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
 ///
 /// @author evanbergstrom
 /// @since 1.0.0
-final class AssertContainsAllByIdentity extends IterableAssertion {
+final class AssertContainsAllByIdentity {
 
     private AssertContainsAllByIdentity() {
     }
@@ -44,7 +46,8 @@ final class AssertContainsAllByIdentity extends IterableAssertion {
     /// @param actual    The iterable that should contain the elements.
     /// @throws AssertionFailedError if the iterable does not contain all the elements or if either of the iterable
     ///                              arguments is null.
-    public static void assertContainsAllByIdentity(final Iterable<?> expected, final Iterable<?> actual) {
+    public static void assertContainsAllByIdentity(final @NonNull Iterable<?> expected,
+                                                   final @NonNull Iterable<?> actual) {
         checkContainsAllByIdentity(expected, actual, null);
     }
 
@@ -56,8 +59,9 @@ final class AssertContainsAllByIdentity extends IterableAssertion {
     /// * @param message   The message to supply if the assertion fails.
     /// * @throws AssertionFailedError if the iterable does not contain all the elements or if either of the iterable
     /// *                              arguments is null.
-    public static void assertContainsAllByIdentity(final Iterable<?> expected, final Iterable<?> actual,
-            final String message) {
+    public static void assertContainsAllByIdentity(final @NonNull Iterable<?> expected,
+                                                   final @NonNull Iterable<?> actual,
+                                                   final @Nullable String message) {
         checkContainsAllByIdentity(expected, actual, message);
     }
 
@@ -69,19 +73,20 @@ final class AssertContainsAllByIdentity extends IterableAssertion {
     /// @param messageSupplier   The supplier to call top generate  message to supply if the assertion fails.
     /// @throws AssertionFailedError if the iterable does not contain all the elements or if either of the iterable
     ///                              arguments is null.
-    public static void assertContainsAllByIdentity(final Iterable<?> expected, final Iterable<?> actual,
-            final Supplier<String> messageSupplier) {
+    public static void assertContainsAllByIdentity(final @NonNull Iterable<?> expected,
+                                                   final @NonNull Iterable<?> actual,
+                                                   final @Nullable Supplier<String> messageSupplier) {
         checkContainsAllByIdentity(expected, actual, messageSupplier);
     }
 
-    private static void checkContainsAllByIdentity(final Iterable<?> expected, final Iterable<?> actual,
-            final Object messageOrSupplier) {
+    private static void checkContainsAllByIdentity(final @NonNull Iterable<?> expected,
+                                                   final @NonNull Iterable<?> actual,
+                                                   final @Nullable Object messageOrSupplier) {
 
-        assertIterablesNotNull(expected, actual, messageOrSupplier);
-        Set<?> s = IterableTestOps.asSet(actual);
+        Set<?> s = IterableTestUtils.asSet(actual);
         Collection<Object> missing = new ArrayList<>();
         for (Object e : expected) {
-            if (!IterableTestOps.containsByIdentity(s, e)) {
+            if (!IterableTestUtils.containsByIdentity(s, e)) {
                 missing.add(e);
             }
         }
@@ -90,8 +95,10 @@ final class AssertContainsAllByIdentity extends IterableAssertion {
         }
     }
 
-    private static AssertionFailedError buildException(final Iterable<?> elements, final Iterable<?> actual,
-            final Iterable<?> missing, final Object messageOrSupplier) {
+    private static AssertionFailedError buildException(final @NonNull Iterable<?> elements,
+                                                       final @NonNull Iterable<?> actual,
+                                                       final @NonNull Iterable<?> missing,
+                                                       final @Nullable Object messageOrSupplier) {
         return assertionFailure()
             .message(messageOrSupplier)
             .expected(elements)

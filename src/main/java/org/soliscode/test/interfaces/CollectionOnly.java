@@ -1,6 +1,6 @@
 package org.soliscode.test.interfaces;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -57,12 +57,12 @@ public class CollectionOnly<E> extends IterableOnly<E> implements Collection<E> 
     }
 
     @Override
-    public @NotNull Object @NotNull [] toArray() {
+    public @NonNull Object @NonNull [] toArray() {
         return collection.toArray();
     }
 
     @Override
-    public @NotNull <T> T @NotNull [] toArray(final @NotNull T @NotNull [] a) {
+    public @NonNull <T> T @NonNull [] toArray(final @NonNull T @NonNull [] a) {
         return collection.toArray(a);
     }
 
@@ -77,22 +77,22 @@ public class CollectionOnly<E> extends IterableOnly<E> implements Collection<E> 
     }
 
     @Override
-    public boolean containsAll(final @NotNull Collection<?> c) {
+    public boolean containsAll(final @NonNull Collection<?> c) {
         return collection.containsAll(c);
     }
 
     @Override
-    public boolean addAll(final @NotNull Collection<? extends E> c) {
+    public boolean addAll(final @NonNull Collection<? extends E> c) {
         return collection.addAll(c);
     }
 
     @Override
-    public boolean removeAll(final @NotNull Collection<?> c) {
+    public boolean removeAll(final @NonNull Collection<?> c) {
         return collection.removeAll(c);
     }
 
     @Override
-    public boolean retainAll(final @NotNull Collection<?> c) {
+    public boolean retainAll(final @NonNull Collection<?> c) {
         return collection.retainAll(c);
     }
 

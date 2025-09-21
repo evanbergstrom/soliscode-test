@@ -16,7 +16,7 @@
 
 package org.soliscode.test.util;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 /**
  * An instance of this class will compare equal to any other object.
@@ -55,7 +55,7 @@ public class MatchEverything implements Comparable<MatchEverything> {
      * @return The value {@code 0}.
      */
     @Override
-    public int compareTo(@NotNull final MatchEverything obj) {
+    public int compareTo(@NonNull final MatchEverything obj) {
         return 0;
     }
 }

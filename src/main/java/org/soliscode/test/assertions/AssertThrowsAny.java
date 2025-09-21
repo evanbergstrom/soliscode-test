@@ -16,7 +16,7 @@
 
 package org.soliscode.test.assertions;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.function.Executable;
 
 import java.util.Collection;
@@ -26,41 +26,140 @@ import static java.lang.String.format;
 import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
 
 /// A collection of utility methods that support asserting that an executable throws one of a list of exception types.
+/// This class provides assertions for testing that code throws ANY of a specified set of exception types,
+/// useful when multiple exception types are acceptable outcomes. All methods in this class will throw an
+/// [AssertionFailedError][org.opentest4j.AssertionFailedError] if the assertion fails.
 ///
 /// @author evanbergstrom
+/// @see org.junit.jupiter.api.function.Executable
+/// @see org.junit.jupiter.api.Assertions
 /// @since 1.0
 public final class AssertThrowsAny {
 
     private AssertThrowsAny() { }
 
     /// Asserts that the executable will throw one of a list of possible exception types.
-    /// @param expectedTypes the exception types that the executable should throw.
-    /// @param executable the executable to test.
-    public static void assertThrowsAny(final @NotNull Collection<Class<? extends Throwable>> expectedTypes,
-                                       final @NotNull Executable executable) {
+    /// This method executes the provided executable and verifies that ANY of the expected exception types
+    /// is thrown. The assertion passes if any exception that is an instance of any of the expected types
+    /// is thrown. The assertion fails if no exception is thrown or if a different type of exception is thrown.
+    /// ```java
+    /// // Example with multiple acceptable exception types - these pass
+    /// Collection<Class<? extends Throwable>> exceptions = List.of(
+    ///     IllegalArgumentException.class,
+    ///     NullPointerException.class
+    /// );
+    ///
+    /// assertThrowsAny(exceptions, () -> {
+    ///     throw new IllegalArgumentException("Invalid input");  // Passes
+    /// });
+    ///
+    /// assertThrowsAny(exceptions, () -> {
+    ///     throw new NullPointerException("Null value");        // Passes
+    /// });
+    ///
+    /// // Example with inheritance - subclasses match
+    /// assertThrowsAny(List.of(RuntimeException.class), () -> {
+    ///     throw new IllegalArgumentException();                // Passes (subclass of RuntimeException)
+    /// });
+    ///
+    /// // Examples that would fail
+    /// assertThrowsAny(List.of(IllegalStateException.class), () -> {
+    ///     throw new IllegalArgumentException();                // Fails: wrong exception type
+    /// });
+    ///
+    /// assertThrowsAny(List.of(IllegalStateException.class), () -> {
+    ///     // No exception thrown                               // Fails: no exception
+    /// });
+    /// ```
+    ///
+    /// @param expectedTypes the collection of exception types that the executable should throw (any one of them)
+    /// @param executable the executable to test
+    /// @throws org.opentest4j.AssertionFailedError if no exception is thrown or if the thrown exception
+    ///         is not an instance of any of the expected types
+    /// @throws NullPointerException if `expectedTypes` or `executable` is null
+    ///
+    /// @see java.lang.Class#isInstance(Object)
+    /// @since 1.0
+    public static void assertThrowsAny(final @NonNull Collection<Class<? extends Throwable>> expectedTypes,
+                                       final @NonNull Executable executable) {
         checkThrowsAny(expectedTypes, executable, null);
     }
 
     /// Asserts that the executable will throw one of a list of possible exception types.
-    /// @param expectedTypes the exception types that the executable should throw.
-    /// @param executable the executable to test.
-    /// @param message the message to include in the exception if the assertions fails.
-    public static void assertThrowsAny(final @NotNull Collection<Class<? extends Throwable>> expectedTypes,
-                                       final @NotNull Executable executable, final String message) {
+    /// This method executes the provided executable and verifies that ANY of the expected exception types
+    /// is thrown. The assertion passes if any exception that is an instance of any of the expected types
+    /// is thrown. The assertion fails if no exception is thrown or if a different type of exception is thrown.
+    /// ```java
+    /// // Example with custom error message
+    /// Collection<Class<? extends Throwable>> validationErrors = List.of(
+    ///     IllegalArgumentException.class,
+    ///     ValidationException.class
+    /// );
+    ///
+    /// assertThrowsAny(validationErrors, () -> {
+    ///     validateInput(null);
+    /// }, "Input validation should throw appropriate exception");
+    ///
+    /// // Example that would fail with custom message
+    /// assertThrowsAny(List.of(IOException.class), () -> {
+    ///     throw new IllegalStateException();
+    /// }, "Expected I/O related exception");
+    /// // Throws AssertionFailedError with message: "Expected I/O related exception"
+    /// ```
+    ///
+    /// @param expectedTypes the collection of exception types that the executable should throw (any one of them)
+    /// @param executable the executable to test
+    /// @param message the message to include in the exception if the assertion fails
+    /// @throws org.opentest4j.AssertionFailedError if no exception is thrown or if the thrown exception
+    ///         is not an instance of any of the expected types
+    /// @throws NullPointerException if {@code expectedTypes} or {@code executable} is null
+    ///
+    /// @see java.lang.Class#isInstance(Object)
+    /// @since 1.0
+    public static void assertThrowsAny(final @NonNull Collection<Class<? extends Throwable>> expectedTypes,
+                                       final @NonNull Executable executable, final String message) {
         checkThrowsAny(expectedTypes, executable, message);
     }
 
     /// Asserts that the executable will throw one of a list of possible exception types.
-    /// @param expectedTypes the exception types that the executable should throw.
-    /// @param executable the executable to test.
-    /// @param messageSupplier the supplier of the message to include in the exception if the assertions fails.
-    public static void assertThrowsAny(final @NotNull Collection<Class<? extends Throwable>> expectedTypes,
-                                       final @NotNull Executable executable, final Supplier<String> messageSupplier) {
+    /// This method executes the provided executable and verifies that ANY of the expected exception types
+    /// is thrown. The assertion passes if any exception that is an instance of any of the expected types
+    /// is thrown. The assertion fails if no exception is thrown or if a different type of exception is thrown.
+    /// ```java
+    /// // Example with message supplier (lazy evaluation)
+    /// Collection<Class<? extends Throwable>> networkErrors = List.of(
+    ///     ConnectException.class,
+    ///     SocketTimeoutException.class,
+    ///     UnknownHostException.class
+    /// );
+    ///
+    /// assertThrowsAny(networkErrors, () -> {
+    ///     connectToServer();
+    /// }, () -> "Network operation should fail with: " + networkErrors);
+    /// // Message is only computed if assertion fails
+    ///
+    /// // Example with expensive message computation
+    /// assertThrowsAny(expectedExceptions, risky Operation,
+    ///     () -> buildDetailedErrorReport(expectedExceptions, actualContext));
+    /// // Message computation is deferred until needed
+    /// ```
+    ///
+    /// @param expectedTypes the collection of exception types that the executable should throw (any one of them)
+    /// @param executable the executable to test
+    /// @param messageSupplier the supplier of the message to include in the exception if the assertion fails
+    /// @throws org.opentest4j.AssertionFailedError if no exception is thrown or if the thrown exception
+    ///         is not an instance of any of the expected types
+    /// @throws NullPointerException if {@code expectedTypes} or {@code executable} is null
+    ///
+    /// @see java.lang.Class#isInstance(Object)
+    /// @since 1.0
+    public static void assertThrowsAny(final @NonNull Collection<Class<? extends Throwable>> expectedTypes,
+                                       final @NonNull Executable executable, final Supplier<String> messageSupplier) {
         checkThrowsAny(expectedTypes, executable, messageSupplier);
     }
 
-    private static void checkThrowsAny(final @NotNull Collection<Class<? extends Throwable>> expectedTypes,
-                                       final @NotNull Executable executable, final Object messageOrSupplier) {
+    private static void checkThrowsAny(final @NonNull Collection<Class<? extends Throwable>> expectedTypes,
+                                       final @NonNull Executable executable, final Object messageOrSupplier) {
         try {
             executable.execute();
         }  catch (Throwable actualException) {

@@ -16,7 +16,7 @@
 
 package org.soliscode.test.interfaces;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Objects;
 
@@ -44,13 +44,13 @@ public class ObjectOnly {
 
     /// Copies and instance of ObjectOnly.
     /// @param other the instance to copy.
-    public ObjectOnly(final @NotNull ObjectOnly other) {
+    public ObjectOnly(final @NonNull ObjectOnly other) {
         this.obj = Objects.requireNonNull(other).obj;
     }
 
     /// Creates an `ObjectOnly` object from any other object.
     /// @param obj the object whose interface is being restricted.
-    public ObjectOnly(final @NotNull Object obj) {
+    public ObjectOnly(final @NonNull Object obj) {
         this.obj = Objects.requireNonNull(obj);
     }
 

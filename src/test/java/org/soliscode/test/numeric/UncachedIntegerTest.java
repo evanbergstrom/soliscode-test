@@ -1,6 +1,6 @@
 package org.soliscode.test.numeric;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.soliscode.test.AbstractTest;
@@ -16,21 +16,24 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 public class UncachedIntegerTest extends AbstractTest implements IntegerContract<UncachedInteger> {
 
     @Override
-    public @NotNull IntegerNumberProvider<UncachedInteger> provider() {
+    public @NonNull IntegerNumberProvider<UncachedInteger> provider() {
         return new IntegerNumberProvider<UncachedInteger>() {
 
             @Override
-            public UncachedInteger createValue(final int value) {
-                return new UncachedInteger(value);
+            public UncachedInteger createValue(final long value) {
+                if (value < Integer.MIN_VALUE || value > Integer.MAX_VALUE) {
+                    throw new IllegalArgumentException("value (" + value + ") is not a valid Integer value");
+                }
+                return new UncachedInteger((int) value);
             }
 
             @Override
-            public @NotNull UncachedInteger copyInstance(final @NotNull UncachedInteger other) {
+            public @NonNull UncachedInteger copyInstance(final @NonNull UncachedInteger other) {
                 return new UncachedInteger(other);
             }
 
             @Override
-            public @NotNull Supplier<UncachedInteger> uniqueInstanceSupplier() {
+            public @NonNull Supplier<UncachedInteger> uniqueInstanceSupplier() {
                 return new Supplier<UncachedInteger>() {
                     private int i = 0;
                     @Override
@@ -38,6 +41,16 @@ public class UncachedIntegerTest extends AbstractTest implements IntegerContract
                         return new UncachedInteger(i++);
                     }
                 };
+            }
+
+            @Override
+            public long maxIntegerValue() {
+                return Integer.MAX_VALUE;
+            }
+
+            @Override
+            public long minIntegerValue() {
+                return Integer.MIN_VALUE;
             }
         };
     }

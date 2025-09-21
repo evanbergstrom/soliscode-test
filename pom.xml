@@ -82,11 +82,12 @@
 
   <!-- Dependency Management -->
   <dependencies>
-    <!-- Versions managed by parent pom dependencyManagement -->
     <dependency>
-      <groupId>org.jetbrains</groupId>
-      <artifactId>annotations</artifactId>
+      <groupId>org.jspecify</groupId>
+      <artifactId>jspecify</artifactId>
+      <version>1.0.0</version>
     </dependency>
+    <!-- Versions managed by parent pom dependencyManagement -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>

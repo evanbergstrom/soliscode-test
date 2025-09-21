@@ -1,6 +1,6 @@
 package org.soliscode.test.breakable;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.soliscode.test.contract.CollectionMethods;
 
 import java.util.ArrayList;
@@ -37,7 +37,7 @@ import java.util.SequencedCollection;
 /// @since 1.0.0
 public class BreakableSequencedCollection<E> extends BreakableCollection<E> implements SequencedCollection<E> {
 
-    private final @NotNull List<E> sequenced;
+    private final @NonNull List<E> sequenced;
 
     /// The [addFirst][SequencedCollection#addFirst] method does not add an element.
     /// @see BreakableSequencedCollection#addFirst(Object)
@@ -118,13 +118,13 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
 
     /// Creates a breakable sequenced collection from an existing instance.
     /// @param other the breakable collection to copy.
-    public BreakableSequencedCollection(final @NotNull BreakableSequencedCollection<E> other) {
+    public BreakableSequencedCollection(final @NonNull BreakableSequencedCollection<E> other) {
         this(other.sequenced, new HashSet<>(), 0);
     }
 
     /// Creates a breakable iterable from an iterable.
     /// @param collection the iterator to use for the elements.
-    public BreakableSequencedCollection(final @NotNull List<E> collection) {
+    public BreakableSequencedCollection(final @NonNull List<E> collection) {
         this(collection, new HashSet<>(), 0);
     }
 
@@ -135,7 +135,7 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
     /// @param breaks          the breaks for the collection.
     /// @param characteristics the characteristics for the collection.
     /// @throws NullPointerException if either the `c` or the `breaks` parameters are null.
-    public BreakableSequencedCollection(final @NotNull List<E> c, final @NotNull Collection<Break> breaks,
+    public BreakableSequencedCollection(final @NonNull List<E> c, final @NonNull Collection<Break> breaks,
                                         final int characteristics) {
         super(c, breaks, characteristics);
         this.sequenced = Objects.requireNonNull(c);
@@ -276,16 +276,20 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
     /// @see SequencedCollection#getLast
     @Override
     public E getLast() {
-        if (hasBreak(GET_LAST_RETURNS_NULL)) {
-            return null;
-        } else if (hasBreak(GET_LAST_ALWAYS_THROWS)) {
-            throw new NoSuchElementException();
-        } else if (hasBreak(GET_LAST_SKIPS_LAST_ELEMENT)) {
-            Iterator<E> i = reversed().iterator();
-            i.next();
-            return i.next();
-        } else {
-            return sequenced.getLast();
+        if (supportsMethod(CollectionMethods.GetLast)) {
+            if (hasBreak(GET_LAST_RETURNS_NULL)) {
+                return null;
+            } else if (hasBreak(GET_LAST_ALWAYS_THROWS)) {
+                throw new NoSuchElementException();
+            } else if (hasBreak(GET_LAST_SKIPS_LAST_ELEMENT)) {
+                Iterator<E> i = reversed().iterator();
+                i.next();
+                return i.next();
+            } else {
+                return sequenced.getLast();
+            }
+        }  else {
+            throw new UnsupportedOperationException();
         }
     }
 
@@ -367,7 +371,7 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
 
         /// Create a builder initialized with an element store.
         /// @param elements the element store to use.
-        public Builder(final @NotNull List<E> elements) {
+        public Builder(final @NonNull List<E> elements) {
             // super(this.list = Objects.requireNonNull(elements));  <-- This will work once Flexible Constructors
             // are available
             super(Objects.requireNonNull(elements));

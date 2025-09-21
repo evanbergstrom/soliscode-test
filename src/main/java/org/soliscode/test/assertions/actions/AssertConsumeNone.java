@@ -16,8 +16,9 @@
 
 package org.soliscode.test.assertions.actions;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
@@ -32,7 +33,7 @@ import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
 /// @since 1.0
 /// @see AssertActions
 /// @see java.util.function.Consumer
-public class AssertConsumeNone<T> implements AssertConsumer<T> {
+public class AssertConsumeNone<T> implements Consumer<T> {
 
     private final @Nullable Object messageOrSupplier;
 

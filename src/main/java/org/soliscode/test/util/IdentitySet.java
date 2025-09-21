@@ -1,6 +1,6 @@
 package org.soliscode.test.util;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.AbstractSet;
 import java.util.Collection;
@@ -15,7 +15,7 @@ import java.util.Map;
 /// @since 1.0
 public class IdentitySet<E> extends AbstractSet<E> {
 
-    private final @NotNull Map<E, ?> elements;
+    private final @NonNull Map<E, ?> elements;
 
     /// Creates an empty identity set.
     public IdentitySet() {
@@ -24,7 +24,7 @@ public class IdentitySet<E> extends AbstractSet<E> {
 
     /// Creates a copy of another identity set.
     /// @param c the identity set to copy.
-    public IdentitySet(final @NotNull Collection<? extends E> c) {
+    public IdentitySet(final @NonNull Collection<? extends E> c) {
         this.elements = new IdentityHashMap<>();
         c.forEach((e) -> elements.put(e, null));
     }
@@ -35,7 +35,7 @@ public class IdentitySet<E> extends AbstractSet<E> {
     }
 
     @Override
-    @NotNull
+    @NonNull
     public Iterator<E> iterator() {
         return elements.keySet().iterator();
     }

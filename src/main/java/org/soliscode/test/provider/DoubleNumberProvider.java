@@ -16,7 +16,7 @@
 
 package org.soliscode.test.provider;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 /// Provides instances of a class that implements the [Number] interface that represent an integer value for the
 /// purposes of testing.
@@ -27,7 +27,7 @@ import org.jetbrains.annotations.NotNull;
 public interface DoubleNumberProvider<T extends Number> extends NumberProvider<T> {
 
     @Override
-    default @NotNull T defaultInstance() {
+    default @NonNull T defaultInstance() {
         return createValue(0.0);
     }
 
@@ -40,13 +40,13 @@ public interface DoubleNumberProvider<T extends Number> extends NumberProvider<T
 
     /// {@inheritDoc}
     @Override
-    default @NotNull T createInstance(final int seed) {
+    default @NonNull T createInstance(final long seed) {
         return createValue(seed);
     }
 
     /// {@inheritDoc}
     @Override
-    default @NotNull T copyInstance(final @NotNull T o) {
+    default @NonNull T copyInstance(final @NonNull T o) {
         return createValue(o.doubleValue());
     }
 
@@ -65,12 +65,12 @@ public interface DoubleNumberProvider<T extends Number> extends NumberProvider<T
     }
 
     /// {@inheritDoc}
-    default @NotNull T maxValue() {
+    default @NonNull T maxValue() {
         return createValue(maxPrimitiveValue());
     }
 
     /// {@inheritDoc}
-    default @NotNull T minValue() {
-        return createValue(maxPrimitiveValue());
+    default @NonNull T minValue() {
+        return createValue(minPrimitiveValue());
     }
 }

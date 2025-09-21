@@ -16,6 +16,8 @@
 
 package org.soliscode.test.assertions.collection;
 
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.junit.platform.commons.util.StringUtils;
 import org.opentest4j.AssertionFailedError;
 
@@ -30,7 +32,7 @@ import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
 /// @author evanbergstrom
 /// @see CollectionAssertions
 /// @since 1.0.0
-final class AssertContains extends IterableAssertion {
+final class AssertContains {
 
     private AssertContains() {
     }
@@ -42,7 +44,7 @@ final class AssertContains extends IterableAssertion {
     /// @param actual    The iterable that should contain the elements.
     /// @throws AssertionFailedError if the iterable does not the element or if either of the iterable
     ///                              arguments is null.
-    public static void assertContains(final Object expected, final Iterable<?> actual) {
+    public static void assertContains(final @NonNull Object expected, final @NonNull Iterable<?> actual) {
         checkContains(expected, actual, null);
     }
 
@@ -54,7 +56,8 @@ final class AssertContains extends IterableAssertion {
     /// @param message   The message to supply if the assertion fails.
     /// @throws AssertionFailedError if the iterable does not the element or if either of the iterable
     ///                              arguments is null.
-    public static void assertContains(final Object expected, final Iterable<?> actual, final String message) {
+    public static void assertContains(final @NonNull Object expected, final @NonNull Iterable<?> actual,
+                                      final @Nullable String message) {
         checkContains(expected, actual, message);
     }
 
@@ -66,15 +69,14 @@ final class AssertContains extends IterableAssertion {
     /// @param messageSupplier   The supplier to call top generate  message to supply if the assertion fails.
     /// @throws AssertionFailedError if the iterable does not the element or if either of the iterable
     ///                              arguments is null.
-    public static void assertContains(final Object expected, final Iterable<?> actual,
-            final Supplier<String> messageSupplier) {
+    public static void assertContains(final @NonNull Object expected, final @NonNull Iterable<?> actual,
+                                      final @Nullable Supplier<String> messageSupplier) {
         checkContains(expected, actual, messageSupplier);
     }
 
-    private static void checkContains(final Object expected, final Iterable<?> actual,
-            final Object messageOrSupplier) {
+    private static void checkContains(final @NonNull Object expected, final @NonNull Iterable<?> actual,
+                                      final @Nullable Object messageOrSupplier) {
 
-        assertIterablesNotNull(expected, actual, messageOrSupplier);
         if (actual instanceof Collection<?> collection) {
             if (!collection.contains(expected)) {
                 throw buildException(expected, actual, messageOrSupplier);
@@ -89,8 +91,9 @@ final class AssertContains extends IterableAssertion {
         }
     }
 
-    private static AssertionFailedError buildException(final Object expected, final Iterable<?> actual,
-            final Object messageOrSupplier) {
+    private static AssertionFailedError buildException(final @NonNull Object expected,
+                                                       final @NonNull Iterable<?> actual,
+                                                       final @Nullable Object messageOrSupplier) {
         return assertionFailure()
                 .message(messageOrSupplier)
                 .expected(expected)

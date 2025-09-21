@@ -16,7 +16,7 @@
 
 package org.soliscode.test.interfaces;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -82,14 +82,14 @@ public class IterableOnly<E> implements Iterable<E> {
 
     /// {@inheritDoc}
     @Override
-    @NotNull
+    @NonNull
     public Iterator<E> iterator() {
         return iterable.iterator();
     }
 
     /// {@inheritDoc}
     @Override
-    public @NotNull Spliterator<E> spliterator() {
+    public @NonNull Spliterator<E> spliterator() {
         return iterable.spliterator();
     }
 

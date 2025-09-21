@@ -1,6 +1,6 @@
 package org.soliscode.test.collection;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.soliscode.test.AbstractTest;
@@ -10,7 +10,7 @@ import org.soliscode.test.contract.list.ListContract;
 import org.soliscode.test.contract.support.WithArrayList;
 import org.soliscode.test.contract.support.WithIntegerElement;
 import org.soliscode.test.provider.*;
-import org.soliscode.test.util.CollectionTestOps;
+import org.soliscode.test.util.CollectionTestUtils;
 
 import java.util.*;
 
@@ -31,7 +31,7 @@ public class ArrayListTest extends AbstractTest
         }
 
         @Override
-        public @NotNull CollectionProvider<Integer, List<Integer>> provider() {
+        public @NonNull CollectionProvider<Integer, List<Integer>> provider() {
             return CollectionProviders.wrap(CollectionProviders.provideArrayList(Providers.integerProvider()),
                     Collections::unmodifiableList);
         }
@@ -43,9 +43,9 @@ public class ArrayListTest extends AbstractTest
             implements ListContract<Integer, List<Integer>>, WithIntegerElement, DoesNotPermitNulls {
 
         @Override
-        public @NotNull CollectionProvider<Integer, List<Integer>> provider() {
+        public @NonNull CollectionProvider<Integer, List<Integer>> provider() {
             return CollectionProviders.wrap(CollectionProviders.provideArrayList(Providers.integerProvider()),
-                    CollectionTestOps::preventNulls);
+                    CollectionTestUtils::preventNulls);
         }
     }
 
@@ -55,7 +55,7 @@ public class ArrayListTest extends AbstractTest
             implements ListContract<Integer, List<Integer>>, WithIntegerElement, DoesNotPermitIncompatibleTypes {
 
         @Override
-        public @NotNull CollectionProvider<Integer, List<Integer>> provider() {
+        public @NonNull CollectionProvider<Integer, List<Integer>> provider() {
             return CollectionProviders.wrap(CollectionProviders.provideArrayList(Providers.integerProvider()),
                     (c) -> Collections.checkedList(c, Integer.class));
         }

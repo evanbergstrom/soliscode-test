@@ -15,7 +15,7 @@
  */
 package org.soliscode.test.breakable;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -104,14 +104,14 @@ public class BreakableSpliterator<E> extends AbstractBreakable implements Splite
     public static final Break SPLITERATOR_GET_COMPARATOR_ALWAYS_RETURNS_NULL = new
             Break("spliterator getComparator always returns null");
 
-    private final @NotNull Spliterator<E> iterator;
+    private final @NonNull Spliterator<E> iterator;
     private final int characteristics;
 
     /// Constructs a breakable spliterator from a spliterator that will provide the implementation.
     /// @param iterator The spliterator that will provide the implementation
     /// @param breaks The breaks that define how the iterator is broken.
     /// @param characteristics A mask that indicates the characteristics of the iterator.
-    public BreakableSpliterator(final @NotNull Spliterator<E> iterator, final Collection<Break> breaks,
+    public BreakableSpliterator(final @NonNull Spliterator<E> iterator, final Collection<Break> breaks,
                                 final int characteristics) {
         super(breaks);
         this.iterator = iterator;
@@ -133,7 +133,7 @@ public class BreakableSpliterator<E> extends AbstractBreakable implements Splite
     /// ```
     /// @param action The action to run on the remaining elements.
     @Override
-    public void forEachRemaining(final @NotNull Consumer<? super E> action) {
+    public void forEachRemaining(final @NonNull Consumer<? super E> action) {
         if (!hasBreak(SPLITERATOR_FOR_EACH_REMAINING_DOES_NOT_CALL_ACTION)) {
             iterator.forEachRemaining(action);
         }

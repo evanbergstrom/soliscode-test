@@ -1,6 +1,6 @@
 package org.soliscode.test.contract.support;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.soliscode.test.provider.ObjectProvider;
 
 /// Interface for contract classes that need an object provider.
@@ -11,5 +11,5 @@ public interface ProviderSupport<T> {
 
     /// Returns an object provider that can be used to create instances of the class being tested.
     /// @return an object provider.
-    @NotNull ObjectProvider<T> provider();
+    @NonNull ObjectProvider<T> provider();
 }

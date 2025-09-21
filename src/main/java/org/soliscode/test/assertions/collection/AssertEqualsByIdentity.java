@@ -22,13 +22,14 @@ import java.util.Iterator;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
+import static org.soliscode.test.util.IterableTestUtils.asIterable;
 
 /// `AssertEquals` is a collection of utility methods that support asserting that a collection
 /// contains specific elements in the expected order.
 ///
 /// @author evanbergstrom
 /// @since 1.0.0
-final class AssertEqualsByIdentity extends IterableAssertion {
+public final class AssertEqualsByIdentity {
     private AssertEqualsByIdentity() {
     }
 
@@ -46,6 +47,7 @@ final class AssertEqualsByIdentity extends IterableAssertion {
     /// Test if an iterable contains all of an array of elements in the same order. The elements are considered the same
     /// if the `equals` method returns true.
     ///
+    /// @param <E>       Th element type.
     /// @param expected  An array of the elements the iterable must contain.
     /// @param actual    The iterable that should contain the elements.
     /// @throws AssertionFailedError if the iterable does not contain all the elements or if either of the iterable
@@ -57,6 +59,7 @@ final class AssertEqualsByIdentity extends IterableAssertion {
     /// Test if an array contains all of a list of elements in the same order. The elements are considered the same
     /// if the `equals` method returns true.
     ///
+    /// @param <E>       Th element type.
     /// @param expected  The elements the array must contain.
     /// @param actual    The array that should contain the elements.
     /// @throws AssertionFailedError if the array does not contain all the elements or if either of the
@@ -81,6 +84,7 @@ final class AssertEqualsByIdentity extends IterableAssertion {
     /// Test if an iterable contains all of an array of elements in the same order. The elements are considered the same
     /// if the `equals` method returns true.
     ///
+    /// @param <E>       Th element type.
     /// @param expected  An array of the elements the iterable must contain.
     /// @param actual    The iterable that should contain the elements.
     /// @param message   The message to supply if the assertion fails.
@@ -93,6 +97,7 @@ final class AssertEqualsByIdentity extends IterableAssertion {
     /// Test if an array contains all of a set of elements in the same order. The elements are considered the same if
     ///  the `equals` method returns true.
     ///
+    /// @param <E>       Th element type.
     /// @param expected  The elements the array must contain.
     /// @param actual    The array that should contain the elements.
     /// @param message   The message to supply if the assertion fails.
@@ -118,6 +123,7 @@ final class AssertEqualsByIdentity extends IterableAssertion {
    /// Test if an iterable contains all of an array of elements in the same order. The elements are considered the same
    /// if the `equals` method returns true.
    ///
+   /// @param <E>       Th element type.
    /// @param expected  An array of the elements the iterable must contain.
    /// @param actual    The iterable that should contain the elements.
    /// @param messageSupplier   The supplier to call top generate  message to supply if the assertion fails.
@@ -131,6 +137,7 @@ final class AssertEqualsByIdentity extends IterableAssertion {
     /// Test if an iterable contains all of an array of elements in the same order. The elements are considered the same
     /// if the `equals` method returns true.
     ///
+    /// @param <E>       Th element type.
     /// @param expected  An array of the elements the iterable must contain.
     /// @param actual    The iterable that should contain the elements.
     /// @param messageSupplier   The supplier to call top generate  message to supply if the assertion fails.
@@ -143,14 +150,12 @@ final class AssertEqualsByIdentity extends IterableAssertion {
 
     private static void checkEquals(final Iterable<?> expected, final Iterable<?> actual,
                                    final Object messageOrSupplier) {
-       assertIterablesNotNull(expected, actual, messageOrSupplier);
-
        if (expected == actual) {
            return;
        }
 
        Iterator<?> expectedIterator = expected.iterator();
-       Iterator<?> actualIterator = expected.iterator();
+       Iterator<?> actualIterator = actual.iterator();
 
        while (expectedIterator.hasNext()) {
            if (!actualIterator.hasNext()) {

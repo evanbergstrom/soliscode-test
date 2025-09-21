@@ -16,7 +16,7 @@
 
 package org.soliscode.test;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -39,7 +39,7 @@ public abstract class OptionalMethodSupport implements SupportedMethods {
     private static final MethodStatus DEFAULT_STATUS = new MethodStatus(true);
 
     /// Map storing the support status for each optional method that has been explicitly configured.
-    private final @NotNull HashMap<OptionalMethod, MethodStatus> methodStatuses;
+    private final @NonNull HashMap<OptionalMethod, MethodStatus> methodStatuses;
 
     /// Default constructor that initializes an empty method status map.
     /// All methods will be considered supported by default.
@@ -50,7 +50,7 @@ public abstract class OptionalMethodSupport implements SupportedMethods {
     /// Copy constructor that creates a new instance with the same method support configuration.
     /// @param other the OptionalMethodSupport instance to copy configuration from
     /// @throws NullPointerException if other is null
-    protected OptionalMethodSupport(final @NotNull OptionalMethodSupport other) {
+    protected OptionalMethodSupport(final @NonNull OptionalMethodSupport other) {
         this.methodStatuses = new HashMap<>(other.methodStatuses);
     }
 
@@ -62,7 +62,7 @@ public abstract class OptionalMethodSupport implements SupportedMethods {
     /// @throws NullPointerException if method is null
     /// @see #doesNotSupportMethod(OptionalMethod)
     @Override
-    public boolean supportsMethod(final @NotNull OptionalMethod method) {
+    public boolean supportsMethod(final @NonNull OptionalMethod method) {
         return methodStatuses.getOrDefault(method, DEFAULT_STATUS).supported();
     }
 
@@ -75,7 +75,7 @@ public abstract class OptionalMethodSupport implements SupportedMethods {
     /// @throws NullPointerException if method is null
     /// @see #supportsMethod(OptionalMethod)
     /// @see #unsupportedMethods()
-    public void doesNotSupportMethod(final @NotNull OptionalMethod method) {
+    public void doesNotSupportMethod(final @NonNull OptionalMethod method) {
         methodStatuses.put(method, new MethodStatus(false));
     }
 
@@ -86,7 +86,7 @@ public abstract class OptionalMethodSupport implements SupportedMethods {
     /// @return an immutable collection of unsupported optional methods; empty if no methods are unsupported
     /// @see #doesNotSupportMethod(OptionalMethod)
     /// @see #supportsMethod(OptionalMethod)
-    protected @NotNull Collection<OptionalMethod> unsupportedMethods() {
+    protected @NonNull Collection<OptionalMethod> unsupportedMethods() {
         return methodStatuses.entrySet().stream()
                 .filter((e) -> !e.getValue().supported())
                 .map(Map.Entry::getKey)

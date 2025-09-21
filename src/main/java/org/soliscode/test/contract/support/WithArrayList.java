@@ -1,6 +1,6 @@
 package org.soliscode.test.contract.support;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.soliscode.test.provider.CollectionProvider;
 import org.soliscode.test.provider.CollectionProviders;
 
@@ -21,7 +21,7 @@ public interface WithArrayList<E> extends CollectionProviderSupport<E, ArrayList
     // Returns a collection provider that can be used to create instances of [ArrayList].
     /// @return an `ArrayList` collection provider.
     @Override
-    default @NotNull CollectionProvider<E, ArrayList<E>> provider() {
+    default @NonNull CollectionProvider<E, ArrayList<E>> provider() {
         return CollectionProviders.provideArrayList(elementProvider());
     }
 }

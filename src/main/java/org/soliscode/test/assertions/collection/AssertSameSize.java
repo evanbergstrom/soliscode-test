@@ -17,7 +17,7 @@
 package org.soliscode.test.assertions.collection;
 
 import org.opentest4j.AssertionFailedError;
-import org.soliscode.test.util.IterableTestOps;
+import org.soliscode.test.util.IterableTestUtils;
 
 import java.util.function.Supplier;
 
@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
 ///
 /// @author evanbergstrom
 /// @since 1.0.0
-public final class AssertSameSize extends IterableAssertion {
+public final class AssertSameSize {
 
     private AssertSameSize() {
     }
@@ -70,8 +70,7 @@ public final class AssertSameSize extends IterableAssertion {
 
     static void checkSameSize(final Iterable<?> expected, final Iterable<?> actual,
             final Object messageOrSupplier) {
-        assertIterablesNotNull(expected, actual, messageOrSupplier);
-        if (IterableTestOps.size(expected) != IterableTestOps.size(actual)) {
+        if (IterableTestUtils.size(expected) != IterableTestUtils.size(actual)) {
             throw buildException(expected, actual, messageOrSupplier);
         }
     }
