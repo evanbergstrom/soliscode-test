@@ -52,6 +52,14 @@ import java.util.function.Predicate;
 ///         .withBreak(CollectionBreaks,EMPTY_ALWAYS_RETURNS_TRUE)
 ///         .build();
 /// ```
+///
+/// ## Thread Safety
+///
+/// This class is not thread-safe. Synchronization is the responsibility of the caller.
+/// The underlying collection's thread safety characteristics determine the overall
+/// thread safety behavior. For thread-safe usage, external synchronization must be
+/// provided or the instance should be confined to a single thread.
+///
 /// @author evanbergstrom
 /// @param <E> The elements type for the `Collection`.
 /// @see CollectionMethods

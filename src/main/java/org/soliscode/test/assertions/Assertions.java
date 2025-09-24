@@ -167,6 +167,12 @@ import java.util.function.Supplier;
 /// - **Minimal reflection**: Type checking uses efficient instanceof operations
 /// - **Direct delegation**: Most operations delegate to optimized implementations
 ///
+/// ## Thread Safety
+///
+/// This class is thread-safe. All methods are static and stateless, making concurrent
+/// access safe from multiple threads. No synchronization is required when calling
+/// these assertion methods from different threads.
+///
 /// @author evanbergstrom
 /// @since 1.0
 /// @see org.junit.jupiter.api.Assertions

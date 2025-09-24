@@ -20,6 +20,13 @@ import org.jspecify.annotations.NonNull;
 import java.util.Collection;
 
 /// Utility class for creating breakable objects for testing contract classes.
+///
+/// ## Thread Safety
+///
+/// This class is thread-safe. All methods are static and stateless, making concurrent
+/// access safe from multiple threads. However, the breakable objects created by the
+/// builders are not thread-safe and synchronization is the responsibility of the caller.
+///
 /// @author evanbergstrom
 /// @since 1.0
 public final class Breakables {

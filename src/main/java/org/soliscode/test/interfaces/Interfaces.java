@@ -22,6 +22,12 @@ import java.util.Collection;
 
 /// Utility class that helps create interface-narrowing views on objects.
 ///
+/// ## Thread Safety
+///
+/// This class is thread-safe. All methods are static and stateless, making concurrent
+/// access safe from multiple threads. The returned interface-narrowing wrapper objects
+/// are also thread-safe as they are immutable views of the wrapped objects.
+///
 /// @author evanbergstrom
 /// @since 1.0
 public final class Interfaces {
