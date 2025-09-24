@@ -99,6 +99,16 @@ public final class Breakables {
                 .addElements(e);
     }
 
+    /// Creates a builder for a `BreakableSet` initialized with a set of elements.
+    /// @param <E> the type of the elements.
+    /// @param e the elements to add to the set.
+    /// @return a builder.
+    @SafeVarargs
+    public static <E> BreakableSet.Builder<E> buildSet(final E... e) {
+        return new BreakableSet.Builder<E>()
+                .addElements(e);
+    }
+
     /// Makes sure that the iterator is not a broken iterator. If the argument is an instance of `BreakableIterator`
     /// then the underlying iterator used as the element store is returned.
     /// @param <E> the type of the elements.

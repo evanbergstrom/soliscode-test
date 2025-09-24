@@ -28,16 +28,16 @@ This library provides support for:\
 >     - Collection 
 >       - SequencedCollection 
 >         - List 
+>     - Set
 > 
 > Support for the following interfaces is planned:
 > - Map
 >   - SortedMap
 >     - NavigableMap
 >   - ConcurrentMap
->     - ConcurrentNavigableMap
-> - Set
->   - SortedSet
->     - NavigableSet
+>     - ConcurrentNavigableMap 
+> - SortedSet
+>   - NavigableSet
 > - Queue
 >   - BlockingQueue
 >     - TransferQueue

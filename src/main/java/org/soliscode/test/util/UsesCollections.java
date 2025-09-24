@@ -1,7 +1,9 @@
 package org.soliscode.test.util;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /// **Mutable Collection Factory Interface for Testing**
 ///
@@ -240,4 +242,94 @@ public interface UsesCollections {
         l.add(e5);
         return l;
     }
+
+    /// Creates a mutable empty set. This is a convenience method for creating small test
+    /// sets no elements. Unlike Set.of(), this method returns a mutable HashSet that allows null value.
+    ///
+    /// @param <E> the element type
+    /// @return a mutable HashSet containing no elements
+    default <E> Set<E> setOf()   {
+        return new HashSet<>();
+    }
+
+    /// Creates a mutable set containing exactly one element. This is a convenience method for creating small test
+    /// sets with known elements. Unlike Set.of(), this method returns a mutable HashSet that allows null value.
+    ///
+    /// @param <E> the element type
+    /// @param e1 the first element
+    /// @return a mutable HashSet containing the one element.
+    default <E> Set<E> setOf(final E e1)   {
+        Set<E> l = new HashSet<>();
+        l.add(e1);
+        return l;
+    }
+
+    /// Creates a mutable set containing exactly two elements. This is a convenience method for creating small test
+    /// sets with known elements. Unlike Set.of(), this method returns a mutable HashSet that allows null value.
+    ///
+    /// @param <E> the element type
+    /// @param e1 the first element
+    /// @param e2 the second element
+    /// @return a mutable HashSet containing the two elements.
+    default <E> Set<E> setOf(final E e1, final E e2) {
+        Set<E> l = new HashSet<>();
+        l.add(e1);
+        l.add(e2);
+        return l;
+    }
+
+    /// Creates a mutable set containing exactly three elements. This is a convenience method for creating small test
+    /// sets with known elements. Unlike Set.of(), this method returns a mutable HashSet that allows null value.
+    ///
+    /// @param <E> the element type
+    /// @param e1 the first element
+    /// @param e2 the second element
+    /// @param e3 the third element
+    /// @return a mutable HashSet containing the three elements
+    default <E> Set<E> setOf(final E e1, final E e2, final E e3)   {
+        Set<E> l = new HashSet<>();
+        l.add(e1);
+        l.add(e2);
+        l.add(e3);
+        return l;
+    }
+
+    /// Creates a mutable set containing exactly four elements. This is a convenience method for creating small test
+    /// sets with known elements. Unlike Set.of(), this method returns a mutable HashSet that allows null values.
+    ///
+    /// @param <E> the element type
+    /// @param e1 the first element
+    /// @param e2 the second element
+    /// @param e3 the third element
+    /// @param e4 the fourth element
+    /// @return a mutable HashSet containing the four elements
+    default <E> Set<E> setOf(final E e1, final E e2, final E e3, final E e4)   {
+        Set<E> l = new HashSet<>();
+        l.add(e1);
+        l.add(e2);
+        l.add(e3);
+        l.add(e4);
+        return l;
+    }
+
+    /// Creates a mutable set containing exactly five elements. This is a convenience method for creating small test
+    /// sets with known elements. Unlike Set.of(), this method returns a mutable HashSet that allows null values.
+    ///
+    /// @param <E> the element type
+    /// @param e1 the first element
+    /// @param e2 the second element
+    /// @param e3 the third element
+    /// @param e4 the fourth element
+    /// @param e5 the five element
+    /// @return a mutable HashSet containing the five elements
+    default <E> Set<E> setOf(final E e1, final E e2, final E e3, final E e4, final E e5)   {
+        Set<E> l = new HashSet<>();
+        l.add(e1);
+        l.add(e2);
+        l.add(e3);
+        l.add(e4);
+        l.add(e5);
+        return l;
+    }
+
 }

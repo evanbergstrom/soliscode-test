@@ -17,7 +17,7 @@ public class UncachedIntegerTest extends AbstractTest implements IntegerContract
 
     @Override
     public @NonNull IntegerNumberProvider<UncachedInteger> provider() {
-        return new IntegerNumberProvider<UncachedInteger>() {
+        return new IntegerNumberProvider<>() {
 
             @Override
             public UncachedInteger createValue(final long value) {
@@ -34,8 +34,9 @@ public class UncachedIntegerTest extends AbstractTest implements IntegerContract
 
             @Override
             public @NonNull Supplier<UncachedInteger> uniqueInstanceSupplier() {
-                return new Supplier<UncachedInteger>() {
+                return new Supplier<>() {
                     private int i = 0;
+
                     @Override
                     public UncachedInteger get() {
                         return new UncachedInteger(i++);

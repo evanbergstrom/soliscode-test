@@ -100,7 +100,7 @@
 /// assertStringContains(expectedTerms, actualContent, "Log validation failed");
 ///
 /// // Lazy error message (for expensive message construction)
-/// assertStringContains(expectedTerms, actualContent, 
+/// assertStringContains(expectedTerms, actualContent,
 ///     () -> "Validation failed: " + getExpensiveDiagnosticInfo());
 /// ```
 ///
@@ -158,7 +158,7 @@
 /// // Validate that critical system events appear in logs
 /// List<String> criticalEvents = List.of("startup", "config_loaded", "services_ready");
 /// String systemLog = getSystemStartupLog();
-/// assertStringContainsInOrder(criticalEvents, systemLog, 
+/// assertStringContainsInOrder(criticalEvents, systemLog,
 ///     "System startup sequence validation failed");
 /// ```
 ///
@@ -174,7 +174,7 @@
 /// ### Workflow and Process Testing
 /// ```java
 /// // Validate business process execution order
-/// List<String> orderSteps = List.of("validate_payment", "reserve_inventory", 
+/// List<String> orderSteps = List.of("validate_payment", "reserve_inventory",
 ///                                   "process_order", "send_confirmation");
 /// String orderProcessLog = getOrderProcessingTrace();
 /// assertStringContainsInOrder(orderSteps, orderProcessLog,
