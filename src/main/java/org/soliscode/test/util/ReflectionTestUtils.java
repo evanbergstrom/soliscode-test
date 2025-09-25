@@ -71,9 +71,9 @@ import java.util.Set;
 /// // Validate that implementation classes conform to expected interface contracts
 /// Class<?> myImplementation = MyCustomList.class;
 /// Set<Class<?>> implementedInterfaces = ReflectionTestUtils.getAllInterfaces(myImplementation);
-/// 
+///
 /// // Verify required interfaces are implemented
-/// assertTrue(implementedInterfaces.contains(List.class), 
+/// assertTrue(implementedInterfaces.contains(List.class),
 ///            "Custom list must implement List interface");
 /// assertTrue(implementedInterfaces.contains(Collection.class),
 ///            "List implementations must support Collection contract");
@@ -144,7 +144,7 @@ public final class ReflectionTestUtils {
     ///
     /// This constructor is provided for completeness but this class is designed to be used
     /// through its static methods. All functionality is available without instantiation.
-    public ReflectionTestUtils() { }
+    private ReflectionTestUtils() { }
 
     /// Gets the set of interfaces directly implemented by the specified class.
     ///
@@ -268,7 +268,7 @@ public final class ReflectionTestUtils {
     /// // Verify complete interface compliance for framework integration
     /// Class<?> implementation = MyCollectionImpl.class;
     /// Set<Class<?>> allInterfaces = ReflectionTestUtils.getAllInterfaces(implementation);
-    /// 
+    ///
     /// assertTrue(allInterfaces.contains(Collection.class), "Must support Collection contract");
     /// assertTrue(allInterfaces.contains(Iterable.class), "Must support iteration");
     /// ```
@@ -286,10 +286,10 @@ public final class ReflectionTestUtils {
     /// // Validate decorator pattern interface preservation
     /// Class<?> decorator = MyDecorator.class;
     /// Class<?> component = OriginalComponent.class;
-    /// 
+    ///
     /// Set<Class<?>> decoratorInterfaces = ReflectionTestUtils.getAllInterfaces(decorator);
     /// Set<Class<?>> componentInterfaces = ReflectionTestUtils.getAllInterfaces(component);
-    /// 
+    ///
     /// assertTrue(decoratorInterfaces.containsAll(componentInterfaces),
     ///            "Decorator must preserve all component interfaces");
     /// ```
@@ -372,7 +372,7 @@ public final class ReflectionTestUtils {
     ///     ArrayList.class, HashSet.class, TreeMap.class
     /// );
     /// Set<Class<?>> allInterfaces = ReflectionTestUtils.getAllInterfaces(collectionTypes);
-    /// // Returns union of all interfaces: [List, RandomAccess, Cloneable, Serializable, 
+    /// // Returns union of all interfaces: [List, RandomAccess, Cloneable, Serializable,
     /// //                                   Collection, Iterable, Set, Map, NavigableMap, SortedMap]
     ///
     /// // Framework service compatibility check
@@ -401,7 +401,7 @@ public final class ReflectionTestUtils {
     /// // Dependency injection container analysis
     /// Collection<Class<?>> beanClasses = containerConfig.getBeanClasses();
     /// Set<Class<?>> availableInterfaces = ReflectionTestUtils.getAllInterfaces(beanClasses);
-    /// 
+    ///
     /// // Verify framework requirements are satisfied
     /// assertTrue(availableInterfaces.contains(ApplicationListener.class),
     ///            "Container must support event listening");
@@ -415,7 +415,7 @@ public final class ReflectionTestUtils {
     /// // API gateway route configuration
     /// Collection<Class<?>> handlerClasses = routeConfig.getHandlerClasses();
     /// Set<Class<?>> handlerInterfaces = ReflectionTestUtils.getAllInterfaces(handlerClasses);
-    /// 
+    ///
     /// // Configure request routing based on supported interfaces
     /// if (handlerInterfaces.contains(AuthenticationHandler.class)) {
     ///     enableAuthenticationRouting();

@@ -135,9 +135,7 @@ public class IntegerProviderTest extends AbstractTest {
     @Test
     @DisplayName("Test copyInstance method with null input")
     public void testCopyInstanceWithNull() {
-        assertThrows(NullPointerException.class, () -> {
-            provider.copyInstance(null);
-        });
+        assertThrows(NullPointerException.class, () -> provider.copyInstance(null));
     }
 
     /// Test the uniqueSizeLimit method returns Integer.MAX_VALUE.
@@ -310,9 +308,7 @@ public class IntegerProviderTest extends AbstractTest {
             }
         };
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            limitedProvider.createUniqueInstances(10);
-        });
+        assertThrows(IllegalArgumentException.class, () -> limitedProvider.createUniqueInstances(10));
     }
 
     /// Test createRandoInstances method produces valid instances.
@@ -388,44 +384,40 @@ public class IntegerProviderTest extends AbstractTest {
     public void testCreateValueOutOfRange() {
         // Test values greater than Integer.MAX_VALUE
         long tooLarge = Integer.MAX_VALUE + 1L;
-        IllegalArgumentException largeLongException = assertThrows(IllegalArgumentException.class, () -> {
-            provider.createValue(tooLarge);
-        });
+        IllegalArgumentException largeLongException = assertThrows(IllegalArgumentException.class,
+                () -> provider.createValue(tooLarge));
         assertTrue(largeLongException.getMessage().contains("value (" + tooLarge + ") is not a valid Integer value"));
 
         // Test much larger values
         long veryLarge = Long.MAX_VALUE;
-        IllegalArgumentException veryLargeException = assertThrows(IllegalArgumentException.class, () -> {
-            provider.createValue(veryLarge);
-        });
+        IllegalArgumentException veryLargeException = assertThrows(IllegalArgumentException.class,
+                () -> provider.createValue(veryLarge));
         assertTrue(veryLargeException.getMessage().contains("value (" + veryLarge + ") is not a valid Integer value"));
 
         // Test values less than Integer.MIN_VALUE
         long tooSmall = Integer.MIN_VALUE - 1L;
-        IllegalArgumentException smallLongException = assertThrows(IllegalArgumentException.class, () -> {
-            provider.createValue(tooSmall);
-        });
+        IllegalArgumentException smallLongException = assertThrows(IllegalArgumentException.class,
+                () -> provider.createValue(tooSmall));
         assertTrue(smallLongException.getMessage().contains("value (" + tooSmall + ") is not a valid Integer value"));
 
         // Test much smaller values
         long verySmall = Long.MIN_VALUE;
-        IllegalArgumentException verySmallException = assertThrows(IllegalArgumentException.class, () -> {
-            provider.createValue(verySmall);
-        });
+        IllegalArgumentException verySmallException = assertThrows(IllegalArgumentException.class,
+                () -> provider.createValue(verySmall));
         assertTrue(verySmallException.getMessage().contains("value (" + verySmall + ") is not a valid Integer value"));
 
         // Test specific boundary violations
         long justAboveMax = (long) Integer.MAX_VALUE + 1;
-        IllegalArgumentException justAboveMaxException = assertThrows(IllegalArgumentException.class, () -> {
-            provider.createValue(justAboveMax);
-        });
-        assertTrue(justAboveMaxException.getMessage().contains("value (" + justAboveMax + ") is not a valid Integer value"));
+        IllegalArgumentException justAboveMaxException = assertThrows(IllegalArgumentException.class,
+                () -> provider.createValue(justAboveMax));
+        assertTrue(justAboveMaxException.getMessage()
+                .contains("value (" + justAboveMax + ") is not a valid Integer value"));
 
         long justBelowMin = (long) Integer.MIN_VALUE - 1;
-        IllegalArgumentException justBelowMinException = assertThrows(IllegalArgumentException.class, () -> {
-            provider.createValue(justBelowMin);
-        });
-        assertTrue(justBelowMinException.getMessage().contains("value (" + justBelowMin + ") is not a valid Integer value"));
+        IllegalArgumentException justBelowMinException = assertThrows(IllegalArgumentException.class,
+                () -> provider.createValue(justBelowMin));
+        assertTrue(justBelowMinException.getMessage()
+                .contains("value (" + justBelowMin + ") is not a valid Integer value"));
     }
 
     /// Test createValue boundary values that should work correctly.
@@ -556,9 +548,9 @@ public class IntegerProviderTest extends AbstractTest {
 
         // Test conversions preserve the values correctly
         assertEquals(Integer.MAX_VALUE, maxInt.intValue());
-        assertEquals((long) Integer.MAX_VALUE, maxInt.longValue());
+        assertEquals(Integer.MAX_VALUE, maxInt.longValue());
         assertEquals(Integer.MIN_VALUE, minInt.intValue());
-        assertEquals((long) Integer.MIN_VALUE, minInt.longValue());
+        assertEquals(Integer.MIN_VALUE, minInt.longValue());
 
         // Test that double conversion is exact for integer values
         assertEquals(Integer.MAX_VALUE, maxInt.doubleValue(), 0.0);

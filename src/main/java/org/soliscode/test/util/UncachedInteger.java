@@ -16,6 +16,8 @@
 
 package org.soliscode.test.util;
 
+import org.jspecify.annotations.NonNull;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -140,7 +142,7 @@ public class UncachedInteger extends Number implements Comparable<UncachedIntege
      *          greater than the argument {@code Integer} (signed comparison).
      */
     @Override
-    public int compareTo(final UncachedInteger o) {
+    public int compareTo(final @NonNull UncachedInteger o) {
         return Integer.compare(value, o.intValue());
     }
 

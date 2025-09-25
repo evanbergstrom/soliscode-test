@@ -113,7 +113,7 @@ public class DoubleProviderTest extends AbstractTest {
         Double result = provider.createInstance(seed);
 
         assertNotNull(result);
-        assertEquals((double) seed, result, 0.0);
+        assertEquals(seed, result, 0.0);
         assertEquals(Double.valueOf(seed), result);
     }
 
@@ -162,9 +162,7 @@ public class DoubleProviderTest extends AbstractTest {
     @Test
     @DisplayName("Test copyInstance method with null input")
     public void testCopyInstanceWithNull() {
-        assertThrows(NullPointerException.class, () -> {
-            provider.copyInstance(null);
-        });
+        assertThrows(NullPointerException.class, () -> provider.copyInstance(null));
     }
 
     /// Test the uniqueSizeLimit method returns Integer.MAX_VALUE.
@@ -303,7 +301,7 @@ public class DoubleProviderTest extends AbstractTest {
 
         // Check that values follow the expected pattern (seed-based)
         for (int i = 0; i < instances.size(); i++) {
-            assertEquals((double) i, instances.get(i), 0.0);
+            assertEquals(i, instances.get(i), 0.0);
         }
     }
 
@@ -320,7 +318,7 @@ public class DoubleProviderTest extends AbstractTest {
 
         // Check that values follow the expected pattern starting from seed
         for (int i = 0; i < instances.size(); i++) {
-            assertEquals((double) (seed + i), instances.get(i), 0.0);
+            assertEquals(seed + i, instances.get(i), 0.0);
         }
     }
 
@@ -336,9 +334,7 @@ public class DoubleProviderTest extends AbstractTest {
             }
         };
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            limitedProvider.createUniqueInstances(10);
-        });
+        assertThrows(IllegalArgumentException.class, () -> limitedProvider.createUniqueInstances(10));
     }
 
     /// Test createRandoInstances method produces valid instances.

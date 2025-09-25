@@ -351,10 +351,10 @@ public final class AssertStringContainsInOrder {
     /// );  // Fails with networking context
     ///
     /// // CI/CD pipeline with mixed case step names
-    /// List<String> cicdSteps = List.of("checkout", "build", "test", "security_scan", "deploy");
+    /// List<String> pipelineSteps = List.of("checkout", "build", "test", "security_scan", "deploy");
     /// String pipelineLog = "CHECKOUT code -> BUILD artifacts -> TEST execution -> deploy to prod";
     /// assertStringContainsInOrderIgnoreCase(
-    ///     cicdSteps,
+    ///     pipelineSteps,
     ///     pipelineLog,
     ///     "CI/CD pipeline security violation - security scan was skipped before deployment"
     /// );  // Fails with security-focused message

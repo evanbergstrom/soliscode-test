@@ -684,7 +684,8 @@ public final class Assertions {
         AssertStringContains.assertStringContains(List.of(expected), actual, message);
     }
 
-    /// Asserts that the actual string contains the expected substring with a custom error message, ignoring case differences.
+    /// Asserts that the actual string contains the expected substring with a custom error message, ignoring case
+    /// differences.
     ///
     /// @param expected the substring that must be present in the actual string (case-insensitive)
     /// @param actual the string to search within
@@ -711,7 +712,8 @@ public final class Assertions {
         AssertStringContains.assertStringContains(List.of(expected), actual, supplier);
     }
 
-    /// Asserts that the actual string contains the expected substring with a lazily-evaluated error message, ignoring case differences.
+    /// Asserts that the actual string contains the expected substring with a lazily-evaluated error message, ignoring
+    /// case differences.
     ///
     /// @param expected the substring that must be present in the actual string (case-insensitive)
     /// @param actual the string to search within
@@ -793,7 +795,8 @@ public final class Assertions {
     /// @see #assertStringContainsIgnoreCase(String, String)
     /// @see #assertStringContainsInOrderIgnoreCase(List, String)
     /// @since 1.0.0
-    public static void assertStringContainsIgnoreCase(final @NonNull List<String> expected, final @NonNull String actual) {
+    public static void assertStringContainsIgnoreCase(final @NonNull List<String> expected,
+                                                      final @NonNull String actual) {
         AssertStringContains.assertStringContainsIgnoreCase(expected, actual);
     }
 
@@ -810,7 +813,8 @@ public final class Assertions {
         AssertStringContains.assertStringContains(expected, actual, message);
     }
 
-    /// Asserts that the actual string contains all of the expected substrings with a custom error message, ignoring case differences.
+    /// Asserts that the actual string contains all of the expected substrings with a custom error message, ignoring
+    /// case differences.
     ///
     /// @param expected the list of substrings that must all be present in the actual string (case-insensitive)
     /// @param actual the string to search within
@@ -838,7 +842,8 @@ public final class Assertions {
         AssertStringContains.assertStringContains(expected, actual, supplier);
     }
 
-    /// Asserts that the actual string contains all of the expected substrings with a lazily-evaluated error message, ignoring case differences.
+    /// Asserts that the actual string contains all of the expected substrings with a lazily-evaluated error message,
+    /// ignoring case differences.
     ///
     /// @param expected the list of substrings that must all be present in the actual string (case-insensitive)
     /// @param actual the string to search within
@@ -891,7 +896,8 @@ public final class Assertions {
         AssertStringContainsInOrder.assertStringContainsInOrder(expected, actual);
     }
 
-    /// Asserts that the actual string contains all expected substrings in the specified order, ignoring case differences.
+    /// Asserts that the actual string contains all expected substrings in the specified order, ignoring case
+    /// differences.
     ///
     /// This method verifies that all substrings in the expected list appear in the actual string
     /// in the same relative order they appear in the list, performing case-insensitive matching.
@@ -926,7 +932,8 @@ public final class Assertions {
         AssertStringContainsInOrder.assertStringContainsInOrderIgnoreCase(expected, actual);
     }
 
-    /// Asserts that the actual string contains all expected substrings in the specified order with a custom error message.
+    /// Asserts that the actual string contains all expected substrings in the specified order with a custom error
+    /// message.
     ///
     /// @param expected the list of substrings that must appear in order within the actual string
     /// @param actual the string to search within
@@ -939,8 +946,8 @@ public final class Assertions {
         AssertStringContainsInOrder.assertStringContainsInOrder(expected, actual, message);
     }
 
-    /// Asserts that the actual string contains all expected substrings in the specified order, ignoring case differences,
-    /// with a custom error message.
+    /// Asserts that the actual string contains all expected substrings in the specified order, ignoring case
+    /// differences, with a custom error message.
     ///
     /// This method verifies that all substrings from the expected list appear in the actual string
     /// in the exact order specified, performing case-insensitive matching. If the assertion fails,
@@ -989,7 +996,8 @@ public final class Assertions {
         AssertStringContainsInOrder.assertStringContainsInOrderIgnoreCase(expected, actual, message);
     }
 
-    /// Asserts that the actual string contains all expected substrings in the specified order with a lazily-evaluated error message.
+    /// Asserts that the actual string contains all expected substrings in the specified order with a lazily-evaluated
+    /// error message.
     ///
     /// @param expected the list of substrings that must appear in order within the actual string
     /// @param actual the string to search within
@@ -1003,7 +1011,8 @@ public final class Assertions {
         AssertStringContainsInOrder.assertStringContainsInOrder(expected, actual, supplier);
     }
 
-    /// Asserts that the actual string contains all expected substrings in the specified order, ignoring case differences,
+    /// Asserts that the actual string contains all expected substrings in the specified order, ignoring case
+    /// differences,
     /// with a lazily-evaluated error message.
     ///
     /// This method verifies that all substrings from the expected list appear in the actual string
@@ -1034,7 +1043,7 @@ public final class Assertions {
     ///
     /// // Service communication validation with case-insensitive matching
     /// List<String> serviceFlow = List.of("REQUEST", "auth", "PROCESS", "response");
-    /// String serviceLog = "request started\nAUTH validated\nprocess completed\nRESPONSE sent";
+    /// String serviceLog = "request started\nAUTH validated\process completed\nRESPONSE sent";
     /// assertStringContainsInOrderIgnoreCase(
     ///     serviceFlow,
     ///     serviceLog,

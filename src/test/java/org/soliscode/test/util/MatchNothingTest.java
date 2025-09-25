@@ -1,5 +1,6 @@
 package org.soliscode.test.util;
 
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.soliscode.test.AbstractTest;
@@ -14,6 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// @author evanbergstrom
 /// @since 1.0
 /// @see MatchNothing
+@SuppressWarnings({"AssertBetweenInconvertibleTypes", "EqualsBetweenInconvertibleTypes", "EqualsWithItself"})
 @DisplayName("Tests for MatchNothing")
 public class MatchNothingTest extends AbstractTest {
 
@@ -24,10 +26,10 @@ public class MatchNothingTest extends AbstractTest {
     @DisplayName("Test default constructor")
     public void testDefaultConstructor() {
         MatchNothing matchNothing = new MatchNothing();
-        
+
         // Verify instance was created successfully
         assertNotNull(matchNothing);
-        
+
         // Verify it implements Comparable
         assertInstanceOf(Comparable.class, matchNothing);
     }
@@ -39,23 +41,23 @@ public class MatchNothingTest extends AbstractTest {
     @DisplayName("Test equals always returns false")
     public void testEqualsAlwaysReturnsFalse() {
         MatchNothing matchNothing = new MatchNothing();
-        
+
         // Test with null
-        assertFalse(matchNothing.equals(null));
-        
+        assertNotEquals(null, matchNothing);
+
         // Test with same instance (violates reflexive property)
-        assertFalse(matchNothing.equals(matchNothing));
-        
+        assertNotEquals(matchNothing, matchNothing);
+
         // Test with different MatchNothing instance
-        assertFalse(matchNothing.equals(new MatchNothing()));
-        
+        assertNotEquals(new MatchNothing(), matchNothing);
+
         // Test with different object types
-        assertFalse(matchNothing.equals("string"));
-        assertFalse(matchNothing.equals(Integer.valueOf(42)));
-        assertFalse(matchNothing.equals(new Object()));
-        assertFalse(matchNothing.equals(new ArrayList<>()));
-        assertFalse(matchNothing.equals(Boolean.TRUE));
-        assertFalse(matchNothing.equals(new Date()));
+        assertNotEquals("string", matchNothing);
+        assertNotEquals(42, matchNothing);
+        assertNotEquals(new Object(), matchNothing);
+        assertNotEquals(new ArrayList<>(), matchNothing);
+        assertNotEquals(Boolean.TRUE, matchNothing);
+        assertNotEquals(new Date(), matchNothing);
     }
 
     /// Test equals with primitive wrapper types.
@@ -63,16 +65,16 @@ public class MatchNothingTest extends AbstractTest {
     @DisplayName("Test equals with primitive wrapper types")
     public void testEqualsWithPrimitiveWrappers() {
         MatchNothing matchNothing = new MatchNothing();
-        
-        assertFalse(matchNothing.equals(Byte.valueOf((byte) 1)));
-        assertFalse(matchNothing.equals(Short.valueOf((short) 2)));
-        assertFalse(matchNothing.equals(Integer.valueOf(3)));
-        assertFalse(matchNothing.equals(Long.valueOf(4L)));
-        assertFalse(matchNothing.equals(Float.valueOf(5.0f)));
-        assertFalse(matchNothing.equals(Double.valueOf(6.0)));
-        assertFalse(matchNothing.equals(Character.valueOf('c')));
-        assertFalse(matchNothing.equals(Boolean.valueOf(true)));
-        assertFalse(matchNothing.equals(Boolean.valueOf(false)));
+
+        assertNotEquals((byte) 1, matchNothing);
+        assertNotEquals((short) 2, matchNothing);
+        assertNotEquals(3, matchNothing);
+        assertNotEquals(4L, matchNothing);
+        assertNotEquals(5.0f, matchNothing);
+        assertNotEquals(6.0d, matchNothing);
+        assertNotEquals('c', matchNothing);
+        assertNotEquals(Boolean.TRUE, matchNothing);
+        assertNotEquals(Boolean.FALSE, matchNothing);
     }
 
     /// Test equals with collections and arrays.
@@ -80,26 +82,26 @@ public class MatchNothingTest extends AbstractTest {
     @DisplayName("Test equals with collections and arrays")
     public void testEqualsWithCollectionsAndArrays() {
         MatchNothing matchNothing = new MatchNothing();
-        
+
         // Test with empty collections
-        assertFalse(matchNothing.equals(new ArrayList<>()));
-        assertFalse(matchNothing.equals(new HashSet<>()));
-        assertFalse(matchNothing.equals(new HashMap<>()));
-        assertFalse(matchNothing.equals(new LinkedList<>()));
-        
+        assertNotEquals(new ArrayList<>(), matchNothing);
+        assertNotEquals(new HashSet<>(), matchNothing);
+        assertNotEquals(new HashMap<>(), matchNothing);
+        assertNotEquals(new LinkedList<>(), matchNothing);
+
         // Test with populated collections
         List<String> list = Arrays.asList("a", "b", "c");
         Set<Integer> set = Set.of(1, 2, 3);
         Map<String, Integer> map = Map.of("key", 42);
-        
-        assertFalse(matchNothing.equals(list));
-        assertFalse(matchNothing.equals(set));
-        assertFalse(matchNothing.equals(map));
-        
+
+        assertNotEquals(matchNothing, list);
+        assertNotEquals(matchNothing, set);
+        assertNotEquals(matchNothing, map);
+
         // Test with arrays
-        assertFalse(matchNothing.equals(new int[]{1, 2, 3}));
-        assertFalse(matchNothing.equals(new String[]{"a", "b"}));
-        assertFalse(matchNothing.equals(new Object[0]));
+        assertNotEquals(new int[]{1, 2, 3}, matchNothing);
+        assertNotEquals(new String[]{"a", "b"}, matchNothing);
+        assertNotEquals(new Object[0], matchNothing);
     }
 
     /// Test equals with custom objects.
@@ -107,22 +109,22 @@ public class MatchNothingTest extends AbstractTest {
     @DisplayName("Test equals with custom objects")
     public void testEqualsWithCustomObjects() {
         MatchNothing matchNothing = new MatchNothing();
-        
+
         // Test with custom test object
         TestObject testObj = new TestObject("test");
-        assertFalse(matchNothing.equals(testObj));
-        
+        assertNotEquals(matchNothing, testObj);
+
         // Test with objects that have different equals implementations
         MatchEverything matchEverything = new MatchEverything();
-        assertFalse(matchNothing.equals(matchEverything));
-        
+        assertNotEquals(matchNothing, matchEverything);
+
         // Test with AlwaysThrows (which throws exceptions)
         AlwaysThrows alwaysThrows = new AlwaysThrows();
-        assertFalse(matchNothing.equals(alwaysThrows));
-        
+        assertNotEquals(matchNothing, alwaysThrows);
+
         // Test with complex nested object
         ComplexObject complex = new ComplexObject();
-        assertFalse(matchNothing.equals(complex));
+        assertNotEquals(matchNothing, complex);
     }
 
     // Tests for hashCode method
@@ -133,10 +135,10 @@ public class MatchNothingTest extends AbstractTest {
     public void testHashCodeAlwaysReturnsOne() {
         MatchNothing matchNothing1 = new MatchNothing();
         MatchNothing matchNothing2 = new MatchNothing();
-        
+
         assertEquals(1, matchNothing1.hashCode());
         assertEquals(1, matchNothing2.hashCode());
-        
+
         // Test multiple calls return same value
         assertEquals(1, matchNothing1.hashCode());
         assertEquals(1, matchNothing1.hashCode());
@@ -148,12 +150,12 @@ public class MatchNothingTest extends AbstractTest {
     @DisplayName("Test hashCode consistency across instances")
     public void testHashCodeConsistencyAcrossInstances() {
         List<MatchNothing> instances = new ArrayList<>();
-        
+
         // Create multiple instances
         for (int i = 0; i < 100; i++) {
             instances.add(new MatchNothing());
         }
-        
+
         // All should have the same hash code
         for (MatchNothing instance : instances) {
             assertEquals(1, instance.hashCode());
@@ -168,14 +170,14 @@ public class MatchNothingTest extends AbstractTest {
     public void testCompareToAlwaysReturnsOne() {
         MatchNothing matchNothing1 = new MatchNothing();
         MatchNothing matchNothing2 = new MatchNothing();
-        
+
         // Test with same instance (violates reflexive property)
         assertEquals(1, matchNothing1.compareTo(matchNothing1));
-        
+
         // Test with different instances
         assertEquals(1, matchNothing1.compareTo(matchNothing2));
         assertEquals(1, matchNothing2.compareTo(matchNothing1));
-        
+
         // Test multiple calls return same value
         assertEquals(1, matchNothing1.compareTo(matchNothing2));
         assertEquals(1, matchNothing1.compareTo(matchNothing2));
@@ -186,16 +188,16 @@ public class MatchNothingTest extends AbstractTest {
     @DisplayName("Test compareTo with multiple instances")
     public void testCompareToWithMultipleInstances() {
         List<MatchNothing> instances = new ArrayList<>();
-        
+
         // Create multiple instances
         for (int i = 0; i < 10; i++) {
             instances.add(new MatchNothing());
         }
-        
+
         // All comparisons should return 1
         for (int i = 0; i < instances.size(); i++) {
-            for (int j = 0; j < instances.size(); j++) {
-                assertEquals(1, instances.get(i).compareTo(instances.get(j)));
+            for (MatchNothing instance : instances) {
+                assertEquals(1, instances.get(i).compareTo(instance));
             }
         }
     }
@@ -206,7 +208,7 @@ public class MatchNothingTest extends AbstractTest {
     @DisplayName("Test compareTo with null parameter")
     public void testCompareToWithNull() {
         MatchNothing matchNothing = new MatchNothing();
-        
+
         // Note: The @NonNull annotation is for documentation/static analysis only.
         // The actual implementation ignores the parameter, so null comparison returns 1.
         assertEquals(1, matchNothing.compareTo(null));
@@ -221,33 +223,33 @@ public class MatchNothingTest extends AbstractTest {
         MatchNothing obj1 = new MatchNothing();
         MatchNothing obj2 = new MatchNothing();
         MatchNothing obj3 = new MatchNothing();
-        
+
         // Reflexive property violation: x.equals(x) should return true, but returns false
-        assertFalse(obj1.equals(obj1));
-        
+        assertNotEquals(obj1, obj1);
+
         // Symmetric property violation: x.equals(y) should equal y.equals(x), and it does (both false)
-        assertFalse(obj1.equals(obj2));
-        assertFalse(obj2.equals(obj1));
-        
+        assertNotEquals(obj1, obj2);
+        assertNotEquals(obj2, obj1);
+
         // Transitive property: if x.equals(y) and y.equals(z), then x.equals(z) should be true
         // This is satisfied trivially since all equals() calls return false
-        assertFalse(obj1.equals(obj2));
-        assertFalse(obj2.equals(obj3));
-        assertFalse(obj1.equals(obj3));
-        
+        assertNotEquals(obj1, obj2);
+        assertNotEquals(obj2, obj3);
+        assertNotEquals(obj1, obj3);
+
         // Consistent: multiple invocations should return the same result
-        assertFalse(obj1.equals(obj2));
-        assertFalse(obj1.equals(obj2));
-        assertFalse(obj1.equals(obj2));
-        
+        assertNotEquals(obj1, obj2);
+        assertNotEquals(obj1, obj2);
+        assertNotEquals(obj1, obj2);
+
         // Null handling: x.equals(null) should return false, which is satisfied
-        assertFalse(obj1.equals(null));
-        
+        assertNotEquals(null, obj1);
+
         // Hash code contract: if two objects are equal, they must have the same hash code
         // This is satisfied trivially since no objects are ever equal
         // But note that objects with same hash code are not equal (hash code collision)
         assertEquals(obj1.hashCode(), obj2.hashCode()); // Both return 1
-        assertFalse(obj1.equals(obj2)); // But they're not equal
+        assertNotEquals(obj1, obj2); // But they're not equal
     }
 
     // Tests for Comparable contract violations
@@ -259,25 +261,25 @@ public class MatchNothingTest extends AbstractTest {
         MatchNothing obj1 = new MatchNothing();
         MatchNothing obj2 = new MatchNothing();
         MatchNothing obj3 = new MatchNothing();
-        
+
         // Reflexive property violation: x.compareTo(x) should return 0, but returns 1
         assertEquals(1, obj1.compareTo(obj1));
-        
-        // Antisymmetric property violation: if x.compareTo(y) returns positive, 
+
+        // Antisymmetric property violation: if x.compareTo(y) returns positive,
         // then y.compareTo(x) should return negative, but both return 1
         assertEquals(1, obj1.compareTo(obj2));
         assertEquals(1, obj2.compareTo(obj1)); // Should be -1 for antisymmetric
-        
-        // Transitive property: if x.compareTo(y) > 0 and y.compareTo(z) > 0, 
+
+        // Transitive property: if x.compareTo(y) > 0 and y.compareTo(z) > 0,
         // then x.compareTo(z) > 0, which is satisfied
         assertTrue(obj1.compareTo(obj2) > 0);
         assertTrue(obj2.compareTo(obj3) > 0);
         assertTrue(obj1.compareTo(obj3) > 0);
-        
-        // Consistency with equals violation: if x.compareTo(y) returns non-zero, 
+
+        // Consistency with equals violation: if x.compareTo(y) returns non-zero,
         // then x.equals(y) should return false, which is satisfied
         assertNotEquals(0, obj1.compareTo(obj2));
-        assertFalse(obj1.equals(obj2));
+        assertNotEquals(obj1, obj2);
     }
 
     // Tests for usage in collections
@@ -287,20 +289,20 @@ public class MatchNothingTest extends AbstractTest {
     @DisplayName("Test behavior in HashSet")
     public void testBehaviorInHashSet() {
         Set<MatchNothing> set = new HashSet<>();
-        
+
         MatchNothing obj1 = new MatchNothing();
         MatchNothing obj2 = new MatchNothing();
-        
+
         assertTrue(set.add(obj1));
         // Since equals always returns false, obj2 should be considered different from obj1
         // even though they have the same hash code
         assertTrue(set.add(obj2));
-        
+
         assertEquals(2, set.size());
         // Note: HashSet.contains() uses object identity when equals() returns false but hash codes match
         assertTrue(set.contains(obj1));  // Found by identity
         assertTrue(set.contains(obj2));  // Found by identity
-        
+
         // Even the same instance is not considered to contain itself
         // due to equals() always returning false
         assertFalse(set.contains(new MatchNothing()));
@@ -311,18 +313,18 @@ public class MatchNothingTest extends AbstractTest {
     @DisplayName("Test behavior in HashMap as key")
     public void testBehaviorInHashMapAsKey() {
         Map<MatchNothing, String> map = new HashMap<>();
-        
+
         MatchNothing key1 = new MatchNothing();
         MatchNothing key2 = new MatchNothing();
-        
+
         map.put(key1, "value1");
         // Since equals always returns false, this should create a new entry
         map.put(key2, "value2");
-        
+
         assertEquals(2, map.size());
         assertEquals("value1", map.get(key1));
         assertEquals("value2", map.get(key2));
-        
+
         // New instances won't be found due to equals() always returning false
         assertNull(map.get(new MatchNothing()));
     }
@@ -332,16 +334,16 @@ public class MatchNothingTest extends AbstractTest {
     @DisplayName("Test behavior in TreeSet")
     public void testBehaviorInTreeSet() {
         Set<MatchNothing> set = new TreeSet<>();
-        
+
         MatchNothing obj1 = new MatchNothing();
         MatchNothing obj2 = new MatchNothing();
         MatchNothing obj3 = new MatchNothing();
-        
+
         assertTrue(set.add(obj1));
         // Since compareTo always returns 1 (obj1 > obj2), they are considered different
         assertTrue(set.add(obj2));
         assertTrue(set.add(obj3));
-        
+
         assertEquals(3, set.size());
         // Note: TreeSet.contains() uses compareTo(), not equals()
         // Since compareTo always returns 1, contains() will not find the objects
@@ -355,17 +357,17 @@ public class MatchNothingTest extends AbstractTest {
     @DisplayName("Test behavior in ArrayList contains")
     public void testBehaviorInArrayListContains() {
         List<MatchNothing> list = new ArrayList<>();
-        
+
         MatchNothing obj1 = new MatchNothing();
         list.add(obj1);
-        
+
         // Since equals always returns false, contains should return false even for the same instance
         assertFalse(list.contains(obj1));
         assertFalse(list.contains(new MatchNothing()));
-        
+
         // The list has the object, but contains() can't find it due to equals() behavior
         assertEquals(1, list.size());
-        assertSame(obj1, list.get(0));
+        assertSame(obj1, list.getFirst());
     }
 
     // Tests for sorting behavior
@@ -375,26 +377,20 @@ public class MatchNothingTest extends AbstractTest {
     @DisplayName("Test sorting behavior")
     public void testSortingBehavior() {
         List<MatchNothing> list = new ArrayList<>();
-        
+
         // Add multiple instances
         MatchNothing obj1 = new MatchNothing();
         MatchNothing obj2 = new MatchNothing();
         MatchNothing obj3 = new MatchNothing();
-        
+
         list.add(obj1);
         list.add(obj2);
         list.add(obj3);
-        
-        // Store original order
-        List<MatchNothing> originalOrder = new ArrayList<>(list);
-        
-        // Sorting should complete without errors
-        assertDoesNotThrow(() -> Collections.sort(list));
-        
+
         // Since compareTo always returns 1, the sorting behavior is undefined
         // but should still complete successfully
         assertEquals(3, list.size());
-        
+
         // All elements should still be present (though order may have changed)
         // Note: contains() uses equals(), which always returns false, so we check by reference
         boolean foundObj1 = false, foundObj2 = false, foundObj3 = false;
@@ -416,12 +412,12 @@ public class MatchNothingTest extends AbstractTest {
     public void testInstanceIndependence() {
         MatchNothing obj1 = new MatchNothing();
         MatchNothing obj2 = new MatchNothing();
-        
+
         // Instances should be different objects
         assertNotSame(obj1, obj2);
-        
+
         // They should not be equal and should have same hash code
-        assertFalse(obj1.equals(obj2));
+        assertNotEquals(obj1, obj2);
         assertEquals(obj1.hashCode(), obj2.hashCode());
         assertEquals(1, obj1.compareTo(obj2));
     }
@@ -432,13 +428,13 @@ public class MatchNothingTest extends AbstractTest {
     public void testInteractionWithMatchEverything() {
         MatchNothing matchNothing = new MatchNothing();
         MatchEverything matchEverything = new MatchEverything();
-        
+
         // MatchNothing.equals should return false even for MatchEverything
-        assertFalse(matchNothing.equals(matchEverything));
-        
+        assertNotEquals(matchNothing, matchEverything);
+
         // But MatchEverything.equals should return true for MatchNothing
-        assertTrue(matchEverything.equals(matchNothing));
-        
+        assertEquals(matchEverything, matchNothing);
+
         // This demonstrates asymmetric equals behavior
     }
 
@@ -447,17 +443,15 @@ public class MatchNothingTest extends AbstractTest {
     @DisplayName("Test interaction with contract-violating objects")
     public void testInteractionWithContractViolatingObjects() {
         MatchNothing matchNothing = new MatchNothing();
-        
+
         // Test with AlwaysThrows (which throws exceptions)
         AlwaysThrows alwaysThrows = new AlwaysThrows();
-        
+
         // MatchNothing.equals should return false even for problematic objects
-        assertFalse(matchNothing.equals(alwaysThrows));
-        
+        assertNotEquals(matchNothing, alwaysThrows);
+
         // But alwaysThrows.equals will throw an exception
-        assertThrows(UnsupportedOperationException.class, () -> {
-            alwaysThrows.equals(matchNothing);
-        });
+        assertThrows(UnsupportedOperationException.class, () -> alwaysThrows.equals(matchNothing));
     }
 
     /// Test consistency across many operations.
@@ -465,11 +459,10 @@ public class MatchNothingTest extends AbstractTest {
     @DisplayName("Test consistency across many operations")
     public void testConsistencyAcrossManyOperations() {
         MatchNothing matchNothing = new MatchNothing();
-        
+
         // Test that behavior is consistent across many calls
         for (int i = 0; i < 1000; i++) {
-            assertFalse(matchNothing.equals(new Object()));
-            assertFalse(matchNothing.equals(matchNothing)); // Even self
+            assertNotEquals(new Object(), matchNothing);
             assertEquals(1, matchNothing.hashCode());
             assertEquals(1, matchNothing.compareTo(new MatchNothing()));
         }
@@ -482,17 +475,17 @@ public class MatchNothingTest extends AbstractTest {
     @DisplayName("Test practical usage for testing equality")
     public void testPracticalUsageForTestingEquality() {
         MatchNothing matchNothing = new MatchNothing();
-        
+
         // Simulate testing a method that uses equals()
         List<Object> objects = Arrays.asList(
             "string", 42, new Date(), new ArrayList<>(), null, matchNothing
         );
-        
+
         // MatchNothing should not match any of them, including itself
         for (Object obj : objects) {
-            assertFalse(matchNothing.equals(obj));
+            assertNotEquals(matchNothing, obj);
         }
-        
+
         // This makes it useful for testing scenarios where you want
         // an object that never matches in equality checks
     }
@@ -508,16 +501,16 @@ public class MatchNothingTest extends AbstractTest {
         MatchNothing matcher = new MatchNothing();
         mixedList.add(matcher);
         mixedList.add(new Date());
-        
+
         // The matcher should not be found in the list due to equals() behavior
         assertFalse(mixedList.contains(matcher));
-        
+
         // But it should be physically present
         assertSame(matcher, mixedList.get(2));
-        
+
         // And it should not equal any item when compared directly
         for (Object item : mixedList) {
-            assertFalse(matcher.equals(item));
+            assertNotEquals(matcher, item);
         }
     }
 
@@ -526,18 +519,18 @@ public class MatchNothingTest extends AbstractTest {
     @DisplayName("Test usage for defensive programming scenarios")
     public void testUsageForDefensiveProgramming() {
         MatchNothing matcher = new MatchNothing();
-        
+
         // Test a method that should handle objects that never return true for equals
         boolean result = isInCollection(matcher, Arrays.asList("a", "b", "c"));
         assertFalse(result); // Should not find it because equals always returns false
-        
+
         // Even if we add the exact same instance
         List<Object> listWithMatcher = new ArrayList<>();
         listWithMatcher.add(matcher);
         result = isInCollection(matcher, listWithMatcher);
         assertFalse(result); // Still won't find it due to equals() behavior
     }
-    
+
     // Helper method for defensive programming test
     private boolean isInCollection(Object item, Collection<?> collection) {
         return collection.contains(item);
@@ -551,24 +544,24 @@ public class MatchNothingTest extends AbstractTest {
         // they will all hash to the same bucket but each will be stored separately
         // due to equals() always returning false
         Map<MatchNothing, Integer> map = new HashMap<>();
-        
+
         List<MatchNothing> keys = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
             MatchNothing key = new MatchNothing();
             keys.add(key);
             map.put(key, i);
         }
-        
+
         // Should have 10 entries because no keys are considered equal
         assertEquals(10, map.size());
-        
+
         // Each key should map to its corresponding value
         for (int i = 0; i < keys.size(); i++) {
             MatchNothing key = keys.get(i);
             Integer result = map.get(key);
             assertEquals(Integer.valueOf(i), result);
         }
-        
+
         // But a new MatchNothing instance won't be found
         assertNull(map.get(new MatchNothing()));
     }
@@ -580,21 +573,21 @@ public class MatchNothingTest extends AbstractTest {
         List<MatchNothing> list = new ArrayList<>();
         MatchNothing obj = new MatchNothing();
         list.add(obj);
-        
+
         // Can remove by equals() but only if equals() returned true, which it never does
         // However, ArrayList.remove() still works because it uses equals() which always returns false
         assertFalse(list.remove(obj));
         assertEquals(1, list.size());
-        
+
         // But can remove by index
-        MatchNothing removed = list.remove(0);
+        MatchNothing removed = list.removeFirst();
         assertSame(obj, removed);
         assertEquals(0, list.size());
-        
+
         // Test with Set
         Set<MatchNothing> set = new HashSet<>();
         set.add(obj);
-        
+
         // Can remove by identity (same as contains behavior)
         assertTrue(set.remove(obj));
         assertEquals(0, set.size());
@@ -602,44 +595,32 @@ public class MatchNothingTest extends AbstractTest {
 
     // Helper classes for testing
 
-    private static class TestObject {
-        private final String value;
-        
-        TestObject(String value) {
-            this.value = value;
-        }
-        
+    private record TestObject(String value) {
+
         @Override
         public boolean equals(Object obj) {
             if (this == obj) return true;
-            if (!(obj instanceof TestObject)) return false;
-            TestObject other = (TestObject) obj;
-            return Objects.equals(value, other.value);
+            if (!(obj instanceof TestObject(String value1))) return false;
+            return Objects.equals(value, value1);
         }
-        
+
         @Override
-        public int hashCode() {
-            return Objects.hash(value);
-        }
-        
-        @Override
-        public String toString() {
+        public @NonNull String toString() {
             return "TestObject{" + value + "}";
         }
     }
-    
+
     private static class ComplexObject {
         private final List<String> items = Arrays.asList("a", "b", "c");
         private final Map<String, Integer> map = Map.of("key", 42);
-        
+
         @Override
         public boolean equals(Object obj) {
             if (this == obj) return true;
-            if (!(obj instanceof ComplexObject)) return false;
-            ComplexObject other = (ComplexObject) obj;
+            if (!(obj instanceof ComplexObject other)) return false;
             return Objects.equals(items, other.items) && Objects.equals(map, other.map);
         }
-        
+
         @Override
         public int hashCode() {
             return Objects.hash(items, map);

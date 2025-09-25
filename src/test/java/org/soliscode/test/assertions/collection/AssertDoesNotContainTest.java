@@ -5,9 +5,7 @@ import org.opentest4j.AssertionFailedError;
 import org.soliscode.test.interfaces.IterableOnly;
 import org.soliscode.test.util.IterableTestUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -67,25 +65,17 @@ public class AssertDoesNotContainTest {
         List<Integer> list = Arrays.asList(1, 2, 3, 4);
 
         // Basic method should fail
-        assertThrows(AssertionFailedError.class, () -> {
-            assertDoesNotContain(2, list);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertDoesNotContain(2, list));
 
         // Method with message should fail
-        assertThrows(AssertionFailedError.class, () -> {
-            assertDoesNotContain(3, list, TEST_MESSAGE);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertDoesNotContain(3, list, TEST_MESSAGE));
 
         // Method with message supplier should fail
-        assertThrows(AssertionFailedError.class, () -> {
-            assertDoesNotContain(4, list, () -> TEST_MESSAGE);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertDoesNotContain(4, list, () -> TEST_MESSAGE));
 
         // Test with generic Iterable
         Iterable<String> iterable = IterableOnly.of("apple", "banana", "cherry");
-        assertThrows(AssertionFailedError.class, () -> {
-            assertDoesNotContain("banana", iterable);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertDoesNotContain("banana", iterable));
     }
 
     /**
@@ -123,17 +113,11 @@ public class AssertDoesNotContainTest {
         List<Integer> listWithoutNull = Arrays.asList(1, 2, 3, 4);
 
         // Null expected element should cause assertion failure due to @NonNull
-        assertThrows(NullPointerException.class, () -> {
-            assertDoesNotContain(null, listWithoutNull);
-        });
+        assertThrows(NullPointerException.class, () -> assertDoesNotContain(null, listWithoutNull));
 
-        assertThrows(NullPointerException.class, () -> {
-            assertDoesNotContain(null, listWithoutNull, TEST_MESSAGE);
-        });
+        assertThrows(NullPointerException.class, () -> assertDoesNotContain(null, listWithoutNull, TEST_MESSAGE));
 
-        assertThrows(NullPointerException.class, () -> {
-            assertDoesNotContain(null, listWithoutNull, () -> TEST_MESSAGE);
-        });
+        assertThrows(NullPointerException.class, () -> assertDoesNotContain(null, listWithoutNull, () -> TEST_MESSAGE));
     }
 
     /**
@@ -152,9 +136,7 @@ public class AssertDoesNotContainTest {
         assertDoesNotContain(5, listWithNull);
 
         // Should fail - searching for existing element in list that contains null
-        assertThrows(AssertionFailedError.class, () -> {
-            assertDoesNotContain(1, listWithNull);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertDoesNotContain(1, listWithNull));
 
         // Note: Generic Iterables with null elements cause NullPointerException in current implementation
         // due to calling e.equals(expected) where e could be null (line 87 in AssertDoesNotContain)
@@ -170,17 +152,14 @@ public class AssertDoesNotContainTest {
      */
     @Test
     public void testAssertDoesNotContainNullCollection() {
-        assertThrows(NullPointerException.class, () -> {
-            CollectionAssertions.assertDoesNotContain("test", null);
-        });
+        assertThrows(NullPointerException.class,
+                () -> CollectionAssertions.assertDoesNotContain("test", null));
 
-        assertThrows(NullPointerException.class, () -> {
-            CollectionAssertions.assertDoesNotContain("test", null, TEST_MESSAGE);
-        });
+        assertThrows(NullPointerException.class,
+                () -> CollectionAssertions.assertDoesNotContain("test", null, TEST_MESSAGE));
 
-        assertThrows(NullPointerException.class, () -> {
-            CollectionAssertions.assertDoesNotContain("test", null, () -> TEST_MESSAGE);
-        });
+        assertThrows(NullPointerException.class,
+                () -> CollectionAssertions.assertDoesNotContain("test", null, () -> TEST_MESSAGE));
     }
 
     /**
@@ -197,18 +176,14 @@ public class AssertDoesNotContainTest {
         assertDoesNotContain(5, listWithDuplicates);
 
         // Should fail - element present (even multiple times)
-        assertThrows(AssertionFailedError.class, () -> {
-            assertDoesNotContain(2, listWithDuplicates);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertDoesNotContain(2, listWithDuplicates));
 
         // Test with generic Iterable with duplicates
         Iterable<String> iterableWithDuplicates = IterableOnly.of("apple", "banana", "apple", "cherry", "apple");
 
         assertDoesNotContain("orange", iterableWithDuplicates);
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertDoesNotContain("apple", iterableWithDuplicates);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertDoesNotContain("apple", iterableWithDuplicates));
     }
 
     /**
@@ -228,13 +203,9 @@ public class AssertDoesNotContainTest {
         assertDoesNotContain("delta", iterable);
 
         // Both should fail for present element
-        assertThrows(AssertionFailedError.class, () -> {
-            assertDoesNotContain("beta", collection);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertDoesNotContain("beta", collection));
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertDoesNotContain("beta", iterable);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertDoesNotContain("beta", iterable));
     }
 
     /**
@@ -246,9 +217,8 @@ public class AssertDoesNotContainTest {
     public void testAssertDoesNotContainWithMessage() {
         List<Integer> list = Arrays.asList(1, 2, 3);
 
-        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> {
-            assertDoesNotContain(2, list, TEST_MESSAGE);
-        });
+        AssertionFailedError error = assertThrows(AssertionFailedError.class,
+                () -> assertDoesNotContain(2, list, TEST_MESSAGE));
 
         // Verify the custom message is included
         assertTrue(error.getMessage().contains(TEST_MESSAGE),
@@ -265,9 +235,8 @@ public class AssertDoesNotContainTest {
     public void testAssertDoesNotContainWithMessageSupplier() {
         List<Integer> list = Arrays.asList(1, 2, 3);
 
-        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> {
-            assertDoesNotContain(3, list, () -> TEST_MESSAGE);
-        });
+        AssertionFailedError error = assertThrows(AssertionFailedError.class,
+                () -> assertDoesNotContain(3, list, () -> TEST_MESSAGE));
 
         // Verify the message supplier result is included
         assertTrue(error.getMessage().contains(TEST_MESSAGE),
@@ -284,9 +253,8 @@ public class AssertDoesNotContainTest {
     public void testAssertDoesNotContainErrorMessageContent() {
         List<String> list = Arrays.asList("apple", "banana", "cherry");
 
-        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> {
-            assertDoesNotContain("banana", list);
-        });
+        AssertionFailedError error = assertThrows(AssertionFailedError.class,
+                () -> assertDoesNotContain("banana", list));
 
         // Verify the error message contains information about the element
         String errorMessage = error.getMessage();
@@ -310,26 +278,20 @@ public class AssertDoesNotContainTest {
         List<Integer> intList = Arrays.asList(1, 2, 3);
         assertDoesNotContain(4, intList);
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertDoesNotContain(2, intList);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertDoesNotContain(2, intList));
 
         // Test with strings
         List<String> stringList = Arrays.asList("one", "two", "three");
         assertDoesNotContain("four", stringList);
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertDoesNotContain("two", stringList);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertDoesNotContain("two", stringList));
 
         // Test with mixed types (using Object list)
         List<Object> mixedList = Arrays.asList(1, "two", 3.0, true);
         assertDoesNotContain("one", mixedList);  // String vs Integer
         assertDoesNotContain(2, mixedList);      // Integer vs String
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertDoesNotContain(1, mixedList);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertDoesNotContain(1, mixedList));
     }
 
     /**
@@ -348,17 +310,11 @@ public class AssertDoesNotContainTest {
         assertDoesNotContain(-0.0, doubleList);  // -0.0 != 0.0 in terms of equals
 
         // Should fail - values in list
-        assertThrows(AssertionFailedError.class, () -> {
-            assertDoesNotContain(1.0, doubleList);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertDoesNotContain(1.0, doubleList));
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertDoesNotContain(Double.NaN, doubleList);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertDoesNotContain(Double.NaN, doubleList));
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertDoesNotContain(Double.POSITIVE_INFINITY, doubleList);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertDoesNotContain(Double.POSITIVE_INFINITY, doubleList));
     }
 
     /**
@@ -371,14 +327,14 @@ public class AssertDoesNotContainTest {
     public void testAssertDoesNotContainEqualityEdgeCases() {
         // Test with string vs string content equality
         List<String> stringList = new ArrayList<>();
-        stringList.add(new String("test"));  // Explicit new String instance
+        stringList.add("test");
 
         assertThrows(AssertionFailedError.class, () -> {
             assertDoesNotContain("test", stringList);  // Should find via equals()
         });
 
         // Test that different but "equal" objects are found
-        List<Integer> integerList = Arrays.asList(Integer.valueOf(42), Integer.valueOf(100));
+        List<Integer> integerList = Arrays.asList(42, 100);
 
         assertThrows(AssertionFailedError.class, () -> {
             assertDoesNotContain(42, integerList);  // Auto-boxing should work

@@ -18,7 +18,6 @@ package org.soliscode.test.assertions.collection;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import org.opentest4j.AssertionFailedError;
 
 import java.util.function.Supplier;
 
@@ -134,7 +133,7 @@ public final class CollectionAssertions {
     ///
     /// @param expected the elements that must be present in the actual iterable
     /// @param actual   the iterable to test for containing all expected elements
-    /// @throws AssertionFailedError if the actual iterable does not contain all expected elements,
+    /// @throws org.opentest4j.AssertionFailedError if the actual iterable does not contain all expected elements,
     ///                              or if either parameter is `null`
     public static void assertContainsAll(final @NonNull Iterable<?> expected, final @NonNull Iterable<?> actual) {
         AssertContainsAll.assertContainsAll(expected, actual);
@@ -148,7 +147,7 @@ public final class CollectionAssertions {
     /// @param <E>      the type of elements in the array
     /// @param expected the array of elements that must be present in the actual iterable
     /// @param actual   the iterable to test for containing all expected elements
-    /// @throws AssertionFailedError if the actual iterable does not contain all expected elements,
+    /// @throws org.opentest4j.AssertionFailedError if the actual iterable does not contain all expected elements,
     ///                              or if either parameter is `null`
     public static <E> void assertContainsAll(final @NonNull E[] expected, final @NonNull Iterable<?> actual) {
         AssertContainsAll.assertContainsAll(expected, actual);
@@ -162,7 +161,7 @@ public final class CollectionAssertions {
     /// @param <E>      the type of elements in the array
     /// @param expected the iterable of elements that must be present in the actual array
     /// @param actual   the array to test for containing all expected elements
-    /// @throws AssertionFailedError if the actual array does not contain all expected elements,
+    /// @throws org.opentest4j.AssertionFailedError if the actual array does not contain all expected elements,
     ///                              or if either parameter is `null`
     public static <E> void assertContainsAll(final @NonNull Iterable<?> expected, final @NonNull E[] actual) {
         AssertContainsAll.assertContainsAll(expected, actual);
@@ -190,7 +189,7 @@ public final class CollectionAssertions {
     /// @param expected the array of elements that must be present in the actual iterable
     /// @param actual   the iterable to test for containing all expected elements
     /// @param message  the custom message to include in the failure exception
-    /// @throws AssertionFailedError if the actual iterable does not contain all expected elements,
+    /// @throws org.opentest4j.AssertionFailedError if the actual iterable does not contain all expected elements,
     ///                              or if either parameter is `null`
     public static <E> void assertContainsAll(final @NonNull E[] expected, final @NonNull Iterable<?> actual,
                                             final @Nullable String message) {
@@ -206,7 +205,7 @@ public final class CollectionAssertions {
     /// @param expected the elements that must be present in the actual iterable
     /// @param actual   the array to test for containing all expected elements
     /// @param message  the custom message to include in the failure exception
-    /// @throws AssertionFailedError if the actual iterable does not contain all expected elements,
+    /// @throws org.opentest4j.AssertionFailedError if the actual iterable does not contain all expected elements,
     ///                              or if either parameter is `null`
     public static <E> void assertContainsAll(final @NonNull Iterable<?> expected, final @NonNull E[] actual,
                                          final @Nullable String message) {
@@ -236,7 +235,7 @@ public final class CollectionAssertions {
     /// @param expected        the array of elements that must be present in the actual iterable
     /// @param actual          the iterable to test for containing all expected elements
     /// @param messageSupplier the supplier to generate a custom failure message
-    /// @throws AssertionFailedError if the actual array does not contain all expected elements,
+    /// @throws org.opentest4j.AssertionFailedError if the actual array does not contain all expected elements,
     ///                              or if either parameter is `null`
     public static <E> void assertContainsAll(final E[] expected, final Iterable<?> actual,
                                          final Supplier<String> messageSupplier) {
@@ -253,7 +252,7 @@ public final class CollectionAssertions {
     /// @param expected        the elements that must be present in the actual iterable
     /// @param actual          the array to test for containing all expected elements
     /// @param messageSupplier the supplier to generate a custom failure message
-    /// @throws AssertionFailedError if the actual iterable does not contain all expected elements,
+    /// @throws org.opentest4j.AssertionFailedError if the actual iterable does not contain all expected elements,
     ///                              or if either parameter is `null`
     public static <E> void assertContainsAll(final Iterable<?> expected, final E[] actual,
                                          final Supplier<String> messageSupplier) {

@@ -5,9 +5,7 @@ import org.opentest4j.AssertionFailedError;
 import org.soliscode.test.interfaces.IterableOnly;
 import org.soliscode.test.util.IterableTestUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -218,28 +216,23 @@ public class AssertEqualsTest {
         List<Integer> nonNull = Arrays.asList(1, 2, 3);
 
         // Null expected collection
-        assertThrows(NullPointerException.class, () -> {
-            CollectionAssertions.assertEquals((Iterable<Integer>) null, nonNull);
-        });
+        assertThrows(NullPointerException.class,
+                () -> CollectionAssertions.assertEquals((Iterable<Integer>) null, nonNull));
 
         // Null actual collection
-        assertThrows(NullPointerException.class, () -> {
-            CollectionAssertions.assertEquals(nonNull, (Iterable<Integer>) null);
-        });
+        assertThrows(NullPointerException.class,
+                () -> CollectionAssertions.assertEquals(nonNull, (Iterable<Integer>) null));
 
         // Both null
-        assertThrows(NullPointerException.class, () -> {
-            CollectionAssertions.assertEquals((Iterable<Integer>) null, (Iterable<Integer>) null);
-        });
+        assertThrows(NullPointerException.class,
+                () -> CollectionAssertions.assertEquals((Iterable<Integer>) null, (Iterable<Integer>) null));
 
         // Test with message variants
-        assertThrows(NullPointerException.class, () -> {
-            CollectionAssertions.assertEquals((Iterable<Integer>) null, nonNull, TEST_MESSAGE);
-        });
+        assertThrows(NullPointerException.class,
+                () -> CollectionAssertions.assertEquals((Iterable<Integer>) null, nonNull, TEST_MESSAGE));
 
-        assertThrows(NullPointerException.class, () -> {
-            CollectionAssertions.assertEquals(nonNull, (Iterable<Integer>) null, () -> TEST_MESSAGE);
-        });
+        assertThrows(NullPointerException.class,
+                () -> CollectionAssertions.assertEquals(nonNull, (Iterable<Integer>) null, () -> TEST_MESSAGE));
     }
 
     /// Tests assertion behavior with collections containing null elements.

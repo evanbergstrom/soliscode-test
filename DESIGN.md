@@ -141,6 +141,8 @@ misconfiguration rather than during execution.
 - **Performance Notes**: Include performance characteristics for non-trivial operations
 - **Thread Safety**: Explicitly document thread safety guarantees
 - **Since Tags**: Use `@since` to indicate version when functionality was introduced
+- **Test Documentation**: Tests should also be documented
+  - Test documentation should not include examples, performance notes, or thread safety
 
 # Library Design Principles
 
@@ -186,7 +188,7 @@ misconfiguration rather than during execution.
   1. **Methods**: A contract class will be provided for each method in an interface containing all of the tests needed
                   to insure that all of the specifications for that method are satisfied.
   2. **Interfaces**: A contract class will be provided for the interface that will extend all of the method interfaces
-                     So that an implementing test class can simply extend the interface contract that is necessaary.
+                     So that an implementing test class can simply extend the interface contract that is necessary.
 
 ### Interface Narrowing Classes (org.soliscode.test.interfaces)
 - Interface narrowing classes are used to narrow the type of an object so that any code that optimizes for different

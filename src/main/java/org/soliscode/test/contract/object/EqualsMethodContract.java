@@ -54,7 +54,6 @@ public interface EqualsMethodContract<T> extends ContractSupport<T> {
     /// @see Object#equals(Object)
     @Test
     @DisplayName("the equals() method is reflexive")
-    @SuppressWarnings("EqualsWithItself")
     default void testEqualsIsReflexive() {
         if (supportsMethod(ObjectMethods.Equals)) {
             T x = provider().createInstance();

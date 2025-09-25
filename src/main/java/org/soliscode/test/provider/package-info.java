@@ -132,7 +132,7 @@
 ///
 /// @author evanbergstrom
 /// @since 1.0
-/// @see ObjectProvider
-/// @see NumberProvider
-/// @see CollectionProvider
+/// @see org.soliscode.test.provider.ObjectProvider
+/// @see org.soliscode.test.provider.NumberProvider
+/// @see org.soliscode.test.provider.CollectionProvider
 package org.soliscode.test.provider;

@@ -24,7 +24,8 @@ import org.soliscode.test.util.UsesCollections;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.soliscode.test.assertions.Assertions.assertStringContains;
 import static org.soliscode.test.assertions.Assertions.assertStringContainsInOrderIgnoreCase;
 

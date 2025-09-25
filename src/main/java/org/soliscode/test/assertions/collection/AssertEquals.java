@@ -19,7 +19,6 @@ package org.soliscode.test.assertions.collection;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.opentest4j.AssertionFailedError;
-import org.soliscode.test.util.IterableTestUtils;
 
 import java.util.Iterator;
 import java.util.Objects;

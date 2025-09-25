@@ -271,6 +271,7 @@ public class BreakableSpliterator<E> extends AbstractBreakable implements Splite
     ///         .build().spliterator();
     /// ```
     /// @return a representation of characteristics, or possibly zero if the spliterator is broken.
+    @SuppressWarnings("MagicConstant")
     @Override
     public int characteristics() {
         if (hasBreak(SPLITERATOR_CHARACTERISTICS_ALWAYS_RETURNS_ZERO)) {

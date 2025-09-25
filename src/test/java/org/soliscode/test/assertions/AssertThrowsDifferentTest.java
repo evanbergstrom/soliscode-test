@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.soliscode.test.assertions.Assertions.*;
+import static org.soliscode.test.assertions.Assertions.assertThrowsDifferent;
 
 /// Test class for `AssertThrowsDifferent` assertion methods.
 /// This class provides comprehensive test coverage for the AssertThrowsDifferent functionality,
@@ -92,29 +92,26 @@ class AssertThrowsDifferentTest {
                 NullPointerException.class
         );
 
-        AssertionFailedError error1 = assertThrows(AssertionFailedError.class, () -> {
-            assertThrowsDifferent(prohibitedTypes, () -> {
-                throw new IllegalArgumentException("Prohibited exception");
-            });
-        });
+        AssertionFailedError error1 = assertThrows(AssertionFailedError.class,
+                () -> assertThrowsDifferent(prohibitedTypes, () -> {
+            throw new IllegalArgumentException("Prohibited exception");
+        }));
         assertNotNull(error1);
 
-        AssertionFailedError error2 = assertThrows(AssertionFailedError.class, () -> {
-            assertThrowsDifferent(prohibitedTypes, () -> {
-                throw new NullPointerException("Also prohibited");
-            });
-        });
+        AssertionFailedError error2 = assertThrows(AssertionFailedError.class,
+                () -> assertThrowsDifferent(prohibitedTypes, () -> {
+            throw new NullPointerException("Also prohibited");
+        }));
         assertNotNull(error2);
     }
 
     @Test
     @DisplayName("assertThrowsDifferent with single type fails when executable throws prohibited exception")
     void testAssertThrowsDifferentSingleTypeFailsWithProhibitedType() {
-        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> {
-            assertThrowsDifferent(IllegalStateException.class, () -> {
-                throw new IllegalStateException("Prohibited exception");
-            });
-        });
+        AssertionFailedError error = assertThrows(AssertionFailedError.class,
+                () -> assertThrowsDifferent(IllegalStateException.class, () -> {
+            throw new IllegalStateException("Prohibited exception");
+        }));
         assertNotNull(error);
     }
 
@@ -122,19 +119,17 @@ class AssertThrowsDifferentTest {
     @DisplayName("assertThrowsDifferent fails when executable throws subclass of prohibited type")
     void testAssertThrowsDifferentFailsWithInheritance() {
         // RuntimeException is prohibited, so IllegalArgumentException (subclass) should also fail
-        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> {
-            assertThrowsDifferent(RuntimeException.class, () -> {
-                throw new IllegalArgumentException("Subclass of prohibited type");
-            });
-        });
+        AssertionFailedError error = assertThrows(AssertionFailedError.class,
+                () -> assertThrowsDifferent(RuntimeException.class, () -> {
+            throw new IllegalArgumentException("Subclass of prohibited type");
+        }));
         assertNotNull(error);
 
         // Exception is prohibited, so RuntimeException (subclass) should also fail
-        AssertionFailedError error2 = assertThrows(AssertionFailedError.class, () -> {
-            assertThrowsDifferent(Exception.class, () -> {
-                throw new RuntimeException("Also subclass of prohibited type");
-            });
-        });
+        AssertionFailedError error2 = assertThrows(AssertionFailedError.class,
+                () -> assertThrowsDifferent(Exception.class, () -> {
+            throw new RuntimeException("Also subclass of prohibited type");
+        }));
         assertNotNull(error2);
     }
 
@@ -159,11 +154,10 @@ class AssertThrowsDifferentTest {
                 IllegalArgumentException.class
         );
 
-        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> {
-            assertThrowsDifferent(prohibitedTypes, () -> {
-                // No exception thrown
-            });
-        });
+        AssertionFailedError error = assertThrows(AssertionFailedError.class,
+                () -> assertThrowsDifferent(prohibitedTypes, () -> {
+            // No exception thrown
+        }));
 
         assertNotNull(error);
         assertTrue(error.getMessage().contains("nothing was thrown"));
@@ -172,11 +166,11 @@ class AssertThrowsDifferentTest {
     @Test
     @DisplayName("assertThrowsDifferent with single type fails when no exception thrown")
     void testAssertThrowsDifferentSingleTypeFailsWhenNoExceptionThrown() {
-        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> {
-            assertThrowsDifferent(IllegalArgumentException.class, () -> {
-                // No exception thrown
-            });
-        });
+        AssertionFailedError error = assertThrows(AssertionFailedError.class,
+                () -> assertThrowsDifferent(IllegalArgumentException.class, () -> {
+                        // No exception thrown
+                })
+        );
 
         assertNotNull(error);
         assertTrue(error.getMessage().contains("nothing was thrown"));
@@ -207,11 +201,9 @@ class AssertThrowsDifferentTest {
         );
         String customMessage = "Expected different exception type";
 
-        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> {
-            assertThrowsDifferent(prohibitedTypes, () -> {
-                throw new IllegalArgumentException("Prohibited");
-            }, customMessage);
-        });
+        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> assertThrowsDifferent(prohibitedTypes, () -> {
+            throw new IllegalArgumentException("Prohibited");
+        }, customMessage));
 
         assertNotNull(error);
         assertTrue(error.getMessage().startsWith(customMessage));
@@ -222,11 +214,9 @@ class AssertThrowsDifferentTest {
     void testAssertThrowsDifferentSingleTypeWithMessageFails() {
         String customMessage = "Expected non-validation error";
 
-        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> {
-            assertThrowsDifferent(IllegalArgumentException.class, () -> {
-                throw new IllegalArgumentException("Prohibited");
-            }, customMessage);
-        });
+        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> assertThrowsDifferent(IllegalArgumentException.class, () -> {
+            throw new IllegalArgumentException("Prohibited");
+        }, customMessage));
 
         assertNotNull(error);
         assertTrue(error.getMessage().startsWith(customMessage));
@@ -247,11 +237,9 @@ class AssertThrowsDifferentTest {
             throw new IllegalStateException("Allowed");
         }, (String) null);
 
-        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> {
-            assertThrowsDifferent(prohibitedTypes, () -> {
-                throw new IllegalArgumentException("Prohibited");
-            }, (String) null);
-        });
+        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> assertThrowsDifferent(prohibitedTypes, () -> {
+            throw new IllegalArgumentException("Prohibited");
+        }, (String) null));
         assertNotNull(error);
     }
 
@@ -279,11 +267,9 @@ class AssertThrowsDifferentTest {
         );
         String suppliedMessage = "Expected non-argument exception";
 
-        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> {
-            assertThrowsDifferent(prohibitedTypes, () -> {
-                throw new IllegalArgumentException("Prohibited");
-            }, () -> suppliedMessage);
-        });
+        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> assertThrowsDifferent(prohibitedTypes, () -> {
+            throw new IllegalArgumentException("Prohibited");
+        }, () -> suppliedMessage));
 
         assertNotNull(error);
         assertTrue(error.getMessage().startsWith(suppliedMessage));
@@ -294,11 +280,9 @@ class AssertThrowsDifferentTest {
     void testAssertThrowsDifferentSingleTypeWithMessageSupplierFails() {
         String suppliedMessage = "Expected non-timeout exception";
 
-        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> {
-            assertThrowsDifferent(IllegalStateException.class, () -> {
-                throw new IllegalStateException("Prohibited");
-            }, () -> suppliedMessage);
-        });
+        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> assertThrowsDifferent(IllegalStateException.class, () -> {
+            throw new IllegalStateException("Prohibited");
+        }, () -> suppliedMessage));
 
         assertNotNull(error);
         assertTrue(error.getMessage().startsWith(suppliedMessage));
@@ -322,14 +306,12 @@ class AssertThrowsDifferentTest {
         assertEquals(0, callCount.get());
 
         // Failing case - supplier should be called
-        assertThrows(AssertionFailedError.class, () -> {
-            assertThrowsDifferent(prohibitedTypes, () -> {
-                throw new IllegalArgumentException("Prohibited type");
-            }, () -> {
-                callCount.incrementAndGet();
-                return "Should be called";
-            });
-        });
+        assertThrows(AssertionFailedError.class, () -> assertThrowsDifferent(prohibitedTypes, () -> {
+            throw new IllegalArgumentException("Prohibited type");
+        }, () -> {
+            callCount.incrementAndGet();
+            return "Should be called";
+        }));
         assertEquals(1, callCount.get());
     }
 
@@ -348,11 +330,9 @@ class AssertThrowsDifferentTest {
             throw new IOException("Also allowed");
         }, (java.util.function.Supplier<String>) null);
 
-        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> {
-            assertThrowsDifferent(prohibitedTypes, () -> {
-                throw new RuntimeException("Prohibited");
-            }, (java.util.function.Supplier<String>) null);
-        });
+        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> assertThrowsDifferent(prohibitedTypes, () -> {
+            throw new RuntimeException("Prohibited");
+        }, (java.util.function.Supplier<String>) null));
         assertNotNull(error);
     }
 
@@ -361,18 +341,14 @@ class AssertThrowsDifferentTest {
     @DisplayName("assertThrowsDifferent handles null prohibited types")
     void testAssertThrowsDifferentWithNullProhibitedTypes() {
         // Null collection will cause NPE when iterating
-        assertThrows(NullPointerException.class, () -> {
-            assertThrowsDifferent((Collection<Class<? extends Throwable>>) null, () -> {
-                throw new RuntimeException();
-            });
-        });
+        assertThrows(NullPointerException.class, () -> assertThrowsDifferent((Collection<Class<? extends Throwable>>) null, () -> {
+            throw new RuntimeException();
+        }));
 
         // Null single type will cause NPE when creating the List.of()
-        assertThrows(NullPointerException.class, () -> {
-            assertThrowsDifferent((Class<? extends Throwable>) null, () -> {
-                throw new RuntimeException();
-            });
-        });
+        assertThrows(NullPointerException.class, () -> assertThrowsDifferent((Class<? extends Throwable>) null, () -> {
+            throw new RuntimeException();
+        }));
     }
 
     @Test
@@ -390,11 +366,9 @@ class AssertThrowsDifferentTest {
         });
 
         // No exception should still fail
-        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> {
-            assertThrowsDifferent(emptyTypes, () -> {
-                // No exception
-            });
-        });
+        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> assertThrowsDifferent(emptyTypes, () -> {
+            // No exception
+        }));
         assertNotNull(error);
     }
 
@@ -415,11 +389,9 @@ class AssertThrowsDifferentTest {
         });
 
         // But Error itself being prohibited should fail
-        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> {
-            assertThrowsDifferent(Error.class, () -> {
-                throw new AssertionError("This is an Error");
-            });
-        });
+        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> assertThrowsDifferent(Error.class, () -> {
+            throw new AssertionError("This is an Error");
+        }));
         assertNotNull(error);
     }
 
@@ -431,11 +403,9 @@ class AssertThrowsDifferentTest {
                 NullPointerException.class
         );
 
-        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> {
-            assertThrowsDifferent(prohibitedTypes, () -> {
-                throw new IllegalArgumentException("Prohibited type");
-            }, "Custom error message");
-        });
+        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> assertThrowsDifferent(prohibitedTypes, () -> {
+            throw new IllegalArgumentException("Prohibited type");
+        }, "Custom error message"));
 
         assertNotNull(error);
         assertTrue(error.getMessage().startsWith("Custom error message"));

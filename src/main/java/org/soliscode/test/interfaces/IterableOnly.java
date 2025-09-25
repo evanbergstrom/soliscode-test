@@ -36,7 +36,7 @@ public class IterableOnly<E> implements Iterable<E> {
     /// The iterable that is being wrapped.
     // We can make this variable private once flexible constructor bodies (JEP 513 / JDK 25) are supported.
     // CHECKSTYLE:OFF: VisibilityModifier
-    protected Iterable<E> iterable;
+    protected final Iterable<E> iterable;
     // CHECKSTYLE:ON: VisibilityModifier
 
     /// Creates an empty iterable.

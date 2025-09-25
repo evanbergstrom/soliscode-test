@@ -6,9 +6,7 @@ import org.soliscode.test.assertions.collection.CollectionAssertions;
 import org.soliscode.test.interfaces.IterableOnly;
 import org.soliscode.test.util.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.soliscode.test.assertions.collection.CollectionAssertions.assertEqualsByIdentity;
@@ -237,23 +235,21 @@ public class AssertEqualsByIdentityTest {
         List<Object> nonNull = Arrays.asList(new Object(), new Object());
 
         // Null expected collection - throws NPE due to implementation bug (line 151)
-        assertThrows(NullPointerException.class, () -> {
-            CollectionAssertions.assertEqualsByIdentity((Iterable<Object>) null, nonNull);
-        });
+        assertThrows(NullPointerException.class,
+                () -> CollectionAssertions.assertEqualsByIdentity((Iterable<Object>) null, nonNull));
 
         // Null actual collection - should return early due to identity check
         // Both null parameters should be considered identical by reference
-        assertDoesNotThrow(() -> {
-            CollectionAssertions.assertEqualsByIdentity((Iterable<Object>) null, (Iterable<Object>) null);
-        });
+        assertDoesNotThrow(() -> CollectionAssertions.assertEqualsByIdentity((Iterable<Object>) null,
+                (Iterable<Object>) null));
 
-        assertThrows(NullPointerException.class, () -> {
-            CollectionAssertions.assertEqualsByIdentity((Iterable<Object>) null, nonNull, TEST_MESSAGE);
-        });
+        assertThrows(NullPointerException.class,
+                () -> CollectionAssertions.assertEqualsByIdentity((Iterable<Object>) null, nonNull, TEST_MESSAGE));
 
-        assertThrows(NullPointerException.class, () -> {
-            CollectionAssertions.assertEqualsByIdentity(nonNull, (Iterable<Object>) null, () -> TEST_MESSAGE);
-        });
+        assertThrows(NullPointerException.class,
+                () -> CollectionAssertions.assertEqualsByIdentity(nonNull, (Iterable<Object>) null,
+                        () -> TEST_MESSAGE));
+
     }
 
     /**

@@ -409,9 +409,9 @@ public class BreakableIterable<E> extends AbstractBreakable implements Iterable<
             final @NonNull ObjectProvider<E> elementProvider,
             final @NonNull Set<Break> breaks) {
         return CollectionProviders.from(
-                () -> new BreakableIterable<E>(new ArrayList<>(), breaks, 0),
-                (o) -> new BreakableIterable<E>(o.iterable, breaks, o.characteristics),
-                (c) -> new BreakableIterable<E>(c, breaks, 0),
+                () -> new BreakableIterable<>(new ArrayList<>(), breaks, 0),
+                (o) -> new BreakableIterable<>(o.iterable, breaks, o.characteristics),
+                (c) -> new BreakableIterable<>(c, breaks, 0),
                 elementProvider
         );
     }

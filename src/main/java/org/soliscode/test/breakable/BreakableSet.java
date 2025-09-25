@@ -3,7 +3,10 @@ package org.soliscode.test.breakable;
 import org.jspecify.annotations.NonNull;
 import org.soliscode.test.contract.CollectionMethods;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Objects;
+import java.util.Set;
 
 /// **Breakable Set Implementation for Testing**
 ///
@@ -471,7 +474,7 @@ public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
         public Builder() {
             // super(this.list = new HashSet<>()); <-- This will work once Flexible Constructors are available
             super(new ArrayList<>());
-            this.set = (ArrayList<E>) elements;
+            this.set = elements;
             this.permitsDuplicates = false;
         }
 

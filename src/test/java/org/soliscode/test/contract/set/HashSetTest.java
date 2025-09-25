@@ -1,4 +1,4 @@
-package org.soliscode.test.collection;
+package org.soliscode.test.contract.set;
 
 import org.jspecify.annotations.NonNull;
 import org.soliscode.test.AbstractTest;

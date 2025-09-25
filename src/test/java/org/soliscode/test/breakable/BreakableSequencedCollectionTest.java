@@ -13,8 +13,7 @@ import org.soliscode.test.provider.FunctionalCollectionProvider;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.soliscode.test.assertions.collection.CollectionAssertions.assertContains;
-import static org.soliscode.test.assertions.collection.CollectionAssertions.assertDoesNotContain;
+import static org.soliscode.test.assertions.collection.CollectionAssertions.*;
 import static org.soliscode.test.assertions.collection.CollectionAssertions.assertEquals;
 
 /// Tests for the [BreakableSequencedCollection] class. These tests determine if the breaks supported by this class

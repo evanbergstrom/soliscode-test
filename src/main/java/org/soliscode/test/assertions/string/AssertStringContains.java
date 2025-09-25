@@ -129,7 +129,7 @@ public final class AssertStringContains {
     ///
     /// // Configuration validation
     /// List<String> configKeys = List.of("database.url", "database.port", "cache.size");
-    /// String configFile = "database.url=localhost\ndatabase.port=5432\ncache.size=1000";
+    /// String configFile = "database.url=localhost\n database.port=5432\n cache.size=1000";
     /// assertStringContains(configKeys, configFile);  // Passes
     ///
     /// // Case sensitivity demonstration

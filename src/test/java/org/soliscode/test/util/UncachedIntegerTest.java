@@ -1,4 +1,4 @@
-package org.soliscode.test.numeric;
+package org.soliscode.test.util;
 
 import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.DisplayName;
@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.soliscode.test.AbstractTest;
 import org.soliscode.test.contract.numeric.IntegerContract;
 import org.soliscode.test.provider.IntegerNumberProvider;
-import org.soliscode.test.util.UncachedInteger;
 
 import java.util.function.Supplier;
 

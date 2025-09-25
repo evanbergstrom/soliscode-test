@@ -26,17 +26,11 @@ public class AssertIsEmptyTest {
         assertIsEmpty(empty, () -> TEST_MESSAGE);
 
         Iterable<Integer> notEmpty = IterableOnly.of(1);
-        assertThrows(AssertionFailedError.class, () -> {
-            assertIsEmpty(notEmpty);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertIsEmpty(notEmpty));
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertIsEmpty(notEmpty, TEST_MESSAGE);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertIsEmpty(notEmpty, TEST_MESSAGE));
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertIsEmpty(notEmpty, () -> TEST_MESSAGE);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertIsEmpty(notEmpty, () -> TEST_MESSAGE));
     }
 
     @Test
@@ -48,23 +42,16 @@ public class AssertIsEmptyTest {
         assertIsEmpty(empty, () -> TEST_MESSAGE);
 
         Iterable<Integer> notEmpty = List.of(1);
-        assertThrows(AssertionFailedError.class, () -> {
-            assertIsEmpty(notEmpty);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertIsEmpty(notEmpty));
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertIsEmpty(notEmpty, TEST_MESSAGE);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertIsEmpty(notEmpty, TEST_MESSAGE));
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertIsEmpty(notEmpty, () -> TEST_MESSAGE);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertIsEmpty(notEmpty, () -> TEST_MESSAGE));
     }
 
     @Test
     public void testAssertSameSizeWithMessageSupplier() {
-        assertThrows(AssertionFailedError.class, () -> {
-            assertIsEmpty(IterableOnly.of(1), () -> TEST_MESSAGE);
-        }, TEST_MESSAGE);
+        assertThrows(AssertionFailedError.class, () -> assertIsEmpty(IterableOnly.of(1),
+                () -> TEST_MESSAGE), TEST_MESSAGE);
     }
 }

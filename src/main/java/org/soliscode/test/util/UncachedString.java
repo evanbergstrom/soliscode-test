@@ -55,7 +55,7 @@ import java.util.stream.IntStream;
 /// // Test hash distribution without string interning effects
 /// UncachedString str1 = new UncachedString("test");
 /// UncachedString str2 = new UncachedString("test");
-/// 
+///
 /// // These are different objects (unlike String literals)
 /// assertNotSame(str1, str2);
 /// assertEquals(str1, str2);  // But still equal in value
@@ -69,7 +69,7 @@ import java.util.stream.IntStream;
 /// stringSet.add(new UncachedString("alpha"));
 /// stringSet.add(new UncachedString("beta"));
 /// stringSet.add(new UncachedString("alpha"));  // Duplicate value
-/// 
+///
 /// assertEquals(2, stringSet.size());  // Duplicates properly handled
 /// ```
 ///
@@ -78,10 +78,10 @@ import java.util.stream.IntStream;
 /// // Test natural ordering without string interning complications
 /// List<UncachedString> strings = Arrays.asList(
 ///     new UncachedString("zebra"),
-///     new UncachedString("alpha"), 
+///     new UncachedString("alpha"),
 ///     new UncachedString("beta")
 /// );
-/// 
+///
 /// Collections.sort(strings);
 /// assertEquals("alpha", strings.get(0).toString());
 /// assertEquals("beta", strings.get(1).toString());
@@ -92,7 +92,7 @@ import java.util.stream.IntStream;
 /// ```java
 /// // Test string processing APIs that accept CharSequence
 /// UncachedString text = new UncachedString("Hello, World!");
-/// 
+///
 /// // Works with standard string processing methods
 /// assertTrue(text.toString().contains("World"));
 /// assertEquals(13, text.length());
@@ -104,12 +104,12 @@ import java.util.stream.IntStream;
 /// ```java
 /// // Test character stream processing
 /// UncachedString text = new UncachedString("ABC123");
-/// 
+///
 /// long letterCount = text.chars()
 ///     .filter(Character::isLetter)
 ///     .count();
 /// assertEquals(3, letterCount);
-/// 
+///
 /// long digitCount = text.chars()
 ///     .filter(Character::isDigit)
 ///     .count();
@@ -320,7 +320,7 @@ public class UncachedString implements java.io.Serializable, Comparable<Uncached
     ///
     /// ```java
     /// UncachedString text = new UncachedString("Hello, World!");
-    /// 
+    ///
     /// CharSequence hello = text.subSequence(0, 5);
     /// assertEquals("Hello", hello.toString());
     ///
@@ -352,7 +352,7 @@ public class UncachedString implements java.io.Serializable, Comparable<Uncached
     ///
     /// ```java
     /// UncachedString text = new UncachedString("ABC123");
-    /// 
+    ///
     /// // Count letters
     /// long letterCount = text.chars()
     ///     .filter(Character::isLetter)
@@ -392,7 +392,7 @@ public class UncachedString implements java.io.Serializable, Comparable<Uncached
     ///
     /// ```java
     /// UncachedString text = new UncachedString("Hello 🌍");
-    /// 
+    ///
     /// // Count code points (properly handles emoji)
     /// long codePointCount = text.codePoints().count();
     /// assertEquals(7, codePointCount);  // 6 regular chars + 1 emoji
@@ -459,7 +459,7 @@ public class UncachedString implements java.io.Serializable, Comparable<Uncached
     /// @see Comparable
     /// @since 1.0.0
     @Override
-    public int compareTo(final UncachedString o) {
+    public int compareTo(final @NonNull UncachedString o) {
         return value.compareTo(o.value);
     }
 

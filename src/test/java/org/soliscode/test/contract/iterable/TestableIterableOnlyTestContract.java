@@ -1,10 +1,9 @@
-package org.soliscode.test.collection;
+package org.soliscode.test.contract.iterable;
 
 import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.soliscode.test.AbstractTest;
-import org.soliscode.test.contract.iterable.IterableContract;
 import org.soliscode.test.contract.support.WithIntegerElement;
 import org.soliscode.test.interfaces.IterableOnly;
 import org.soliscode.test.provider.CollectionProvider;

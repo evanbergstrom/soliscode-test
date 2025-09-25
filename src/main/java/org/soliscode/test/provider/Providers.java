@@ -40,7 +40,7 @@ import org.jspecify.annotations.NonNull;
 /// IntegerProvider intProvider = Providers.integerProvider();
 /// StringProvider stringProvider = Providers.stringProvider();
 /// DoubleProvider doubleProvider = Providers.doubleProvider();
-/// 
+///
 /// // Use providers to generate test data
 /// Integer value = intProvider.createInstance(42);           // 42
 /// String text = stringProvider.createInstance(100);        // "100"
@@ -57,7 +57,7 @@ import org.jspecify.annotations.NonNull;
 ///     assertNotNull(min);
 ///     assertNotNull(max);
 /// }
-/// 
+///
 /// static Stream<NumberProvider<? extends Number>> numericProviders() {
 ///     return Stream.of(
 ///         Providers.integerProvider(),
@@ -72,10 +72,10 @@ import org.jspecify.annotations.NonNull;
 /// ### Collection Provider Integration
 /// ```java
 /// // Use with collection providers
-/// CollectionProvider<String, List<String>> listProvider = 
+/// CollectionProvider<String, List<String>> listProvider =
 ///     CollectionProviders.arrayListProvider(Providers.stringProvider());
-/// 
-/// CollectionProvider<Integer, Set<Integer>> setProvider = 
+///
+/// CollectionProvider<Integer, Set<Integer>> setProvider =
 ///     CollectionProviders.hashSetProvider(Providers.integerProvider());
 /// ```
 ///
@@ -110,7 +110,7 @@ public final class Providers {
     ///
     /// ```java
     /// IntegerProvider provider = Providers.integerProvider();
-    /// 
+    ///
     /// Integer zero = provider.defaultInstance();        // 0
     /// Integer custom = provider.createInstance(42);     // 42
     /// Integer max = provider.maxValue();                // 2147483647
@@ -134,7 +134,7 @@ public final class Providers {
     ///
     /// ```java
     /// LongProvider provider = Providers.longProvider();
-    /// 
+    ///
     /// Long zero = provider.defaultInstance();           // 0L
     /// Long custom = provider.createInstance(42);        // 42L
     /// Long max = provider.maxValue();                   // 9223372036854775807L
@@ -158,7 +158,7 @@ public final class Providers {
     ///
     /// ```java
     /// ShortProvider provider = Providers.shortProvider();
-    /// 
+    ///
     /// Short zero = provider.defaultInstance();          // (short) 0
     /// Short custom = provider.createInstance(42);       // (short) 42
     /// Short max = provider.maxValue();                  // 32767
@@ -183,7 +183,7 @@ public final class Providers {
     ///
     /// ```java
     /// DoubleProvider provider = Providers.doubleProvider();
-    /// 
+    ///
     /// Double zero = provider.defaultInstance();         // 0.0
     /// Double custom = provider.createInstance(42);      // 42.0
     /// Double max = provider.maxValue();                 // 1.7976931348623157E308
@@ -209,7 +209,7 @@ public final class Providers {
     ///
     /// ```java
     /// FloatProvider provider = Providers.floatProvider();
-    /// 
+    ///
     /// Float zero = provider.defaultInstance();          // 0.0f
     /// Float custom = provider.createInstance(42);       // 42.0f
     /// Float max = provider.maxValue();                  // 3.4028235E38f
@@ -233,7 +233,7 @@ public final class Providers {
     ///
     /// ```java
     /// StringProvider provider = Providers.stringProvider();
-    /// 
+    ///
     /// String empty = provider.defaultInstance();        // ""
     /// String number = provider.createInstance(42);      // "42"
     /// String negative = provider.createInstance(-100);  // "-100"

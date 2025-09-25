@@ -17,7 +17,7 @@ public abstract class DynamicContract<E,C extends Iterable<E>> extends AbstractT
     private final Set<Break> breaks;
     private final BiFunction<ObjectProvider<E>, Set<Break>, CollectionProvider<E, C>> providerCreator;
 
-    DynamicContract(final Break b, final BiFunction<ObjectProvider<E>, Set<Break>, CollectionProvider<E, C>> providerCreator) {
+    public DynamicContract(final Break b, final BiFunction<ObjectProvider<E>, Set<Break>, CollectionProvider<E, C>> providerCreator) {
         this.breaks = (b == null) ? Collections.emptySet() : Set.of(b);
         this.providerCreator = providerCreator;
     }

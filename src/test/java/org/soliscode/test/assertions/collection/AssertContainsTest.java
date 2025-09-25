@@ -26,9 +26,7 @@ public class AssertContainsTest {
         assertContains(2, iterable);
         assertContains(3, iterable);
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContains(4, iterable);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertContains(4, iterable));
     }
 
     @DisplayName("Test assertContains with a collection")
@@ -42,9 +40,7 @@ public class AssertContainsTest {
         assertContains(2, collection);
         assertContains(3, collection);
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContains(4, collection);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertContains(4, collection));
     }
 
     @DisplayName("Test assertContains with an empty collection")
@@ -52,17 +48,13 @@ public class AssertContainsTest {
     public void testAssertContainsOnEmptyCollection() {
 
         Iterable<Integer> iterable = Collections.emptyList();
-        assertThrows(AssertionFailedError.class, () -> {
-            CollectionAssertions.assertContains(1, iterable);
-        });
+        assertThrows(AssertionFailedError.class, () -> CollectionAssertions.assertContains(1, iterable));
     }
 
     @DisplayName("Test assertContains with a null collection")
     @Test
     public void testAssertContainsOnNullCollection() {
 
-        assertThrows(NullPointerException.class, () -> {
-            CollectionAssertions.assertContains(1, null);
-        });
+        assertThrows(NullPointerException.class, () -> CollectionAssertions.assertContains(1, null));
     }
 }

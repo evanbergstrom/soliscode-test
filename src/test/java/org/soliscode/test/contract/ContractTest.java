@@ -14,10 +14,8 @@ public abstract class ContractTest<E,C extends Iterable<E>> {
 
     protected <X extends DynamicContract<E,C>> DynamicTest failingTest(String description, Break aBreak,
                                       Consumer<X> test) {
-        return dynamicTest(description, () -> {
-            assertThrows(AssertionFailedError.class,
-                    () -> test.accept(createTest(aBreak)));
-        });
+        return dynamicTest(description, () -> assertThrows(AssertionFailedError.class,
+                () -> test.accept(createTest(aBreak))));
     }
 
     protected abstract <X extends DynamicContract<E,C>> @NonNull X createTest(final Break b);

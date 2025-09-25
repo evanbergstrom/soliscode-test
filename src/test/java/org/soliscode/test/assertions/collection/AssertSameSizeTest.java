@@ -28,58 +28,42 @@ public class AssertSameSizeTest {
         CollectionAssertions.assertSameSize(empty1, empty2, () -> TEST_MESSAGE);
 
         Iterable<Integer> nonEmpty = IterableOnly.of(1);
-        assertThrows(AssertionFailedError.class, () -> {
-            CollectionAssertions.assertSameSize(empty1, nonEmpty);
-        });
+        assertThrows(AssertionFailedError.class, () -> CollectionAssertions.assertSameSize(empty1, nonEmpty));
 
-        assertThrows(AssertionFailedError.class, () -> {
-            CollectionAssertions.assertSameSize(nonEmpty, empty1);
-        });
+        assertThrows(AssertionFailedError.class, () -> CollectionAssertions.assertSameSize(nonEmpty, empty1));
     }
 
     @Test
-    public void testAssertSameSizeOnNonemptCollection() {
+    public void testAssertSameSizeOnNonEmptyCollection() {
         Iterable<Integer> list1 = IterableOnly.of(1);
         Iterable<Integer> list2 = IterableOnly.of(2);
         Iterable<Integer> list3 = IterableOnly.of(4, 5);
 
-        assertDoesNotThrow(() -> {
-            assertSameSize(list1, list2);
-        });
+        assertDoesNotThrow(() -> assertSameSize(list1, list2));
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertSameSize(list1, list3);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertSameSize(list1, list3));
     }
 
     @Test
     public void testAssertSameSizeThrowsOnNullCollection() {
         Iterable<Integer> list1 = IterableOnly.of(1);
 
-        assertThrows(NullPointerException.class, () -> {
-            assertSameSize(list1, null);
-        });
+        assertThrows(NullPointerException.class, () -> assertSameSize(list1, null));
 
-        assertThrows(NullPointerException.class, () -> {
-            assertSameSize(null, list1);
-        });
+        assertThrows(NullPointerException.class, () -> assertSameSize(null, list1));
 
-        assertThrows(NullPointerException.class, () -> {
-            assertSameSize(null, null);
-        });
+        assertThrows(NullPointerException.class, () -> assertSameSize(null, null));
     }
 
     @Test
     public void testAssertSameSizeWithMessage() {
-        assertThrows(AssertionFailedError.class, () -> {
-            assertSameSize(IterableOnly.of(1), IterableOnly.of(1, 2), TEST_MESSAGE);
-        }, TEST_MESSAGE);
+        assertThrows(AssertionFailedError.class,
+                () -> assertSameSize(IterableOnly.of(1), IterableOnly.of(1, 2), TEST_MESSAGE), TEST_MESSAGE);
     }
 
     @Test
     public void testAssertSameSizeWithMessageSupplier() {
-        assertThrows(AssertionFailedError.class, () -> {
-            assertSameSize(IterableOnly.of(1), IterableOnly.of(1, 2), () -> TEST_MESSAGE);
-        }, TEST_MESSAGE);
+        assertThrows(AssertionFailedError.class,
+                () -> assertSameSize(IterableOnly.of(1), IterableOnly.of(1, 2), () -> TEST_MESSAGE), TEST_MESSAGE);
     }
 }

@@ -135,9 +135,7 @@ public class LongProviderTest extends AbstractTest {
     @Test
     @DisplayName("Test copyInstance method with null input")
     public void testCopyInstanceWithNull() {
-        assertThrows(NullPointerException.class, () -> {
-            provider.copyInstance(null);
-        });
+        assertThrows(NullPointerException.class, () -> provider.copyInstance(null));
     }
 
     /// Test the uniqueSizeLimit method returns Long.MAX_VALUE.
@@ -310,9 +308,7 @@ public class LongProviderTest extends AbstractTest {
             }
         };
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            limitedProvider.createUniqueInstances(10);
-        });
+        assertThrows(IllegalArgumentException.class, () -> limitedProvider.createUniqueInstances(10));
     }
 
     /// Test createRandoInstances method produces valid instances.

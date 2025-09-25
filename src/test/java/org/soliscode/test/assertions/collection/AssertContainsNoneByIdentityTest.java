@@ -3,9 +3,7 @@ package org.soliscode.test.assertions.collection;
 import org.junit.jupiter.api.Test;
 import org.opentest4j.AssertionFailedError;
 import org.soliscode.test.interfaces.IterableOnly;
-import org.soliscode.test.util.IterableTestUtils;
-import org.soliscode.test.util.UncachedInteger;
-import org.soliscode.test.util.UncachedString;
+import org.soliscode.test.util.*;
 
 import java.util.*;
 
@@ -83,18 +81,15 @@ public class AssertContainsNoneByIdentityTest {
         List<String> actual = Arrays.asList(shared1, unique1, unique2); // Contains shared1
 
         // Should fail - actual contains shared1 by identity
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsNoneByIdentity(excluded, actual);
-        });
+        assertThrows(AssertionFailedError.class,
+                () -> assertContainsNoneByIdentity(excluded, actual));
 
         // Test with message variants
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsNoneByIdentity(excluded, actual, TEST_MESSAGE);
-        });
+        assertThrows(AssertionFailedError.class,
+                () -> assertContainsNoneByIdentity(excluded, actual, TEST_MESSAGE));
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsNoneByIdentity(excluded, actual, () -> TEST_MESSAGE);
-        });
+        assertThrows(AssertionFailedError.class,
+                () -> assertContainsNoneByIdentity(excluded, actual, () -> TEST_MESSAGE));
     }
 
     /**
@@ -125,9 +120,8 @@ public class AssertContainsNoneByIdentityTest {
         // Now test with shared identity - should fail
         List<UncachedString> actualWithSharedIdentity = Arrays.asList(excluded1, actual2);
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsNoneByIdentity(excluded, actualWithSharedIdentity);
-        });
+        assertThrows(AssertionFailedError.class,
+                () -> assertContainsNoneByIdentity(excluded, actualWithSharedIdentity));
     }
 
     /**
@@ -185,20 +179,18 @@ public class AssertContainsNoneByIdentityTest {
         // Test excluding null - should fail when actual contains null
         List<Object> actualWithNull = Arrays.asList(obj2, null, obj3);
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsNoneByIdentity(excludedWithNull, actualWithNull);
-        });
+        assertThrows(AssertionFailedError.class,
+                () -> assertContainsNoneByIdentity(excludedWithNull, actualWithNull));
 
         // Test multiple nulls - null identity is consistent
         List<Object> excludedMultipleNulls = Arrays.asList(null, null);
         List<Object> actualMultipleNulls = Arrays.asList(null, obj1);
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsNoneByIdentity(excludedMultipleNulls, actualMultipleNulls);
-        });
+        assertThrows(AssertionFailedError.class,
+                () -> assertContainsNoneByIdentity(excludedMultipleNulls, actualMultipleNulls));
 
         // Test with only nulls - may throw NPE or AssertionFailedError depending on implementation
-        List<Object> onlyNullsExcluded = Arrays.asList((Object) null, (Object) null);
+        List<Object> onlyNullsExcluded = Arrays.asList(null, null);
         List<Object> onlyNullsActual = new ArrayList<>();
         onlyNullsActual.add(null);
 
@@ -232,9 +224,8 @@ public class AssertContainsNoneByIdentityTest {
         // Should fail - actual contains one of the excluded objects
         List<Object> actualWithExcluded = Arrays.asList(obj3, obj1);
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsNoneByIdentity(excludedWithDuplicates, actualWithExcluded);
-        });
+        assertThrows(AssertionFailedError.class,
+                () -> assertContainsNoneByIdentity(excludedWithDuplicates, actualWithExcluded));
 
         // Test duplicates in actual list
         List<Object> excludedSingle = List.of(obj1);
@@ -246,9 +237,8 @@ public class AssertContainsNoneByIdentityTest {
         // Should fail - one of the actual duplicates matches excluded
         List<Object> actualWithExcludedDuplicates = Arrays.asList(obj1, obj1, obj3);
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsNoneByIdentity(excludedSingle, actualWithExcludedDuplicates);
-        });
+        assertThrows(AssertionFailedError.class,
+                () -> assertContainsNoneByIdentity(excludedSingle, actualWithExcludedDuplicates));
     }
 
     /**
@@ -268,9 +258,7 @@ public class AssertContainsNoneByIdentityTest {
         List<Integer> actualCached = List.of(cached1b); // Same identity
 
         // Should fail due to shared identity
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsNoneByIdentity(excludedCached, actualCached);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertContainsNoneByIdentity(excludedCached, actualCached));
 
         // Large integers are not cached and have different identities
         UncachedInteger large1a = UncachedInteger.valueOf(1000);
@@ -288,9 +276,7 @@ public class AssertContainsNoneByIdentityTest {
         List<Boolean> actualBool = List.of(Boolean.TRUE);
 
         // Should fail - Boolean constants have same identity
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsNoneByIdentity(excludedBool, actualBool);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertContainsNoneByIdentity(excludedBool, actualBool));
     }
 
     /**
@@ -316,9 +302,7 @@ public class AssertContainsNoneByIdentityTest {
         // Add one shared identity - should fail
         List<Object> actualWithShared = Arrays.asList(bool, obj, str);
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsNoneByIdentity(excluded, actualWithShared);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertContainsNoneByIdentity(excluded, actualWithShared));
 
         // Test with equal but different objects
         UncachedString strEqual = new UncachedString("test");
@@ -395,28 +379,23 @@ public class AssertContainsNoneByIdentityTest {
         List<Object> nonNull = Arrays.asList(new Object(), new Object());
 
         // Null excluded collection
-        assertThrows(NullPointerException.class, () -> {
-            CollectionAssertions.assertContainsNoneByIdentity(null, nonNull);
-        });
+        assertThrows(NullPointerException.class,
+                () -> CollectionAssertions.assertContainsNoneByIdentity(null, nonNull));
 
         // Null actual collection
-        assertThrows(NullPointerException.class, () -> {
-            CollectionAssertions.assertContainsNoneByIdentity(nonNull, null);
-        });
+        assertThrows(NullPointerException.class,
+                () -> CollectionAssertions.assertContainsNoneByIdentity(nonNull, null));
 
         // Both null
-        assertThrows(NullPointerException.class, () -> {
-            CollectionAssertions.assertContainsNoneByIdentity(null, null);
-        });
+        assertThrows(NullPointerException.class,
+                () -> CollectionAssertions.assertContainsNoneByIdentity(null, null));
 
         // Test with message variants
-        assertThrows(NullPointerException.class, () -> {
-            CollectionAssertions.assertContainsNoneByIdentity(null, nonNull, TEST_MESSAGE);
-        });
+        assertThrows(NullPointerException.class,
+                () -> CollectionAssertions.assertContainsNoneByIdentity(null, nonNull, TEST_MESSAGE));
 
-        assertThrows(NullPointerException.class, () -> {
-            CollectionAssertions.assertContainsNoneByIdentity(nonNull, null, () -> TEST_MESSAGE);
-        });
+        assertThrows(NullPointerException.class,
+                () -> CollectionAssertions.assertContainsNoneByIdentity(nonNull, null, () -> TEST_MESSAGE));
     }
 
     /**
@@ -446,9 +425,7 @@ public class AssertContainsNoneByIdentityTest {
         Object shared = excluded.get(100);
         actual.add(shared);
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsNoneByIdentity(excluded, actual);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertContainsNoneByIdentity(excluded, actual));
     }
 
     /**
@@ -464,9 +441,8 @@ public class AssertContainsNoneByIdentityTest {
         List<String> actualLiterals = Arrays.asList("hello", "test");
 
         // Should fail - "hello" has same identity due to interning
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsNoneByIdentity(excludedLiterals, actualLiterals);
-        });
+        assertThrows(AssertionFailedError.class,
+                () -> assertContainsNoneByIdentity(excludedLiterals, actualLiterals));
 
         // Test with non-overlapping literals
         List<String> actualDifferent = Arrays.asList("foo", "bar");
@@ -475,8 +451,8 @@ public class AssertContainsNoneByIdentityTest {
         assertContainsNoneByIdentity(excludedLiterals, actualDifferent);
 
         // Test with constructed strings (different identities)
-        List<String> excludedConstructed = Arrays.asList(new String("hello"), new String("world"));
-        List<String> actualConstructed = Arrays.asList(new String("hello"), new String("test"));
+        List<String> excludedConstructed = Arrays.asList("hello", "world");
+        List<String> actualConstructed = Arrays.asList("hello", "test");
 
         // Should pass - constructed strings have different identities despite equal values
         assertContainsNoneByIdentity(excludedConstructed, actualConstructed);

@@ -54,6 +54,7 @@ import static org.soliscode.test.util.IterableTestUtils.size;
 /// @see Collection#spliterator
 /// @see Spliterator
 /// @since 1.0.0
+@SuppressWarnings("MagicConstant")
 public interface SpliteratorMethodContract<E, I extends Iterable<E>> extends IteratorMethodContract<E, I> {
 
     /// The full list of supported Spliterator characteristics.

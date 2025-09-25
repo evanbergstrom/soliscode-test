@@ -25,34 +25,22 @@ public class AssertContainsSameTest {
         assertContainsSame(empty1, empty2, () -> TEST_MESSAGE);
 
         Iterable<Integer> nonEmpty = IterableOnly.of(1);
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsSame(nonEmpty, empty1);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertContainsSame(nonEmpty, empty1));
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsSame(nonEmpty, empty1, TEST_MESSAGE);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertContainsSame(nonEmpty, empty1, TEST_MESSAGE));
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsSame(nonEmpty, empty1, () -> TEST_MESSAGE);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertContainsSame(nonEmpty, empty1, () -> TEST_MESSAGE));
     }
 
     @Test
     public void testAssertContainsSameOnNullCollection() {
 
         Iterable<Integer> nonEmpty = IterableOnly.of(1);
-        assertThrows(NullPointerException.class, () -> {
-            CollectionAssertions.assertContainsSame(nonEmpty, null);
-        });
+        assertThrows(NullPointerException.class, () -> CollectionAssertions.assertContainsSame(nonEmpty, null));
 
-        assertThrows(NullPointerException.class, () -> {
-            CollectionAssertions.assertContainsSame(null, nonEmpty);
-        });
+        assertThrows(NullPointerException.class, () -> CollectionAssertions.assertContainsSame(null, nonEmpty));
 
-        assertThrows(NullPointerException.class, () -> {
-            CollectionAssertions.assertContainsSame(null, null);
-        });
+        assertThrows(NullPointerException.class, () -> CollectionAssertions.assertContainsSame(null, null));
     }
 
     @Test
@@ -64,38 +52,28 @@ public class AssertContainsSameTest {
         Iterable<Integer> notSameDuplicates = IterableOnly.of(1, 2, 3, 4, 1, 2, 3, 4);
         assertContainsSame(expected, same);
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsSame(expected, notSameMissing);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertContainsSame(expected, notSameMissing));
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsSame(expected, notSameDifferent);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertContainsSame(expected, notSameDifferent));
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsSame(expected, notSameMissing, TEST_MESSAGE);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertContainsSame(expected, notSameMissing, TEST_MESSAGE));
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsSame(expected, notSameDifferent, () -> TEST_MESSAGE);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertContainsSame(expected, notSameDifferent,
+                () -> TEST_MESSAGE));
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsSame(expected, notSameDuplicates, () -> TEST_MESSAGE);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertContainsSame(expected, notSameDuplicates,
+                () -> TEST_MESSAGE));
     }
 
     @Test
     public void testAssertContainsAllWithMessage() {
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsSame(IterableOnly.of(1, 2), IterableOnly.of(1), TEST_MESSAGE);
-        }, TEST_MESSAGE);
+        assertThrows(AssertionFailedError.class,
+                () -> assertContainsSame(IterableOnly.of(1, 2), IterableOnly.of(1), TEST_MESSAGE), TEST_MESSAGE);
     }
 
     @Test
     public void testAssertContainsAllWithMessageSupplier() {
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsSame(IterableOnly.of(1, 2), IterableOnly.of(1), () -> TEST_MESSAGE);
-        }, TEST_MESSAGE);
+        assertThrows(AssertionFailedError.class,
+                () -> assertContainsSame(IterableOnly.of(1, 2), IterableOnly.of(1), () -> TEST_MESSAGE), TEST_MESSAGE);
     }
 }

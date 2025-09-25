@@ -26,26 +26,18 @@ public class AlwaysThrowsTest extends AbstractTest {
     @DisplayName("Test default constructor throws UnsupportedOperationException")
     public void testDefaultConstructor() {
         AlwaysThrows alwaysThrows = new AlwaysThrows();
-        
+
         // Test that the instance was created successfully
         assertNotNull(alwaysThrows);
-        
+
         // Test that all methods throw UnsupportedOperationException
-        assertThrows(UnsupportedOperationException.class, () -> {
-            alwaysThrows.equals(new Object());
-        });
-        
-        assertThrows(UnsupportedOperationException.class, () -> {
-            alwaysThrows.hashCode();
-        });
-        
-        assertThrows(UnsupportedOperationException.class, () -> {
-            alwaysThrows.toString();
-        });
-        
-        assertThrows(UnsupportedOperationException.class, () -> {
-            alwaysThrows.compareTo(new AlwaysThrows());
-        });
+        assertThrows(UnsupportedOperationException.class, () -> alwaysThrows.equals(new Object()));
+
+        assertThrows(UnsupportedOperationException.class, alwaysThrows::hashCode);
+
+        assertThrows(UnsupportedOperationException.class, alwaysThrows::toString);
+
+        assertThrows(UnsupportedOperationException.class, () -> alwaysThrows.compareTo(new AlwaysThrows()));
     }
 
     // Tests for custom exception supplier constructor
@@ -56,67 +48,52 @@ public class AlwaysThrowsTest extends AbstractTest {
     public void testCustomExceptionSupplierConstructor() {
         Supplier<RuntimeException> customSupplier = () -> new IllegalArgumentException("Custom exception");
         AlwaysThrows alwaysThrows = new AlwaysThrows(customSupplier);
-        
+
         // Test that the instance was created successfully
         assertNotNull(alwaysThrows);
-        
+
         // Test that all methods throw the custom exception
-        IllegalArgumentException equalsException = assertThrows(IllegalArgumentException.class, () -> {
-            alwaysThrows.equals(new Object());
-        });
+        IllegalArgumentException equalsException = assertThrows(IllegalArgumentException.class,
+                () -> alwaysThrows.equals(new Object()));
         assertEquals("Custom exception", equalsException.getMessage());
-        
-        IllegalArgumentException hashCodeException = assertThrows(IllegalArgumentException.class, () -> {
-            alwaysThrows.hashCode();
-        });
+
+        IllegalArgumentException hashCodeException = assertThrows(IllegalArgumentException.class,
+                alwaysThrows::hashCode);
         assertEquals("Custom exception", hashCodeException.getMessage());
-        
-        IllegalArgumentException toStringException = assertThrows(IllegalArgumentException.class, () -> {
-            alwaysThrows.toString();
-        });
+
+        IllegalArgumentException toStringException = assertThrows(IllegalArgumentException.class,
+                alwaysThrows::toString);
         assertEquals("Custom exception", toStringException.getMessage());
-        
-        IllegalArgumentException compareToException = assertThrows(IllegalArgumentException.class, () -> {
-            alwaysThrows.compareTo(new AlwaysThrows());
-        });
+
+        IllegalArgumentException compareToException = assertThrows(IllegalArgumentException.class,
+                () -> alwaysThrows.compareTo(new AlwaysThrows()));
         assertEquals("Custom exception", compareToException.getMessage());
     }
 
     // Tests for equals method
 
     /// Test that equals method throws exceptions with various inputs.
+    @SuppressWarnings({"EqualsWithItself", "EqualsBetweenInconvertibleTypes", "UnnecessaryBoxing"})
     @Test
     @DisplayName("Test equals method throws exceptions with various inputs")
     public void testEqualsMethodThrows() {
         AlwaysThrows alwaysThrows = new AlwaysThrows();
-        
+
         // Test with null
-        assertThrows(UnsupportedOperationException.class, () -> {
-            alwaysThrows.equals(null);
-        });
-        
+        assertThrows(UnsupportedOperationException.class, () -> alwaysThrows.equals(null));
+
         // Test with same instance
-        assertThrows(UnsupportedOperationException.class, () -> {
-            alwaysThrows.equals(alwaysThrows);
-        });
-        
+        assertThrows(UnsupportedOperationException.class, () -> alwaysThrows.equals(alwaysThrows));
+
         // Test with different AlwaysThrows instance
-        assertThrows(UnsupportedOperationException.class, () -> {
-            alwaysThrows.equals(new AlwaysThrows());
-        });
-        
+        assertThrows(UnsupportedOperationException.class, () -> alwaysThrows.equals(new AlwaysThrows()));
+
         // Test with different object types
-        assertThrows(UnsupportedOperationException.class, () -> {
-            alwaysThrows.equals("string");
-        });
-        
-        assertThrows(UnsupportedOperationException.class, () -> {
-            alwaysThrows.equals(Integer.valueOf(42));
-        });
-        
-        assertThrows(UnsupportedOperationException.class, () -> {
-            alwaysThrows.equals(new Object());
-        });
+        assertThrows(UnsupportedOperationException.class, () -> alwaysThrows.equals("string"));
+
+        assertThrows(UnsupportedOperationException.class, () -> alwaysThrows.equals(Integer.valueOf(42)));
+
+        assertThrows(UnsupportedOperationException.class, () -> alwaysThrows.equals(new Object()));
     }
 
     /// Test that equals method throws custom exceptions when using custom supplier.
@@ -125,10 +102,8 @@ public class AlwaysThrowsTest extends AbstractTest {
     public void testEqualsMethodThrowsCustomException() {
         Supplier<RuntimeException> customSupplier = () -> new RuntimeException("Custom equals exception");
         AlwaysThrows alwaysThrows = new AlwaysThrows(customSupplier);
-        
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            alwaysThrows.equals(new Object());
-        });
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> alwaysThrows.equals(new Object()));
         assertEquals("Custom equals exception", exception.getMessage());
     }
 
@@ -139,19 +114,13 @@ public class AlwaysThrowsTest extends AbstractTest {
     @DisplayName("Test hashCode method throws exceptions")
     public void testHashCodeMethodThrows() {
         AlwaysThrows alwaysThrows = new AlwaysThrows();
-        
+
         // Test multiple calls to hashCode
-        assertThrows(UnsupportedOperationException.class, () -> {
-            alwaysThrows.hashCode();
-        });
-        
-        assertThrows(UnsupportedOperationException.class, () -> {
-            alwaysThrows.hashCode();
-        });
-        
-        assertThrows(UnsupportedOperationException.class, () -> {
-            alwaysThrows.hashCode();
-        });
+        assertThrows(UnsupportedOperationException.class, alwaysThrows::hashCode);
+
+        assertThrows(UnsupportedOperationException.class, alwaysThrows::hashCode);
+
+        assertThrows(UnsupportedOperationException.class, alwaysThrows::hashCode);
     }
 
     /// Test that hashCode method throws custom exceptions when using custom supplier.
@@ -160,10 +129,8 @@ public class AlwaysThrowsTest extends AbstractTest {
     public void testHashCodeMethodThrowsCustomException() {
         Supplier<RuntimeException> customSupplier = () -> new IllegalStateException("Custom hashCode exception");
         AlwaysThrows alwaysThrows = new AlwaysThrows(customSupplier);
-        
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-            alwaysThrows.hashCode();
-        });
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class, alwaysThrows::hashCode);
         assertEquals("Custom hashCode exception", exception.getMessage());
     }
 
@@ -174,15 +141,11 @@ public class AlwaysThrowsTest extends AbstractTest {
     @DisplayName("Test toString method throws exceptions")
     public void testToStringMethodThrows() {
         AlwaysThrows alwaysThrows = new AlwaysThrows();
-        
+
         // Test multiple calls to toString
-        assertThrows(UnsupportedOperationException.class, () -> {
-            alwaysThrows.toString();
-        });
-        
-        assertThrows(UnsupportedOperationException.class, () -> {
-            alwaysThrows.toString();
-        });
+        assertThrows(UnsupportedOperationException.class, alwaysThrows::toString);
+
+        assertThrows(UnsupportedOperationException.class, alwaysThrows::toString);
     }
 
     /// Test that toString method throws custom exceptions when using custom supplier.
@@ -191,34 +154,28 @@ public class AlwaysThrowsTest extends AbstractTest {
     public void testToStringMethodThrowsCustomException() {
         Supplier<RuntimeException> customSupplier = () -> new RuntimeException("Custom toString exception");
         AlwaysThrows alwaysThrows = new AlwaysThrows(customSupplier);
-        
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            alwaysThrows.toString();
-        });
+
+        RuntimeException exception = assertThrows(RuntimeException.class, alwaysThrows::toString);
         assertEquals("Custom toString exception", exception.getMessage());
     }
 
     // Tests for compareTo method
 
     /// Test that compareTo method throws exceptions with various inputs.
+    @SuppressWarnings("EqualsWithItself")
     @Test
     @DisplayName("Test compareTo method throws exceptions with various inputs")
     public void testCompareToMethodThrows() {
         AlwaysThrows alwaysThrows = new AlwaysThrows();
-        
+
         // Test with same instance
-        assertThrows(UnsupportedOperationException.class, () -> {
-            alwaysThrows.compareTo(alwaysThrows);
-        });
-        
+        assertThrows(UnsupportedOperationException.class, () -> alwaysThrows.compareTo(alwaysThrows));
+
         // Test with different AlwaysThrows instances
-        assertThrows(UnsupportedOperationException.class, () -> {
-            alwaysThrows.compareTo(new AlwaysThrows());
-        });
-        
-        assertThrows(UnsupportedOperationException.class, () -> {
-            alwaysThrows.compareTo(new AlwaysThrows(() -> new RuntimeException("Other exception")));
-        });
+        assertThrows(UnsupportedOperationException.class, () -> alwaysThrows.compareTo(new AlwaysThrows()));
+
+        assertThrows(UnsupportedOperationException.class, () -> alwaysThrows.compareTo(new AlwaysThrows(
+                () -> new RuntimeException("Other exception"))));
     }
 
     /// Test that compareTo method throws custom exceptions when using custom supplier.
@@ -227,10 +184,9 @@ public class AlwaysThrowsTest extends AbstractTest {
     public void testCompareToMethodThrowsCustomException() {
         Supplier<RuntimeException> customSupplier = () -> new IllegalArgumentException("Custom compareTo exception");
         AlwaysThrows alwaysThrows = new AlwaysThrows(customSupplier);
-        
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            alwaysThrows.compareTo(new AlwaysThrows());
-        });
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> alwaysThrows.compareTo(new AlwaysThrows()));
         assertEquals("Custom compareTo exception", exception.getMessage());
     }
 
@@ -240,12 +196,10 @@ public class AlwaysThrowsTest extends AbstractTest {
     @DisplayName("Test compareTo method with null parameter")
     public void testCompareToWithNull() {
         AlwaysThrows alwaysThrows = new AlwaysThrows();
-        
+
         // Note: compareTo should throw the custom exception, not a NullPointerException
         // because the method throws before parameter validation
-        assertThrows(UnsupportedOperationException.class, () -> {
-            alwaysThrows.compareTo(null);
-        });
+        assertThrows(UnsupportedOperationException.class, () -> alwaysThrows.compareTo(null));
     }
 
     // Tests for multiple exception types
@@ -257,15 +211,15 @@ public class AlwaysThrowsTest extends AbstractTest {
         // Test with IllegalStateException
         AlwaysThrows illegalState = new AlwaysThrows(() -> new IllegalStateException("Illegal state"));
         assertThrows(IllegalStateException.class, () -> illegalState.equals(null));
-        
+
         // Test with NullPointerException
         AlwaysThrows nullPointer = new AlwaysThrows(() -> new NullPointerException("Null pointer"));
-        assertThrows(NullPointerException.class, () -> nullPointer.hashCode());
-        
+        assertThrows(NullPointerException.class, nullPointer::hashCode);
+
         // Test with RuntimeException
         AlwaysThrows runtime = new AlwaysThrows(() -> new RuntimeException("Runtime"));
-        assertThrows(RuntimeException.class, () -> runtime.toString());
-        
+        assertThrows(RuntimeException.class, runtime::toString);
+
         // Test with custom RuntimeException subclass
         AlwaysThrows custom = new AlwaysThrows(() -> new SecurityException("Security"));
         assertThrows(SecurityException.class, () -> custom.compareTo(new AlwaysThrows()));
@@ -283,33 +237,26 @@ public class AlwaysThrowsTest extends AbstractTest {
             counter[0]++;
             return new RuntimeException("Exception #" + counter[0]);
         };
-        
+
         AlwaysThrows alwaysThrows = new AlwaysThrows(countingSupplier);
-        
+
         // Call equals
-        RuntimeException exception1 = assertThrows(RuntimeException.class, () -> {
-            alwaysThrows.equals(null);
-        });
+        RuntimeException exception1 = assertThrows(RuntimeException.class, () -> alwaysThrows.equals(null));
         assertEquals("Exception #1", exception1.getMessage());
-        
+
         // Call hashCode
-        RuntimeException exception2 = assertThrows(RuntimeException.class, () -> {
-            alwaysThrows.hashCode();
-        });
+        RuntimeException exception2 = assertThrows(RuntimeException.class, alwaysThrows::hashCode);
         assertEquals("Exception #2", exception2.getMessage());
-        
+
         // Call toString
-        RuntimeException exception3 = assertThrows(RuntimeException.class, () -> {
-            alwaysThrows.toString();
-        });
+        RuntimeException exception3 = assertThrows(RuntimeException.class, alwaysThrows::toString);
         assertEquals("Exception #3", exception3.getMessage());
-        
+
         // Call compareTo
-        RuntimeException exception4 = assertThrows(RuntimeException.class, () -> {
-            alwaysThrows.compareTo(new AlwaysThrows());
-        });
+        RuntimeException exception4 = assertThrows(RuntimeException.class,
+                () -> alwaysThrows.compareTo(new AlwaysThrows()));
         assertEquals("Exception #4", exception4.getMessage());
-        
+
         // Verify counter was incremented for each call
         assertEquals(4, counter[0]);
     }
@@ -320,69 +267,60 @@ public class AlwaysThrowsTest extends AbstractTest {
     public void testSupplierReturningNull() {
         Supplier<RuntimeException> nullSupplier = () -> null;
         AlwaysThrows alwaysThrows = new AlwaysThrows(nullSupplier);
-        
+
         // When the supplier returns null, trying to throw null should cause a NullPointerException
-        assertThrows(NullPointerException.class, () -> {
-            alwaysThrows.equals(null);
-        });
-        
-        assertThrows(NullPointerException.class, () -> {
-            alwaysThrows.hashCode();
-        });
-        
-        assertThrows(NullPointerException.class, () -> {
-            alwaysThrows.toString();
-        });
-        
-        assertThrows(NullPointerException.class, () -> {
-            alwaysThrows.compareTo(new AlwaysThrows());
-        });
+        assertThrows(NullPointerException.class, () -> alwaysThrows.equals(null));
+
+        assertThrows(NullPointerException.class, alwaysThrows::hashCode);
+
+        assertThrows(NullPointerException.class, alwaysThrows::toString);
+
+        assertThrows(NullPointerException.class, () -> alwaysThrows.compareTo(new AlwaysThrows()));
     }
 
     // Tests for interaction with Java collections and frameworks
 
     /// Test behavior when used in collections that call equals/hashCode.
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     @Test
     @DisplayName("Test behavior in collections")
     public void testBehaviorInCollections() {
         AlwaysThrows alwaysThrows = new AlwaysThrows();
-        
+
         // Test that HashSet operations fail due to hashCode() throwing
         assertThrows(UnsupportedOperationException.class, () -> {
             java.util.Set<AlwaysThrows> set = new java.util.HashSet<>();
             set.add(alwaysThrows); // This should trigger hashCode()
         });
-        
+
         // Test that contains operations fail due to equals() throwing
         java.util.List<AlwaysThrows> list = new java.util.ArrayList<>();
         list.add(alwaysThrows); // ArrayList.add() doesn't call equals/hashCode
-        
+
         assertThrows(UnsupportedOperationException.class, () -> {
             list.contains(alwaysThrows); // This should trigger equals()
         });
     }
 
     /// Test behavior when used with sorting that calls compareTo.
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     @Test
     @DisplayName("Test behavior with sorting")
     public void testBehaviorWithSorting() {
         AlwaysThrows alwaysThrows1 = new AlwaysThrows();
         AlwaysThrows alwaysThrows2 = new AlwaysThrows();
-        
+
         java.util.List<AlwaysThrows> list = new java.util.ArrayList<>();
         list.add(alwaysThrows1);
         list.add(alwaysThrows2);
-        
+
         // Test that sorting fails due to compareTo() throwing
-        assertThrows(UnsupportedOperationException.class, () -> {
-            java.util.Collections.sort(list);
-        });
+        assertThrows(UnsupportedOperationException.class, () -> java.util.Collections.sort(list));
     }
 
     // Tests for edge cases and error conditions
 
     /// Test constructor with null supplier.
-    @SuppressWarnings("DataFlowIssue") // explicitly testing passing a null parameter
     @Test
     @DisplayName("Test constructor with null supplier")
     public void testConstructorWithNullSupplier() {
@@ -395,18 +333,17 @@ public class AlwaysThrowsTest extends AbstractTest {
     }
 
     /// Test that exception messages are preserved correctly.
+    /// @param message the exception message
     @ParameterizedTest
-    @ValueSource(strings = {"", "Simple message", "Message with special chars: !@#$%^&*()", 
-                           "Very long message that contains multiple words and punctuation marks to test message preservation."})
+    @ValueSource(strings = {"", "Simple message", "Message with special chars: !@#$%^&*()",
+            "Very long message that contains multiple words and punctuation marks to test message preservation."})
     @DisplayName("Test exception message preservation")
     public void testExceptionMessagePreservation(String message) {
         Supplier<RuntimeException> messageSupplier = () -> new RuntimeException(message);
         AlwaysThrows alwaysThrows = new AlwaysThrows(messageSupplier);
-        
+
         // Test that message is preserved in equals
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            alwaysThrows.equals(null);
-        });
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> alwaysThrows.equals(null));
         assertEquals(message, exception.getMessage());
     }
 
@@ -417,26 +354,19 @@ public class AlwaysThrowsTest extends AbstractTest {
         String expectedMessage = "Consistent exception";
         Supplier<RuntimeException> consistentSupplier = () -> new RuntimeException(expectedMessage);
         AlwaysThrows alwaysThrows = new AlwaysThrows(consistentSupplier);
-        
+
         // All methods should throw the same type of exception with the same message
-        RuntimeException equalsException = assertThrows(RuntimeException.class, () -> {
-            alwaysThrows.equals(new Object());
-        });
+        RuntimeException equalsException = assertThrows(RuntimeException.class, () -> alwaysThrows.equals(new Object()));
         assertEquals(expectedMessage, equalsException.getMessage());
-        
-        RuntimeException hashCodeException = assertThrows(RuntimeException.class, () -> {
-            alwaysThrows.hashCode();
-        });
+
+        RuntimeException hashCodeException = assertThrows(RuntimeException.class, alwaysThrows::hashCode);
         assertEquals(expectedMessage, hashCodeException.getMessage());
-        
-        RuntimeException toStringException = assertThrows(RuntimeException.class, () -> {
-            alwaysThrows.toString();
-        });
+
+        RuntimeException toStringException = assertThrows(RuntimeException.class, alwaysThrows::toString);
         assertEquals(expectedMessage, toStringException.getMessage());
-        
-        RuntimeException compareToException = assertThrows(RuntimeException.class, () -> {
-            alwaysThrows.compareTo(new AlwaysThrows());
-        });
+
+        RuntimeException compareToException = assertThrows(RuntimeException.class,
+                () -> alwaysThrows.compareTo(new AlwaysThrows()));
         assertEquals(expectedMessage, compareToException.getMessage());
     }
 
@@ -447,7 +377,7 @@ public class AlwaysThrowsTest extends AbstractTest {
     @DisplayName("Test practical usage for testing exception handling")
     public void testPracticalUsageForTesting() {
         AlwaysThrows problematicObject = new AlwaysThrows(() -> new RuntimeException("Simulated failure"));
-        
+
         // Test that code can catch exceptions from equals
         try {
             boolean result = problematicObject.equals(new Object());
@@ -455,7 +385,7 @@ public class AlwaysThrowsTest extends AbstractTest {
         } catch (RuntimeException e) {
             assertEquals("Simulated failure", e.getMessage());
         }
-        
+
         // Test that code can catch exceptions from toString
         try {
             String result = problematicObject.toString();
@@ -470,15 +400,15 @@ public class AlwaysThrowsTest extends AbstractTest {
     @DisplayName("Test defensive programming scenarios")
     public void testDefensiveProgrammingScenarios() {
         AlwaysThrows problematicObject = new AlwaysThrows();
-        
+
         // Example of defensive code that should handle exceptions gracefully
         String safeToString = getSafeToString(problematicObject);
         assertEquals("toString() failed", safeToString);
-        
+
         boolean safeEquals = getSafeEquals(problematicObject, new Object());
         assertFalse(safeEquals);
     }
-    
+
     // Helper methods for defensive programming test
     private String getSafeToString(Object obj) {
         try {
@@ -487,7 +417,7 @@ public class AlwaysThrowsTest extends AbstractTest {
             return "toString() failed";
         }
     }
-    
+
     private boolean getSafeEquals(Object obj1, Object obj2) {
         try {
             return obj1.equals(obj2);

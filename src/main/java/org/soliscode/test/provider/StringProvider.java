@@ -38,18 +38,18 @@ import java.util.Objects;
 /// ### Basic String Creation
 /// ```java
 /// StringProvider provider = new StringProvider();
-/// 
+///
 /// // Create strings with different approaches
 /// String empty = provider.defaultInstance();         // ""
 /// String zero = provider.createInstance(0);          // "0"
-/// String positive = provider.createInstance(42);     // "42"  
+/// String positive = provider.createInstance(42);     // "42"
 /// String negative = provider.createInstance(-100);   // "-100"
 /// ```
 ///
 /// ### Test Data Generation
 /// ```java
 /// StringProvider provider = new StringProvider();
-/// 
+///
 /// // Generate predictable test data
 /// List<String> equalStrings = provider.createEqualObjects(3);     // ["", "", ""]
 /// List<String> uniqueStrings = provider.createUniqueInstances(5); // ["0", "1", "2", "3", "4"]
@@ -60,11 +60,11 @@ import java.util.Objects;
 /// ```java
 /// StringProvider provider = new StringProvider();
 /// String original = "test";
-/// 
+///
 /// // Copy operation (returns same instance due to immutability)
 /// String copy = provider.copyInstance(original);
 /// assertSame(original, copy);  // Same reference due to immutability
-/// 
+///
 /// // Null safety validation
 /// assertThrows(NullPointerException.class, () -> {
 ///     provider.copyInstance(null);
@@ -130,7 +130,7 @@ public class StringProvider implements ObjectProvider<String> {
     ///
     /// ```java
     /// StringProvider provider = new StringProvider();
-    /// 
+    ///
     /// String zero = provider.createInstance(0);      // "0"
     /// String pos = provider.createInstance(123);     // "123"
     /// String neg = provider.createInstance(-456);    // "-456"
@@ -165,7 +165,7 @@ public class StringProvider implements ObjectProvider<String> {
     /// StringProvider provider = new StringProvider();
     /// String original = "test";
     /// String copy = provider.copyInstance(original);
-    /// 
+    ///
     /// // Same reference due to immutability
     /// assertSame(original, copy);
     /// assertEquals("test", copy);

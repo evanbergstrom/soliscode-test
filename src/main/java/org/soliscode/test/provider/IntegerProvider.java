@@ -36,7 +36,7 @@ import org.jspecify.annotations.NonNull;
 /// ### Basic Usage
 /// ```java
 /// IntegerProvider provider = new IntegerProvider();
-/// 
+///
 /// // Create instances with different approaches
 /// Integer zero = provider.defaultInstance();        // 0
 /// Integer fromSeed = provider.createInstance(42);   // 42
@@ -47,11 +47,11 @@ import org.jspecify.annotations.NonNull;
 /// ### Boundary Testing
 /// ```java
 /// IntegerProvider provider = new IntegerProvider();
-/// 
+///
 /// // Test edge cases
 /// Integer maxValue = provider.maxValue();
 /// Integer minValue = provider.minValue();
-/// 
+///
 /// // Verify boundaries
 /// assertEquals(Integer.MAX_VALUE, maxValue.intValue());
 /// assertEquals(Integer.MIN_VALUE, minValue.intValue());
@@ -60,7 +60,7 @@ import org.jspecify.annotations.NonNull;
 /// ### Collection Generation
 /// ```java
 /// IntegerProvider provider = new IntegerProvider();
-/// 
+///
 /// // Generate test data sets
 /// List<Integer> equalValues = provider.createEqualObjects(5);     // [0, 0, 0, 0, 0]
 /// List<Integer> uniqueValues = provider.createUniqueInstances(5); // [0, 1, 2, 3, 4]
@@ -102,12 +102,12 @@ public class IntegerProvider implements IntegerNumberProvider<Integer> {
     ///
     /// ```java
     /// IntegerProvider provider = new IntegerProvider();
-    /// 
+    ///
     /// Integer zero = provider.createValue(0);                    // 0
     /// Integer positive = provider.createValue(42);               // 42
     /// Integer negative = provider.createValue(-100);             // -100
     /// Integer max = provider.createValue(Integer.MAX_VALUE);     // 2147483647
-    /// 
+    ///
     /// // This would throw an exception:
     /// // provider.createValue(Long.MAX_VALUE);  // IllegalArgumentException
     /// ```

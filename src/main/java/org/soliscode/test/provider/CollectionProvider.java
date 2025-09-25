@@ -22,9 +22,9 @@ import java.util.Collection;
 ///
 /// ### Basic Collection Creation
 /// ```java
-/// CollectionProvider<String, List<String>> provider = 
+/// CollectionProvider<String, List<String>> provider =
 ///     CollectionProviders.arrayListProvider(new StringProvider());
-/// 
+///
 /// // Create collections with different characteristics
 /// List<String> empty = provider.emptyInstance();                    // []
 /// List<String> single = provider.createSingleton("test");           // ["test"]
@@ -34,9 +34,9 @@ import java.util.Collection;
 /// ### Element Provider Integration
 /// ```java
 /// ObjectProvider<Integer> elementProvider = new IntegerProvider();
-/// CollectionProvider<Integer, Set<Integer>> setProvider = 
+/// CollectionProvider<Integer, Set<Integer>> setProvider =
 ///     CollectionProviders.hashSetProvider(elementProvider);
-/// 
+///
 /// // Access the underlying element provider
 /// ObjectProvider<Integer> elements = setProvider.elementProvider();
 /// Integer maxElement = elements.createInstance(Integer.MAX_VALUE);
@@ -44,9 +44,9 @@ import java.util.Collection;
 ///
 /// ### Unique Element Collections
 /// ```java
-/// CollectionProvider<String, List<String>> provider = 
+/// CollectionProvider<String, List<String>> provider =
 ///     CollectionProviders.arrayListProvider(new StringProvider());
-/// 
+///
 /// // Create collections with guaranteed unique elements
 /// List<String> unique5 = provider.createInstanceWithUniqueElements(5);
 /// List<String> uniqueSeeded = provider.createInstanceWithUniqueElements(10, 42);
@@ -77,9 +77,9 @@ public interface CollectionProvider<E, I extends Iterable<E>> extends ObjectProv
     /// ## Examples
     ///
     /// ```java
-    /// CollectionProvider<Integer, List<Integer>> listProvider = 
+    /// CollectionProvider<Integer, List<Integer>> listProvider =
     ///     CollectionProviders.arrayListProvider(new IntegerProvider());
-    /// 
+    ///
     /// ObjectProvider<Integer> elementProvider = listProvider.elementProvider();
     /// Integer element = elementProvider.createInstance(42);  // 42
     /// ```
@@ -96,9 +96,9 @@ public interface CollectionProvider<E, I extends Iterable<E>> extends ObjectProv
     /// ## Examples
     ///
     /// ```java
-    /// CollectionProvider<String, List<String>> provider = 
+    /// CollectionProvider<String, List<String>> provider =
     ///     CollectionProviders.arrayListProvider(new StringProvider());
-    /// 
+    ///
     /// List<String> empty = provider.emptyInstance();
     /// assertTrue(empty.isEmpty());
     /// assertEquals(0, empty.size());
@@ -117,9 +117,9 @@ public interface CollectionProvider<E, I extends Iterable<E>> extends ObjectProv
     /// ## Examples
     ///
     /// ```java
-    /// CollectionProvider<Integer, Set<Integer>> setProvider = 
+    /// CollectionProvider<Integer, Set<Integer>> setProvider =
     ///     CollectionProviders.hashSetProvider(new IntegerProvider());
-    /// 
+    ///
     /// List<Integer> sourceList = Arrays.asList(1, 2, 3, 2);  // Duplicates included
     /// Set<Integer> resultSet = setProvider.createInstance(sourceList);  // {1, 2, 3}
     /// ```
@@ -145,9 +145,9 @@ public interface CollectionProvider<E, I extends Iterable<E>> extends ObjectProv
     /// ## Examples
     ///
     /// ```java
-    /// CollectionProvider<String, List<String>> provider = 
+    /// CollectionProvider<String, List<String>> provider =
     ///     CollectionProviders.arrayListProvider(new StringProvider());
-    /// 
+    ///
     /// List<String> list1 = provider.createInstance(42);
     /// List<String> list2 = provider.createInstance(42);
     /// assertEquals(list1, list2);  // Same seed produces identical content
@@ -166,9 +166,9 @@ public interface CollectionProvider<E, I extends Iterable<E>> extends ObjectProv
     /// ## Examples
     ///
     /// ```java
-    /// CollectionProvider<String, List<String>> provider = 
+    /// CollectionProvider<String, List<String>> provider =
     ///     CollectionProviders.arrayListProvider(new StringProvider());
-    /// 
+    ///
     /// List<String> singleton = provider.createSingleton();  // [""] (empty string default)
     /// assertEquals(1, singleton.size());
     /// ```
@@ -185,9 +185,9 @@ public interface CollectionProvider<E, I extends Iterable<E>> extends ObjectProv
     /// ## Examples
     ///
     /// ```java
-    /// CollectionProvider<Integer, Set<Integer>> setProvider = 
+    /// CollectionProvider<Integer, Set<Integer>> setProvider =
     ///     CollectionProviders.hashSetProvider(new IntegerProvider());
-    /// 
+    ///
     /// Set<Integer> singleton = setProvider.createSingleton(42);  // {42}
     /// assertTrue(singleton.contains(42));
     /// assertEquals(1, singleton.size());
@@ -207,9 +207,9 @@ public interface CollectionProvider<E, I extends Iterable<E>> extends ObjectProv
     /// ## Examples
     ///
     /// ```java
-    /// CollectionProvider<String, List<String>> provider = 
+    /// CollectionProvider<String, List<String>> provider =
     ///     CollectionProviders.arrayListProvider(new StringProvider());
-    /// 
+    ///
     /// String[] array = {"a", "b", "c"};
     /// List<String> list = provider.createInstance(array);  // ["a", "b", "c"]
     /// assertEquals(Arrays.asList(array), list);
@@ -236,9 +236,9 @@ public interface CollectionProvider<E, I extends Iterable<E>> extends ObjectProv
     /// ## Examples
     ///
     /// ```java
-    /// CollectionProvider<Integer, Set<Integer>> setProvider = 
+    /// CollectionProvider<Integer, Set<Integer>> setProvider =
     ///     CollectionProviders.hashSetProvider(new IntegerProvider());
-    /// 
+    ///
     /// Set<Integer> uniqueSet = setProvider.createInstanceWithUniqueElements();
     /// assertEquals(uniqueSet.size(), new HashSet<>(uniqueSet).size());  // No duplicates
     /// ```
@@ -256,9 +256,9 @@ public interface CollectionProvider<E, I extends Iterable<E>> extends ObjectProv
     /// ## Examples
     ///
     /// ```java
-    /// CollectionProvider<String, List<String>> provider = 
+    /// CollectionProvider<String, List<String>> provider =
     ///     CollectionProviders.arrayListProvider(new StringProvider());
-    /// 
+    ///
     /// List<String> unique5 = provider.createInstanceWithUniqueElements(5);
     /// assertEquals(5, unique5.size());
     /// assertEquals(5, new HashSet<>(unique5).size());  // All unique
@@ -285,15 +285,15 @@ public interface CollectionProvider<E, I extends Iterable<E>> extends ObjectProv
     /// ## Examples
     ///
     /// ```java
-    /// CollectionProvider<Integer, List<Integer>> provider = 
+    /// CollectionProvider<Integer, List<Integer>> provider =
     ///     CollectionProviders.arrayListProvider(new IntegerProvider());
-    /// 
+    ///
     /// List<Integer> unique1 = provider.createInstanceWithUniqueElements(3, 10);  // [10, 11, 12]
     /// List<Integer> unique2 = provider.createInstanceWithUniqueElements(3, 10);  // [10, 11, 12]
     /// assertEquals(unique1, unique2);  // Same seed produces same result
     /// ```
     ///
-    /// @param size the exact number of unique elements to include  
+    /// @param size the exact number of unique elements to include
     /// @param seed the starting seed value for element generation
     /// @return an instance of the iterable containing unique elements starting from the seed
     /// @throws IllegalArgumentException if size is negative or exceeds element provider limits

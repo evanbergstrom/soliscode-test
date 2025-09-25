@@ -10,7 +10,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.soliscode.test.assertions.collection.CollectionAssertions.*;
+import static org.soliscode.test.assertions.collection.CollectionAssertions.assertContainsAll;
 
 /// **AssertContainsAllTest** - Comprehensive test suite for [AssertContainsAll][org.soliscode.test.assertions.collection.AssertContainsAll].
 ///
@@ -45,17 +45,11 @@ public class AssertContainsAllTest {
         assertContainsAll(empty1, empty2, () -> TEST_MESSAGE);
 
         Iterable<Integer> nonEmpty = IterableOnly.of(1);
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsAll(nonEmpty, empty1);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertContainsAll(nonEmpty, empty1));
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsAll(nonEmpty, empty1, TEST_MESSAGE);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertContainsAll(nonEmpty, empty1, TEST_MESSAGE));
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsAll(nonEmpty, empty1, () -> TEST_MESSAGE);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertContainsAll(nonEmpty, empty1, () -> TEST_MESSAGE));
     }
 
     /// Tests assertion behavior with null collections.
@@ -67,17 +61,14 @@ public class AssertContainsAllTest {
     public void testAssertContainsAllOnNullCollection() {
 
         Iterable<Integer> nonEmpty = IterableOnly.of(1);
-        assertThrows(NullPointerException.class, () -> {
-            CollectionAssertions.assertContainsAll(nonEmpty, (Iterable<?>)null);
-        });
+        assertThrows(NullPointerException.class,
+                () -> CollectionAssertions.assertContainsAll(nonEmpty, (Iterable<?>)null));
 
-        assertThrows(NullPointerException.class, () -> {
-            CollectionAssertions.assertContainsAll((Iterable<?>)null, nonEmpty);
-        });
+        assertThrows(NullPointerException.class,
+                () -> CollectionAssertions.assertContainsAll((Iterable<?>)null, nonEmpty));
 
-        assertThrows(NullPointerException.class, () -> {
-            CollectionAssertions.assertContainsAll((Iterable<?>)null, (Iterable<?>)null);
-        });
+        assertThrows(NullPointerException.class,
+                () -> CollectionAssertions.assertContainsAll((Iterable<?>)null, (Iterable<?>)null));
     }
 
     /// Tests basic assertion functionality with non-empty collections.
@@ -90,17 +81,11 @@ public class AssertContainsAllTest {
         Iterable<Integer> subset = IterableOnly.of(2, 3);
         assertContainsAll(subset, superset);
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsAll(superset, subset);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertContainsAll(superset, subset));
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsAll(superset, subset, TEST_MESSAGE);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertContainsAll(superset, subset, TEST_MESSAGE));
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsAll(superset, subset, () -> TEST_MESSAGE);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertContainsAll(superset, subset, () -> TEST_MESSAGE));
     }
 
     /// Tests basic assertion functionality with non-empty array and non-empty collection.
@@ -113,17 +98,11 @@ public class AssertContainsAllTest {
         Iterable<Integer> subset = IterableOnly.of(2, 3);
         assertContainsAll(subset, superset);
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsAll(superset, subset);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertContainsAll(superset, subset));
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsAll(superset, subset, TEST_MESSAGE);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertContainsAll(superset, subset, TEST_MESSAGE));
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsAll(superset, subset, () -> TEST_MESSAGE);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertContainsAll(superset, subset, () -> TEST_MESSAGE));
     }
 
     /// Tests basic assertion functionality with non-empty array and non-empty collection.
@@ -136,17 +115,11 @@ public class AssertContainsAllTest {
         Integer[] subset = new Integer[]{2, 3};
         assertContainsAll(subset, superset);
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsAll(superset, subset);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertContainsAll(superset, subset));
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsAll(superset, subset, TEST_MESSAGE);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertContainsAll(superset, subset, TEST_MESSAGE));
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsAll(superset, subset, () -> TEST_MESSAGE);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertContainsAll(superset, subset, () -> TEST_MESSAGE));
     }
 
     /// Tests custom message functionality with static message string.
@@ -154,9 +127,8 @@ public class AssertContainsAllTest {
     /// Verifies that custom failure messages are properly included in assertion exceptions.
     @Test
     public void testAssertContainsAllWithMessage() {
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsAll(IterableOnly.of(1, 2), IterableOnly.of(1), TEST_MESSAGE);
-        }, TEST_MESSAGE);
+        assertThrows(AssertionFailedError.class, () -> assertContainsAll(IterableOnly.of(1, 2),
+                IterableOnly.of(1), TEST_MESSAGE), TEST_MESSAGE);
     }
 
     /// Tests custom message functionality with message supplier.
@@ -165,9 +137,8 @@ public class AssertContainsAllTest {
     /// are included in assertion exceptions. This enables lazy message generation.
     @Test
     public void testAssertContainsAllWithMessageSupplier() {
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsAll(IterableOnly.of(1, 2), IterableOnly.of(1), () -> TEST_MESSAGE);
-        }, TEST_MESSAGE);
+        assertThrows(AssertionFailedError.class, () -> assertContainsAll(IterableOnly.of(1, 2),
+                IterableOnly.of(1), () -> TEST_MESSAGE), TEST_MESSAGE);
     }
 
     /// Tests array-based collections with iterable assertions.
@@ -184,12 +155,10 @@ public class AssertContainsAllTest {
 
         // Should fail - actualList doesn't contain all elements from a larger list
         List<Integer> largerList = Arrays.asList(1, 2, 3, 4, 5);
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsAll(largerList, actualList);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertContainsAll(largerList, actualList));
 
         // Test with empty array as list - should always pass (vacuous truth)
-        List<Integer> emptyList = Arrays.asList();
+        List<Integer> emptyList = List.of();
         assertContainsAll(emptyList, actualList);
         assertContainsAll(emptyList, IterableTestUtils.empty());
     }
@@ -208,14 +177,12 @@ public class AssertContainsAllTest {
 
         // Should fail - smaller array doesn't contain all expected elements
         List<Integer> smallerArray = Arrays.asList(1, 2);
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsAll(expectedList, smallerArray);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertContainsAll(expectedList, smallerArray));
 
         // Test with empty iterable - should always pass (vacuous truth)
         Iterable<Integer> emptyIterable = IterableTestUtils.empty();
         assertContainsAll(emptyIterable, actualArray);
-        assertContainsAll(emptyIterable, Arrays.asList());
+        assertContainsAll(emptyIterable, List.of());
     }
 
     /// Tests assertion behavior with duplicate elements.
@@ -252,17 +219,13 @@ public class AssertContainsAllTest {
 
         // Should fail - actual doesn't contain null
         List<Integer> actualWithoutNull = Arrays.asList(1, 2, 3, 4);
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsAll(expectedWithNull, actualWithoutNull);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertContainsAll(expectedWithNull, actualWithoutNull));
 
         // Test arrays with null elements converted to lists
         List<Integer> arrayWithNull = Arrays.asList(1, null, 3);
         assertContainsAll(arrayWithNull, actualWithNull);
 
-        assertThrows(AssertionFailedError.class, () -> {
-            assertContainsAll(arrayWithNull, actualWithoutNull);
-        });
+        assertThrows(AssertionFailedError.class, () -> assertContainsAll(arrayWithNull, actualWithoutNull));
     }
 
     /// Tests error message content and structure.
@@ -274,9 +237,8 @@ public class AssertContainsAllTest {
         List<Integer> expected = Arrays.asList(1, 2, 3, 4, 5);
         List<Integer> actual = Arrays.asList(1, 3, 5);
 
-        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> {
-            assertContainsAll(expected, actual);
-        });
+        AssertionFailedError error = assertThrows(AssertionFailedError.class,
+                () -> assertContainsAll(expected, actual));
 
         // Verify the error message contains information about missing elements
         String errorMessage = error.getMessage();

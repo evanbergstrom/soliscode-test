@@ -135,9 +135,7 @@ public class ShortProviderTest extends AbstractTest {
     @Test
     @DisplayName("Test copyInstance method with null input")
     public void testCopyInstanceWithNull() {
-        assertThrows(NullPointerException.class, () -> {
-            provider.copyInstance(null);
-        });
+        assertThrows(NullPointerException.class, () -> provider.copyInstance(null));
     }
 
     /// Test the uniqueSizeLimit method returns Integer.MAX_VALUE.
@@ -310,9 +308,7 @@ public class ShortProviderTest extends AbstractTest {
             }
         };
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            limitedProvider.createUniqueInstances(10);
-        });
+        assertThrows(IllegalArgumentException.class, () -> limitedProvider.createUniqueInstances(10));
     }
 
     /// Test createRandoInstances method produces valid instances.
@@ -388,43 +384,37 @@ public class ShortProviderTest extends AbstractTest {
     public void testCreateValueOutOfRange() {
         // Test values greater than Short.MAX_VALUE
         long tooLarge = Short.MAX_VALUE + 1L;
-        IllegalArgumentException largeLongException = assertThrows(IllegalArgumentException.class, () -> {
-            provider.createValue(tooLarge);
-        });
+        IllegalArgumentException largeLongException = assertThrows(IllegalArgumentException.class,
+                () -> provider.createValue(tooLarge));
         assertTrue(largeLongException.getMessage().contains("value (" + tooLarge + ") is not a valid Short value"));
 
         // Test much larger values
         long veryLarge = Integer.MAX_VALUE;
-        IllegalArgumentException veryLargeException = assertThrows(IllegalArgumentException.class, () -> {
-            provider.createValue(veryLarge);
-        });
+        IllegalArgumentException veryLargeException = assertThrows(IllegalArgumentException.class,
+                () -> provider.createValue(veryLarge));
         assertTrue(veryLargeException.getMessage().contains("value (" + veryLarge + ") is not a valid Short value"));
 
         // Test values less than Short.MIN_VALUE
         long tooSmall = Short.MIN_VALUE - 1L;
-        IllegalArgumentException smallLongException = assertThrows(IllegalArgumentException.class, () -> {
-            provider.createValue(tooSmall);
-        });
+        IllegalArgumentException smallLongException = assertThrows(IllegalArgumentException.class,
+                () -> provider.createValue(tooSmall));
         assertTrue(smallLongException.getMessage().contains("value (" + tooSmall + ") is not a valid Short value"));
 
         // Test much smaller values
         long verySmall = Integer.MIN_VALUE;
-        IllegalArgumentException verySmallException = assertThrows(IllegalArgumentException.class, () -> {
-            provider.createValue(verySmall);
-        });
+        IllegalArgumentException verySmallException = assertThrows(IllegalArgumentException.class,
+                () -> provider.createValue(verySmall));
         assertTrue(verySmallException.getMessage().contains("value (" + verySmall + ") is not a valid Short value"));
 
         // Test extreme boundary values
         long maxLong = Long.MAX_VALUE;
-        IllegalArgumentException maxLongException = assertThrows(IllegalArgumentException.class, () -> {
-            provider.createValue(maxLong);
-        });
+        IllegalArgumentException maxLongException = assertThrows(IllegalArgumentException.class,
+                () -> provider.createValue(maxLong));
         assertTrue(maxLongException.getMessage().contains("value (" + maxLong + ") is not a valid Short value"));
 
         long minLong = Long.MIN_VALUE;
-        IllegalArgumentException minLongException = assertThrows(IllegalArgumentException.class, () -> {
-            provider.createValue(minLong);
-        });
+        IllegalArgumentException minLongException = assertThrows(IllegalArgumentException.class,
+                () -> provider.createValue(minLong));
         assertTrue(minLongException.getMessage().contains("value (" + minLong + ") is not a valid Short value"));
     }
 
@@ -545,9 +535,9 @@ public class ShortProviderTest extends AbstractTest {
 
         // Test conversions preserve the values correctly
         assertEquals(Short.MAX_VALUE, maxInt.shortValue());
-        assertEquals((long) Short.MAX_VALUE, maxInt.longValue());
+        assertEquals(Short.MAX_VALUE, maxInt.longValue());
         assertEquals(Short.MIN_VALUE, minInt.shortValue());
-        assertEquals((long) Short.MIN_VALUE, minInt.longValue());
+        assertEquals(Short.MIN_VALUE, minInt.longValue());
 
         // Test that double conversion is exact for integer values
         assertEquals(Short.MAX_VALUE, maxInt.doubleValue(), 0.0);

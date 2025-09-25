@@ -29,7 +29,7 @@ public class StringProviderTest extends AbstractTest {
     @DisplayName("Test defaultInstance method")
     public void testDefaultInstance() {
         String defaultValue = provider.defaultInstance();
-        
+
         assertNotNull(defaultValue);
         assertEquals("", defaultValue);
         assertTrue(defaultValue.isEmpty());
@@ -42,7 +42,7 @@ public class StringProviderTest extends AbstractTest {
     @DisplayName("Test createInstance(long) method with various seeds")
     public void testCreateInstanceWithSeed(long seed) {
         String result = provider.createInstance(seed);
-        
+
         assertNotNull(result);
         assertEquals(String.valueOf(seed), result);
         assertEquals(Long.toString(seed), result);
@@ -53,7 +53,7 @@ public class StringProviderTest extends AbstractTest {
     @DisplayName("Test no-argument createInstance method")
     public void testCreateInstanceNoArgs() {
         String result = provider.createInstance();
-        
+
         assertNotNull(result);
         assertEquals("0", result);
         assertEquals(String.valueOf(0L), result);
@@ -66,7 +66,7 @@ public class StringProviderTest extends AbstractTest {
     @DisplayName("Test copyInstance method with various string values")
     public void testCopyInstance(String value) {
         String copy = provider.copyInstance(value);
-        
+
         assertNotNull(copy);
         assertEquals(value, copy);
         // Test string immutability - should be the same reference
@@ -79,9 +79,7 @@ public class StringProviderTest extends AbstractTest {
     @Test
     @DisplayName("Test copyInstance method with null input")
     public void testCopyInstanceWithNull() {
-        assertThrows(NullPointerException.class, () -> {
-            provider.copyInstance(null);
-        });
+        assertThrows(NullPointerException.class, () -> provider.copyInstance(null));
     }
 
     /// Test the uniqueSizeLimit method returns Long.MAX_VALUE.
@@ -99,19 +97,19 @@ public class StringProviderTest extends AbstractTest {
     @DisplayName("Test equalInstanceSupplier method")
     public void testEqualInstanceSupplier() {
         Supplier<String> supplier = provider.equalInstanceSupplier();
-        
+
         String first = supplier.get();
         String second = supplier.get();
         String third = supplier.get();
-        
+
         assertNotNull(first);
         assertNotNull(second);
         assertNotNull(third);
-        
+
         assertEquals(first, second);
         assertEquals(second, third);
         assertEquals(first, third);
-        
+
         assertEquals(first.hashCode(), second.hashCode());
         assertEquals(second.hashCode(), third.hashCode());
     }
@@ -121,19 +119,19 @@ public class StringProviderTest extends AbstractTest {
     @DisplayName("Test uniqueInstanceSupplier method")
     public void testUniqueInstanceSupplier() {
         Supplier<String> supplier = provider.uniqueInstanceSupplier();
-        
+
         String first = supplier.get();   // seed 0
         String second = supplier.get();  // seed 1
         String third = supplier.get();   // seed 2
-        
+
         assertNotNull(first);
         assertNotNull(second);
         assertNotNull(third);
-        
+
         assertNotEquals(first, second);
         assertNotEquals(second, third);
         assertNotEquals(first, third);
-        
+
         assertEquals("0", first);
         assertEquals("1", second);
         assertEquals("2", third);
@@ -144,11 +142,11 @@ public class StringProviderTest extends AbstractTest {
     @DisplayName("Test uniqueInstanceSupplier method with custom seed")
     public void testUniqueInstanceSupplierWithSeed() {
         Supplier<String> supplier = provider.uniqueInstanceSupplier(10L);
-        
+
         String first = supplier.get();   // seed 10
         String second = supplier.get();  // seed 11
         String third = supplier.get();   // seed 12
-        
+
         assertEquals("10", first);
         assertEquals("11", second);
         assertEquals("12", third);
@@ -159,15 +157,15 @@ public class StringProviderTest extends AbstractTest {
     @DisplayName("Test randomInstanceSupplier method")
     public void testRandomInstanceSupplier() {
         Supplier<String> supplier = provider.randomInstanceSupplier();
-        
+
         String first = supplier.get();
         String second = supplier.get();
         String third = supplier.get();
-        
+
         assertNotNull(first);
         assertNotNull(second);
         assertNotNull(third);
-        
+
         // Random instances should be valid string representations of numbers
         assertDoesNotThrow(() -> Long.parseLong(first));
         assertDoesNotThrow(() -> Long.parseLong(second));
@@ -183,10 +181,10 @@ public class StringProviderTest extends AbstractTest {
     @DisplayName("Test createEqualObjects method")
     public void testCreateEqualObjects(int size) {
         List<String> objects = provider.createEqualObjects(size);
-        
+
         assertNotNull(objects);
         assertEquals(size, objects.size());
-        
+
         if (size > 0) {
             String first = objects.getFirst();
             for (String obj : objects) {
@@ -203,17 +201,17 @@ public class StringProviderTest extends AbstractTest {
     @DisplayName("Test createUniqueInstances method")
     public void testCreateUniqueInstances(int size) {
         List<String> instances = provider.createUniqueInstances(size);
-        
+
         assertNotNull(instances);
         assertEquals(size, instances.size());
-        
+
         // Check that all instances are unique
         for (int i = 0; i < instances.size(); i++) {
             for (int j = i + 1; j < instances.size(); j++) {
                 assertNotEquals(instances.get(i), instances.get(j));
             }
         }
-        
+
         // Check that values follow the expected pattern (seed-based)
         for (int i = 0; i < instances.size(); i++) {
             assertEquals(String.valueOf(i), instances.get(i));
@@ -227,10 +225,10 @@ public class StringProviderTest extends AbstractTest {
         int size = 5;
         long seed = 10L;
         List<String> instances = provider.createUniqueInstances(size, seed);
-        
+
         assertNotNull(instances);
         assertEquals(size, instances.size());
-        
+
         // Check that values follow the expected pattern starting from seed
         for (int i = 0; i < instances.size(); i++) {
             assertEquals(String.valueOf(seed + i), instances.get(i));
@@ -248,10 +246,8 @@ public class StringProviderTest extends AbstractTest {
                 return 5;
             }
         };
-        
-        assertThrows(IllegalArgumentException.class, () -> {
-            limitedProvider.createUniqueInstances(10);
-        });
+
+        assertThrows(IllegalArgumentException.class, () -> limitedProvider.createUniqueInstances(10));
     }
 
     /// Test createRandomInstances method produces valid instances.
@@ -261,10 +257,10 @@ public class StringProviderTest extends AbstractTest {
     @DisplayName("Test createRandomInstances method")
     public void testCreateRandomInstances(int size) {
         List<String> instances = provider.createRandomInstances(size);
-        
+
         assertNotNull(instances);
         assertEquals(size, instances.size());
-        
+
         // All instances should be valid string representations of numbers
         for (String instance : instances) {
             assertNotNull(instance);
@@ -280,7 +276,7 @@ public class StringProviderTest extends AbstractTest {
     public void testDefaultInstanceConsistency() {
         String defaultValue = provider.defaultInstance();
         String zeroValue = provider.createInstance(0L);
-        
+
         // These should NOT be equal - defaultInstance returns "" while createInstance(0) returns "0"
         assertNotEquals(defaultValue, zeroValue);
         assertEquals("", defaultValue);
@@ -293,7 +289,7 @@ public class StringProviderTest extends AbstractTest {
     public void testCreateInstanceConsistency() {
         String first = provider.createInstance(42L);
         String second = provider.createInstance(42L);
-        
+
         assertEquals(first, second);
         assertEquals("42", first);
         assertEquals("42", second);
@@ -305,7 +301,7 @@ public class StringProviderTest extends AbstractTest {
     public void testCopyInstanceConsistency() {
         String original = "test string";
         String copy = provider.copyInstance(original);
-        
+
         assertEquals(original, copy);
         assertSame(original, copy); // String immutability
     }
@@ -321,18 +317,18 @@ public class StringProviderTest extends AbstractTest {
         assertNotNull(maxLong);
         assertEquals(String.valueOf(Long.MAX_VALUE), maxLong);
         assertEquals("9223372036854775807", maxLong);
-        
+
         // Test minimum long value
         String minLong = provider.createInstance(Long.MIN_VALUE);
         assertNotNull(minLong);
         assertEquals(String.valueOf(Long.MIN_VALUE), minLong);
         assertEquals("-9223372036854775808", minLong);
-        
+
         // Test zero
         String zero = provider.createInstance(0L);
         assertNotNull(zero);
         assertEquals("0", zero);
-        
+
         // Test boundary values near zero
         String positiveOne = provider.createInstance(1L);
         String negativeOne = provider.createInstance(-1L);
@@ -348,20 +344,20 @@ public class StringProviderTest extends AbstractTest {
         String empty = provider.defaultInstance();
         assertTrue(empty.isEmpty());
         assertEquals(0, empty.length());
-        
+
         // Test positive number string
         String positive = provider.createInstance(123L);
         assertFalse(positive.isEmpty());
         assertEquals(3, positive.length());
         assertTrue(positive.matches("\\d+"));
-        
+
         // Test negative number string
         String negative = provider.createInstance(-456L);
         assertFalse(negative.isEmpty());
         assertEquals(4, negative.length()); // includes the minus sign
         assertTrue(negative.matches("-\\d+"));
         assertTrue(negative.startsWith("-"));
-        
+
         // Test zero string
         String zero = provider.createInstance(0L);
         assertEquals(1, zero.length());
@@ -374,32 +370,31 @@ public class StringProviderTest extends AbstractTest {
     public void testStringImmutability() {
         String original = "immutable test";
         String copy = provider.copyInstance(original);
-        
+
         // Should be the exact same reference due to string immutability
         assertSame(original, copy);
         assertEquals(original, copy);
-        
+
         // Test with different strings to ensure they're properly handled
         String first = provider.createInstance(100L);
         String second = provider.createInstance(100L);
         assertEquals(first, second);
         // Note: String.valueOf may or may not return the same reference for numbers
-        
+
         String copied = provider.copyInstance(first);
         assertSame(first, copied);
     }
 
     /// Test that the provider follows all interface contracts properly.
-    @SuppressWarnings("UnnecessaryLocalVariable")
     @Test
     @DisplayName("Test provider interface contracts")
     public void testProviderContracts() {
         // Test that the provider implements the expected interface
         assertInstanceOf(ObjectProvider.class, provider);
-        
+
         // Test that generic type parameter is correctly specified
         ObjectProvider<String> objectProvider = provider;
-        
+
         assertNotNull(objectProvider.defaultInstance());
         assertNotNull(objectProvider.createInstance(42L));
         assertNotNull(objectProvider.copyInstance("test"));
@@ -410,9 +405,9 @@ public class StringProviderTest extends AbstractTest {
     @DisplayName("Test number parsing consistency")
     public void testNumberParsingConsistency() {
         // Test that created strings can be parsed back to the original numbers
-        long[] testValues = {0L, 1L, -1L, 42L, -42L, 1000L, -1000L, 
+        long[] testValues = {0L, 1L, -1L, 42L, -42L, 1000L, -1000L,
                             Long.MAX_VALUE, Long.MIN_VALUE};
-        
+
         for (long value : testValues) {
             String stringValue = provider.createInstance(value);
             long parsedValue = Long.parseLong(stringValue);
@@ -429,11 +424,11 @@ public class StringProviderTest extends AbstractTest {
             String result = provider.createInstance(i);
             assertNotNull(result);
             assertFalse(result.isEmpty());
-            
+
             // Should be parseable as a long
             long parsed = Long.parseLong(result);
             assertEquals(i, parsed);
-            
+
             // Should not contain any whitespace or special characters (except minus for negatives)
             if (i >= 0) {
                 assertTrue(result.matches("\\d+"));
@@ -451,12 +446,12 @@ public class StringProviderTest extends AbstractTest {
         String value1 = provider.createInstance(100L);
         String value2 = provider.createInstance(100L);
         String copied = provider.copyInstance(value1);
-        
+
         assertEquals(value1, value2);
         assertEquals(value1, copied);
         assertEquals(value1.hashCode(), value2.hashCode());
         assertEquals(value1.hashCode(), copied.hashCode());
-        
+
         // Test that different values have different content
         String different = provider.createInstance(200L);
         assertNotEquals(value1, different);
@@ -473,22 +468,22 @@ public class StringProviderTest extends AbstractTest {
         assertEquals("", empty);
         assertTrue(empty.isEmpty());
         assertEquals(0, empty.length());
-        
+
         // Test copy of empty string
         String emptyCopy = provider.copyInstance(empty);
         assertSame(empty, emptyCopy);
         assertEquals(empty, emptyCopy);
-        
+
         // Test single character strings
         String zero = provider.createInstance(0L);
         assertEquals("0", zero);
         assertEquals(1, zero.length());
-        
+
         // Test large number string
         String large = provider.createInstance(Long.MAX_VALUE);
         assertEquals("9223372036854775807", large);
         assertEquals(19, large.length());
-        
+
         // Test negative number string
         String negative = provider.createInstance(Long.MIN_VALUE);
         assertEquals("-9223372036854775808", negative);

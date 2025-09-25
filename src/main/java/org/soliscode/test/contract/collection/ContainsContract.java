@@ -56,7 +56,6 @@ public interface ContainsContract<E, C extends Collection<E>> extends Collection
     /**
      * Tests that the {@code contains()} method works for a collection with null elements.
      */
-    @SuppressWarnings("DataFlowIssue")
     @Test
     default void testContainsOnCollectionWithNulls() {
         List<E> values = elementProvider().createUniqueInstances(2);

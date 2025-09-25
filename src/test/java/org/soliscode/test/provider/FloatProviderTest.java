@@ -161,9 +161,7 @@ public class FloatProviderTest extends AbstractTest {
     @Test
     @DisplayName("Test copyInstance method with null input")
     public void testCopyInstanceWithNull() {
-        assertThrows(NullPointerException.class, () -> {
-            provider.copyInstance(null);
-        });
+        assertThrows(NullPointerException.class, () -> provider.copyInstance(null));
     }
 
     /// Test the uniqueSizeLimit method returns Integer.MAX_VALUE.
@@ -335,9 +333,7 @@ public class FloatProviderTest extends AbstractTest {
             }
         };
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            limitedProvider.createUniqueInstances(10);
-        });
+        assertThrows(IllegalArgumentException.class, () -> limitedProvider.createUniqueInstances(10));
     }
 
     /// Test createRandoInstances method produces valid instances.
@@ -397,6 +393,7 @@ public class FloatProviderTest extends AbstractTest {
     // Edge case tests
 
     /// Test behavior with extreme values and special cases.
+    @SuppressWarnings("WrapperTypeMayBePrimitive")
     @Test
     @DisplayName("Test edge cases with special Float values")
     public void testSpecialFloatValues() {

@@ -8,9 +8,14 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.soliscode.test.assertions.Assertions.assertThrowsDifferent;
-import static org.soliscode.test.assertions.collection.CollectionAssertions.*;
+import static org.soliscode.test.assertions.collection.CollectionAssertions.assertContainsSame;
+import static org.soliscode.test.assertions.collection.CollectionAssertions.assertEquals;
 import static org.soliscode.test.breakable.BreakableIterator.*;
 
 /// Tests for the `BreakableIterator` class. These tests determine if the breaks supported by this class result in the

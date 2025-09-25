@@ -156,8 +156,8 @@ public final class CollectionTestUtils {
 
             @Override
             public boolean equals(final Object obj) {
-                if (obj instanceof PreventNullsCollection<?> other) {
-                    return collection.equals(other.collection);
+                if (obj instanceof PreventNullsCollection<?>(Collection<?> collection1)) {
+                    return collection.equals(collection1);
                 } else {
                     return false;
                 }
@@ -328,8 +328,8 @@ public final class CollectionTestUtils {
             public boolean equals(final Object obj) {
                 if (obj == this) {
                     return true;
-                } else if (obj instanceof PreventNullsList<?> other) {
-                    return list.equals(other.list);
+                } else if (obj instanceof PreventNullsList<?>(List<?> list1)) {
+                    return list.equals(list1);
                 } else {
                     return false;
                 }

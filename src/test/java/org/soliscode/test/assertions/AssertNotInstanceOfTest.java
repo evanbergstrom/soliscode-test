@@ -24,7 +24,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.soliscode.test.assertions.Assertions.*;
+import static org.soliscode.test.assertions.Assertions.assertNotInstanceOf;
 
 /// Test class for `AssertNotInstanceOf` assertion methods.
 /// This class provides comprehensive test coverage for the AssertNotInstanceOf functionality,
@@ -43,6 +43,7 @@ import static org.soliscode.test.assertions.Assertions.*;
 ///
 /// @author evanbergstrom
 /// @since 1.0.0
+@SuppressWarnings("DataFlowIssue")
 class AssertNotInstanceOfTest {
 
     @Test

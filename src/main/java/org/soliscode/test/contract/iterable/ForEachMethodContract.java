@@ -18,7 +18,9 @@ package org.soliscode.test.contract.iterable;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.soliscode.test.assertions.actions.*;
+import org.soliscode.test.assertions.actions.AssertActions;
+import org.soliscode.test.assertions.actions.AssertConsumeCount;
+import org.soliscode.test.assertions.actions.AssertConsumeExactly;
 import org.soliscode.test.contract.support.CollectionContractSupport;
 import org.soliscode.test.provider.CollectionProvider;
 

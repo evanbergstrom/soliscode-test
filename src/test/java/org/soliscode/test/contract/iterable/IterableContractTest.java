@@ -1,11 +1,12 @@
-package org.soliscode.test.contract;
+package org.soliscode.test.contract.iterable;
 
 import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.*;
 import org.soliscode.test.AbstractTest;
 import org.soliscode.test.breakable.Break;
 import org.soliscode.test.breakable.BreakableIterable;
-import org.soliscode.test.contract.iterable.IterableContract;
+import org.soliscode.test.contract.ContractTest;
+import org.soliscode.test.contract.DynamicContract;
 import org.soliscode.test.contract.support.WithIntegerElement;
 
 import java.util.Arrays;

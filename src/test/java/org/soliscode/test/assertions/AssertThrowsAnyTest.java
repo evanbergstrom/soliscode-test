@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.soliscode.test.assertions.Assertions.*;
+import static org.soliscode.test.assertions.Assertions.assertThrowsAny;
 
 /// Test class for `AssertThrowsAny` assertion methods.
 /// This class provides comprehensive test coverage for the AssertThrowsAny functionality,
@@ -101,11 +101,10 @@ class AssertThrowsAnyTest {
                 NullPointerException.class
         );
 
-        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> {
-            assertThrowsAny(expectedTypes, () -> {
-                throw new IllegalStateException("Wrong exception type");
-            });
-        });
+        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> assertThrowsAny(expectedTypes,
+                () -> {
+                    throw new IllegalStateException("Wrong exception type");
+                }));
 
         assertNotNull(error);
         assertNotNull(error.getExpected());
@@ -120,11 +119,10 @@ class AssertThrowsAnyTest {
                 RuntimeException.class
         );
 
-        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> {
-            assertThrowsAny(expectedTypes, () -> {
-                // No exception thrown
-            });
-        });
+        AssertionFailedError error = assertThrows(AssertionFailedError.class,
+                () -> assertThrowsAny(expectedTypes, () -> {
+            // No exception thrown
+        }));
 
         assertNotNull(error);
         assertTrue(error.getMessage().contains("nothing was thrown"));
@@ -156,11 +154,10 @@ class AssertThrowsAnyTest {
         );
         String customMessage = "Expected validation exceptions only";
 
-        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> {
-            assertThrowsAny(expectedTypes, () -> {
-                throw new IllegalStateException("Wrong type");
-            }, customMessage);
-        });
+        AssertionFailedError error = assertThrows(AssertionFailedError.class,
+                () -> assertThrowsAny(expectedTypes, () -> {
+            throw new IllegalStateException("Wrong type");
+        }, customMessage));
 
         assertNotNull(error);
         assertTrue(error.getMessage().startsWith(customMessage));
@@ -177,11 +174,9 @@ class AssertThrowsAnyTest {
             throw new IllegalArgumentException("Test");
         }, (String) null);
 
-        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> {
-            assertThrowsAny(expectedTypes, () -> {
-                throw new IllegalStateException("Wrong type");
-            }, (String) null);
-        });
+        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> assertThrowsAny(expectedTypes, () -> {
+            throw new IllegalStateException("Wrong type");
+        }, (String) null));
         assertNotNull(error);
     }
 
@@ -211,11 +206,10 @@ class AssertThrowsAnyTest {
         );
         String suppliedMessage = "Expected specific validation exceptions";
 
-        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> {
-            assertThrowsAny(expectedTypes, () -> {
-                throw new IllegalStateException("Wrong type");
-            }, () -> suppliedMessage);
-        });
+        AssertionFailedError error = assertThrows(AssertionFailedError.class,
+                () -> assertThrowsAny(expectedTypes, () -> {
+            throw new IllegalStateException("Wrong type");
+        }, () -> suppliedMessage));
 
         assertNotNull(error);
         assertTrue(error.getMessage().startsWith(suppliedMessage));
@@ -240,14 +234,12 @@ class AssertThrowsAnyTest {
         assertEquals(0, callCount.get());
 
         // Failing case - supplier should be called
-        assertThrows(AssertionFailedError.class, () -> {
-            assertThrowsAny(expectedTypes, () -> {
-                throw new IllegalStateException("Wrong type");
-            }, () -> {
-                callCount.incrementAndGet();
-                return "Should be called";
-            });
-        });
+        assertThrows(AssertionFailedError.class, () -> assertThrowsAny(expectedTypes, () -> {
+            throw new IllegalStateException("Wrong type");
+        }, () -> {
+            callCount.incrementAndGet();
+            return "Should be called";
+        }));
         assertEquals(1, callCount.get());
     }
 
@@ -262,11 +254,10 @@ class AssertThrowsAnyTest {
             throw new RuntimeException("Test");
         }, (java.util.function.Supplier<String>) null);
 
-        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> {
-            assertThrowsAny(expectedTypes, () -> {
-                throw new IOException("Wrong type");
-            }, (java.util.function.Supplier<String>) null);
-        });
+        AssertionFailedError error = assertThrows(AssertionFailedError.class,
+                () -> assertThrowsAny(expectedTypes, () -> {
+            throw new IOException("Wrong type");
+        }, (java.util.function.Supplier<String>) null));
         assertNotNull(error);
     }
 
@@ -275,23 +266,17 @@ class AssertThrowsAnyTest {
     @DisplayName("assertThrowsAny handles null expected types collection")
     void testAssertThrowsAnyWithNullExpectedTypes() {
         // The method will throw an NPE when trying to iterate the null collection
-        assertThrows(NullPointerException.class, () -> {
-            assertThrowsAny(null, () -> {
-                throw new RuntimeException();
-            });
-        });
+        assertThrows(NullPointerException.class, () -> assertThrowsAny(null, () -> {
+            throw new RuntimeException();
+        }));
 
-        assertThrows(NullPointerException.class, () -> {
-            assertThrowsAny(null, () -> {
-                throw new RuntimeException();
-            }, "Custom message");
-        });
+        assertThrows(NullPointerException.class, () -> assertThrowsAny(null, () -> {
+            throw new RuntimeException();
+        }, "Custom message"));
 
-        assertThrows(NullPointerException.class, () -> {
-            assertThrowsAny(null, () -> {
-                throw new RuntimeException();
-            }, () -> "Supplied message");
-        });
+        assertThrows(NullPointerException.class, () -> assertThrowsAny(null, () -> {
+            throw new RuntimeException();
+        }, () -> "Supplied message"));
     }
 
     @Test
@@ -305,11 +290,9 @@ class AssertThrowsAnyTest {
             throw new IllegalArgumentException("Single type test");
         });
 
-        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> {
-            assertThrowsAny(singleType, () -> {
-                throw new IllegalStateException("Wrong single type");
-            });
-        });
+        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> assertThrowsAny(singleType, () -> {
+            throw new IllegalStateException("Wrong single type");
+        }));
         assertNotNull(error);
     }
 
@@ -319,19 +302,15 @@ class AssertThrowsAnyTest {
         Collection<Class<? extends Throwable>> emptyTypes = List.of();
 
         // Any exception should fail when no types are expected
-        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> {
-            assertThrowsAny(emptyTypes, () -> {
-                throw new RuntimeException("Any exception");
-            });
-        });
+        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> assertThrowsAny(emptyTypes, () -> {
+            throw new RuntimeException("Any exception");
+        }));
         assertNotNull(error);
 
         // No exception should also fail
-        AssertionFailedError error2 = assertThrows(AssertionFailedError.class, () -> {
-            assertThrowsAny(emptyTypes, () -> {
-                // No exception
-            });
-        });
+        AssertionFailedError error2 = assertThrows(AssertionFailedError.class, () -> assertThrowsAny(emptyTypes, () -> {
+            // No exception
+        }));
         assertNotNull(error2);
     }
 
@@ -351,11 +330,9 @@ class AssertThrowsAnyTest {
             throw new OutOfMemoryError("Test OOM error");
         });
 
-        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> {
-            assertThrowsAny(errorTypes, () -> {
-                throw new RuntimeException("Not an error");
-            });
-        });
+        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> assertThrowsAny(errorTypes, () -> {
+            throw new RuntimeException("Not an error");
+        }));
         assertNotNull(error);
     }
 
@@ -367,11 +344,9 @@ class AssertThrowsAnyTest {
                 NullPointerException.class
         );
 
-        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> {
-            assertThrowsAny(expectedTypes, () -> {
-                throw new IllegalStateException("Wrong type");
-            }, "Custom error message");
-        });
+        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> assertThrowsAny(expectedTypes, () -> {
+            throw new IllegalStateException("Wrong type");
+        }, "Custom error message"));
 
         assertNotNull(error);
         assertTrue(error.getMessage().startsWith("Custom error message"));

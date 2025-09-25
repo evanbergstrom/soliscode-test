@@ -229,7 +229,7 @@ public class AssertConsumeNoneTest implements UsesCollections {
         // Create a large list
         List<Integer> largeList = listOf();
         for (int i = 0; i < 1000; i++) {
-            ((java.util.List<Integer>) largeList).add(i);
+            largeList.add(i);
         }
 
         // Should fail immediately on first element, regardless of size

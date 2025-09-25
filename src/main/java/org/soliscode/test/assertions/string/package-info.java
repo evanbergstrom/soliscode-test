@@ -185,8 +185,8 @@
 /// ```java
 /// // Verify deployment pipeline execution
 /// List<String> deploymentSteps = List.of("build", "test", "security_scan", "deploy");
-/// String cicdLog = getCICDPipelineLog();
-/// assertStringContainsInOrder(deploymentSteps, cicdLog,
+/// String pipelineLog = getCICDPipelineLog();
+/// assertStringContainsInOrder(deploymentSteps, pipelineLog,
 ///     () -> "Deployment validation failed: " + getDeploymentDiagnostics());
 /// ```
 ///

@@ -80,7 +80,7 @@ public class AssertConsumeCount<T> implements Consumer<T>, CheckableAction {
     }
 
     /**
-     * Rreturns the number of abjects that have been accepted by the consumer.
+     * Returns the number of abjects that have been accepted by the consumer.
      * @return the number of objects accepted.
      */
     public int accepted() {
