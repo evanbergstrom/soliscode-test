@@ -5,6 +5,7 @@ import org.soliscode.test.contract.CollectionMethods;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -18,7 +19,7 @@ import java.util.Set;
 /// ## Core Functionality
 ///
 /// As a Set implementation, this class enforces unique element constraints by default but
-/// can be configured to break this fundamental set contract through the `SET_ALLOWS_DUPLICATE_ELEMENTS`
+/// can be configured to break this fundamental set contract through the `ADD_RETURNS_TRUE_FOR_DUPLICATES`
 /// break. This allows testing of code that must handle corrupted or non-compliant Set instances.
 ///
 /// ### Set Semantics
@@ -31,25 +32,27 @@ import java.util.Set;
 ///
 /// ### Breakable Behavior
 ///
-/// When the `SET_ALLOWS_DUPLICATE_ELEMENTS` break is active, the set violates its
-/// fundamental contract by allowing duplicate elements to be added, creating an inconsistent
-/// state that can be used to test error handling and validation logic.
+/// When the `ADD_RETURNS_TRUE_FOR_DUPLICATES` break is active, the set violates its
+/// fundamental contract by allowing the add() method to return true for duplicate elements,
+/// creating an inconsistent state that can be used to test error handling and validation logic.
 ///
 /// ## Available Breaks
 ///
-/// ### SET_ALLOWS_DUPLICATE_ELEMENTS
-/// **Purpose**: Allows the set to accept duplicate elements, violating set semantics
-/// **Effect**: The `add()` method will add elements even if they already exist
+/// ### Uniqueness Violation Breaks
+///
+/// #### ADD_RETURNS_TRUE_FOR_DUPLICATES
+/// **Purpose**: Forces the set's add() method to return true for duplicate elements
+/// **Effect**: The `add()` method returns true even when elements already exist in the set
 /// **Use Case**: Testing code that must handle corrupted or non-compliant Set implementations
 ///
 /// ```java
 /// BreakableSet<String> set = new BreakableSet.Builder<String>()
-///     .withBreak(BreakableSet.SET_ALLOWS_DUPLICATE_ELEMENTS)
+///     .withBreak(BreakableSet.ADD_RETURNS_TRUE_FOR_DUPLICATES)
 ///     .build();
 ///
 /// set.add("element");
-/// set.add("element"); // This succeeds when break is active
-/// assertEquals(2, set.size()); // Set now contains duplicates
+/// boolean result = set.add("element"); // Returns true even for duplicate
+/// assertTrue(result); // Break causes add to return true for duplicates
 /// ```
 ///
 /// ## Builder Pattern
@@ -65,7 +68,7 @@ import java.util.Set;
 ///
 /// // Create a set with specific breaks
 /// BreakableSet<String> brokenSet = new BreakableSet.Builder<String>()
-///     .withBreak(SET_ALLOWS_DUPLICATE_ELEMENTS)
+///     .withBreak(ADD_RETURNS_TRUE_FOR_DUPLICATES)
 ///     .doesNotSupport(CollectionMethods.Remove)
 ///     .build();
 /// ```
@@ -75,7 +78,7 @@ import java.util.Set;
 /// // Create a set with custom backing collection and multiple breaks
 /// Set<String> backingSet = new HashSet<>();
 /// BreakableSet<String> customSet = new BreakableSet.Builder<>(backingSet)
-///     .withBreak(SET_ALLOWS_DUPLICATE_ELEMENTS)
+///     .withBreak(ADD_RETURNS_TRUE_FOR_DUPLICATES)
 ///     .permitsNulls(false)
 ///     .doesNotSupport(CollectionMethods.Clear)
 ///     .build();
@@ -90,7 +93,7 @@ import java.util.Set;
 /// @Test
 /// void testSetValidation() {
 ///     BreakableSet<String> corruptedSet = new BreakableSet.Builder<String>()
-///         .withBreak(SET_ALLOWS_DUPLICATE_ELEMENTS)
+///         .withBreak(ADD_RETURNS_TRUE_FOR_DUPLICATES)
 ///         .build();
 ///
 ///     corruptedSet.add("test");
@@ -125,7 +128,7 @@ import java.util.Set;
 /// @Test
 /// void testCollectionIntegration() {
 ///     BreakableSet<String> set = new BreakableSet.Builder<String>()
-///         .withBreak(SET_ALLOWS_DUPLICATE_ELEMENTS)
+///         .withBreak(ADD_RETURNS_TRUE_FOR_DUPLICATES)
 ///         .build();
 ///
 ///     set.addAll(Arrays.asList("a", "b", "a")); // Adds duplicates
@@ -159,12 +162,16 @@ import java.util.Set;
 public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
 
     /// The backing collection that stores the set elements.
-    private final Collection<E> set;
+    private final Set<E> set;
 
     /// Break that allows the set to violate uniqueness constraints by permitting duplicate elements.
     /// When this break is active, the set will accept duplicate elements, violating the fundamental
     /// Set contract that requires all elements to be unique.
-    public static final Break SET_ALLOWS_DUPLICATE_ELEMENTS = new Break("Set allows addition of duplicate elements");
+    /// 
+    /// **Purpose**: Forces `add()` method to return true for duplicate elements even when they already exist
+    /// **Effect**: Set semantics are violated, allowing multiple instances of the same element
+    /// **Use Case**: Testing code that must handle corrupted or non-compliant Set implementations
+    public static final Break ADD_RETURNS_TRUE_FOR_DUPLICATES = new Break("Add returns true for duplicates");
 
     /// Creates a new empty BreakableSet with default configuration.
     ///
@@ -176,7 +183,7 @@ public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
     /// set.add("element");
     /// ```
     public BreakableSet() {
-        this(new ArrayList<>(), new ArrayList<>(), 0);
+        this(new HashSet<>(), new ArrayList<>(), 0);
     }
 
     /// Creates a new BreakableSet as a shallow copy of another BreakableSet.
@@ -217,7 +224,7 @@ public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
     ///
     /// @param collection the backing collection to use for element storage
     /// @throws NullPointerException if collection is null
-    public BreakableSet(final @NonNull Collection<E> collection) {
+    public BreakableSet(final @NonNull Set<E> collection) {
         this(collection, new ArrayList<>(), 0);
     }
 
@@ -229,7 +236,7 @@ public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
     ///
     /// ```java
     /// Collection<String> backing = new HashSet<>();
-    /// Collection<Break> breaks = Arrays.asList(SET_ALLOWS_DUPLICATE_ELEMENTS);
+    /// Collection<Break> breaks = Arrays.asList(ADD_RETURNS_TRUE_FOR_DUPLICATES);
     /// int characteristics = Spliterator.ORDERED;
     ///
     /// BreakableSet<String> set = new BreakableSet<>(backing, breaks, characteristics);
@@ -239,7 +246,7 @@ public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
     /// @param breaks the collection of breaks to activate
     /// @param characteristics the spliterator characteristics
     /// @throws NullPointerException if set or breaks is null
-    public BreakableSet(final @NonNull Collection<E> set, final @NonNull Collection<Break> breaks,
+    public BreakableSet(final @NonNull Set<E> set, final @NonNull Collection<Break> breaks,
                         final int characteristics) {
         super(set, breaks, characteristics);
         this.set = Objects.requireNonNull(set);
@@ -249,7 +256,7 @@ public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
     /// Adds the specified element to this set if it is not already present, or if breaks allow duplicates.
     ///
     /// This method maintains proper Set semantics under normal operation by checking for element
-    /// existence before adding. However, when the `SET_ALLOWS_DUPLICATE_ELEMENTS` break is active,
+    /// existence before adding. However, when the `ADD_RETURNS_TRUE_FOR_DUPLICATES` break is active,
     /// it allows duplicate elements to be added, violating the Set contract.
     ///
     /// ### Normal Behavior
@@ -257,7 +264,7 @@ public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
     /// - Returns `false` if the element was already present
     /// - Maintains set uniqueness constraints
     ///
-    /// ### With SET_ALLOWS_DUPLICATE_ELEMENTS Break
+    /// ### With ADD_RETURNS_TRUE_FOR_DUPLICATES Break
     /// - Always attempts to add the element, even if already present
     /// - Returns the result of the backing collection's add operation
     /// - May result in duplicate elements in the set
@@ -268,7 +275,7 @@ public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
     /// assertFalse(normalSet.add("test"));  // Duplicate add fails
     ///
     /// BreakableSet<String> brokenSet = new BreakableSet.Builder<String>()
-    ///     .withBreak(SET_ALLOWS_DUPLICATE_ELEMENTS)
+    ///     .withBreak(ADD_RETURNS_TRUE_FOR_DUPLICATES)
     ///     .build();
     /// assertTrue(brokenSet.add("test"));   // First add succeeds
     /// assertTrue(brokenSet.add("test"));   // Duplicate add also succeeds
@@ -283,10 +290,10 @@ public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
     @Override
     public boolean add(final E e) {
         if (supportsMethod(CollectionMethods.Add)) {
-            if (!set.contains(e) || hasBreak(SET_ALLOWS_DUPLICATE_ELEMENTS)) {
-                return set.add(e);
+            if (set.contains(e) && hasBreak(ADD_RETURNS_TRUE_FOR_DUPLICATES)) {
+                return true;
             } else {
-                return false;
+                return set.add(e);
             }
         } else {
             throw new UnsupportedOperationException("Unsupported method: add(e)");
@@ -303,7 +310,7 @@ public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
     /// - Each element is processed individually through `add(E e)`
     /// - Returns `true` if any element was added to the set
     /// - Returns `false` if no elements were added (all were already present)
-    /// - Respects the `SET_ALLOWS_DUPLICATE_ELEMENTS` break configuration
+    /// - Respects the `ADD_RETURNS_TRUE_FOR_DUPLICATES` break configuration
     ///
     /// ### Performance Note
     /// This implementation uses streaming to process elements, which may be less efficient
@@ -319,7 +326,7 @@ public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
     ///
     /// // With breaks active
     /// BreakableSet<Integer> brokenSet = new BreakableSet.Builder<Integer>()
-    ///     .withBreak(SET_ALLOWS_DUPLICATE_ELEMENTS)
+    ///     .withBreak(ADD_RETURNS_TRUE_FOR_DUPLICATES)
     ///     .build();
     /// brokenSet.add(1);
     /// brokenSet.addAll(Arrays.asList(1, 2)); // Both elements added, including duplicate
@@ -344,7 +351,7 @@ public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
     ///
     /// For BreakableSet, this method always throws an exception when called with `true`
     /// because sets fundamentally cannot permit duplicates as part of their contract.
-    /// The duplicate behavior is controlled through the `SET_ALLOWS_DUPLICATE_ELEMENTS`
+    /// The duplicate behavior is controlled through the `ADD_RETURNS_TRUE_FOR_DUPLICATES`
     /// break mechanism instead.
     ///
     /// ### Design Rationale
@@ -359,7 +366,7 @@ public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
     ///
     /// // To allow duplicates, use the break mechanism instead:
     /// BreakableSet<String> brokenSet = new BreakableSet.Builder<String>()
-    ///     .withBreak(SET_ALLOWS_DUPLICATE_ELEMENTS)
+    ///     .withBreak(ADD_RETURNS_TRUE_FOR_DUPLICATES)
     ///     .build();
     /// ```
     ///
@@ -406,7 +413,7 @@ public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
     /// ### Set with Breaks and Restrictions
     /// ```java
     /// BreakableSet<String> brokenSet = new BreakableSet.Builder<String>()
-    ///     .withBreak(SET_ALLOWS_DUPLICATE_ELEMENTS)
+    ///     .withBreak(ADD_RETURNS_TRUE_FOR_DUPLICATES)
     ///     .doesNotSupport(CollectionMethods.Remove)
     ///     .permitsNulls(false)
     ///     .build();
@@ -415,7 +422,7 @@ public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
     /// ### Complex Configuration
     /// ```java
     /// BreakableSet<Object> complexSet = new BreakableSet.Builder<Object>()
-    ///     .withBreaks(SET_ALLOWS_DUPLICATE_ELEMENTS, COLLECTION_THROWS_ON_EMPTY)
+    ///     .withBreaks(ADD_RETURNS_TRUE_FOR_DUPLICATES, COLLECTION_THROWS_ON_EMPTY)
     ///     .doesNotSupport(CollectionMethods.Clear, CollectionMethods.RemoveAll)
     ///     .permitsIncompatibleTypes(true)
     ///     .withCharacteristics(Spliterator.ORDERED | Spliterator.DISTINCT)
@@ -452,10 +459,6 @@ public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
     public static class Builder<E>
             extends AbstractBuilder<BreakableSet.Builder<E>, BreakableSet<E>, E> {
 
-        /// The backing collection that will store the set elements.
-        /// This reference is maintained to ensure proper builder-to-set configuration transfer.
-        private final Collection<E> set;
-
         /// Creates a new builder with default configuration.
         ///
         /// This constructor initializes the builder with:
@@ -472,10 +475,8 @@ public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
         /// BreakableSet<String> set = builder.build();
         /// ```
         public Builder() {
-            // super(this.list = new HashSet<>()); <-- This will work once Flexible Constructors are available
-            super(new ArrayList<>());
-            this.set = elements;
-            this.permitsDuplicates = false;
+            super();
+            doesNotPermitDuplicates();
         }
 
         /// Creates a new builder with a custom backing set implementation.
@@ -505,12 +506,9 @@ public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
         ///
         /// @param elements the backing set implementation to use for element storage
         /// @throws NullPointerException if elements is null
-        public Builder(final @NonNull Set<E> elements) {
-            // super(this.list = Objects.requireNonNull(elements));  <-- This will work once Flexible Constructors
-            // are available
-            super(Objects.requireNonNull(elements));
-            this.set = elements;
-            this.permitsDuplicates = false;
+        public Builder(final @NonNull Collection<E> elements) {
+            super(elements);
+            doesNotPermitDuplicates();
         }
 
         /// Creates a new builder by copying configuration from another builder.
@@ -536,7 +534,7 @@ public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
         ///     .build();
         ///
         /// BreakableSet<String> brokenSet = new BreakableSet.Builder<>(baseBuilder)
-        ///     .withBreak(SET_ALLOWS_DUPLICATE_ELEMENTS)
+        ///     .withBreak(ADD_RETURNS_TRUE_FOR_DUPLICATES)
         ///     .build();
         /// ```
         ///
@@ -544,8 +542,7 @@ public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
         /// @throws NullPointerException if other is null
         public Builder(final BreakableSet.Builder<E> other) {
             super(other);
-            this.set = other.set;
-            this.permitsDuplicates = false;
+            doesNotPermitDuplicates();
         }
 
         /// Returns this builder instance for method chaining.
@@ -556,7 +553,7 @@ public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
         ///
         /// ```java
         /// BreakableSet<String> set = new BreakableSet.Builder<String>()
-        ///     .withBreak(SET_ALLOWS_DUPLICATE_ELEMENTS)  // returns BreakableSet.Builder<String>
+        ///     .withBreak(ADD_RETURNS_TRUE_FOR_DUPLICATES)  // returns BreakableSet.Builder<String>
         ///     .permitsNulls(false)                       // returns BreakableSet.Builder<String>
         ///     .build();                                  // can call set-specific methods
         /// ```
@@ -585,7 +582,7 @@ public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
         ///
         /// // Create independent copies for different configurations
         /// BreakableSet.Builder<Integer> variation1 = template.copy()
-        ///     .withBreak(SET_ALLOWS_DUPLICATE_ELEMENTS);
+        ///     .withBreak(ADD_RETURNS_TRUE_FOR_DUPLICATES);
         ///
         /// BreakableSet.Builder<Integer> variation2 = template.copy()
         ///     .doesNotSupport(CollectionMethods.Add);
@@ -617,7 +614,7 @@ public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
         ///
         /// ```java
         /// BreakableSet.Builder<String> builder = new BreakableSet.Builder<String>()
-        ///     .withBreak(SET_ALLOWS_DUPLICATE_ELEMENTS)
+        ///     .withBreak(ADD_RETURNS_TRUE_FOR_DUPLICATES)
         ///     .permitsNulls(false);
         ///
         /// // Create multiple independent sets with the same configuration
@@ -631,11 +628,11 @@ public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
         ///
         /// @return a new BreakableSet instance configured according to this builder's settings
         public BreakableSet<E> build() {
-            BreakableSet<E> broken = new BreakableSet<>(set, breaks, characteristics);
-            broken.setPermitsNulls(permitsNulls);
-            broken.setPermitsDuplicates(permitsDuplicates);
-            broken.setPermitsIncompatibleTypes(permitsIncompatibleTypes);
-            unsupportedMethods.forEach(broken::doesNotSupportMethod);
+            BreakableSet<E> broken = new BreakableSet<>(new HashSet<>(elements()), breaks(), characteristics());
+            broken.setPermitsNulls(permitsNulls());
+            broken.setPermitsDuplicates(permitsDuplicates());
+            broken.setPermitsIncompatibleTypes(permitsIncompatibleTypes());
+            unsupportedMethods().forEach(broken::doesNotSupportMethod);
             return broken;
         }
     }

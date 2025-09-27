@@ -12,22 +12,307 @@ import java.util.ListIterator;
 import java.util.Objects;
 import java.util.function.UnaryOperator;
 
-/// A list that can be broken in well-defined ways in order to test collection utilities or testing
-/// classes.
+/// **Breakable List Implementation for Testing**
 ///
-/// # Breaks
-/// In addition to the breaks for [BreakableSequencedCollection], the breaks found in [?] are also supported.
+/// This class provides a List implementation that can be programmatically broken for comprehensive
+/// testing scenarios. It extends BreakableSequencedCollection to maintain all sequence operations
+/// while adding List-specific indexed access, modification, and bulk operations that can be
+/// individually configured to fail in various ways.
 ///
-/// Builder methods are provided to make declaring a broken list easier, for example:
+/// ## Core Functionality
+///
+/// As a List implementation, this class supports all standard collection and sequence operations
+/// plus List-specific indexed operations that provide random access to elements. The class can be
+/// configured to break these List-specific contracts through targeted breaks while maintaining
+/// compatibility with the broader collection testing framework.
+///
+/// ### List Semantics
+///
+/// Under normal operation (no breaks active), BreakableList maintains proper List behavior:
+/// - **Indexed Access**: get(index) and set(index, element) provide direct element access
+/// - **Indexed Modification**: add(index, element) and remove(index) modify at specific positions
+/// - **Bulk Operations**: addAll(index, collection) and replaceAll(operator) operate on ranges
+/// - **Search Operations**: indexOf() and lastIndexOf() find element positions
+/// - **Ordering**: sort() arranges elements according to comparators
+/// - **Views**: subList() and listIterator() provide List-specific views
+///
+/// ### Breakable Behavior
+///
+/// The class introduces List-specific breaks organized into several categories:
+///
+/// ## Available Breaks
+///
+/// ### Indexed Access Breaks
+///
+/// #### GET_ALWAYS_RETURNS_NULL
+/// **Purpose**: Forces `get(index)` method to return null instead of the element at the specified index
+/// **Effect**: Violates List contract that should return actual elements
+/// **Use Case**: Testing code handling of unexpected null returns from indexed access
+///
+/// #### GET_ALWAYS_RETURNS_THE_FIRST_ELEMENT / GET_ALWAYS_RETURNS_THE_LAST_ELEMENT
+/// **Purpose**: Forces `get(index)` method to return the first or last element regardless of index
+/// **Effect**: Indexed access becomes unreliable, always returning boundary elements
+/// **Use Case**: Testing code that depends on accurate indexed access
+///
+/// #### GET_RETURNS_THE_NEXT_ELEMENT / GET_RETURNS_THE_PREVIOUS_ELEMENT
+/// **Purpose**: Forces `get(index)` method to return elements at adjacent indices (index±1)
+/// **Effect**: Indexed access has consistent offset errors
+/// **Use Case**: Testing code robustness when indices are systematically incorrect
+///
+/// #### GET_RETURNS_NULL_ON_BAD_INDEX / GET_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX
+/// **Purpose**: Forces `get(index)` to handle invalid indices incorrectly
+/// **Effect**: Wrong error handling for out-of-bounds access
+/// **Use Case**: Testing code that expects proper IndexOutOfBoundsException behavior
+///
+/// ### Indexed Modification Breaks
+///
+/// #### SET_DOES_NOT_CHANGE_THE_ELEMENT
+/// **Purpose**: Forces `set(index, element)` method to return old values without actually changing elements
+/// **Effect**: Elements remain unchanged despite successful method completion
+/// **Use Case**: Testing assumptions about set operation effectiveness
+///
+/// #### SET_ALWAYS_RETURNS_NULL
+/// **Purpose**: Forces `set(index, element)` method to return null instead of the previous element
+/// **Effect**: Violates List contract that should return replaced elements
+/// **Use Case**: Testing code handling of unexpected null returns from modification methods
+///
+/// #### SET_CHANGES_THE_NEXT_ELEMENT / SET_CHANGES_THE_PREVIOUS_ELEMENT
+/// **Purpose**: Forces `set(index, element)` method to modify adjacent elements instead of target
+/// **Effect**: Indexed modification has systematic offset errors
+/// **Use Case**: Testing code that assumes set operations target correct indices
+///
+/// #### SET_RETURNS_NULL_ON_BAD_INDEX / SET_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX
+/// **Purpose**: Forces `set(index, element)` to handle invalid indices incorrectly
+/// **Effect**: Wrong error handling for out-of-bounds modification
+/// **Use Case**: Testing code that expects proper IndexOutOfBoundsException behavior
+///
+/// ### Indexed Addition Breaks
+///
+/// #### ADD_AT_INDEX_DOES_NOT_ADD_THE_ELEMENT
+/// **Purpose**: Forces `add(index, element)` method to complete without actually adding elements
+/// **Effect**: Method completes normally but list remains unchanged
+/// **Use Case**: Testing code that assumes successful add operations modify the list
+///
+/// #### ADD_AT_INDEX_ADDS_AT_NEXT_POSITION / ADD_AT_INDEX_ADDS_AT_PREVIOUS_POSITION
+/// **Purpose**: Forces `add(index, element)` method to insert at adjacent positions
+/// **Effect**: Indexed insertion has systematic offset errors
+/// **Use Case**: Testing code that assumes add operations target correct indices
+///
+/// #### ADD_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX
+/// **Purpose**: Forces `add(index, element)` to throw wrong exceptions for invalid indices
+/// **Effect**: Wrong error handling for out-of-bounds insertion
+/// **Use Case**: Testing code that expects proper IndexOutOfBoundsException behavior
+///
+/// ### Indexed Removal Breaks
+///
+/// #### REMOVE_AT_INDEX_DOES_NOT_REMOVE_THE_ELEMENT
+/// **Purpose**: Forces `remove(index)` method to return elements without actually removing them
+/// **Effect**: Elements remain in list despite successful method completion
+/// **Use Case**: Testing assumptions about removal operation effectiveness
+///
+/// #### REMOVE_AT_INDEX_REMOVES_THE_NEXT_ELEMENT / REMOVE_AT_INDEX_REMOVES_THE_PREVIOUS_ELEMENT
+/// **Purpose**: Forces `remove(index)` method to remove adjacent elements instead of target
+/// **Effect**: Indexed removal has systematic offset errors
+/// **Use Case**: Testing code that assumes remove operations target correct indices
+///
+/// #### REMOVE_AT_INDEX_ALWAYS_RETURNS_NULL
+/// **Purpose**: Forces `remove(index)` method to return null instead of removed elements
+/// **Effect**: Violates List contract that should return removed elements
+/// **Use Case**: Testing code handling of unexpected null returns from removal methods
+///
+/// #### REMOVE_AT_INDEX_RETURNS_NULL_ON_BAD_INDEX / REMOVE_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX
+/// **Purpose**: Forces `remove(index)` to handle invalid indices incorrectly
+/// **Effect**: Wrong error handling for out-of-bounds removal
+/// **Use Case**: Testing code that expects proper IndexOutOfBoundsException behavior
+///
+/// ### Bulk Operation Breaks
+///
+/// #### ADD_ALL_AT_INDEX_DOES_NOT_ADD_ANY_ELEMENTS
+/// **Purpose**: Forces `addAll(index, collection)` method to complete without adding elements
+/// **Effect**: Method completes normally but list remains unchanged
+/// **Use Case**: Testing bulk operation failure handling
+///
+/// #### ADD_ALL_AT_INDEX_ADDS_TO_THE_END
+/// **Purpose**: Forces `addAll(index, collection)` method to ignore index and add at end
+/// **Effect**: Indexed bulk insertion becomes append operation
+/// **Use Case**: Testing code that depends on precise insertion positioning
+///
+/// #### ADD_ALL_AT_INDEX_ALWAYS_RETURNS_TRUE / ADD_ALL_AT_INDEX_ALWAYS_RETURNS_FALSE / ADD_ALL_AT_INDEX_ALWAYS_RETURNS_OPPOSITE_VALUE
+/// **Purpose**: Forces `addAll(index, collection)` method to return incorrect success indicators
+/// **Effect**: Return value doesn't match actual operation result
+/// **Use Case**: Testing code that relies on addAll return values for control flow
+///
+/// #### Exception Handling Breaks for addAll
+/// **Purpose**: Forces `addAll(index, collection)` to throw wrong exceptions for various error conditions
+/// **Effect**: Improper exception handling for invalid indices, null arguments, or unsupported operations
+/// **Use Case**: Testing exception handling robustness
+///
+/// ### Element Replacement Breaks
+///
+/// #### REPLACE_ALL_DOES_NOT_REPLACE_ELEMENTS
+/// **Purpose**: Forces `replaceAll(operator)` method to complete without replacing any elements
+/// **Effect**: Method completes normally but elements remain unchanged
+/// **Use Case**: Testing assumptions about bulk replacement effectiveness
+///
+/// #### REPLACE_ALL_SKIPS_FIRST_ELEMENT / REPLACE_ALL_SKIPS_LAST_ELEMENT
+/// **Purpose**: Forces `replaceAll(operator)` method to skip boundary elements
+/// **Effect**: Partial replacement, leaving specific elements unchanged
+/// **Use Case**: Testing handling of incomplete bulk operations
+///
+/// ### Sorting Breaks
+///
+/// #### SORT_DOES_NOT_SORT_THE_ELEMENTS
+/// **Purpose**: Forces `sort(comparator)` method to complete without sorting elements
+/// **Effect**: Method completes normally but element order remains unchanged
+/// **Use Case**: Testing assumptions about sort operation effectiveness
+///
+/// #### SORT_REVERSES_THE_ORDER
+/// **Purpose**: Forces `sort(comparator)` method to sort in reverse order
+/// **Effect**: Sorting produces opposite of expected ordering
+/// **Use Case**: Testing code that depends on specific sort ordering
+///
+/// #### SORT_THROWS_ON_NULL_ARGUMENT
+/// **Purpose**: Forces `sort(comparator)` method to throw NullPointerException for null comparator
+/// **Effect**: Rejects natural ordering that should normally be accepted
+/// **Use Case**: Testing error handling when natural ordering should be allowed
+///
+/// ## Builder Pattern Usage
+///
+/// The class provides a comprehensive Builder for constructing BreakableList instances:
+///
+/// ### Basic List Creation
 /// ```java
-///     BreakableList<Integer> broken = Breakables.buildList(1, 2)
-///         .withBreak(List.ADD_ALL_AT_INDEX_DOES_NOT_ADD_ANY_ELEMENTS)
-///         .build();
+/// BreakableList<String> list = new BreakableList.Builder<String>()
+///     .build();
 /// ```
+///
+/// ### List with Breaks
+/// ```java
+/// BreakableList<Integer> brokenList = new BreakableList.Builder<Integer>()
+///     .withBreak(GET_ALWAYS_RETURNS_NULL)
+///     .withBreak(SET_DOES_NOT_CHANGE_THE_ELEMENT)
+///     .build();
+/// ```
+///
+/// ### List with Initial Elements
+/// ```java
+/// BreakableList<String> list = new BreakableList.Builder<String>()
+///     .addElements(Arrays.asList("first", "second", "third"))
+///     .withBreak(ADD_AT_INDEX_ADDS_AT_NEXT_POSITION)
+///     .build();
+/// ```
+///
+/// ## Inheritance Support
+///
+/// This class extends BreakableSequencedCollection and supports all collection, sequence, iterator, and spliterator breaks:
+/// - Collection breaks affect standard collection operations (add, remove, contains, size, etc.)
+/// - SequencedCollection breaks affect sequence operations (addFirst, addLast, getFirst, getLast, etc.)
+/// - Iterator breaks are passed through to created iterators
+/// - Spliterator breaks affect spliterator behavior
+/// - List-specific breaks can be combined with all inherited breaks
+///
+/// ## Testing Applications
+///
+/// ### Indexed Access Testing
+/// ```java
+/// @Test
+/// void testGetIndexOffByOne() {
+///     BreakableList<String> list = new BreakableList.Builder<String>()
+///         .addElements(Arrays.asList("a", "b", "c"))
+///         .withBreak(GET_RETURNS_THE_NEXT_ELEMENT)
+///         .build();
+///     
+///     assertEquals("b", list.get(0));  // Returns next element instead
+///     assertEquals("c", list.get(1));  // Consistent offset error
+/// }
+/// ```
+///
+/// ### Indexed Modification Testing
+/// ```java
+/// @Test
+/// void testSetDoesNotModify() {
+///     BreakableList<Integer> list = new BreakableList.Builder<Integer>()
+///         .addElements(Arrays.asList(1, 2, 3))
+///         .withBreak(SET_DOES_NOT_CHANGE_THE_ELEMENT)
+///         .build();
+///     
+///     Integer old = list.set(1, 99);
+///     assertEquals(2, old);            // Returns old value
+///     assertEquals(2, list.get(1));    // But doesn't change element
+/// }
+/// ```
+///
+/// ### Bulk Operation Testing
+/// ```java
+/// @Test
+/// void testAddAllWrongPosition() {
+///     BreakableList<String> list = new BreakableList.Builder<String>()
+///         .addElements(Arrays.asList("a", "b"))
+///         .withBreak(ADD_ALL_AT_INDEX_ADDS_TO_THE_END)
+///         .build();
+///     
+///     list.addAll(0, Arrays.asList("x", "y"));
+///     
+///     assertEquals("a", list.get(0));   // Original order preserved
+///     assertEquals("b", list.get(1));   // Elements added at end instead
+///     assertEquals("x", list.get(2));   // Not at requested index
+///     assertEquals("y", list.get(3));
+/// }
+/// ```
+///
+/// ### Sorting Testing
+/// ```java
+/// @Test
+/// void testSortReverseOrder() {
+///     BreakableList<Integer> list = new BreakableList.Builder<Integer>()
+///         .addElements(Arrays.asList(3, 1, 2))
+///         .withBreak(SORT_REVERSES_THE_ORDER)
+///         .build();
+///     
+///     list.sort(Integer::compareTo);
+///     
+///     assertEquals(3, list.get(0));     // Sorted in reverse
+///     assertEquals(2, list.get(1));     // Not ascending order
+///     assertEquals(1, list.get(2));
+/// }
+/// ```
+///
+/// ## Optional Method Support
+///
+/// This class supports optional method configuration using the OptionalMethod system:
+/// - List methods can be disabled to simulate unsupported operations
+/// - UnsupportedOperationException is thrown for disabled methods
+/// - Useful for testing code that handles optional list methods
+///
+/// ## Type Safety Configuration
+///
+/// The class inherits configurable type safety from BreakableCollection:
+/// - **Null Handling**: Can be configured to accept or reject null elements
+/// - **Duplicate Handling**: Can be configured to accept or reject duplicate elements
+/// - **Type Compatibility**: Can be configured to accept or reject incompatible types
+///
+/// ## Design Considerations
+///
+/// ### Thread Safety
+/// This class is not thread-safe. The underlying List's thread safety characteristics
+/// determine the overall thread safety behavior. External synchronization is required for
+/// concurrent access.
+///
+/// ### Performance
+/// - **Normal Operations**: Performance depends on the backing List (default: ArrayList)
+/// - **Broken Operations**: May have additional overhead for break condition checking
+/// - **Memory Usage**: Minimal overhead beyond the backing List and inherited collections
+///
+/// ### Index Handling
+/// The class maintains proper index bounds checking and delegates to the underlying List
+/// implementation for all index-based operations when not broken.
+///
+/// @param <E> the type of elements maintained by this list
 /// @author evanbergstrom
-/// @param <E> The elements type for the `List`.
-/// @see CollectionMethods
 /// @since 1.0.0
+/// @see CollectionMethods
+/// @see BreakableSequencedCollection
+/// @see java.util.List
 public class BreakableList<E> extends BreakableSequencedCollection<E> implements List<E> {
 
     private final @NonNull List<E> list;
@@ -635,26 +920,21 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     public static class Builder<E>
             extends AbstractBuilder<BreakableList.Builder<E>, BreakableList<E>, E> {
 
-        private final List<E> list;
-
         /// Create a builder initialized with the default values.
         public Builder() {
             super(new ArrayList<>());
-            this.list = (ArrayList<E>) elements;
         }
 
         /// Create a builder initialized with an element store.
         /// @param elements the element store to use.
-        public Builder(final @NonNull List<E> elements) {
-            super(Objects.requireNonNull(elements));
-            this.list = elements;
+        public Builder(final @NonNull Collection<E> elements) {
+            super(new ArrayList<>(Objects.requireNonNull(elements)));
         }
 
         /// Create a builder initialized with the values copied from another builder.
         /// @param other the builder to copy the values from.
         public Builder(final BreakableList.Builder<E> other) {
             super(other);
-            this.list = other.list;
         }
 
         @Override
@@ -670,7 +950,12 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
         /// Build a BreakableList object using the values from the builder.
         /// @return a new BreakableList object.
         public BreakableList<E> build() {
-            return new BreakableList<>(list, breaks, characteristics);
+            BreakableList<E> broken =  new BreakableList<>(new ArrayList<>(elements()), breaks(), characteristics());
+            broken.setPermitsNulls(permitsNulls());
+            broken.setPermitsDuplicates(permitsDuplicates());
+            broken.setPermitsIncompatibleTypes(permitsIncompatibleTypes());
+            unsupportedMethods().forEach(broken::doesNotSupportMethod);
+            return broken;
         }
     }
 }

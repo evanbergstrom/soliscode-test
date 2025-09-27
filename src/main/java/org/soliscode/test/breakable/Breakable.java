@@ -38,6 +38,10 @@ public interface Breakable {
     /// @return The set of breaks that have ben added.
     @NonNull Set<Break> breaks();
 
+    /// Adds a break to this object.
+    /// @param aBreak the break to add.
+    void addBreak(@NonNull Break aBreak);
+
     /// Adds a set of breaks to this object.
     /// @param breaks the breaks to add.
     void addBreaks(@NonNull Collection<Break> breaks);

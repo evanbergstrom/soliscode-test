@@ -604,4 +604,13 @@ public class UncachedString implements java.io.Serializable, Comparable<Uncached
     public @NonNull String toString() {
         return value;
     }
+
+    /**
+     * Creates an instance of UncachedString with the value provided by the argument.
+     * @param value The value of the uncached string instance.
+     * @return An UncachedString instance with the supplied value.
+     */
+    public static UncachedString valueOf(final String value) {
+        return new UncachedString(value);
+    }
 }

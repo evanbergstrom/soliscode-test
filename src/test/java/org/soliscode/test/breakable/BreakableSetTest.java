@@ -9,6 +9,8 @@ import org.soliscode.test.provider.CollectionProvider;
 import org.soliscode.test.provider.FunctionalCollectionProvider;
 import org.soliscode.test.util.UsesCollections;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.soliscode.test.assertions.collection.CollectionAssertions.assertEquals;
 
@@ -177,7 +179,7 @@ public class BreakableSetTest extends AbstractTest
         return FunctionalCollectionProvider.from(
                 BreakableSet::new,
                 BreakableSet::new,
-                elements -> new BreakableSet<>(new java.util.ArrayList<>(elements)),
+                elements -> new BreakableSet<Integer>(new java.util.HashSet<>(elements)),
                 elementProvider()
         );
     }
@@ -205,62 +207,6 @@ public class BreakableSetTest extends AbstractTest
     @Override
     public boolean permitDuplicates() {
         return false;
-    }
-
-    // ========== Add Operation Tests ==========
-    //
-    // These tests focus on the add() method behavior, particularly how the
-    // SET_ALLOWS_DUPLICATE_ELEMENTS break affects standard set semantics.
-
-    /// Tests that the SET_ALLOWS_DUPLICATE_ELEMENTS break allows duplicate element addition.
-    ///
-    /// This test validates that when the SET_ALLOWS_DUPLICATE_ELEMENTS break is active,
-    /// the set violates its fundamental uniqueness contract and allows duplicate elements
-    /// to be added. This behavior is essential for testing code that must handle
-    /// corrupted or non-compliant Set implementations.
-    ///
-    /// ### Test Scenario
-    /// 1. Create a BreakableSet with initial elements {1, 2, 3}
-    /// 2. Activate the SET_ALLOWS_DUPLICATE_ELEMENTS break
-    /// 3. Attempt to add duplicate elements (2, 1, 3)
-    /// 4. Verify that all add operations return true (indicating successful additions)
-    /// 5. Confirm that the set size reflects the duplicates (6 total elements)
-    ///
-    /// ### Expected Behavior
-    /// - Normal Set: add(2) would return false, size would remain 3
-    /// - Broken Set: add(2) returns true, size increases to 6
-    ///
-    /// ### Break Validation
-    /// This test confirms that:
-    /// - The break successfully overrides normal set semantics
-    /// - Duplicate additions are accepted and reflected in size
-    /// - The add method returns true for all additions when break is active
-    /// - Set state remains consistent despite violating uniqueness
-    ///
-    /// ```java
-    /// // Normal set behavior:
-    /// Set<Integer> normalSet = Set.of(1, 2, 3);
-    /// assertFalse(normalSet.add(2));  // Would fail - element already present
-    ///
-    /// // Broken set behavior:
-    /// BreakableSet<Integer> brokenSet = createWithBreak(SET_ALLOWS_DUPLICATE_ELEMENTS);
-    /// assertTrue(brokenSet.add(2));   // Succeeds - break allows duplicates
-    /// ```
-    ///
-    /// @see BreakableSet#SET_ALLOWS_DUPLICATE_ELEMENTS
-    /// @see BreakableSet#add(Object)
-    @Test
-    @DisplayName("Test the add method with the SET_ALLOWS_DUPLICATE_ELEMENTS break")
-    public void testContainsAlwaysReturnsTrueBreak() {
-        BreakableSet<Integer> collection = Breakables.buildSet(1, 2, 3)
-                .addBreak(BreakableSet.SET_ALLOWS_DUPLICATE_ELEMENTS)
-                .build();
-
-        assertTrue(collection.add(2));
-        assertTrue(collection.add(1));
-        assertTrue(collection.add(3));
-
-        Assertions.assertEquals(6, collection.size());
     }
 
     // ========== Constructor Tests ==========
@@ -310,7 +256,8 @@ public class BreakableSetTest extends AbstractTest
     @Test
     @DisplayName("Test copy constructor")
     public void testCopyConstructor() {
-        BreakableSet<Integer> original = Breakables.buildSet(1, 2, 3)
+        BreakableSet<Integer> original = new BreakableSet.Builder<Integer>()
+                .addElements(1, 2, 3)
                 .addBreak(BreakableCollection.ADD_DOES_NOT_ADD_ELEMENT)
                 .build();
 
@@ -367,6 +314,16 @@ public class BreakableSetTest extends AbstractTest
     public void testBuilder() {
         BreakableSet<Integer> set = new BreakableSet.Builder<Integer>()
                 .addElements(1, 2, 3)
+                .addBreak(BreakableCollection.ADD_DOES_NOT_ADD_ELEMENT)
+                .build();
+
+        assertEquals(setOf(1, 2, 3), set);
+    }
+
+    @Test
+    @DisplayName("Test builder pattern")
+    public void testBuilderCollectionConstructor() {
+        BreakableSet<Integer> set = new BreakableSet.Builder<Integer>(List.of(1,2,3))
                 .addBreak(BreakableCollection.ADD_DOES_NOT_ADD_ELEMENT)
                 .build();
 

@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// @author evanbergstrom
 /// @since 1.0
 /// @see MatchEverything
-@SuppressWarnings({"EqualsWithItself", "AssertBetweenInconvertibleTypes", "EqualsBetweenInconvertibleTypes", "SimplifiableAssertion"})
+@SuppressWarnings({"EqualsWithItself", "AssertBetweenInconvertibleTypes", "EqualsBetweenInconvertibleTypes", "SimplifiableAssertion", "MisorderedAssertEqualsArguments"})
 @DisplayName("Tests for MatchEverything")
 public class MatchEverythingTest extends AbstractTest {
 
@@ -44,7 +44,7 @@ public class MatchEverythingTest extends AbstractTest {
         MatchEverything matchEverything = new MatchEverything();
 
         // Test with null
-        assertEquals(null, matchEverything);
+        assertEquals(matchEverything, null);
 
         // Test with same instance
         assertEquals(matchEverything, matchEverything);
@@ -53,12 +53,12 @@ public class MatchEverythingTest extends AbstractTest {
         assertEquals(new MatchEverything(), matchEverything);
 
         // Test with different object types
-        assertEquals("string", matchEverything);
-        assertEquals(42, matchEverything);
-        assertEquals(new Object(), matchEverything);
-        assertEquals(new ArrayList<>(), matchEverything);
-        assertEquals(Boolean.TRUE, matchEverything);
-        assertEquals(new Date(), matchEverything);
+        assertEquals(matchEverything, "string");
+        assertEquals(matchEverything, 42);
+        assertEquals(matchEverything, new Object());
+        assertEquals(matchEverything, new ArrayList<>());
+        assertEquals(matchEverything, Boolean.TRUE);
+        assertEquals(matchEverything, new Date());
     }
 
     /// Test equals with primitive wrapper types.
@@ -67,15 +67,15 @@ public class MatchEverythingTest extends AbstractTest {
     public void testEqualsWithPrimitiveWrappers() {
         MatchEverything matchEverything = new MatchEverything();
 
-        assertEquals((byte) 1, matchEverything);
-        assertEquals((short) 2, matchEverything);
-        assertEquals(3, matchEverything);
-        assertEquals(4L, matchEverything);
-        assertEquals(5.0f, matchEverything);
-        assertEquals(6.0, matchEverything);
-        assertEquals('c', matchEverything);
-        assertEquals(Boolean.TRUE, matchEverything);
-        assertEquals(Boolean.FALSE, matchEverything);
+        assertEquals(matchEverything, (byte) 1);
+        assertEquals(matchEverything, (short) 2);
+        assertEquals(matchEverything, 3);
+        assertEquals(matchEverything, 4L);
+        assertEquals(matchEverything, 5.0f);
+        assertEquals(matchEverything, 6.0);
+        assertEquals(matchEverything, 'c');
+        assertEquals(matchEverything, Boolean.TRUE);
+        assertEquals(matchEverything, Boolean.FALSE);
     }
 
     /// Test equals with collections and arrays.
@@ -85,10 +85,10 @@ public class MatchEverythingTest extends AbstractTest {
         MatchEverything matchEverything = new MatchEverything();
 
         // Test with empty collections
-        assertEquals(new ArrayList<>(), matchEverything);
-        assertEquals(new HashSet<>(), matchEverything);
-        assertEquals(new HashMap<>(), matchEverything);
-        assertEquals(new LinkedList<>(), matchEverything);
+        assertEquals(matchEverything, new ArrayList<>());
+        assertEquals(matchEverything, new HashSet<>());
+        assertEquals(matchEverything, new HashMap<>());
+        assertEquals(matchEverything, new LinkedList<>());
 
         // Test with populated collections
         List<String> list = Arrays.asList("a", "b", "c");
@@ -100,9 +100,9 @@ public class MatchEverythingTest extends AbstractTest {
         assertEquals(matchEverything, map);
 
         // Test with arrays
-        assertEquals(new int[]{1, 2, 3}, matchEverything);
-        assertEquals(new String[]{"a", "b"}, matchEverything);
-        assertEquals(new Object[0], matchEverything);
+        assertEquals(matchEverything, new int[]{1, 2, 3});
+        assertEquals(matchEverything, new String[]{"a", "b"});
+        assertEquals(matchEverything, new Object[0]);
     }
 
     /// Test equals with custom objects.
@@ -240,7 +240,7 @@ public class MatchEverythingTest extends AbstractTest {
 
         // Null handling: x.equals(null) should return false for non-null x
         // NOTE: MatchEverything violates this contract by design - it returns true for null
-        assertEquals(null, obj1); // This is the intended behavior
+        assertEquals(obj1, null); // This is the intended behavior
 
         // Hash code contract: if two objects are equal, they must have the same hash code
         assertEquals(obj1.hashCode(), obj2.hashCode());
@@ -353,8 +353,8 @@ public class MatchEverythingTest extends AbstractTest {
         // Note: This might not work as expected due to type checking in ArrayList.contains()
         // but let's test the equals method directly
         MatchEverything testObj = new MatchEverything();
-        assertEquals("string", testObj);
-        assertEquals(42, testObj);
+        assertEquals(testObj, "string");
+        assertEquals(testObj, 42);
     }
 
     // Tests for sorting behavior
@@ -424,7 +424,7 @@ public class MatchEverythingTest extends AbstractTest {
 
         // Test that behavior is consistent across many calls
         for (int i = 0; i < 1000; i++) {
-            assertEquals(new Object(), matchEverything);
+            assertEquals(matchEverything, new Object());
             assertEquals(1, matchEverything.hashCode());
             assertEquals(0, matchEverything.compareTo(new MatchEverything()));
         }

@@ -35,35 +35,235 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 
-/// A collection that can be broken in well-defined ways in order to test collection utilities or testing classes.
+/// **Breakable Collection Implementation for Testing**
 ///
-/// # Breaks
-/// The breaks that are supported for this class are listed in the description of the method that they impact.
-/// In addition it supports the breaks in the [BreakableIterable], [BreakableIterator], and [BreakableSpliterator]
-/// classes. Any iterator or spliterator breaks that are added to this iterable will be passes along to iterator or
-/// spliterator instances that are created.
+/// This class provides a Collection implementation that can be programmatically broken
+/// for comprehensive testing scenarios. It maintains standard collection semantics by default
+/// but allows controlled introduction of various failure modes and behavioral anomalies
+/// to test code that must handle corrupted or non-compliant Collection instances.
 ///
-/// Any breaks that are not listed in the supported classes can be added to an instance of `BreakableCollection`, but
-/// will not have any impact on how it functions.
+/// ## Core Functionality
 ///
-/// Builder methods are provided to make declaring a broken collection easier, for example:
+/// As a Collection implementation, this class supports all standard collection operations
+/// (add, remove, contains, size, etc.) but can be configured to break these fundamental
+/// contracts through specific breaks. This enables testing of code that must handle
+/// unexpected collection behaviors.
+///
+/// ### Collection Semantics
+///
+/// Under normal operation (no breaks active), BreakableCollection maintains proper Collection behavior:
+/// - **Element Management**: Add, remove, and query operations work as expected
+/// - **Size Tracking**: Accurate size reporting and isEmpty() behavior
+/// - **Iteration**: Proper iterator and array conversion support
+/// - **Bulk Operations**: addAll, removeAll, retainAll work correctly
+/// - **Type Safety**: Proper handling of null values and incompatible types
+///
+/// ### Breakable Behavior
+///
+/// The class introduces numerous Collection-specific breaks organized into several categories:
+///
+/// ## Available Breaks
+///
+/// ### Element Modification Breaks
+///
+/// #### ADD_DOES_NOT_ADD_ELEMENT
+/// **Purpose**: Forces `add()` method to accept elements but not actually add them to the collection
+/// **Effect**: Method returns normally but collection remains unchanged
+/// **Use Case**: Testing code that assumes successful add operations modify the collection
+///
+/// #### ADD_ALWAYS_RETURNS_TRUE / ADD_ALWAYS_RETURNS_FALSE
+/// **Purpose**: Forces `add()` method to return incorrect success/failure indicators
+/// **Effect**: Return value doesn't match actual operation result
+/// **Use Case**: Testing code that relies on add() return values for control flow
+///
+/// #### ADD_ALWAYS_RETURNS_OPPOSITE_VALUE
+/// **Purpose**: Forces `add()` method to return the opposite of the correct result
+/// **Effect**: Returns false when element was added, true when it wasn't
+/// **Use Case**: Testing robust error handling when return values are unreliable
+///
+/// ### Bulk Operation Breaks
+///
+/// #### ADD_ALL_DOES_NOT_ADD_ANY_ELEMENTS
+/// **Purpose**: Forces `addAll()` to accept but not add any elements
+/// **Effect**: Collection remains unchanged despite successful method completion
+/// **Use Case**: Testing bulk operation failure handling
+///
+/// #### ADD_ALL_SKIPS_FIRST_ELEMENT / ADD_ALL_SKIPS_LAST_ELEMENT
+/// **Purpose**: Forces `addAll()` to skip the first or last element during addition
+/// **Effect**: Partial completion of bulk operations
+/// **Use Case**: Testing handling of incomplete bulk operations
+///
+/// #### Similar patterns for REMOVE_ALL_*, RETAIN_ALL_*, and REMOVE_IF_*
+/// **Purpose**: Simulate various failure modes in bulk removal and retention operations
+/// **Effect**: Incomplete, failed, or incorrectly reported bulk operations
+/// **Use Case**: Testing robustness of code using bulk collection operations
+///
+/// ### Query Operation Breaks
+///
+/// #### CONTAINS_ALWAYS_RETURNS_TRUE / CONTAINS_ALWAYS_RETURNS_FALSE
+/// **Purpose**: Forces `contains()` to return incorrect membership information
+/// **Effect**: Method returns wrong boolean values regardless of actual membership
+/// **Use Case**: Testing code that depends on accurate membership queries
+///
+/// #### CONTAINS_RETURNS_OPPOSITE_VALUE / CONTAINS_ALL_RETURNS_OPPOSITE_VALUE
+/// **Purpose**: Forces membership queries to return inverted results
+/// **Effect**: True becomes false, false becomes true for membership tests
+/// **Use Case**: Testing error handling when membership queries are unreliable
+///
+/// ### Size and State Breaks
+///
+/// #### SIZE_ALWAYS_RETURNS_ZERO / SIZE_ALWAYS_RETURNS_CONSTANT_VALUE
+/// **Purpose**: Forces `size()` to return incorrect size information
+/// **Effect**: Size reporting becomes unreliable or completely wrong
+/// **Use Case**: Testing code that depends on accurate size information
+///
+/// #### IS_EMPTY_ALWAYS_RETURNS_TRUE / IS_EMPTY_ALWAYS_RETURNS_FALSE
+/// **Purpose**: Forces `isEmpty()` to return incorrect emptiness state
+/// **Effect**: Method returns wrong boolean values regardless of actual state
+/// **Use Case**: Testing code that uses isEmpty() for control flow decisions
+///
+/// ### Array Conversion Breaks
+///
+/// #### TO_ARRAY_RETURNS_NULL / TO_ARRAY_RETURNS_EMPTY_ARRAY
+/// **Purpose**: Forces `toArray()` methods to return null or empty arrays
+/// **Effect**: Array conversion operations fail or return incomplete data
+/// **Use Case**: Testing array conversion error handling
+///
+/// #### TO_ARRAY_MISSING_FIRST_ELEMENT / TO_ARRAY_MISSING_LAST_ELEMENT
+/// **Purpose**: Forces `toArray()` methods to omit specific elements
+/// **Effect**: Array conversion returns incomplete element sets
+/// **Use Case**: Testing handling of partial array conversion results
+///
+/// ### Clear Operation Breaks
+///
+/// #### CLEAR_DOES_NOT_REMOVE_ANY_ELEMENTS
+/// **Purpose**: Forces `clear()` to complete without removing elements
+/// **Effect**: Collection remains unchanged after clear operation
+/// **Use Case**: Testing assumptions about clear operation effectiveness
+///
+/// #### CLEAR_SKIPS_FIRST_ELEMENT / CLEAR_SKIPS_LAST_ELEMENT
+/// **Purpose**: Forces `clear()` to leave some elements in the collection
+/// **Effect**: Partial clearing, leaving specific elements behind
+/// **Use Case**: Testing handling of incomplete clear operations
+///
+/// ## Builder Pattern Usage
+///
+/// The class provides a comprehensive Builder for constructing BreakableCollection instances:
+///
+/// ### Basic Collection Creation
 /// ```java
-///     BreakableCollection<Integer> broken = Breakables.buildCollection.of(1, 2)
-///         .withBreak(CollectionBreaks,EMPTY_ALWAYS_RETURNS_TRUE)
-///         .build();
+/// BreakableCollection<String> collection = new BreakableCollection.Builder<String>()
+///     .build();
 /// ```
 ///
-/// ## Thread Safety
+/// ### Collection with Breaks
+/// ```java
+/// BreakableCollection<Integer> brokenCollection = new BreakableCollection.Builder<Integer>()
+///     .withBreak(ADD_DOES_NOT_ADD_ELEMENT)
+///     .withBreak(SIZE_ALWAYS_RETURNS_ZERO)
+///     .build();
+/// ```
 ///
-/// This class is not thread-safe. Synchronization is the responsibility of the caller.
-/// The underlying collection's thread safety characteristics determine the overall
-/// thread safety behavior. For thread-safe usage, external synchronization must be
-/// provided or the instance should be confined to a single thread.
+/// ### Collection with Type Restrictions
+/// ```java
+/// BreakableCollection<String> restrictedCollection = new BreakableCollection.Builder<String>()
+///     .doesNotPermitNulls()
+///     .doesNotPermitDuplicates()
+///     .withBreak(CONTAINS_ALWAYS_RETURNS_FALSE)
+///     .build();
+/// ```
 ///
+/// ## Inheritance Support
+///
+/// This class extends BreakableIterable and supports all iterator and spliterator breaks:
+/// - Iterator breaks are passed through to created iterators
+/// - Spliterator breaks affect spliterator behavior
+/// - Iteration-specific failures can be combined with collection-specific breaks
+///
+/// ## Testing Applications
+///
+/// ### Add Operation Testing
+/// ```java
+/// @Test
+/// void testAddOperationFailure() {
+///     BreakableCollection<String> collection = new BreakableCollection.Builder<String>()
+///         .withBreak(ADD_DOES_NOT_ADD_ELEMENT)
+///         .withBreak(ADD_ALWAYS_RETURNS_TRUE)
+///         .build();
+///
+///     assertTrue(collection.add("test")); // Returns true
+///     assertTrue(collection.isEmpty());   // But element wasn't added
+/// }
+/// ```
+///
+/// ### Size Inconsistency Testing
+/// ```java
+/// @Test
+/// void testSizeInconsistency() {
+///     BreakableCollection<Integer> collection = new BreakableCollection.Builder<Integer>()
+///         .withBreak(SIZE_ALWAYS_RETURNS_ZERO)
+///         .build();
+///
+///     collection.add(1);
+///     collection.add(2);
+///     assertEquals(0, collection.size());     // Always returns 0
+///     assertFalse(collection.isEmpty());     // But not actually empty
+/// }
+/// ```
+///
+/// ### Bulk Operation Testing
+/// ```java
+/// @Test
+/// void testIncompleteAddAll() {
+///     BreakableCollection<String> collection = new BreakableCollection.Builder<String>()
+///         .withBreak(ADD_ALL_SKIPS_FIRST_ELEMENT)
+///         .build();
+///
+///     List<String> items = Arrays.asList("a", "b", "c");
+///     collection.addAll(items);
+///
+///     assertFalse(collection.contains("a")); // First element skipped
+///     assertTrue(collection.contains("b"));   // Others added normally
+///     assertTrue(collection.contains("c"));
+/// }
+/// ```
+///
+/// ## Optional Method Support
+///
+/// This class supports optional method configuration using the OptionalMethod system:
+/// - Methods can be disabled to simulate unsupported operations
+/// - UnsupportedOperationException is thrown for disabled methods
+/// - Useful for testing code that handles optional collection methods
+///
+/// ## Type Safety Configuration
+///
+/// The class supports configurable type safety:
+/// - **Null Handling**: Can be configured to accept or reject null elements
+/// - **Duplicate Handling**: Can be configured to accept or reject duplicate elements
+/// - **Type Compatibility**: Can be configured to accept or reject incompatible types
+///
+/// ## Design Considerations
+///
+/// ### Thread Safety
+/// This class is not thread-safe. The underlying collection's thread safety characteristics
+/// determine the overall thread safety behavior. External synchronization is required for
+/// concurrent access.
+///
+/// ### Performance
+/// - **Normal Operations**: Performance depends on the backing collection (default: ArrayList)
+/// - **Broken Operations**: May have additional overhead for break condition checking
+/// - **Memory Usage**: Minimal overhead beyond the backing collection
+///
+/// ### Provider Support
+/// The class includes provider support for integration with the testing framework's
+/// collection provider system, enabling automated test generation.
+///
+/// @param <E> the type of elements maintained by this collection
 /// @author evanbergstrom
-/// @param <E> The elements type for the `Collection`.
-/// @see CollectionMethods
 /// @since 1.0.0
+/// @see CollectionMethods
+/// @see BreakableIterable
+/// @see java.util.Collection
 public class BreakableCollection<E> extends BreakableIterable<E> implements Collection<E> {
 
     /// The default capacity used for constant size returns when SIZE_ALWAYS_RETURNS_CONSTANT_VALUE break is applied.
@@ -1049,19 +1249,18 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// @param <E> the element type
     /// @author evanbergstrom
     /// @since 1.0
-    // CHECKSTYLE:OFF: VisibilityModifier
     public abstract static class AbstractBuilder<B extends AbstractBuilder<B, C, E>,
             C extends BreakableCollection<E>, E>
             extends BreakableIterable.AbstractBuilder<B, C, E> {
 
         /// Flag indicating whether the builder will create collections that permit null elements.
-        protected boolean permitsNulls;
+        private boolean permitsNulls;
 
         /// Flag indicating whether the builder will create collections that permit duplicate elements.
-        protected boolean permitsDuplicates;
+        private boolean permitsDuplicates;
 
         /// Flag indicating whether the builder will create collections that permit incompatible types.
-        protected boolean permitsIncompatibleTypes;
+        private boolean permitsIncompatibleTypes;
 
 
         /// Default constructor to be called by default constructors for subclasses.
@@ -1075,7 +1274,7 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
         /// @param elements the initial elements for the builder
         /// @throws NullPointerException if elements is null
         protected AbstractBuilder(final @NonNull Collection<E> elements) {
-            super(elements);
+            super(Objects.requireNonNull(elements));
             this.permitsNulls = true;
             this.permitsDuplicates = true;
             this.permitsIncompatibleTypes = true;
@@ -1119,11 +1318,28 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
         /// @param method the method that the collection does not support.
         /// @return the builder.
         public final B doesNotSupportMethod(final OptionalMethod method) {
-            unsupportedMethods.add(method);
+            doesNotSupport(method);
             return self();
         }
+
+        /// Returns whether the builder will create collections that permit null elements.
+        /// @return true if null elements are permitted, false otherwise
+        public boolean permitsNulls() {
+            return permitsNulls;
+        }
+
+        /// Returns whether the builder will create collections that permit duplicate elements.
+        /// @return true if duplicate elements are permitted, false otherwise
+        public boolean permitsDuplicates() {
+            return permitsDuplicates;
+        }
+
+        /// Returns whether the builder will create collections that permit incompatible types.
+        /// @return true if incompatible types are permitted, false otherwise
+        public boolean permitsIncompatibleTypes() {
+            return permitsIncompatibleTypes;
+        }
     }
-    // CHECKSTYLE:ON: VisibilityModifier
 
     /// The builder for BreakableCollection objects.
     /// @param <E> the element type.
@@ -1155,11 +1371,11 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
         /// Build a BreakableCollection objects using the values from the builder.
         /// @return a new BreakableCollection object.
         public BreakableCollection<E> build() {
-            BreakableCollection<E> broken = new BreakableCollection<>(elements, breaks, characteristics);
-            broken.setPermitsNulls(permitsNulls);
-            broken.setPermitsDuplicates(permitsDuplicates);
-            broken.setPermitsIncompatibleTypes(permitsIncompatibleTypes);
-            unsupportedMethods.forEach(broken::doesNotSupportMethod);
+            BreakableCollection<E> broken = new BreakableCollection<>(elements(), breaks(), characteristics());
+            broken.setPermitsNulls(permitsNulls());
+            broken.setPermitsDuplicates(permitsDuplicates());
+            broken.setPermitsIncompatibleTypes(permitsIncompatibleTypes());
+            unsupportedMethods().forEach(broken::doesNotSupportMethod);
             return broken;
         }
     }

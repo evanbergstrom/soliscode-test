@@ -32,25 +32,281 @@ import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 
-/// An iterable that can be broken in well-defined ways in order to test collection utilities or testing classes.
+/// **Breakable Iterable Implementation for Testing**
 ///
-/// # Breaks
-/// The breaks that are supported for this class are listed in the description of the method that they impact.
-/// In addition it supports the breaks in the [BreakableIterator] and [BreakableSpliterator] classes. Any iterator or
-/// spliterator breaks that are added to this iterable will be passes along to iterator or spliterator instances that
-/// are created.
+/// This class provides an Iterable implementation that can be programmatically broken for comprehensive
+/// testing scenarios. It serves as the foundation of the breakable framework, providing basic iteration
+/// functionality that can be configured to violate standard Iterable contracts in controlled ways.
 ///
-/// Any breaks that are not listed in the supported classes can be added to an instance of `BreakableIterable`, but will
-/// not have any impact on how it functions.
+/// ## Core Functionality
 ///
-/// # Builder
-/// Builder methods are provided to make declaring a broken collection easier, for example:
+/// As an Iterable implementation, this class provides fundamental iteration capabilities:
+/// - **Basic Iteration**: iterator() method for element traversal
+/// - **Enhanced Iteration**: forEach() method for functional-style processing
+/// - **Parallel Processing**: spliterator() method for stream operations and parallel processing
+/// - **Iterator Delegation**: Passes breaks through to Iterator and Spliterator instances
+///
+/// ### Iterable Semantics
+///
+/// Under normal operation (no breaks active), BreakableIterable maintains proper Iterable behavior:
+/// - **Consistent Iteration**: Multiple iterator() calls return equivalent iteration sequences
+/// - **forEach Compliance**: forEach() method processes all elements in iteration order
+/// - **Spliterator Support**: spliterator() provides appropriate parallel processing capabilities
+/// - **Element Preservation**: All elements are accessible through iteration
+///
+/// ### Breakable Behavior
+///
+/// The class introduces several Iterable-specific breaks that can simulate common iteration failures:
+///
+/// ## Available Breaks
+///
+/// ### forEach Operation Breaks
+///
+/// #### FOR_EACH_DOES_NOT_CALL_ACTION
+/// **Purpose**: Forces `forEach()` method to accept the action but not call it on any elements
+/// **Effect**: Method completes normally but no elements are processed
+/// **Use Case**: Testing code that assumes forEach() actually processes elements
+///
+/// #### FOR_EACH_SKIPS_FIRST_ELEMENT
+/// **Purpose**: Forces `forEach()` method to skip the first element during processing
+/// **Effect**: First element is omitted from forEach() processing but remains accessible via iterator()
+/// **Use Case**: Testing algorithms that depend on complete element processing
+///
+/// #### FOR_EACH_SKIPS_LAST_ELEMENT
+/// **Purpose**: Forces `forEach()` method to skip the last element during processing
+/// **Effect**: Last element is omitted from forEach() processing but remains accessible via iterator()
+/// **Use Case**: Testing edge-case handling in functional processing
+///
+/// #### FOR_EACH_THROWS_WRONG_EXCEPTION_FOR_NULL_ARGUMENT
+/// **Purpose**: Forces `forEach()` method to throw RuntimeException instead of NullPointerException for null actions
+/// **Effect**: Violates Iterable contract regarding null argument handling
+/// **Use Case**: Testing exception handling robustness when contracts are violated
+///
+/// ### Inherited Breaks
+///
+/// This class also supports all breaks from:
+/// - **BreakableIterator**: Breaks affecting iterator() method behavior
+/// - **BreakableSpliterator**: Breaks affecting spliterator() method behavior
+///
+/// When iterator or spliterator breaks are added to a BreakableIterable, they are automatically
+/// passed through to the Iterator and Spliterator instances created by this iterable.
+///
+/// ## Builder Pattern Usage
+///
+/// The class provides a comprehensive Builder for constructing BreakableIterable instances:
+///
+/// ### Basic Iterable Creation
 /// ```java
-///     BreakableIterator<Integer> broken = Breakable.iterableOf(1, 2)
-///         .addBreak(FOR_EACH_DOES_NOT_CALL_ACTION)
-///         .setCharacteristics(ORDERED | SIZED | SUBSIZED)
-///         .build();
+/// BreakableIterable<String> iterable = new BreakableIterable.Builder<String>()
+///     .addElements("first", "second", "third")
+///     .build();
 /// ```
+///
+/// ### Iterable with forEach Breaks
+/// ```java
+/// BreakableIterable<Integer> brokenIterable = new BreakableIterable.Builder<Integer>()
+///     .addElements(1, 2, 3, 4, 5)
+///     .addBreak(FOR_EACH_SKIPS_FIRST_ELEMENT)
+///     .addBreak(FOR_EACH_SKIPS_LAST_ELEMENT)
+///     .build();
+/// ```
+///
+/// ### Iterable with Iterator and Spliterator Breaks
+/// ```java
+/// BreakableIterable<String> complexBroken = new BreakableIterable.Builder<String>()
+///     .addElements("a", "b", "c")
+///     .addBreak(FOR_EACH_DOES_NOT_CALL_ACTION)           // Iterable break
+///     .addBreak(BreakableIterator.ITERATOR_IS_ALWAYS_EMPTY) // Iterator break
+///     .addBreak(BreakableSpliterator.SPLITERATOR_IS_ALWAYS_EMPTY) // Spliterator break
+///     .setCharacteristics(Spliterator.ORDERED | Spliterator.SIZED)
+///     .build();
+/// ```
+///
+/// ## Testing Applications
+///
+/// ### forEach Processing Testing
+/// Test that code handles forEach() method failures appropriately:
+///
+/// ```java
+/// @Test
+/// void testForEachProcessingFailures() {
+///     BreakableIterable<String> brokenIterable = new BreakableIterable.Builder<String>()
+///         .addElements("first", "middle", "last")
+///         .addBreak(FOR_EACH_DOES_NOT_CALL_ACTION)
+///         .build();
+///
+///     AtomicInteger processedCount = new AtomicInteger(0);
+///     brokenIterable.forEach(item -> processedCount.incrementAndGet());
+///
+///     assertEquals(0, processedCount.get()); // No elements processed due to break
+///
+///     // Test that algorithms handle failed forEach operations
+///     testFunctionalProcessingWithBrokenForEach(brokenIterable);
+/// }
+/// ```
+///
+/// ### Partial forEach Processing Testing
+/// Test that code handles incomplete forEach() processing:
+///
+/// ```java
+/// @Test
+/// void testPartialForEachProcessing() {
+///     BreakableIterable<Integer> partiallyBroken = new BreakableIterable.Builder<Integer>()
+///         .addElements(1, 2, 3, 4, 5)
+///         .addBreak(FOR_EACH_SKIPS_FIRST_ELEMENT)
+///         .addBreak(FOR_EACH_SKIPS_LAST_ELEMENT)
+///         .build();
+///
+///     List<Integer> processed = new ArrayList<>();
+///     partiallyBroken.forEach(processed::add);
+///
+///     assertEquals(Arrays.asList(2, 3, 4), processed); // First and last skipped
+///
+///     // Verify full iteration still works
+///     List<Integer> viaIterator = new ArrayList<>();
+///     partiallyBroken.iterator().forEachRemaining(viaIterator::add);
+///     assertEquals(Arrays.asList(1, 2, 3, 4, 5), viaIterator);
+/// }
+/// ```
+///
+/// ### Exception Handling Testing
+/// Test that code handles unexpected exceptions from forEach():
+///
+/// ```java
+/// @Test
+/// void testForEachExceptionHandling() {
+///     BreakableIterable<String> exceptionThrowing = new BreakableIterable.Builder<String>()
+///         .addElements("test")
+///         .addBreak(FOR_EACH_THROWS_WRONG_EXCEPTION_FOR_NULL_ARGUMENT)
+///         .build();
+///
+///     // Test that wrong exception types are handled gracefully
+///     assertThrows(RuntimeException.class, () ->
+///         exceptionThrowing.forEach(null)); // Should throw RuntimeException, not NPE
+///
+///     // Test that exception handling code is robust
+///     testExceptionRecoveryStrategies(exceptionThrowing);
+/// }
+/// ```
+///
+/// ### Iterator Integration Testing
+/// Test that Iterator breaks work correctly when passed through:
+///
+/// ```java
+/// @Test
+/// void testIteratorBreakIntegration() {
+///     BreakableIterable<String> withIteratorBreaks = new BreakableIterable.Builder<String>()
+///         .addElements("a", "b", "c", "d")
+///         .addBreak(BreakableIterator.ITERATOR_IS_ALWAYS_EMPTY)
+///         .build();
+///
+///     Iterator<String> iterator = withIteratorBreaks.iterator();
+///     assertFalse(iterator.hasNext()); // Iterator break makes it appear empty
+///
+///     // But forEach should still work (uses direct iterable access)
+///     List<String> forEachResults = new ArrayList<>();
+///     withIteratorBreaks.forEach(forEachResults::add);
+///     assertEquals(Arrays.asList("a", "b", "c", "d"), forEachResults);
+/// }
+/// ```
+///
+/// ### Spliterator Integration Testing
+/// Test that Spliterator breaks work correctly when passed through:
+///
+/// ```java
+/// @Test
+/// void testSpliteratorBreakIntegration() {
+///     BreakableIterable<Integer> withSpliteratorBreaks = new BreakableIterable.Builder<Integer>()
+///         .addElements(1, 2, 3, 4, 5)
+///         .addBreak(BreakableSpliterator.SPLITERATOR_IS_ALWAYS_EMPTY)
+///         .setCharacteristics(Spliterator.ORDERED | Spliterator.SIZED)
+///         .build();
+///
+///     Spliterator<Integer> spliterator = withSpliteratorBreaks.spliterator();
+///     assertEquals(0, spliterator.estimateSize()); // Spliterator break makes it appear empty
+///
+///     // Test that stream operations handle empty spliterators
+///     long streamCount = StreamSupport.stream(spliterator, false).count();
+///     assertEquals(0, streamCount);
+///
+///     // But direct iteration should still work
+///     assertEquals(5, IterableTestUtils.size(withSpliteratorBreaks));
+/// }
+/// ```
+///
+/// ### Combined Break Testing
+/// Test that multiple break types work together correctly:
+///
+/// ```java
+/// @Test
+/// void testCombinedBreakScenarios() {
+///     BreakableIterable<String> multiplyBroken = new BreakableIterable.Builder<String>()
+///         .addElements("alpha", "beta", "gamma", "delta")
+///         .addBreak(FOR_EACH_SKIPS_FIRST_ELEMENT)           // forEach break
+///         .addBreak(BreakableIterator.HAS_NEXT_ALWAYS_FALSE) // Iterator break
+///         .addBreak(BreakableSpliterator.ESTIMATE_SIZE_ALWAYS_RETURNS_ZERO) // Spliterator break
+///         .build();
+///
+///     // Test forEach behavior (skips first)
+///     List<String> forEachResults = new ArrayList<>();
+///     multiplyBroken.forEach(forEachResults::add);
+///     assertEquals(Arrays.asList("beta", "gamma", "delta"), forEachResults);
+///
+///     // Test iterator behavior (appears to have no elements)
+///     Iterator<String> iterator = multiplyBroken.iterator();
+///     assertFalse(iterator.hasNext());
+///
+///     // Test spliterator behavior (reports size as 0)
+///     Spliterator<String> spliterator = multiplyBroken.spliterator();
+///     assertEquals(0, spliterator.estimateSize());
+///
+///     // Test that robust algorithms handle multiple failure modes
+///     testMultipleIterationStrategies(multiplyBroken);
+/// }
+/// ```
+///
+/// ### Provider Integration Testing
+/// Test that BreakableIterable works with the provider system:
+///
+/// ```java
+/// @Test
+/// void testProviderIntegration() {
+///     ObjectProvider<String> stringProvider = () -> Stream.of("test1", "test2", "test3");
+///     CollectionProvider<String, BreakableIterable<String>> provider =
+///         BreakableIterable.iterableProvider(stringProvider);
+///
+///     Stream<BreakableIterable<String>> iterables = provider.collections();
+///     List<BreakableIterable<String>> iterableList = iterables.collect(Collectors.toList());
+///
+///     // Test that provider creates working iterables
+///     assertFalse(iterableList.isEmpty());
+///     iterableList.forEach(iterable -> {
+///         assertNotNull(iterable);
+///         assertTrue(IterableTestUtils.size(iterable) >= 0);
+///     });
+/// }
+/// ```
+///
+/// ## Design Considerations
+///
+/// ### Thread Safety
+/// This class is not thread-safe. The underlying iterable's thread safety characteristics
+/// determine the overall thread safety behavior. External synchronization is required for
+/// concurrent access.
+///
+/// ### Performance
+/// - **Normal Operations**: Performance depends on the backing iterable (default: ArrayList)
+/// - **Broken Operations**: May have additional overhead for break condition checking
+/// - **Memory Usage**: Minimal overhead beyond the backing iterable
+/// - **Break Delegation**: Efficient pass-through of breaks to Iterator and Spliterator instances
+///
+/// ### Iteration Consistency
+/// The class ensures that breaks are consistently applied across all iteration methods.
+/// Iterator and Spliterator instances receive their respective breaks automatically.
+///
+/// ### Provider Support
+/// The class includes static factory methods for creating collection providers that integrate
+/// with the SolisCode Test framework's automated test generation system.
 ///
 /// @author evanbergstrom
 /// @param <E> The elements type for the `Iterable`.
@@ -245,16 +501,16 @@ public class BreakableIterable<E> extends AbstractBreakable implements Iterable<
             C extends BreakableIterable<E>, E> {
 
         /// The collection of elements that will be used to create the breakable iterable.
-        protected final @NonNull Collection<E> elements;
+        private final @NonNull Collection<E> elements;
 
         /// The set of breaks that will be applied to the breakable iterable.
-        protected final @NonNull Set<Break> breaks;
+        private final @NonNull Set<Break> breaks;
 
         /// The set of optional methods that will not be supported by the breakable iterable.
-        protected final @NonNull Set<OptionalMethod> unsupportedMethods;
+        private final @NonNull Set<OptionalMethod> unsupportedMethods;
 
         /// The characteristics flags that will be applied to the spliterator.
-        protected int characteristics;
+        private int characteristics;
 
         /// Default constructor that creates an empty builder.
         /// @see AbstractBuilder(Collection)
@@ -341,6 +597,36 @@ public class BreakableIterable<E> extends AbstractBreakable implements Iterable<
             unsupportedMethods.add(method);
             return self();
         }
+
+        /**
+         * Returns the elements that have been added to the builder.
+         * @return The elements for the collection.
+         */
+        public @NonNull Collection<E> elements() {
+            return elements;
+        }
+
+        /**
+         * Returns the breaks that have been added to the builder.
+         * @return The breaks for the collection.
+         */
+        public @NonNull Set<Break> breaks() {
+            return breaks;
+        }
+
+        /**
+         * Returns the characteristics that have been added to the builder.
+         * @return The characteristics for the collection.
+         */
+        public int characteristics() {
+            return characteristics;
+        }
+
+        /// returns the unsupported methods that have been added to the builder
+        /// @return the set of supported methods for the collection..
+        public @NonNull Set<OptionalMethod> unsupportedMethods() {
+            return unsupportedMethods;
+        }
     }
     // CHECKSTYLE:ON: VisibilityModifier
 
@@ -378,8 +664,8 @@ public class BreakableIterable<E> extends AbstractBreakable implements Iterable<
         /// @return a new BreakableIterable instance
         @Override
         public BreakableIterable<E> build() {
-            BreakableIterable<E> iterator = new BreakableIterable<>(elements, breaks, characteristics);
-            unsupportedMethods.forEach(iterator::doesNotSupportMethod);
+            BreakableIterable<E> iterator = new BreakableIterable<>(elements(), breaks(), characteristics());
+            unsupportedMethods().forEach(iterator::doesNotSupportMethod);
             return iterator;
         }
     }

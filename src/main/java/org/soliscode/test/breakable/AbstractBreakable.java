@@ -172,6 +172,23 @@ public abstract class AbstractBreakable extends OptionalMethodSupport implements
 
     /// {@inheritDoc}
     ///
+    /// This implementation adds a provided breaks to the internal break set.
+    /// Duplicate breaks are automatically handled by the set semantics - adding
+    /// a break that already exists has no effect.
+    ///
+    /// This method allows dynamic modification of the object's behavior after
+    /// construction, which can be useful for testing scenarios where breaks
+    /// need to be applied conditionally.
+    ///
+    /// @param aBreak the break to add; must not be null
+    /// @throws NullPointerException if aBreak is null
+    @Override
+    public void addBreak(final @NonNull Break aBreak) {
+        this.breaks.add(aBreak);
+    }
+
+    /// {@inheritDoc}
+    ///
     /// This implementation adds all provided breaks to the internal break set.
     /// Duplicate breaks are automatically handled by the set semantics - adding
     /// a break that already exists has no effect.

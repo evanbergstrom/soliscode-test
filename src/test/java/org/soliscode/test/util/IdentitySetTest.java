@@ -76,15 +76,15 @@ public class IdentitySetTest extends AbstractTest {
     @Test
     @DisplayName("Test copy constructor with equal but different objects")
     public void testCopyConstructorWithEqualButDifferentObjects() {
-        String str1 = "test";
-        String str2 = "test";
-        List<String> list = Arrays.asList(str1, str2);
+        UncachedString str1 = UncachedString.valueOf("test");
+        UncachedString str2 = UncachedString.valueOf("test");
 
         // Verify they are equal but not the same reference
         assertEquals(str1, str2);
         assertNotSame(str1, str2);
 
-        IdentitySet<String> set = new IdentitySet<>(list);
+        List<UncachedString> list = Arrays.asList(str1, str2);
+        IdentitySet<UncachedString> set = new IdentitySet<>(list);
 
         // Should have two elements since they are different references
         assertEquals(2, set.size());
@@ -133,14 +133,14 @@ public class IdentitySetTest extends AbstractTest {
     @Test
     @DisplayName("Test add equal but different objects")
     public void testAddEqualButDifferentObjects() {
-        IdentitySet<String> set = new IdentitySet<>();
-        String str1 = "test";
-        String str2 = "test";
+        UncachedString str1 = UncachedString.valueOf("test");
+        UncachedString str2 = UncachedString.valueOf("test");
 
         // Verify they are equal but not the same reference
         assertEquals(str1, str2);
         assertNotSame(str1, str2);
 
+        IdentitySet<UncachedString> set = new IdentitySet<>();
         set.add(str1);
         set.add(str2);
 
@@ -167,14 +167,14 @@ public class IdentitySetTest extends AbstractTest {
     @Test
     @DisplayName("Test contains with equal but different objects")
     public void testContainsWithEqualButDifferentObjects() {
-        IdentitySet<String> set = new IdentitySet<>();
-        String str1 = "test";
-        String str2 = "test";
+        UncachedString str1 = UncachedString.valueOf("test");
+        UncachedString str2 = UncachedString.valueOf("test");
 
         // Verify they are equal but not the same reference
         assertEquals(str1, str2);
         assertNotSame(str1, str2);
 
+        IdentitySet<UncachedString> set = new IdentitySet<>();
         set.add(str1);
 
         // Should contain str1 but not str2 (different reference)
@@ -205,14 +205,14 @@ public class IdentitySetTest extends AbstractTest {
     @Test
     @DisplayName("Test remove with equal but different objects")
     public void testRemoveWithEqualButDifferentObjects() {
-        IdentitySet<String> set = new IdentitySet<>();
-        String str1 = "test";
-        String str2 = "test";
+        UncachedString str1 = UncachedString.valueOf("test");
+        UncachedString str2 = UncachedString.valueOf("test");
 
         // Verify they are equal but not the same reference
         assertEquals(str1, str2);
         assertNotSame(str1, str2);
 
+        IdentitySet<UncachedString> set = new IdentitySet<>();
         set.add(str1);
 
         // Should not be able to remove str2 (different reference) but returns true due to bug
@@ -366,21 +366,21 @@ public class IdentitySetTest extends AbstractTest {
     @Test
     @DisplayName("Test comparison with regular HashSet behavior")
     public void testComparisonWithRegularHashSet() {
-        String str1 = "test";
-        String str2 = "test";
+        UncachedString str1 = UncachedString.valueOf("test");
+        UncachedString str2 = UncachedString.valueOf("test");
 
         // Verify they are equal but not the same reference
         assertEquals(str1, str2);
         assertNotSame(str1, str2);
 
         // IdentitySet behavior
-        IdentitySet<String> identitySet = new IdentitySet<>();
+        IdentitySet<UncachedString> identitySet = new IdentitySet<>();
         identitySet.add(str1);
         identitySet.add(str2);
         assertEquals(2, identitySet.size()); // Both added due to different identity
 
         // Regular HashSet behavior
-        Set<String> hashSet = new HashSet<>();
+        Set<UncachedString> hashSet = new HashSet<>();
         hashSet.add(str1);
         hashSet.add(str2);
         assertEquals(1, hashSet.size()); // Only one added due to equality

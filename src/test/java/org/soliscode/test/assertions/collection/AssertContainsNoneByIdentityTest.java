@@ -451,8 +451,10 @@ public class AssertContainsNoneByIdentityTest {
         assertContainsNoneByIdentity(excludedLiterals, actualDifferent);
 
         // Test with constructed strings (different identities)
-        List<String> excludedConstructed = Arrays.asList("hello", "world");
-        List<String> actualConstructed = Arrays.asList("hello", "test");
+        List<UncachedString> excludedConstructed = Arrays.asList(new UncachedString("hello"),
+                new UncachedString("world"));
+        List<UncachedString> actualConstructed = Arrays.asList(new UncachedString("hello"),
+                new UncachedString("test"));
 
         // Should pass - constructed strings have different identities despite equal values
         assertContainsNoneByIdentity(excludedConstructed, actualConstructed);
