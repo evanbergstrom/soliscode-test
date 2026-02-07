@@ -28,10 +28,12 @@ public class IterableOnlyTest extends AbstractTest implements IterableContract<I
                 (c) -> new IterableOnly<>(new ArrayList<>(c)), elementProvider());
     }
 
-    /// Test that `IterableOnly` only implements the `Iterable` interface.
+    /// Verifies that [IterableOnly] only implements the [Iterable] interface.
+    ///
+    /// @see IterableOnly
+    @DisplayName("constructor_whenCalled_returnsIterableThatImplementsOnlyIterable")
     @Test
-    @DisplayName("IterableOnly only implements the Iterable interface.")
-    public void testIterableIsOnlyInterface() {
+    public void constructor_whenCalled_returnsIterableThatImplementsOnlyIterable() {
         Iterable<Integer> iterable = new IterableOnly<>();
         Assertions.assertImplementsOnly(Iterable.class, iterable);
     }

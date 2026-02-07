@@ -530,7 +530,7 @@ public class CountingConsumerTest extends AbstractTest {
         List<String> data = List.of("item1", "item2", "item3", "item4", "item5");
 
         // Process item (simulated)
-        // Could add logging here: "Processed item: " + item
+        // Could add_singleElement_returnsTrueAndUpdatesSize logging here: "Processed item: " + item
         data.forEach(monitor);
 
         // Verify all items were processed

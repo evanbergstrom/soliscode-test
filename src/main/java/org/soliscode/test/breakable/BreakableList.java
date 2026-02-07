@@ -1,15 +1,21 @@
 package org.soliscode.test.breakable;
 
 import org.jspecify.annotations.NonNull;
-import org.soliscode.test.contract.CollectionMethods;
+import org.soliscode.test.InterfaceMethod;
+import org.soliscode.test.MethodStatus;
+import org.soliscode.test.contract.collection.CollectionMethods;
+import org.soliscode.test.contract.list.ListMethods;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.UnaryOperator;
 
 /// **Breakable List Implementation for Testing**
@@ -30,7 +36,7 @@ import java.util.function.UnaryOperator;
 ///
 /// Under normal operation (no breaks active), BreakableList maintains proper List behavior:
 /// - **Indexed Access**: get(index) and set(index, element) provide direct element access
-/// - **Indexed Modification**: add(index, element) and remove(index) modify at specific positions
+/// - **Indexed Modification**: add_singleElement_returnsTrueAndUpdatesSize(index, element) and remove(index) modify at specific positions
 /// - **Bulk Operations**: addAll(index, collection) and replaceAll(operator) operate on ranges
 /// - **Search Operations**: indexOf() and lastIndexOf() find element positions
 /// - **Ordering**: sort() arranges elements according to comparators
@@ -89,17 +95,17 @@ import java.util.function.UnaryOperator;
 /// ### Indexed Addition Breaks
 ///
 /// #### ADD_AT_INDEX_DOES_NOT_ADD_THE_ELEMENT
-/// **Purpose**: Forces `add(index, element)` method to complete without actually adding elements
+/// **Purpose**: Forces `add_singleElement_returnsTrueAndUpdatesSize(index, element)` method to complete without actually adding elements
 /// **Effect**: Method completes normally but list remains unchanged
-/// **Use Case**: Testing code that assumes successful add operations modify the list
+/// **Use Case**: Testing code that assumes successful add_singleElement_returnsTrueAndUpdatesSize operations modify the list
 ///
 /// #### ADD_AT_INDEX_ADDS_AT_NEXT_POSITION / ADD_AT_INDEX_ADDS_AT_PREVIOUS_POSITION
-/// **Purpose**: Forces `add(index, element)` method to insert at adjacent positions
+/// **Purpose**: Forces `add_singleElement_returnsTrueAndUpdatesSize(index, element)` method to insert at adjacent positions
 /// **Effect**: Indexed insertion has systematic offset errors
-/// **Use Case**: Testing code that assumes add operations target correct indices
+/// **Use Case**: Testing code that assumes add_singleElement_returnsTrueAndUpdatesSize operations target correct indices
 ///
 /// #### ADD_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX
-/// **Purpose**: Forces `add(index, element)` to throw wrong exceptions for invalid indices
+/// **Purpose**: Forces `add_singleElement_returnsTrueAndUpdatesSize(index, element)` to throw wrong exceptions for invalid indices
 /// **Effect**: Wrong error handling for out-of-bounds insertion
 /// **Use Case**: Testing code that expects proper IndexOutOfBoundsException behavior
 ///
@@ -133,7 +139,7 @@ import java.util.function.UnaryOperator;
 /// **Use Case**: Testing bulk operation failure handling
 ///
 /// #### ADD_ALL_AT_INDEX_ADDS_TO_THE_END
-/// **Purpose**: Forces `addAll(index, collection)` method to ignore index and add at end
+/// **Purpose**: Forces `addAll(index, collection)` method to ignore index and add_singleElement_returnsTrueAndUpdatesSize at end
 /// **Effect**: Indexed bulk insertion becomes append operation
 /// **Use Case**: Testing code that depends on precise insertion positioning
 ///
@@ -205,7 +211,7 @@ import java.util.function.UnaryOperator;
 /// ## Inheritance Support
 ///
 /// This class extends BreakableSequencedCollection and supports all collection, sequence, iterator, and spliterator breaks:
-/// - Collection breaks affect standard collection operations (add, remove, contains, size, etc.)
+/// - Collection breaks affect standard collection operations (add_singleElement_returnsTrueAndUpdatesSize, remove, contains, size, etc.)
 /// - SequencedCollection breaks affect sequence operations (addFirst, addLast, getFirst, getLast, etc.)
 /// - Iterator breaks are passed through to created iterators
 /// - Spliterator breaks affect spliterator behavior
@@ -221,7 +227,7 @@ import java.util.function.UnaryOperator;
 ///         .addElements(Arrays.asList("a", "b", "c"))
 ///         .withBreak(GET_RETURNS_THE_NEXT_ELEMENT)
 ///         .build();
-///     
+///
 ///     assertEquals("b", list.get(0));  // Returns next element instead
 ///     assertEquals("c", list.get(1));  // Consistent offset error
 /// }
@@ -235,7 +241,7 @@ import java.util.function.UnaryOperator;
 ///         .addElements(Arrays.asList(1, 2, 3))
 ///         .withBreak(SET_DOES_NOT_CHANGE_THE_ELEMENT)
 ///         .build();
-///     
+///
 ///     Integer old = list.set(1, 99);
 ///     assertEquals(2, old);            // Returns old value
 ///     assertEquals(2, list.get(1));    // But doesn't change element
@@ -250,9 +256,9 @@ import java.util.function.UnaryOperator;
 ///         .addElements(Arrays.asList("a", "b"))
 ///         .withBreak(ADD_ALL_AT_INDEX_ADDS_TO_THE_END)
 ///         .build();
-///     
+///
 ///     list.addAll(0, Arrays.asList("x", "y"));
-///     
+///
 ///     assertEquals("a", list.get(0));   // Original order preserved
 ///     assertEquals("b", list.get(1));   // Elements added at end instead
 ///     assertEquals("x", list.get(2));   // Not at requested index
@@ -268,9 +274,9 @@ import java.util.function.UnaryOperator;
 ///         .addElements(Arrays.asList(3, 1, 2))
 ///         .withBreak(SORT_REVERSES_THE_ORDER)
 ///         .build();
-///     
+///
 ///     list.sort(Integer::compareTo);
-///     
+///
 ///     assertEquals(3, list.get(0));     // Sorted in reverse
 ///     assertEquals(2, list.get(1));     // Not ascending order
 ///     assertEquals(1, list.get(2));
@@ -279,7 +285,7 @@ import java.util.function.UnaryOperator;
 ///
 /// ## Optional Method Support
 ///
-/// This class supports optional method configuration using the OptionalMethod system:
+/// This class supports optional method configuration using the InterfaceMethod system:
 /// - List methods can be disabled to simulate unsupported operations
 /// - UnsupportedOperationException is thrown for disabled methods
 /// - Useful for testing code that handles optional list methods
@@ -319,19 +325,22 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
 
     /// Creates an empty list that has no breaks.
     public BreakableList() {
-        this(new ArrayList<>(), new HashSet<>(), 0);
+        this(new ArrayList<>(), new HashSet<>(), new HashMap<>(), DEFAULT_CHARACTERISTICS, DEFAULT_PERMITS,
+                DEFAULT_SAFETY, Object.class);
     }
 
     /// Creates a breakable sequenced collection from an existing instance.
     /// @param other the breakable collection to copy.
     public BreakableList(final @NonNull BreakableList<E> other) {
-        this(other.list, new HashSet<>(), 0);
+        this(new ArrayList<>(other.list), new HashSet<>(other.breaks()), new HashMap<>(other.methodStatuses()),
+                other.characteristics(), other.permits(), other.isSafe(), other.compatibleType());
     }
 
     /// Creates a breakable iterable from an iterable.
     /// @param collection the iterator to use for the elements.
     public BreakableList(final @NonNull List<E> collection) {
-        this(collection, new HashSet<>(), 0);
+        this(collection, new HashSet<>(), new HashMap<>(), DEFAULT_CHARACTERISTICS, DEFAULT_PERMITS, DEFAULT_SAFETY,
+                Object.class);
     }
 
     /// Creates a `BreakableSequencedCollection` from en existing collection and specifying the breaks and collection
@@ -339,11 +348,15 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     /// [BreakableCollection.Builder].
     /// @param c               the initial elements for the breakable collection.
     /// @param breaks          the breaks for the collection.
+    /// @param methodStatuses  the method status configuration.
     /// @param characteristics the characteristics for the collection.
+    /// @param permits         the flags that indicate what types of values are supported by the collection.
     /// @throws NullPointerException if either the `c` or the `breaks` parameters are null.
-    public BreakableList(final @NonNull List<E> c, final @NonNull Collection<Break> breaks, final int characteristics) {
-        super(c, breaks, characteristics);
-        this.list = Objects.requireNonNull(c);
+    public BreakableList(final @NonNull List<E> c, final @NonNull Set<Break> breaks,
+                         final @NonNull Map<InterfaceMethod, MethodStatus> methodStatuses,
+                         final int characteristics, final int permits, final boolean isSafe,
+                         final Class<?> compatibleType) {
+        super(this.list = c, breaks, methodStatuses, characteristics, permits, isSafe, compatibleType);
     }
 
     /// The [addAll][List#addAll(int,Collection)] method always return a result of `true`, even if the
@@ -384,30 +397,30 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     public static final Break ADD_ALL_AT_INDEX_THROWS_WRONG_EXCEPTION_WHEN_ARGUMENT_IS_NULL =
             new Break("addAll(int, Collection) throws wrong exception when argument is null");
 
-    /// The [addAll][List#addAll(int,Collection)] method will not add any elements to the collection
+    /// The [addAll][List#addAll(int,Collection)] method will not add_singleElement_returnsTrueAndUpdatesSize any elements to the collection
     /// @see BreakableList#addAll(int,Collection)
     public static final Break ADD_ALL_AT_INDEX_DOES_NOT_ADD_ANY_ELEMENTS =
-            new Break("addAll(int, Collection) does not add elements");
+            new Break("addAll(int, Collection) does not add_singleElement_returnsTrueAndUpdatesSize elements");
 
-    /// The [add][List#add(int,Object)] method will not add an element to the collection
+    /// The [add_singleElement_returnsTrueAndUpdatesSize][List#add(int,Object)] method will not add_singleElement_returnsTrueAndUpdatesSize an element to the collection
     /// @see BreakableList#add(int,Object)
     public static final Break ADD_AT_INDEX_DOES_NOT_ADD_THE_ELEMENT =
-            new Break("add(int, Object) does not add elements");
+            new Break("add_singleElement_returnsTrueAndUpdatesSize(int, Object) does not add_singleElement_returnsTrueAndUpdatesSize elements");
 
-    /// The [add][List#add(int,Object)] method adds the element at the next position.
+    /// The [add_singleElement_returnsTrueAndUpdatesSize][List#add(int,Object)] method adds the element at the next position.
     /// @see BreakableList#add(int,Object)
     public static final Break ADD_AT_INDEX_ADDS_AT_NEXT_POSITION =
-            new Break("add(int,Object) method will not add an element to the collection");
+            new Break("add_singleElement_returnsTrueAndUpdatesSize(int,Object) method will not add_singleElement_returnsTrueAndUpdatesSize an element to the collection");
 
-    /// The [add][List#add(int,Object)] method adds the element at the previous position.
+    /// The [add_singleElement_returnsTrueAndUpdatesSize][List#add(int,Object)] method adds the element at the previous position.
     /// @see BreakableList#add(int,Object)
     public static final Break ADD_AT_INDEX_ADDS_AT_PREVIOUS_POSITION =
-            new Break("add(int,Object) method adds the element at the previous position");
+            new Break("add_singleElement_returnsTrueAndUpdatesSize(int,Object) method adds the element at the previous position");
 
-    /// The [add][List#add(int,Object)] method throws the wrong exception when the index is out of bounds.
+    /// The [add_singleElement_returnsTrueAndUpdatesSize][List#add(int,Object)] method throws the wrong exception when the index is out of bounds.
     /// @see BreakableList#add(int,Object)
     public static final Break ADD_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX =
-            new Break("add(int,Object) method throws the wrong exception when the index is out of bounds");
+            new Break("add_singleElement_returnsTrueAndUpdatesSize(int,Object) method throws the wrong exception when the index is out of bounds");
 
     /// The [get][List#get(int)] method always returns `null`
     /// @see BreakableList#get(int)
@@ -544,7 +557,7 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     ///
     /// | Break                    | Description                                     |
     /// | ------------------------ | ----------------------------------------------- |
-    /// | ADD_ALL_AT_INDEX_DOES_NOT_ADD_ANY_ELEMENTS | The `addAll` method will not add any elements to the collection. |
+    /// | ADD_ALL_AT_INDEX_DOES_NOT_ADD_ANY_ELEMENTS | The `addAll` method will not add_singleElement_returnsTrueAndUpdatesSize any elements to the collection. |
     /// | ADD_ALL_AT_INDEX_ADDS_TO_THE_END |  The `addAll` method adds to the end of the collection. |
     /// | ADD_ALL_AT_INDEX_ALWAYS_RETURNS_TRUE | The `addAll` method always return a result of `true`, even if the element is not added. |
     /// | ADD_ALL_AT_INDEX_ALWAYS_RETURNS_FALSE | The `addAll` method always returns `false` |
@@ -574,7 +587,7 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     @SuppressWarnings("ConstantValue")
     @Override
     public boolean addAll(final int index, final @NonNull Collection<? extends E> c) {
-        if (supportsMethod(CollectionMethods.AddAll)) {
+        if (supportsMethod(CollectionMethods.ADD_ALL)) {
             if ((index < 0 || index >= list.size()) && hasBreak(ADD_ALL_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX)) {
                 throw new RuntimeException();
             }
@@ -631,7 +644,7 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     /// @see List#replaceAll(UnaryOperator)
     @Override
     public void replaceAll(final @NonNull UnaryOperator<E> operator) {
-        if (supportsMethod(CollectionMethods.ReplaceAll)) {
+        if (supportsMethod(ListMethods.REPLACE_ALL)) {
             int start = 0;
             int end = list.size();
             if (hasBreak(REPLACE_ALL_SKIPS_FIRST_ELEMENT)) {
@@ -676,7 +689,7 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     /// @see List#sort(Comparator)
     @Override
     public void sort(final Comparator<? super E> c) {
-        if (supportsMethod(CollectionMethods.ReplaceAll)) {
+        if (supportsMethod(ListMethods.REPLACE_ALL)) {
             if (hasBreak(SORT_REVERSES_THE_ORDER)) {
                 list.sort(c.reversed());
             } else if (hasBreak(SORT_THROWS_ON_NULL_ARGUMENT)) {
@@ -716,7 +729,7 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     /// @throws IndexOutOfBoundsException if the index is out of range `index < 0 || index >= size()}`
     @Override
     public E get(final int index) {
-        if (supportsMethod(CollectionMethods.Get)) {
+        if (supportsMethod(ListMethods.GET)) {
             if (hasBreak(GET_ALWAYS_RETURNS_NULL)) {
                 return null;
             } else if (hasBreak(GET_ALWAYS_RETURNS_THE_FIRST_ELEMENT)) {
@@ -761,12 +774,12 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     ///         .build();
     /// ```
     /// @param index index of the element to return.
-    /// @param element the element to add at the index.
+    /// @param element the element to add_singleElement_returnsTrueAndUpdatesSize at the index.
     /// @return the element at the specified position in this list, or possibly a different element if the list is broken.
     /// @throws IndexOutOfBoundsException if the index is out of range `index < 0 || index >= size()}`
     @Override
     public E set(final int index, final E element) {
-        if (supportsMethod(CollectionMethods.Set)) {
+        if (supportsMethod(ListMethods.SET)) {
             if (index < 0 || index >= list.size()) {
                 if (hasBreak(SET_RETURNS_NULL_ON_BAD_INDEX)) {
                     return null;
@@ -796,15 +809,15 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
         }
     }
 
-    /// Implements the [add][List#add(int, Object)] method from the [List] interface. This method can be broken using the
+    /// Implements the [add_singleElement_returnsTrueAndUpdatesSize][List#add(int, Object)] method from the [List] interface. This method can be broken using the
     /// following collection breaks:
     ///
     /// | Break                    | Description                                     |
     /// | ------------------------ | ----------------------------------------------- |
-    /// | ADD_AT_INDEX_DOES_NOT_ADD_THE_ELEMENT | The `add` method will not add an element to the collection |
-    /// | ADD_AT_INDEX_ADDS_AT_NEXT_POSITION | The `add` method adds the element at the next position. |
-    /// | ADD_AT_INDEX_ADDS_AT_PREVIOUS_POSITION | The `add` method adds the element at the previous position. |
-    /// | ADD_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX | The `add` method throws the wrong exception when the index is out of bounds. |
+    /// | ADD_AT_INDEX_DOES_NOT_ADD_THE_ELEMENT | The `add_singleElement_returnsTrueAndUpdatesSize` method will not add_singleElement_returnsTrueAndUpdatesSize an element to the collection |
+    /// | ADD_AT_INDEX_ADDS_AT_NEXT_POSITION | The `add_singleElement_returnsTrueAndUpdatesSize` method adds the element at the next position. |
+    /// | ADD_AT_INDEX_ADDS_AT_PREVIOUS_POSITION | The `add_singleElement_returnsTrueAndUpdatesSize` method adds the element at the previous position. |
+    /// | ADD_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX | The `add_singleElement_returnsTrueAndUpdatesSize` method throws the wrong exception when the index is out of bounds. |
     ///
     /// A collection that has any of these breaks can be constructed using the builder:
     /// ```java
@@ -814,14 +827,14 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     /// ```
     /// @param index index at which the specified element is to be inserted
     /// @param element element to be inserted
-    /// @throws UnsupportedOperationException if the `add` operation is not supported by this list
+    /// @throws UnsupportedOperationException if the `add_singleElement_returnsTrueAndUpdatesSize` operation is not supported by this list
     /// @throws ClassCastException if the class of the specified element prevents it from being added to this list
     /// @throws NullPointerException if the specified element is null and this list does not permit null elements
     /// @throws IllegalArgumentException if some property of the specified element prevents it from being added to this list
     /// @throws IndexOutOfBoundsException if the index is out of range (`index < 0 || index > size()`)
     @Override
     public void add(final int index, final E element) {
-        if (supportsMethod(CollectionMethods.Set)) {
+        if (supportsMethod(ListMethods.SET)) {
             if ((index < 0 || index >= list.size()) && hasBreak(ADD_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX)) {
                 throw new IllegalArgumentException();
             } else if (hasBreak(ADD_AT_INDEX_ADDS_AT_NEXT_POSITION)) {
@@ -860,7 +873,7 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     /// @throws IndexOutOfBoundsException if the index is out of range (`@code index < 0 || index >= size()`)
     @Override
     public E remove(final int index) {
-        if (supportsMethod(CollectionMethods.RemoveAtIndex)) {
+        if (supportsMethod(ListMethods.REMOVE_AT_INDEX)) {
             if (index < 0 || index >= list.size()) {
                 if (hasBreak(REMOVE_AT_INDEX_RETURNS_NULL_ON_BAD_INDEX)) {
                     return null;
@@ -950,12 +963,8 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
         /// Build a BreakableList object using the values from the builder.
         /// @return a new BreakableList object.
         public BreakableList<E> build() {
-            BreakableList<E> broken =  new BreakableList<>(new ArrayList<>(elements()), breaks(), characteristics());
-            broken.setPermitsNulls(permitsNulls());
-            broken.setPermitsDuplicates(permitsDuplicates());
-            broken.setPermitsIncompatibleTypes(permitsIncompatibleTypes());
-            unsupportedMethods().forEach(broken::doesNotSupportMethod);
-            return broken;
+            return new BreakableList<>(new ArrayList<>(elements()), new HashSet<>(breaks()),
+                    new HashMap<>(methodStatuses()), characteristics(), permits(), isSafe(), compatibleType());
         }
     }
 }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CheckStyle-IDEA" serialisationVersion="2">
-    <checkstyleVersion>11.0.1</checkstyleVersion>
+    <checkstyleVersion>12.3.0</checkstyleVersion>
     <scanScope>JavaOnly</scanScope>
     <option name="thirdPartyClasspath" />
     <option name="activeLocationIds">
@@ -15,7 +15,6 @@
           $PROJECT_DIR$/../soliscode-parent/src/main/resources/checkstyle.xml
           <option name="properties">
             <map>
-              <entry key="org.checkstyle.sun.suppressionfilter.config" value="checkstyle-suppressions.xml" />
               <entry key="org.checkstyle.sun.suppressionxpathfilter.config" value="checkstyle-xpath-suppressions.xml" />
             </map>
           </option>

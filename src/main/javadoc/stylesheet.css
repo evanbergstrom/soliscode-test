@@ -80,7 +80,7 @@
  * Styles for markdown tables in comments
  */
  .block table {
-     border-collapse:all;
+     border-collapse:collapse;
      padding: 8px 3px 3px 7px
  }
  .block thead {
@@ -98,7 +98,7 @@
      background-color: var(--odd-row-color);
  }
  .block table tr:nth-child(odd) {
-     background-color: var(--evan-row-color);
+     background-color: var(--even-row-color);
  }
 
 /*

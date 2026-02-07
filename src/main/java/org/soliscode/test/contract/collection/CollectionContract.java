@@ -1,8 +1,7 @@
 package org.soliscode.test.contract.collection;
 
-import org.soliscode.test.OptionalMethod;
+import org.soliscode.test.InterfaceMethod;
 import org.soliscode.test.contract.CollectionContractConfig;
-import org.soliscode.test.contract.CollectionMethods;
 import org.soliscode.test.contract.iterable.IterableContract;
 
 import java.util.Collection;
@@ -56,31 +55,28 @@ public interface CollectionContract<E, C extends Collection<E>> extends Iterable
         ToArrayContract<E, C> {
 
     @Override
-    boolean supportsMethod(OptionalMethod method);
-
-    /// Used to indicate that the class being tested does not support an optional method.
-    /// @param method the method that the class being tested does not support.
-    void doesNotSupportMethod(OptionalMethod method);
+    boolean supportsMethod(InterfaceMethod method);
 
     /// Specific if the test collection supports the methods that allow modification. It is a convenience function to
     /// set the support state for all the modification methods at once. These methods are:
     ///
-    /// - [add\(Object\)][Collection#add(Object)]
+    /// - [add_singleElement_returnsTrueAndUpdatesSize\(Object\)][Collection#add(Object)]
     /// - [addAll\(Collection\)][Collection#addAll(Collection)]
     /// - [clear\(\)][Collection#clear]
     /// - [remove\(Object\)][Collection#remove(Object)]
     /// - [removeAll\(Collection\)][Collection#removeAll(Collection)]
     /// - [removeIf\(Predicate\)][Collection#removeIf(java.util.function.Predicate)]
     /// - [retainAll\(Collection\)][Collection#retainAll(Collection)]
+    /// - [size\(\)][Collection#size]
     /// - [Iterator.remove\(\)][java.util.Iterator#remove()]
     default void doesNotSupportModification() {
-        doesNotSupportMethod(CollectionMethods.Add);
-        doesNotSupportMethod(CollectionMethods.AddAll);
-        doesNotSupportMethod(CollectionMethods.Clear);
-        doesNotSupportMethod(CollectionMethods.Remove);
-        doesNotSupportMethod(CollectionMethods.RemoveAll);
-        doesNotSupportMethod(CollectionMethods.RemoveIf);
-        doesNotSupportMethod(CollectionMethods.RetainAll);
-        doesNotSupportMethod(CollectionMethods.IteratorRemove);
+        IterableContract.super.doesNotSupportModification();
+        doesNotSupportMethod(CollectionMethods.ADD);
+        doesNotSupportMethod(CollectionMethods.ADD_ALL);
+        doesNotSupportMethod(CollectionMethods.CLEAR);
+        doesNotSupportMethod(CollectionMethods.REMOVE);
+        doesNotSupportMethod(CollectionMethods.REMOVE_ALL);
+        doesNotSupportMethod(CollectionMethods.REMOVE_IF);
+        doesNotSupportMethod(CollectionMethods.RETAIN_ALL);
     }
 }

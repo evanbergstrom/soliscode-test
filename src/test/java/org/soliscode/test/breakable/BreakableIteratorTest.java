@@ -2,9 +2,13 @@ package org.soliscode.test.breakable;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.soliscode.test.contract.CollectionMethods;
+import org.soliscode.test.contract.iterable.IterableMethods;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -208,7 +212,7 @@ public class BreakableIteratorTest {
     @DisplayName("Test remove method fails when not supported")
     public void testRemoveFailsWhenNotSupported() {
         BreakableIterable<Integer> iterable = Breakables.buildIterable(1, 2, 3)
-                .doesNotSupport(CollectionMethods.IteratorRemove)
+                .doesNotSupport(IterableMethods.ITERATOR_REMOVE)
                 .build();
 
         Iterator<Integer> iterator = iterable.iterator();
@@ -257,7 +261,7 @@ public class BreakableIteratorTest {
 
         BreakableIterable<Integer> broken = Breakables.buildIterable(1, 2, 3)
                 .addBreak(ITERATOR_REMOVE_THROWS_WRONG_EXCEPTION_IF_NOT_SUPPORTED)
-                .doesNotSupport(CollectionMethods.IteratorRemove)
+                .doesNotSupport(IterableMethods.ITERATOR_REMOVE)
                 .build();
 
         Iterator<Integer> brokenIterator = broken.iterator();
@@ -362,7 +366,7 @@ public class BreakableIteratorTest {
     @DisplayName("Test forEachRemaining method fails when not supported")
     public void testForEachRemainingFailsWhenNotSupported() {
         BreakableIterable<Integer> iterable = Breakables.buildIterable(1, 2, 3)
-                .doesNotSupport(CollectionMethods.IteratorForEachRemaining)
+                .doesNotSupport(IterableMethods.ITERATOR_FOR_EACH_REMAINING)
                 .build();
 
         assertThrows(UnsupportedOperationException.class, () -> iterable.iterator().forEachRemaining((c) -> {}));

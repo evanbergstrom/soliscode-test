@@ -5,7 +5,9 @@ import org.opentest4j.AssertionFailedError;
 import org.soliscode.test.interfaces.IterableOnly;
 import org.soliscode.test.util.IterableTestUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;

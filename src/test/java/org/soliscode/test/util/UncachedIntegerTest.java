@@ -7,7 +7,9 @@ import org.soliscode.test.AbstractTest;
 import org.soliscode.test.contract.numeric.IntegerContract;
 import org.soliscode.test.provider.IntegerNumberProvider;
 
-import java.util.function.Supplier;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
@@ -32,13 +34,21 @@ public class UncachedIntegerTest extends AbstractTest implements IntegerContract
             }
 
             @Override
-            public @NonNull Supplier<UncachedInteger> uniqueInstanceSupplier() {
-                return new Supplier<>() {
+            public @NonNull RecordingSupplier<UncachedInteger> uniqueInstanceSupplier() {
+                return new RecordingSupplier<>() {
                     private int i = 0;
+                    private final List<UncachedInteger> recorded = Collections.synchronizedList(new ArrayList<>());
 
                     @Override
                     public UncachedInteger get() {
-                        return new UncachedInteger(i++);
+                        UncachedInteger instance = new UncachedInteger(i++);
+                        recorded.add(instance);
+                        return instance;
+                    }
+
+                    @Override
+                    public @NonNull List<UncachedInteger> recorded() {
+                        return recorded;
                     }
                 };
             }

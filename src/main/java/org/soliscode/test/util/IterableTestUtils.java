@@ -183,7 +183,7 @@ public final class IterableTestUtils {
         }
     }
 
-    /// Creates a copy of an iterable. The returned copy weill have the same elements as the original but may
+    /// Creates a copy of an iterable. The returned copy will have the same elements as the original but may
     /// have a different implementation.
     /// @param <E> the type of the elements.
     /// @param iterable the iterable to copy.
@@ -221,6 +221,24 @@ public final class IterableTestUtils {
         ensureUnbroken(iterable).forEach(list::add);
         return list;
     }
+
+    public static <E> E first(final Iterable<E> iterable) {
+        Iterator<E> iter = iterable.iterator();
+        if (iter.hasNext()) {
+            return iter.next();
+        }
+        return null;
+    }
+
+    public static <E> E last(final Iterable<E> iterable) {
+        Iterator<E> iter = iterable.iterator();
+        E last = null;
+        while (iter.hasNext()) {
+            last = iter.next();
+        }
+        return last;
+    }
+
 
     /// Returns an iterator that will skips the first element.
     /// @param <E> the element type.

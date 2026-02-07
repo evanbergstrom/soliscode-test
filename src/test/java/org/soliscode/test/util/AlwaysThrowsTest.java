@@ -295,7 +295,7 @@ public class AlwaysThrowsTest extends AbstractTest {
 
         // Test that contains operations fail due to equals() throwing
         java.util.List<AlwaysThrows> list = new java.util.ArrayList<>();
-        list.add(alwaysThrows); // ArrayList.add() doesn't call equals/hashCode
+        list.add(alwaysThrows); // ArrayList.add_singleElement_returnsTrueAndUpdatesSize() doesn't call equals/hashCode
 
         assertThrows(UnsupportedOperationException.class, () -> {
             list.contains(alwaysThrows); // This should trigger equals()

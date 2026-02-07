@@ -26,7 +26,7 @@ import java.util.function.Supplier;
 import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
 
 /// A consumer that checks that it only consumes objects from a specified set of objects, and not consuming any objects
-/// not in the set. This consumer does not require that all of the objects in the set are consumed. Instead of
+/// not in the set. This consumer does not require that all the objects in the set are consumed. Instead of
 /// instantiating this class directly, the [AssertActions] utility class should be used:
 /// ```java
 /// Consumer<Integer> consumer = AssertActions.consumeOnly(Set.of(1, 3, 5, 7));
@@ -49,7 +49,7 @@ public class AssertConsumeOnly<T> implements Consumer<T> {
     }
 
     /// Creates a consumer that checks that it only consumes objects from a specified set of objects. This constructor
-    /// allows specification of a string to be included in the exception of the assertion fails.
+    /// allows specification of a string to be included in the exception if the assertion fails.
     /// @param expected the set of objects that should be consumed.
     /// @param message the text to include in the exception.
     public AssertConsumeOnly(final @NonNull Iterable<T> expected, final @Nullable String message) {

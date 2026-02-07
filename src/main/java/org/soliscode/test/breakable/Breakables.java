@@ -43,7 +43,7 @@ public final class Breakables {
 
     /// Creates a builder for a `BreakableIterable` initialized with a set of elements.
     /// @param <E> the type of the elements.
-    /// @param e the elements to add to the iterable.
+    /// @param e the elements to add_singleElement_returnsTrueAndUpdatesSize to the iterable.
     /// @return a builder.
     @SafeVarargs
     public static <E> BreakableIterable.Builder<E> buildIterable(final @NonNull E... e) {
@@ -61,7 +61,7 @@ public final class Breakables {
 
     /// Creates a builder for a `BreakableCollection` initialized with a set of elements.
     /// @param <E> the type of the elements.
-    /// @param e the elements to add to the collection.
+    /// @param e the elements to add_singleElement_returnsTrueAndUpdatesSize to the collection.
     /// @return a builder.
     @SafeVarargs
     public static <E> BreakableCollection.Builder<E> buildCollection(final E... e) {
@@ -80,7 +80,7 @@ public final class Breakables {
 
     /// Creates a builder for a `BreakableSequencedCollection` initialized with a set of elements.
     /// @param <E> the type of the elements.
-    /// @param e the elements to add to the collection.
+    /// @param e the elements to add_singleElement_returnsTrueAndUpdatesSize to the collection.
     /// @return a builder.
     @SafeVarargs
     public static <E> BreakableSequencedCollection.Builder<E> buildSequencedCollection(final E... e) {
@@ -98,7 +98,7 @@ public final class Breakables {
 
     /// Creates a builder for a `BreakableList` initialized with a set of elements.
     /// @param <E> the type of the elements.
-    /// @param e the elements to add to the list.
+    /// @param e the elements to add_singleElement_returnsTrueAndUpdatesSize to the list.
     /// @return a builder.
     @SafeVarargs
     public static <E> BreakableList.Builder<E> buildList(final E... e) {
@@ -108,7 +108,7 @@ public final class Breakables {
 
     /// Creates a builder for a `BreakableSet` initialized with a set of elements.
     /// @param <E> the type of the elements.
-    /// @param e the elements to add to the set.
+    /// @param e the elements to add_singleElement_returnsTrueAndUpdatesSize to the set.
     /// @return a builder.
     @SafeVarargs
     public static <E> BreakableSet.Builder<E> buildSet(final E... e) {

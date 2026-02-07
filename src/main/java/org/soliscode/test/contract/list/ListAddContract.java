@@ -2,8 +2,8 @@ package org.soliscode.test.contract.list;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.soliscode.test.contract.CollectionMethods;
 import org.soliscode.test.contract.collection.AddContract;
+import org.soliscode.test.contract.collection.CollectionMethods;
 
 import java.util.List;
 
@@ -19,11 +19,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /// @see List#add(Object)
 public interface ListAddContract<E, L extends List<E>> extends AddContract<E, L> {
 
-    /// Tests that the [add][List#add] method works.
-    @DisplayName("Test that the add method appends to the end of the list")
+    /// Tests that the [add_singleElement_returnsTrueAndUpdatesSize][List#add] method works.
+    @DisplayName("Test that the add_singleElement_returnsTrueAndUpdatesSize method appends to the end of the list")
     @Test
-    default void testAdd() {
-        if (supportsMethod(CollectionMethods.Add)) {
+    default void add_singleElement_returnsTrueAndUpdatesSize() {
+        if (supportsMethod(CollectionMethods.ADD)) {
             List<E> list = provider().emptyInstance();
             List<E> values = elementProvider().createUniqueInstances(DEFAULT_SIZE);
             for (int i = 0; i < values.size(); i++) {

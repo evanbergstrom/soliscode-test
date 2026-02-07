@@ -67,6 +67,7 @@ public interface ForEachMethodContract<E, I extends Iterable<E>> extends Collect
     default void testForEachWithNullAction() {
         Iterable<E> iterable = provider().createInstanceWithUniqueElements();
         Consumer<E> action = null;
+        //noinspection ConstantValue
         assertThrows(NullPointerException.class, () -> iterable.forEach(action));
     }
 }

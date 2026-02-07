@@ -4,7 +4,7 @@ import org.soliscode.test.contract.support.CollectionContractSupport;
 
 import java.util.List;
 
-/// Contract for testing the [add][List#add(int, java.lang.Object)] method in the [List] interface.
+/// Contract for testing the [add_singleElement_returnsTrueAndUpdatesSize][List#add(int, java.lang.Object)] method in the [List] interface.
 ///
 /// @param <E> The element type for the list
 /// @param <L> The type of the list

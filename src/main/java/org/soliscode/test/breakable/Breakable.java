@@ -27,22 +27,21 @@ import java.util.Set;
 /// @since 1.0
 /// @see AbstractBreakable
 public interface Breakable {
-
     /// Determines if this instance has a specified break. The default value for all breaks that have not been added is
     /// `false`.
     /// @param aBreak The break to determine if ti has been added to this instance.
     /// @return 'true' if the break has been added, 'false' if it has not.
     boolean hasBreak(@NonNull Break aBreak);
 
-    /// Returns all of the breaks that have been added to this object.
-    /// @return The set of breaks that have ben added.
+    /// Returns all the breaks that have been added to this object.
+    /// @return The set of breaks that have been added.
     @NonNull Set<Break> breaks();
 
     /// Adds a break to this object.
-    /// @param aBreak the break to add.
+    /// @param aBreak the break to add_singleElement_returnsTrueAndUpdatesSize.
     void addBreak(@NonNull Break aBreak);
 
     /// Adds a set of breaks to this object.
-    /// @param breaks the breaks to add.
+    /// @param breaks the breaks to add_singleElement_returnsTrueAndUpdatesSize.
     void addBreaks(@NonNull Collection<Break> breaks);
 }

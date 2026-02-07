@@ -16,19 +16,29 @@
 package org.soliscode.test.breakable;
 
 import org.jspecify.annotations.NonNull;
-import org.soliscode.test.OptionalMethodSupport;
+import org.soliscode.test.InterfaceMethod;
+import org.soliscode.test.MethodStatus;
+import org.soliscode.test.MethodSupport;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Random;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /// Abstract base class that provides common functionality for implementing breakable collection classes.
 ///
 /// This class serves as the foundation for all breakable collection implementations, providing:
 /// - Break management (adding, checking, and retrieving breaks)
-/// - Optional method support inheritance from {@link OptionalMethodSupport}
+/// - Optional method support inheritance from {@link MethodSupport}
 /// - Thread-safe break storage and manipulation
 /// - Standard constructors for different initialization scenarios
 ///
@@ -80,7 +90,7 @@ import java.util.Set;
 ///
 /// ## Inheritance Hierarchy
 ///
-/// This class extends {@link OptionalMethodSupport}, which provides the ability to mark certain
+/// This class extends {@link MethodSupport}, which provides the ability to mark certain
 /// collection methods as unsupported, causing them to throw {@link UnsupportedOperationException}.
 /// This is useful for testing scenarios where collections have partial interface implementations.
 ///
@@ -88,13 +98,65 @@ import java.util.Set;
 /// @since 1.0
 /// @see Breakable
 /// @see Break
-/// @see OptionalMethodSupport
+/// @see MethodSupport
 /// @see BreakableIterable
 /// @see BreakableList
 /// @see BreakableCollection
-public abstract class AbstractBreakable extends OptionalMethodSupport implements Breakable {
+public abstract class AbstractBreakable extends MethodSupport implements Breakable, Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    /// Default value for the safety field
+    protected static final boolean DEFAULT_SAFETY = false;
+
+    protected static final Set<Break> DEFAULT_BREAKS = Collections.emptySet();
+
+    protected static final Map<InterfaceMethod, MethodStatus> DEFAULT_METHOD_STATUSES = Collections.emptyMap();
 
     private final @NonNull Set<Break> breaks;
+
+    private static final Random RANDOM = new Random();
+
+    /// Mutex for synchronizing access to the breakable object.
+    private transient Object mutex;
+
+    /// Serialization support for writing the object state.
+    ///
+    /// This method ensures that the object's fields, including the behavioral
+    /// modifications, are correctly serialized. It also handles the non-serializable
+    /// mutex field by recording its presence.
+    ///
+    /// @param out the [ObjectOutputStream] to write to
+    /// @throws IOException if an I/O error occurs
+    @Serial
+    private void writeObject(final ObjectOutputStream out) throws IOException {
+        out.defaultWriteObject();
+        out.writeBoolean(mutex != null);
+    }
+
+    /// Serialization support for reading the object state.
+    ///
+    /// This method ensures that the object's fields, including the behavioral
+    /// modifications, are correctly restored during deserialization. It also
+    /// reconstructs the mutex field if it was present in the original object.
+    ///
+    /// @param in the [ObjectInputStream] to read from
+    /// @throws IOException if an I/O error occurs
+    /// @throws ClassNotFoundException if the class of a serialized object could not be found
+    @Serial
+    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        if (in.readBoolean()) {
+            try {
+                var field = AbstractBreakable.class.getDeclaredField("mutex");
+                field.setAccessible(true);
+                field.set(this, new Object());
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+                throw new IOException("Failed to restore mutex field", e);
+            }
+        }
+    }
 
     /// Creates a breakable object with no breaks applied.
     ///
@@ -107,6 +169,7 @@ public abstract class AbstractBreakable extends OptionalMethodSupport implements
     public AbstractBreakable() {
         super();
         this.breaks = new HashSet<>();
+        this.mutex = null;
     }
 
     /// Creates a breakable object by copying the breaks and optional method support from another breakable object.
@@ -123,23 +186,32 @@ public abstract class AbstractBreakable extends OptionalMethodSupport implements
     public AbstractBreakable(final @NonNull AbstractBreakable other) {
         super(other);
         this.breaks = new HashSet<>(other.breaks);
+        this.mutex = (other.isSafe()) ? new Object() : null;
     }
 
     /// Creates a breakable object with the specified collection of breaks.
     ///
     /// This constructor initializes the break set with the provided breaks, allowing
-    /// immediate application of behavioral modifications. The breaks collection is copied
-    /// to prevent external modification of the internal break set.
+    /// immediate application of behavioral modifications.
     ///
     /// This is the most common constructor for creating breakable objects with known
     /// behavioral deviations, typically used in test scenarios.
     ///
     /// @param breaks the collection of breaks to apply to this object; must not be null
     ///               and may be empty to create an unbroken object
+    /// @param methodStatuses the method status configuration.
     /// @throws NullPointerException if breaks is null
-    public AbstractBreakable(final @NonNull Collection<Break> breaks) {
-        super();
-        this.breaks = new HashSet<>(Objects.requireNonNull(breaks));
+    protected AbstractBreakable(final @NonNull Set<Break> breaks,
+                                final @NonNull Map<InterfaceMethod, MethodStatus> methodStatuses,
+                                final boolean isSafe) {
+        super(methodStatuses);
+        this.breaks = breaks;
+        if (isSafe) {
+            this.mutex = new Object();
+        } else {
+            this.mutex = null;
+        }
+
     }
 
     /// {@inheritDoc}
@@ -180,7 +252,7 @@ public abstract class AbstractBreakable extends OptionalMethodSupport implements
     /// construction, which can be useful for testing scenarios where breaks
     /// need to be applied conditionally.
     ///
-    /// @param aBreak the break to add; must not be null
+    /// @param aBreak the break to add_singleElement_returnsTrueAndUpdatesSize; must not be null
     /// @throws NullPointerException if aBreak is null
     @Override
     public void addBreak(final @NonNull Break aBreak) {
@@ -197,11 +269,66 @@ public abstract class AbstractBreakable extends OptionalMethodSupport implements
     /// construction, which can be useful for testing scenarios where breaks
     /// need to be applied conditionally.
     ///
-    /// @param newBreaks the collection of breaks to add; must not be null
+    /// @param newBreaks the collection of breaks to add_singleElement_returnsTrueAndUpdatesSize; must not be null
     ///                  but may be empty (which results in no changes)
     /// @throws NullPointerException if newBreaks is null
     @Override
     public void addBreaks(final @NonNull Collection<Break> newBreaks) {
         this.breaks.addAll(newBreaks);
+    }
+
+    protected static int randomInt() {
+        return RANDOM.nextInt();
+    }
+
+    protected static int randomIndex(final int length) {
+        return Math.abs(RANDOM.nextInt()) % length;
+    }
+
+    protected static String notSupportedMessage(final @NonNull InterfaceMethod method) {
+        return method.methodName() + " is not supported by " + Breakable.class.getSimpleName();
+    }
+
+    protected void checkMethodSupport(final @NonNull InterfaceMethod method) {
+        if (!supportsMethod(method)) {
+            throw new UnsupportedOperationException(notSupportedMessage(method));
+        }
+    }
+
+    protected void checkOptionalMethodSupport(final @NonNull InterfaceMethod method,
+                                              final @NonNull Break wrongExceptionBreak) {
+        if (!supportsMethod(method)) {
+            if (hasBreak(wrongExceptionBreak)) {
+                throw new RuntimeException(notSupportedMessage(method));
+            }
+            throw new UnsupportedOperationException(notSupportedMessage(method));
+        }
+    }
+
+    protected RuntimeException wrongException(final @NonNull Exception e) {
+        return new RuntimeException("Threw wrong exception", e);
+    }
+
+    public boolean isSafe() {
+        return mutex != null;
+    }
+
+    protected void runWithBreakableSafety(final @NonNull Break safetyBreak, final @NonNull Runnable runnable) {
+        if (mutex != null && !hasBreak(safetyBreak)) {
+            synchronized (mutex) {
+                runnable.run();
+            }
+        } else {
+            runnable.run();
+        }
+    }
+
+    protected <T> T getWithBreakableSafety(final @NonNull Break safetyBreak, final @NonNull Supplier<T> supplier) {
+        if (mutex != null && !hasBreak(safetyBreak)) {
+            synchronized (mutex) {
+                return supplier.get();
+            }
+        }
+        return supplier.get();
     }
 }

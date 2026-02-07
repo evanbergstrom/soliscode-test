@@ -1,17 +1,22 @@
 package org.soliscode.test.breakable;
 
 import org.jspecify.annotations.NonNull;
-import org.soliscode.test.contract.CollectionMethods;
+import org.soliscode.test.InterfaceMethod;
+import org.soliscode.test.MethodStatus;
+import org.soliscode.test.contract.sequencedcollection.SequencedCollectionMethods;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.SequencedCollection;
+import java.util.Set;
 
 /// **Breakable SequencedCollection Implementation for Testing**
 ///
@@ -45,22 +50,22 @@ import java.util.SequencedCollection;
 /// ### Positional Addition Breaks
 ///
 /// #### ADD_FIRST_DOES_NOT_ADD_ELEMENT
-/// **Purpose**: Forces `addFirst()` method to accept elements but not actually add them to the collection
+/// **Purpose**: Forces `addFirst()` method to accept elements but not actually add_singleElement_returnsTrueAndUpdatesSize them to the collection
 /// **Effect**: Method completes normally but collection remains unchanged
 /// **Use Case**: Testing code that assumes successful addFirst operations modify the collection
 ///
 /// #### ADD_FIRST_ADDS_TO_END
-/// **Purpose**: Forces `addFirst()` method to add elements to the end instead of the beginning
+/// **Purpose**: Forces `addFirst()` method to add_singleElement_returnsTrueAndUpdatesSize elements to the end instead of the beginning
 /// **Effect**: Sequence order is violated, elements appear at the wrong position
 /// **Use Case**: Testing code robustness when positional guarantees are broken
 ///
 /// #### ADD_LAST_DOES_NOT_ADD_ELEMENT
-/// **Purpose**: Forces `addLast()` method to accept elements but not actually add them to the collection
+/// **Purpose**: Forces `addLast()` method to accept elements but not actually add_singleElement_returnsTrueAndUpdatesSize them to the collection
 /// **Effect**: Method completes normally but collection remains unchanged
 /// **Use Case**: Testing code that assumes successful addLast operations modify the collection
 ///
 /// #### ADD_LAST_ADDS_TO_FRONT
-/// **Purpose**: Forces `addLast()` method to add elements to the front instead of the end
+/// **Purpose**: Forces `addLast()` method to add_singleElement_returnsTrueAndUpdatesSize elements to the front instead of the end
 /// **Effect**: Sequence order is violated, elements appear at the wrong position
 /// **Use Case**: Testing code robustness when positional guarantees are broken
 ///
@@ -169,7 +174,7 @@ import java.util.SequencedCollection;
 /// ## Inheritance Support
 ///
 /// This class extends BreakableCollection and supports all collection, iterator, and spliterator breaks:
-/// - Collection breaks affect standard collection operations (add, remove, contains, size, etc.)
+/// - Collection breaks affect standard collection operations (add_singleElement_returnsTrueAndUpdatesSize, remove, contains, size, etc.)
 /// - Iterator breaks are passed through to created iterators
 /// - Spliterator breaks affect spliterator behavior
 /// - SequencedCollection-specific breaks can be combined with inherited breaks
@@ -183,10 +188,10 @@ import java.util.SequencedCollection;
 ///     BreakableSequencedCollection<String> collection = new BreakableSequencedCollection.Builder<String>()
 ///         .withBreak(ADD_FIRST_ADDS_TO_END)
 ///         .build();
-///     
+///
 ///     collection.addFirst("first");
 ///     collection.addFirst("second");
-///     
+///
 ///     assertEquals("first", collection.getFirst());  // "second" went to end instead
 ///     assertEquals("second", collection.getLast());  // Unexpected behavior
 /// }
@@ -199,10 +204,10 @@ import java.util.SequencedCollection;
 ///     BreakableSequencedCollection<Integer> collection = new BreakableSequencedCollection.Builder<Integer>()
 ///         .withBreak(GET_FIRST_RETURNS_NULL)
 ///         .build();
-///     
+///
 ///     collection.addFirst(1);
 ///     collection.addFirst(2);
-///     
+///
 ///     assertNull(collection.getFirst());      // Returns null despite elements
 ///     assertEquals(2, collection.size());     // But collection has elements
 /// }
@@ -215,10 +220,10 @@ import java.util.SequencedCollection;
 ///     BreakableSequencedCollection<String> collection = new BreakableSequencedCollection.Builder<String>()
 ///         .withBreak(REMOVE_FIRST_DOES_NOT_REMOVE_ELEMENT)
 ///         .build();
-///     
+///
 ///     collection.addFirst("test");
 ///     String removed = collection.removeFirst();
-///     
+///
 ///     assertEquals("test", removed);           // Returns the element
 ///     assertEquals(1, collection.size());     // But doesn't remove it
 ///     assertTrue(collection.contains("test"));// Element still present
@@ -232,13 +237,13 @@ import java.util.SequencedCollection;
 ///     BreakableSequencedCollection<Integer> collection = new BreakableSequencedCollection.Builder<Integer>()
 ///         .withBreak(REVERSED_MODIFIES_THE_COLLECTION)
 ///         .build();
-///     
+///
 ///     collection.addLast(1);
 ///     collection.addLast(2);
 ///     collection.addLast(3);
-///     
+///
 ///     SequencedCollection<Integer> reversed = collection.reversed();
-///     
+///
 ///     // Original collection was modified instead of creating view
 ///     assertEquals(3, collection.getFirst()); // Original collection reversed
 ///     assertSame(collection, reversed);       // Same instance returned
@@ -247,7 +252,7 @@ import java.util.SequencedCollection;
 ///
 /// ## Optional Method Support
 ///
-/// This class supports optional method configuration using the OptionalMethod system:
+/// This class supports optional method configuration using the InterfaceMethod system:
 /// - SequencedCollection methods can be disabled to simulate unsupported operations
 /// - UnsupportedOperationException is thrown for disabled methods
 /// - Useful for testing code that handles optional sequenced collection methods
@@ -278,100 +283,230 @@ import java.util.SequencedCollection;
 /// @param <E> the type of elements maintained by this sequenced collection
 /// @author evanbergstrom
 /// @since 1.0.0
-/// @see CollectionMethods
 /// @see BreakableCollection
 /// @see java.util.SequencedCollection
 public class BreakableSequencedCollection<E> extends BreakableCollection<E> implements SequencedCollection<E> {
 
     private final @NonNull List<E> sequenced;
 
-    /// The [addFirst][SequencedCollection#addFirst] method does not add an element.
+    /// #### ADD_FIRST_DOES_NOT_ADD_ELEMENT
+    /// **Purpose**: Forces `addFirst(E)` method to accept elements but not actually add_singleElement_returnsTrueAndUpdatesSize them to the collection
+    /// **Effect**: Method completes normally but collection remains unchanged
+    /// **Use Case**: Testing code that assumes successful `addFirst` operations modify the collection
+    /// **Affected Methods**: `addFirst(E)`
     /// @see BreakableSequencedCollection#addFirst(Object)
-    public static final Break ADD_FIRST_DOES_NOT_ADD_ELEMENT = new Break("addFirst does not add element");
+    public static final Break ADD_FIRST_DOES_NOT_ADD_ELEMENT = new Break("ADD_FIRST_DOES_NOT_ADD_ELEMENT");
 
-    /// The [addFirst][SequencedCollection#addFirst] method adds the element to the end of the collection.
+    /// #### ADD_FIRST_ADDS_TO_END
+    /// **Purpose**: Forces `addFirst(E)` method to add_singleElement_returnsTrueAndUpdatesSize elements to the end instead of the beginning
+    /// **Effect**: Sequence order is violated, elements appear at the wrong position
+    /// **Use Case**: Testing code robustness when positional guarantees are broken
+    /// **Affected Methods**: `addFirst(E)`
     /// @see BreakableSequencedCollection#addFirst(Object)
-    public static final Break ADD_FIRST_ADDS_TO_END = new Break("addFirst adds to the end");
+    public static final Break ADD_FIRST_ADDS_TO_END = new Break("ADD_FIRST_ADDS_TO_END");
 
-    /// The [addLast][SequencedCollection#addLast] method does not add an element.
+    /// #### ADD_FIRST_IS_NOT_THREAD_SAFE
+    /// **Purpose**: Forces `addFirst(E)` method to be not thread safe
+    /// **Effect**: Disables synchronization for the `addFirst` operation
+    /// **Use Case**: Testing code robustness under concurrent access when thread-safety is expected
+    /// **Affected Methods**: `addFirst(E)`
+    /// @see BreakableSequencedCollection#addFirst(Object)
+    public static final Break ADD_FIRST_IS_NOT_THREAD_SAFE = new Break("ADD_FIRST_IS_NOT_THREAD_SAFE");
+
+    /// #### ADD_LAST_DOES_NOT_ADD_ELEMENT
+    /// **Purpose**: Forces `addLast(E)` method to accept elements but not actually add_singleElement_returnsTrueAndUpdatesSize them to the collection
+    /// **Effect**: Method completes normally but collection remains unchanged
+    /// **Use Case**: Testing code that assumes successful `addLast` operations modify the collection
+    /// **Affected Methods**: `addLast(E)`
     /// @see BreakableSequencedCollection#addLast(Object)
-    public static final Break ADD_LAST_DOES_NOT_ADD_ELEMENT = new Break("addLast does not add element");
+    public static final Break ADD_LAST_DOES_NOT_ADD_ELEMENT = new Break("ADD_LAST_DOES_NOT_ADD_ELEMENT");
 
-    /// The [addLast][SequencedCollection#addLast] method adds the element to the front of the collection.
+    /// #### ADD_LAST_ADDS_TO_FRONT
+    /// **Purpose**: Forces `addLast(E)` method to add_singleElement_returnsTrueAndUpdatesSize elements to the front instead of the end
+    /// **Effect**: Sequence order is violated, elements appear at the wrong position
+    /// **Use Case**: Testing code robustness when positional guarantees are broken
+    /// **Affected Methods**: `addLast(E)`
     /// @see BreakableSequencedCollection#addLast(Object)
-    public static final Break ADD_LAST_ADDS_TO_FRONT = new Break("addLast adds to the beginning");
+    public static final Break ADD_LAST_ADDS_TO_FRONT = new Break("ADD_LAST_ADDS_TO_FRONT");
 
-    /// The `getFirst` method returns a `null` value.
+    /// #### ADD_LAST_IS_NOT_THREAD_SAFE
+    /// **Purpose**: Forces `addLast(E)` method to be not thread safe
+    /// **Effect**: Disables synchronization for the `addLast` operation
+    /// **Use Case**: Testing code robustness under concurrent access when thread-safety is expected
+    /// **Affected Methods**: `addLast(E)`
+    /// @see BreakableSequencedCollection#addLast(Object)
+    public static final Break ADD_LAST_IS_NOT_THREAD_SAFE = new Break("ADD_LAST_IS_NOT_THREAD_SAFE");
+
+    /// #### GET_FIRST_RETURNS_NULL
+    /// **Purpose**: Forces `getFirst()` method to return `null` instead of the first element
+    /// **Effect**: Violates `SequencedCollection` contract that should return elements or throw exceptions
+    /// **Use Case**: Testing code handling of unexpected `null` returns from access methods
+    /// **Affected Methods**: `getFirst()`
     /// @see BreakableSequencedCollection#getFirst()
-    public static final Break GET_FIRST_RETURNS_NULL = new Break("getFirst always returns null");
+    public static final Break GET_FIRST_RETURNS_NULL = new Break("GET_FIRST_RETURNS_NULL");
 
-    /// The `getFirst` method always throws a `NoSuchElementException`
+    /// #### GET_FIRST_ALWAYS_THROWS
+    /// **Purpose**: Forces `getFirst()` method to always throw `NoSuchElementException`
+    /// **Effect**: Method throws exceptions even when elements exist in the collection
+    /// **Use Case**: Testing error handling when access methods fail unexpectedly
+    /// **Affected Methods**: `getFirst()`
     /// @see BreakableSequencedCollection#getFirst()
-    public static final Break GET_FIRST_ALWAYS_THROWS = new Break("getFirst always throws");
+    public static final Break GET_FIRST_ALWAYS_THROWS = new Break("GET_FIRST_ALWAYS_THROWS");
 
-    /// The `getFirst` method returns the second element.
+    /// #### GET_FIRST_SKIPS_FIRST_ELEMENT
+    /// **Purpose**: Forces `getFirst()` method to skip the actual first element and return the second
+    /// **Effect**: First element becomes inaccessible via `getFirst()` method
+    /// **Use Case**: Testing code handling when positional access is unreliable
+    /// **Affected Methods**: `getFirst()`
     /// @see BreakableSequencedCollection#getFirst()
-    public static final Break GET_FIRST_SKIPS_FIRST_ELEMENT = new Break("getFirst returns second element");
+    public static final Break GET_FIRST_SKIPS_FIRST_ELEMENT = new Break("GET_FIRST_SKIPS_FIRST_ELEMENT");
 
-    /// The `getLast` method returns a `null` value.
+    /// #### GET_FIRST_IS_NOT_THREAD_SAFE
+    /// **Purpose**: Forces `getFirst()` method to be not thread safe
+    /// **Effect**: Disables synchronization for the `getFirst` operation
+    /// **Use Case**: Testing code robustness under concurrent access when thread-safety is expected
+    /// **Affected Methods**: `getFirst()`
+    /// @see BreakableSequencedCollection#getFirst()
+    public static final Break GET_FIRST_IS_NOT_THREAD_SAFE = new Break("GET_FIRST_IS_NOT_THREAD_SAFE");
+
+    /// #### GET_LAST_RETURNS_NULL
+    /// **Purpose**: Forces `getLast()` method to return `null` instead of the last element
+    /// **Effect**: Violates `SequencedCollection` contract that should return elements or throw exceptions
+    /// **Use Case**: Testing code handling of unexpected `null` returns from access methods
+    /// **Affected Methods**: `getLast()`
     /// @see BreakableSequencedCollection#getLast()
-    public static final Break GET_LAST_RETURNS_NULL = new Break("getLast always returns null");
+    public static final Break GET_LAST_RETURNS_NULL = new Break("GET_LAST_RETURNS_NULL");
 
-    /// The `getLast` method always throws a `NoSuchElementException`
+    /// #### GET_LAST_ALWAYS_THROWS
+    /// **Purpose**: Forces `getLast()` method to always throw `NoSuchElementException`
+    /// **Effect**: Method throws exceptions even when elements exist in the collection
+    /// **Use Case**: Testing error handling when access methods fail unexpectedly
+    /// **Affected Methods**: `getLast()`
     /// @see BreakableSequencedCollection#getLast()
-    public static final Break GET_LAST_ALWAYS_THROWS = new Break("getLast always throws");
+    public static final Break GET_LAST_ALWAYS_THROWS = new Break("GET_LAST_ALWAYS_THROWS");
 
-    /// The `getLast` method returns the second-to-last element.
+    /// #### GET_LAST_SKIPS_LAST_ELEMENT
+    /// **Purpose**: Forces `getLast()` method to skip the actual last element and return the second-to-last
+    /// **Effect**: Last element becomes inaccessible via `getLast()` method
+    /// **Use Case**: Testing code handling when positional access is unreliable
+    /// **Affected Methods**: `getLast()`
     /// @see BreakableSequencedCollection#getLast()
-    public static final Break GET_LAST_SKIPS_LAST_ELEMENT = new Break("getLast returns second-to-last element");
+    public static final Break GET_LAST_SKIPS_LAST_ELEMENT = new Break("GET_LAST_SKIPS_LAST_ELEMENT");
 
-    /// The [removeFirst][SequencedCollection#removeFirst()] method does not remove the first element.
+    /// #### GET_LAST_IS_NOT_THREAD_SAFE
+    /// **Purpose**: Forces `getLast()` method to be not thread safe
+    /// **Effect**: Disables synchronization for the `getLast` operation
+    /// **Use Case**: Testing code robustness under concurrent access when thread-safety is expected
+    /// **Affected Methods**: `getLast()`
+    /// @see BreakableSequencedCollection#getLast()
+    public static final Break GET_LAST_IS_NOT_THREAD_SAFE = new Break("GET_LAST_IS_NOT_THREAD_SAFE");
+
+    /// #### REMOVE_FIRST_DOES_NOT_REMOVE_ELEMENT
+    /// **Purpose**: Forces `removeFirst()` method to return elements without actually removing them
+    /// **Effect**: Elements remain in collection despite successful method completion
+    /// **Use Case**: Testing assumptions about removal operation effectiveness
+    /// **Affected Methods**: `removeFirst()`
     /// @see BreakableSequencedCollection#removeFirst()
-    public static final Break REMOVE_FIRST_DOES_NOT_REMOVE_ELEMENT = new Break("removeFirst() does not remove element");
+    public static final Break REMOVE_FIRST_DOES_NOT_REMOVE_ELEMENT = new Break("REMOVE_FIRST_DOES_NOT_REMOVE_ELEMENT");
 
-    /// The [removeFirst][SequencedCollection#removeFirst()] method returns `null`
+    /// #### REMOVE_FIRST_RETURNS_NULL
+    /// **Purpose**: Forces `removeFirst()` method to return `null` instead of the removed element
+    /// **Effect**: Violates `SequencedCollection` contract for non-empty collections
+    /// **Use Case**: Testing code handling of unexpected `null` returns from removal methods
+    /// **Affected Methods**: `removeFirst()`
     /// @see BreakableSequencedCollection#removeFirst()
-    public static final Break REMOVE_FIRST_RETURNS_NULL = new Break("removeFirst() always returns null");
+    public static final Break REMOVE_FIRST_RETURNS_NULL = new Break("REMOVE_FIRST_RETURNS_NULL");
 
-    /// The [removeFirst][SequencedCollection#removeFirst()] method always throws a `NoSuchElement` exception.
+    /// #### REMOVE_FIRST_ALWAYS_THROWS
+    /// **Purpose**: Forces `removeFirst()` method to always throw `NoSuchElementException`
+    /// **Effect**: Method throws exceptions even when elements exist to remove
+    /// **Use Case**: Testing error handling when removal methods fail unexpectedly
+    /// **Affected Methods**: `removeFirst()`
     /// @see BreakableSequencedCollection#removeFirst()
-    public static final Break REMOVE_FIRST_ALWAYS_THROWS = new Break("removeFirst() always throws");
+    public static final Break REMOVE_FIRST_ALWAYS_THROWS = new Break("REMOVE_FIRST_ALWAYS_THROWS");
 
-    /// The [removeLast][SequencedCollection#removeLast()] method does not remove the last element.
+    /// #### REMOVE_FIRST_IS_NOT_THREAD_SAFE
+    /// **Purpose**: Forces `removeFirst()` method to be not thread safe
+    /// **Effect**: Disables synchronization for the `removeFirst` operation
+    /// **Use Case**: Testing code robustness under concurrent access when thread-safety is expected
+    /// **Affected Methods**: `removeFirst()`
+    /// @see BreakableSequencedCollection#removeFirst()
+    public static final Break REMOVE_FIRST_IS_NOT_THREAD_SAFE = new Break("REMOVE_FIRST_IS_NOT_THREAD_SAFE");
+
+    /// #### REMOVE_LAST_DOES_NOT_REMOVE_ELEMENT
+    /// **Purpose**: Forces `removeLast()` method to return elements without actually removing them
+    /// **Effect**: Elements remain in collection despite successful method completion
+    /// **Use Case**: Testing assumptions about removal operation effectiveness
+    /// **Affected Methods**: `removeLast()`
     /// @see BreakableSequencedCollection#removeLast()
-    public static final Break REMOVE_LAST_DOES_NOT_REMOVE_ELEMENT = new Break("removeLast() does not remove element");
+    public static final Break REMOVE_LAST_DOES_NOT_REMOVE_ELEMENT = new Break("REMOVE_LAST_DOES_NOT_REMOVE_ELEMENT");
 
-    /// The [removeLast][SequencedCollection#removeLast()] method returns `null`
+    /// #### REMOVE_LAST_RETURNS_NULL
+    /// **Purpose**: Forces `removeLast()` method to return `null` instead of the removed element
+    /// **Effect**: Violates `SequencedCollection` contract for non-empty collections
+    /// **Use Case**: Testing code handling of unexpected `null` returns from removal methods
+    /// **Affected Methods**: `removeLast()`
     /// @see BreakableSequencedCollection#removeLast()
-    public static final Break REMOVE_LAST_RETURNS_NULL = new Break("removeLast() always returns null");
+    public static final Break REMOVE_LAST_RETURNS_NULL = new Break("REMOVE_LAST_RETURNS_NULL");
 
-    /// The [removeLast][SequencedCollection#removeLast()] method always throws a `NoSuchElement` exception.
+    /// #### REMOVE_LAST_ALWAYS_THROWS
+    /// **Purpose**: Forces `removeLast()` method to always throw `NoSuchElementException`
+    /// **Effect**: Method throws exceptions even when elements exist to remove
+    /// **Use Case**: Testing error handling when removal methods fail unexpectedly
+    /// **Affected Methods**: `removeLast()`
     /// @see BreakableSequencedCollection#removeLast()
-    public static final Break REMOVE_LAST_ALWAYS_THROWS = new Break("removeLast always throws");
+    public static final Break REMOVE_LAST_ALWAYS_THROWS = new Break("REMOVE_LAST_ALWAYS_THROWS");
 
-    /// The [reversed][java.util.SequencedCollection#reversed] method does not reverse the collection.
+    /// #### REMOVE_LAST_IS_NOT_THREAD_SAFE
+    /// **Purpose**: Forces `removeLast()` method to be not thread safe
+    /// **Effect**: Disables synchronization for the `removeLast` operation
+    /// **Use Case**: Testing code robustness under concurrent access when thread-safety is expected
+    /// **Affected Methods**: `removeLast()`
+    /// @see BreakableSequencedCollection#removeLast()
+    public static final Break REMOVE_LAST_IS_NOT_THREAD_SAFE = new Break("REMOVE_LAST_IS_NOT_THREAD_SAFE");
+
+    /// #### REVERSED_DOES_NOT_REVERSE_COLLECTION
+    /// **Purpose**: Forces `reversed()` method to return the original collection instead of a reversed view
+    /// **Effect**: Sequence reversal operation has no effect, maintaining original order
+    /// **Use Case**: Testing code that depends on reversed views having different iteration order
+    /// **Affected Methods**: `reversed()`
     /// @see BreakableSequencedCollection#reversed()
-    public static final Break REVERSED_DOES_NOT_REVERSE_COLLECTION = new Break("reversed() does not reverse elements");
+    public static final Break REVERSED_DOES_NOT_REVERSE_COLLECTION = new Break("REVERSED_DOES_NOT_REVERSE_COLLECTION");
 
-    /// The [reversed][java.util.SequencedCollection#reversed] method modifies the collection.
+    /// #### REVERSED_MODIFIES_THE_COLLECTION
+    /// **Purpose**: Forces `reversed()` method to modify the original collection instead of returning a view
+    /// **Effect**: Violates `SequencedCollection` contract that `reversed()` should return views
+    /// **Use Case**: Testing code handling when view operations have unexpected side effects
+    /// **Affected Methods**: `reversed()`
     /// @see BreakableSequencedCollection#reversed()
-    public static final Break REVERSED_MODIFIES_THE_COLLECTION = new Break("reversed() modifies the collection");
+    public static final Break REVERSED_MODIFIES_THE_COLLECTION = new Break("REVERSED_MODIFIES_THE_COLLECTION");
+
+    /// #### REVERSED_IS_NOT_THREAD_SAFE
+    /// **Purpose**: Forces `reversed()` method to be not thread safe
+    /// **Effect**: Disables synchronization for the `reversed` operation
+    /// **Use Case**: Testing code robustness under concurrent access when thread-safety is expected
+    /// **Affected Methods**: `reversed()`
+    /// @see BreakableSequencedCollection#reversed()
+    public static final Break REVERSED_IS_NOT_THREAD_SAFE = new Break("REVERSED_IS_NOT_THREAD_SAFE");
 
     /// Creates an empty sequenced collection that has no breaks.
     public BreakableSequencedCollection() {
-        this(new ArrayList<>(), new HashSet<>(), 0);
+        this(new ArrayList<>(), new HashSet<>(), new HashMap<>(), DEFAULT_CHARACTERISTICS, DEFAULT_PERMITS,
+                DEFAULT_SAFETY, Object.class);
     }
 
     /// Creates a breakable sequenced collection from an existing instance.
     /// @param other the breakable collection to copy.
     public BreakableSequencedCollection(final @NonNull BreakableSequencedCollection<E> other) {
-        this(other.sequenced, new HashSet<>(), 0);
+        this(new ArrayList<>(other.sequenced), new HashSet<>(other.breaks()), new HashMap<>(other.methodStatuses()),
+                other.characteristics(), other.permits(), other.isSafe(), other.compatibleType());
     }
 
     /// Creates a breakable iterable from an iterable.
     /// @param collection the iterator to use for the elements.
     public BreakableSequencedCollection(final @NonNull List<E> collection) {
-        this(collection, new HashSet<>(), 0);
+        this(collection, new HashSet<>(), new HashMap<>(), DEFAULT_CHARACTERISTICS, DEFAULT_PERMITS, DEFAULT_SAFETY,
+                Object.class);
     }
 
     /// Creates a `BreakableSequencedCollection` from en existing collection and specifying the breaks and collection
@@ -379,38 +514,47 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
     /// [BreakableCollection.Builder].
     /// @param c               the initial elements for the breakable collection.
     /// @param breaks          the breaks for the collection.
+    /// @param methodStatuses the method status configuration.
     /// @param characteristics the characteristics for the collection.
+    /// @param permits         the flags that indicate what types of values are supported by the collection.
+    /// @param isSafe          whether the collection is safe for concurrent access.
     /// @throws NullPointerException if either the `c` or the `breaks` parameters are null.
-    public BreakableSequencedCollection(final @NonNull List<E> c, final @NonNull Collection<Break> breaks,
-                                        final int characteristics) {
-        super(c, breaks, characteristics);
-        this.sequenced = Objects.requireNonNull(c);
+    protected BreakableSequencedCollection(final @NonNull List<E> c, final @NonNull Set<Break> breaks,
+                                           final @NonNull Map<InterfaceMethod, MethodStatus> methodStatuses,
+                                           final int characteristics, final int permits, final boolean isSafe,
+                                           final Class<?> compatibleType) {
+        super(this.sequenced = c, breaks, methodStatuses, characteristics, permits, isSafe, compatibleType);
     }
 
-    /// Implements the [reversed][SequencedCollection#reversed] method from the [SequencedCollection] interface. This
-    /// method can be broken using the following collection breaks:
+    /// Implements the [reversed][SequencedCollection#reversed] method from the [SequencedCollection] interface.
+    /// This method can be broken using the following collection breaks:
     /// - REVERSED_DOES_NOT_REVERSE_COLLECTION
     /// - REVERSED_MODIFIES_THE_COLLECTION
     ///
     /// A collection that has any of these breaks can be constructed using the builder:
     /// ```java
-    ///     Collection<Integer> collection = Breakables.buildSequencedCollection(1,2,3,4,5)
-    ///         .withBreak(CollectionBreaks.REVERSED_DOES_NOT_REVERSE_COLLECTION)
+    ///     SequencedCollection<Integer> collection = new BreakableSequencedCollection.Builder<Integer>()
+    ///         .addElements(1, 2, 3)
+    ///         .addBreak(REVERSED_DOES_NOT_REVERSE_COLLECTION)
     ///         .build();
     /// ```
-    /// @return a collection with the elements in the reverse order.
-    /// @see SequencedCollection#reversed()
+    ///
+    /// @return a reverse-ordered view of this collection, or possibly the original collection or a modified version
+    ///         if the collection has been broken.
+    /// @see SequencedCollection#reversed
     @Override
     public SequencedCollection<E> reversed() {
-        if (supportsMethod(CollectionMethods.Reversed)) {
+        if (supportsMethod(SequencedCollectionMethods.REVERSED)) {
             if (hasBreak(REVERSED_DOES_NOT_REVERSE_COLLECTION)) {
                 return sequenced;
-            } else if (hasBreak(REVERSED_MODIFIES_THE_COLLECTION)) {
-                Collections.reverse(sequenced);
-                return sequenced;
-            } else {
-                return sequenced.reversed();
             }
+            if (hasBreak(REVERSED_MODIFIES_THE_COLLECTION)) {
+                runWithBreakableSafety(REVERSED_IS_NOT_THREAD_SAFE, () -> Collections.reverse(sequenced));
+                return sequenced;
+            }
+            return getWithBreakableSafety(REVERSED_IS_NOT_THREAD_SAFE, () ->
+                    new BreakableSequencedCollection<>(sequenced.reversed(), breaks(), methodStatuses(),
+                            characteristics(), permits(), isSafe(), compatibleType()));
         }  else {
             throw new UnsupportedOperationException();
         }
@@ -432,12 +576,12 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
     /// @see SequencedCollection#addFirst
     @Override
     public void addFirst(final E e) {
-        if (supportsMethod(CollectionMethods.AddFirst)) {
+        if (supportsMethod(SequencedCollectionMethods.ADD_FIRST)) {
             checkNewElement(e);
             if (hasBreak(ADD_FIRST_ADDS_TO_END)) {
-                sequenced.addLast(e);
+                runWithBreakableSafety(ADD_FIRST_IS_NOT_THREAD_SAFE, () -> sequenced.addLast(e));
             } else if (!hasBreak(ADD_FIRST_DOES_NOT_ADD_ELEMENT)) {
-                sequenced.addFirst(e);
+                runWithBreakableSafety(ADD_FIRST_IS_NOT_THREAD_SAFE, () -> sequenced.addFirst(e));
             }
         }  else {
             throw new UnsupportedOperationException();
@@ -460,12 +604,12 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
     /// @see SequencedCollection#addLast
     @Override
     public void addLast(final E e) {
-        if (supportsMethod(CollectionMethods.AddLast)) {
+        if (supportsMethod(SequencedCollectionMethods.ADD_LAST)) {
             checkNewElement(e);
             if (hasBreak(ADD_LAST_ADDS_TO_FRONT)) {
-                sequenced.addFirst(e);
+                runWithBreakableSafety(ADD_LAST_IS_NOT_THREAD_SAFE, () -> sequenced.addFirst(e));
             } else if (!hasBreak(ADD_LAST_DOES_NOT_ADD_ELEMENT)) {
-                sequenced.addLast(e);
+                runWithBreakableSafety(ADD_LAST_IS_NOT_THREAD_SAFE, () -> sequenced.addLast(e));
             }
         }  else {
             throw new UnsupportedOperationException();
@@ -489,18 +633,21 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
     /// @see SequencedCollection#getFirst
     @Override
     public E getFirst() {
-        if (supportsMethod(CollectionMethods.GetFirst)) {
+        if (supportsMethod(SequencedCollectionMethods.GET_FIRST)) {
             if (hasBreak(GET_FIRST_RETURNS_NULL)) {
                 return null;
-            } else if (hasBreak(GET_FIRST_ALWAYS_THROWS)) {
-                throw new NoSuchElementException();
-            } else if (hasBreak(GET_FIRST_SKIPS_FIRST_ELEMENT)) {
-                Iterator<E> i = iterator();
-                i.next();
-                return i.next();
-            } else {
-                return sequenced.getFirst();
             }
+            if (hasBreak(GET_FIRST_ALWAYS_THROWS)) {
+                throw new NoSuchElementException();
+            }
+            if (hasBreak(GET_FIRST_SKIPS_FIRST_ELEMENT)) {
+                return getWithBreakableSafety(GET_FIRST_IS_NOT_THREAD_SAFE, () -> {
+                    Iterator<E> i = iterator();
+                    i.next();
+                    return i.next();
+                });
+            }
+            return getWithBreakableSafety(GET_FIRST_IS_NOT_THREAD_SAFE, sequenced::getFirst);
         }  else {
             throw new UnsupportedOperationException();
         }
@@ -522,18 +669,21 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
     /// @see SequencedCollection#getLast
     @Override
     public E getLast() {
-        if (supportsMethod(CollectionMethods.GetLast)) {
+        if (supportsMethod(SequencedCollectionMethods.GET_LAST)) {
             if (hasBreak(GET_LAST_RETURNS_NULL)) {
                 return null;
-            } else if (hasBreak(GET_LAST_ALWAYS_THROWS)) {
-                throw new NoSuchElementException();
-            } else if (hasBreak(GET_LAST_SKIPS_LAST_ELEMENT)) {
-                Iterator<E> i = reversed().iterator();
-                i.next();
-                return i.next();
-            } else {
-                return sequenced.getLast();
             }
+            if (hasBreak(GET_LAST_ALWAYS_THROWS)) {
+                throw new NoSuchElementException();
+            }
+            if (hasBreak(GET_LAST_SKIPS_LAST_ELEMENT)) {
+                return getWithBreakableSafety(GET_LAST_IS_NOT_THREAD_SAFE, () -> {
+                    Iterator<E> i = reversed().iterator();
+                    i.next();
+                    return i.next();
+                });
+            }
+            return sequenced.getLast();
         }  else {
             throw new UnsupportedOperationException();
         }
@@ -555,16 +705,17 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
     /// @see SequencedCollection#removeFirst
     @Override
     public E removeFirst() {
-        if (supportsMethod(CollectionMethods.RemoveFirst)) {
+        if (supportsMethod(SequencedCollectionMethods.REMOVE_FIRST)) {
             if (hasBreak(REMOVE_FIRST_DOES_NOT_REMOVE_ELEMENT)) {
-                return getFirst();
-            } else if (hasBreak(REMOVE_FIRST_RETURNS_NULL)) {
-                return null;
-            } else if (hasBreak(REMOVE_FIRST_ALWAYS_THROWS)) {
-                throw new NoSuchElementException();
-            } else {
-                return sequenced.removeFirst();
+                return getWithBreakableSafety(REMOVE_FIRST_IS_NOT_THREAD_SAFE, this::getFirst);
             }
+            if (hasBreak(REMOVE_FIRST_RETURNS_NULL)) {
+                return null;
+            }
+            if (hasBreak(REMOVE_FIRST_ALWAYS_THROWS)) {
+                throw new NoSuchElementException();
+            }
+            return sequenced.removeFirst();
         }  else {
             throw new UnsupportedOperationException();
         }
@@ -586,64 +737,60 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
     /// @see SequencedCollection#removeLast
     @Override
     public E removeLast() {
-        if (supportsMethod(CollectionMethods.RemoveLast)) {
+        if (supportsMethod(SequencedCollectionMethods.REMOVE_LAST)) {
             if (hasBreak(REMOVE_LAST_DOES_NOT_REMOVE_ELEMENT)) {
-                return getLast();
-            } else if (hasBreak(REMOVE_LAST_RETURNS_NULL)) {
-                return null;
-            } else if (hasBreak(REMOVE_LAST_ALWAYS_THROWS)) {
-                throw new NoSuchElementException();
-            } else {
-                return sequenced.removeLast();
+                return getWithBreakableSafety(REMOVE_LAST_IS_NOT_THREAD_SAFE, this::getLast);
             }
+            if (hasBreak(REMOVE_LAST_RETURNS_NULL)) {
+                return null;
+            }
+            if (hasBreak(REMOVE_LAST_ALWAYS_THROWS)) {
+                throw new NoSuchElementException();
+            }
+            return sequenced.removeLast();
         }  else {
             throw new UnsupportedOperationException();
         }
     }
 
-    /// The builder for BreakableCollection objects.
-    /// @param <E> the element type.
-    public static class Builder<E>
-            extends AbstractBuilder<BreakableSequencedCollection.Builder<E>, BreakableSequencedCollection<E>, E> {
+    /// The builder for `BreakableSequencedCollection` objects.
+    /// @param <E> the element type
+    public static class Builder<E> extends AbstractBuilder<BreakableSequencedCollection.Builder<E>,
+                BreakableSequencedCollection<E>, E> {
 
-        /// Create a builder initialized with the default values.
-        public Builder() {
-            super(new ArrayList<>());
-        }
-
-        /// Create a builder initialized with an element store.
-        /// @param elements the element store to use.
-        public Builder(final @NonNull Collection<E> elements) {
-            super(new ArrayList<>(Objects.requireNonNull(elements)));
-        }
-
-        /// Create a builder initialized with the values copied from another builder.
-        /// @param other the builder to copy the values from.
-        public Builder(final BreakableSequencedCollection.Builder<E> other) {
-            super(other);
-        }
-
-        @Override
-        public Builder<E> self() {
-            return this;
-        }
-
-        @Override
-        public BreakableSequencedCollection.Builder<E> copy() {
-            return new BreakableSequencedCollection.Builder<>(this);
-        }
-
-        /// Build a BreakableCollection objects using the values from the builder.
-        /// @return a new BreakableCollection object.
-        public BreakableSequencedCollection<E> build() {
-            BreakableSequencedCollection<E> broken =
-                    new BreakableSequencedCollection<>(new ArrayList<>(elements()), breaks(), characteristics());
-            broken.setPermitsNulls(permitsNulls());
-            broken.setPermitsDuplicates(permitsDuplicates());
-            broken.setPermitsIncompatibleTypes(permitsIncompatibleTypes());
-            unsupportedMethods().forEach(broken::doesNotSupportMethod);
-            return broken;
-        }
+    /// Create a builder initialized with the default values.
+    public Builder() {
+        super(new ArrayList<>());
     }
+
+    /// Create a builder initialized with an element store.
+    /// @param elements the element store to use
+    public Builder(final @NonNull Collection<E> elements) {
+        super(new ArrayList<>(Objects.requireNonNull(elements)));
+    }
+
+    /// Create a builder initialized with the values copied from another builder.
+    /// @param other the builder to copy the values from
+    public Builder(final BreakableSequencedCollection.Builder<E> other) {
+        super(other);
+    }
+
+    @Override
+    public Builder<E> self() {
+        return this;
+    }
+
+    @Override
+    public BreakableSequencedCollection.Builder<E> copy() {
+        return new BreakableSequencedCollection.Builder<>(this);
+    }
+
+    /// Build a `BreakableSequencedCollection` object using the values from the builder.
+    /// @return a new `BreakableSequencedCollection` object.
+    public BreakableSequencedCollection<E> build() {
+        return new BreakableSequencedCollection<>(new ArrayList<>(elements()), new HashSet<>(breaks()),
+                new HashMap<>(methodStatuses()), characteristics(), permits(), isSafe(), compatibleType());
+    }
+}
 
 }

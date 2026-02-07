@@ -19,7 +19,7 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
  * passes when the two iterables are completely disjoint (share no common elements) and fails when
  * any element from the excluded set is found in the actual iterable.
  * 
- * <h3>Key Testing Scenarios</h3>
+ * ### Key Testing Scenarios
  * <ul>
  * <li>Empty collections - verifies behavior when one or both collections are empty</li>
  * <li>Null handling - ensures proper {@link NullPointerException} for null arguments</li>
@@ -27,15 +27,15 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
  * <li>Overlapping collections - confirms that any shared elements cause the assertion to fail</li>
  * <li>Message handling - tests custom error messages and message suppliers</li>
  * </ul>
- * 
- * <h3>Assertion Method Variants Tested</h3>
+ *
+ * ### Assertion Method Variants Tested
  * <ul>
  * <li>{@link CollectionAssertions#assertContainsNone(Iterable, Iterable)} - basic assertion</li>
  * <li>{@link CollectionAssertions#assertContainsNone(Iterable, Iterable, String)} - with custom message</li>
  * <li>{@link CollectionAssertions#assertContainsNone(Iterable, Iterable, java.util.function.Supplier)} - with message supplier</li>
  * </ul>
- * 
- * <h3>Common Use Cases</h3>
+ *
+ * ### Common Use Cases
  * <p>This assertion is particularly useful for:
  * <ul>
  * <li>Testing collection removal operations ({@code removeAll}, {@code removeIf})</li>

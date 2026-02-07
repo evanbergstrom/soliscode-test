@@ -62,7 +62,7 @@ public interface HashCodeMethodContract<T> extends ContractSupport<T> {
     @Test
     @DisplayName("hashCode() returns the same integer for multiple invocations.")
     default void testHashCodeIsStable() {
-        if (supportsMethod(ObjectMethods.HashCode)) {
+        if (supportsMethod(ObjectMethods.HASH_CODE)) {
             T value = provider().createInstance();
             int hash1 = value.hashCode();
             int hash2 = value.hashCode();
@@ -77,7 +77,7 @@ public interface HashCodeMethodContract<T> extends ContractSupport<T> {
     @Test
     @DisplayName("hashCode() returns the same integer for equals values")
     default void testHashCodeWithEqualValues() {
-       if (supportsMethod(ObjectMethods.HashCode)) {
+       if (supportsMethod(ObjectMethods.HASH_CODE)) {
            T value = provider().createInstance();
            T other = provider().copyInstance(value);
            int hash = value.hashCode();
@@ -94,7 +94,7 @@ public interface HashCodeMethodContract<T> extends ContractSupport<T> {
     @Test
     @DisplayName("hashCode() returns different integer for values that are not equal.")
     default void testHashDifferentValues() {
-        if (supportsMethod(ObjectMethods.HashCode)) {
+        if (supportsMethod(ObjectMethods.HASH_CODE)) {
             List<T> values = provider().createUniqueInstances(10);
             long uniqueValues = values.stream().map(Object::hashCode).distinct().count();
             assertEquals(values.size(), uniqueValues);
@@ -109,7 +109,7 @@ public interface HashCodeMethodContract<T> extends ContractSupport<T> {
     @Test
     @DisplayName("hashCode() returns integer that have a uniform distribution.")
     default void testHashCodeDistribution() {
-        if (supportsMethod(ObjectMethods.HashCode)) {
+        if (supportsMethod(ObjectMethods.HASH_CODE)) {
             final double expectedLoadFactor = 0.75;
             final int numberOfObjects = 1000;
             final int hashTableSize = (int) (numberOfObjects / expectedLoadFactor);

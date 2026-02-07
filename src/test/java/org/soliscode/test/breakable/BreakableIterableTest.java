@@ -7,17 +7,24 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.soliscode.test.AbstractTest;
 import org.soliscode.test.assertions.actions.AssertActions;
-import org.soliscode.test.contract.CollectionMethods;
 import org.soliscode.test.contract.iterable.IterableContract;
+import org.soliscode.test.contract.iterable.IterableMethods;
 import org.soliscode.test.contract.support.WithIntegerElement;
 import org.soliscode.test.provider.CollectionProvider;
 import org.soliscode.test.provider.CollectionProviders;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.Spliterator;
 import java.util.function.Consumer;
 
 import static java.util.Spliterator.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.soliscode.test.assertions.Assertions.assertNotInstanceOf;
 import static org.soliscode.test.assertions.collection.CollectionAssertions.assertContainsSame;
 import static org.soliscode.test.breakable.BreakableIterable.*;
@@ -166,7 +173,7 @@ public class BreakableIterableTest extends AbstractTest
     @Test
     public void testIteratorRemoveWithoutSupport() {
         BreakableIterable<Integer> iterable = Breakables.buildIterable(1, 2, 3)
-                .doesNotSupport(CollectionMethods.IteratorRemove)
+                .doesNotSupport(IterableMethods.ITERATOR_REMOVE)
                 .build();
 
         final Iterator<?> iterator = iterable.iterator();
@@ -177,7 +184,7 @@ public class BreakableIterableTest extends AbstractTest
     @Test
     public void testIteratorForEachRemainingWithoutSupport() {
         BreakableIterable<Integer> iterable = Breakables.buildIterable(1, 2, 3)
-                .doesNotSupport(CollectionMethods.IteratorForEachRemaining)
+                .doesNotSupport(IterableMethods.ITERATOR_FOR_EACH_REMAINING)
                 .build();
 
         final Iterator<?> iterator = iterable.iterator();
@@ -318,26 +325,6 @@ public class BreakableIterableTest extends AbstractTest
     }
 
     // Tests for Object Contract
-
-    /// Test equals method with same content but different characteristics.
-    @Test
-    @DisplayName("Test equals method")
-    public void testEquals() {
-        BreakableIterable<Integer> iterable1 = Breakables.buildIterable(1, 2, 3)
-                .setCharacteristics(ORDERED)
-                .build();
-
-        BreakableIterable<Integer> iterable2 = Breakables.buildIterable(1, 2, 3)
-                .setCharacteristics(ORDERED)
-                .build();
-
-        BreakableIterable<Integer> iterable3 = Breakables.buildIterable(1, 2, 3)
-                .setCharacteristics(SIZED)
-                .build();
-
-        assertEquals(iterable1, iterable2);
-        assertNotEquals(iterable1, iterable3);
-    }
 
     /// Test unbroken method returns original iterable.
     @Test

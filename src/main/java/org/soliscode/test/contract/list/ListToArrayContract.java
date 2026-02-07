@@ -27,7 +27,7 @@ public interface ListToArrayContract<E, L extends List<E>>
     /// @throws org.opentest4j.AssertionFailedError if the test fails.
     @Test
     @DisplayName("The toArray method works on a container with elements")
-    default void testToArray() {
+    default void toArray_whenNotEmpty_returnsArrayWithElements() {
         Collection<E> values = elementProvider().createUniqueInstances(DEFAULT_SIZE);
         Collection<E> collection = provider().createInstance(values);
         Object[] array = collection.toArray();
@@ -39,7 +39,7 @@ public interface ListToArrayContract<E, L extends List<E>>
     /// @throws org.opentest4j.AssertionFailedError if the test fails.
     @Test
     @DisplayName("The toArray method returns a safe array")
-    default void testToArrayIsSafe() {
+    default void toArray_whenCalled_returnsSafeArray() {
         Collection<E> values = elementProvider().createUniqueInstances(DEFAULT_SIZE);
         Collection<E> collection = provider().createInstance(values);
 

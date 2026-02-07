@@ -3,7 +3,10 @@ package org.soliscode.test.breakable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.NavigableSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.soliscode.test.breakable.BreakableNavigableSet.*;
@@ -15,7 +18,7 @@ import static org.soliscode.test.breakable.BreakableNavigableSet.*;
  * broken {@link NavigableSet} behavior for testing purposes. The {@code BreakableNavigableSet} extends the functionality
  * of {@code BreakableSortedSet} with additional navigation methods and their corresponding breakable behaviors.
  *
- * <h3>Purpose and Use Cases</h3>
+ * ### Purpose and Use Cases
  * <p>The {@code BreakableNavigableSet} is particularly valuable for:
  * <ul>
  * <li>Testing error handling in code that uses NavigableSet navigation methods</li>
@@ -26,10 +29,10 @@ import static org.soliscode.test.breakable.BreakableNavigableSet.*;
  * <li>Testing descending iteration and view functionality</li>
  * </ul>
  *
- * <h3>Breakable Behaviors Tested</h3>
+ * ### Breakable Behaviors Tested
  * <p>This test suite validates the following types of breakable behaviors:
  *
- * <h4>Navigation Method Breaks</h4>
+ * #### Navigation Method Breaks
  * <ul>
  * <li>{@code CEILING_ALWAYS_RETURNS_NULL} - ceiling() method always returns null</li>
  * <li>{@code CEILING_RETURNS_FLOOR_VALUE} - ceiling() returns floor value instead</li>
@@ -41,7 +44,7 @@ import static org.soliscode.test.breakable.BreakableNavigableSet.*;
  * <li>{@code LOWER_RETURNS_HIGHER_VALUE} - lower() returns higher value instead</li>
  * </ul>
  *
- * <h4>Poll Operation Breaks</h4>
+ * #### Poll Operation Breaks
  * <ul>
  * <li>{@code POLL_FIRST_ALWAYS_RETURNS_NULL} - pollFirst() always returns null</li>
  * <li>{@code POLL_FIRST_DOES_NOT_REMOVE} - pollFirst() returns element but doesn't remove it</li>
@@ -49,13 +52,13 @@ import static org.soliscode.test.breakable.BreakableNavigableSet.*;
  * <li>{@code POLL_LAST_DOES_NOT_REMOVE} - pollLast() returns element but doesn't remove it</li>
  * </ul>
  *
- * <h4>Descendant View Breaks</h4>
+ * #### Descendant View Breaks
  * <ul>
  * <li>{@code DESCENDING_SET_RETURNS_EMPTY} - descendingSet() always returns empty set</li>
  * <li>{@code DESCENDING_ITERATOR_RETURNS_EMPTY} - descendingIterator() returns empty iterator</li>
  * </ul>
  *
- * <h3>Testing Strategy</h3>
+ * ### Testing Strategy
  * <p>Each test method focuses on a specific break behavior and verifies that:
  * <ul>
  * <li>The break is correctly applied to the navigable set instance</li>
@@ -565,7 +568,7 @@ public class BreakableNavigableSetTest {
                 .withComparator(Collections.reverseOrder())
                 .addBreak(CEILING_ALWAYS_RETURNS_NULL);
 
-        // Create a copy and add additional breaks
+        // Create a copy and add_singleElement_returnsTrueAndUpdatesSize additional breaks
         BreakableNavigableSet.Builder<Integer> copyBuilder = new BreakableNavigableSet.Builder<>(baseBuilder)
                 .addBreak(POLL_FIRST_DOES_NOT_REMOVE);
 

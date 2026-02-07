@@ -2,18 +2,44 @@ package org.soliscode.test.contract.collection;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.soliscode.test.contract.CollectionMethods;
+import org.opentest4j.AssertionFailedError;
 import org.soliscode.test.contract.support.CollectionContractSupport;
 import org.soliscode.test.util.MatchNothing;
 
 import java.util.Collection;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
-/// This interface tests if a collection class has implemented the `remove` method correctly.
+/// **Contract for the `remove` method of a `Collection`**
+///
+/// This interface defines tests for the [remove][Collection#remove] method. It is designed
+/// to be used as a mix-in interface by test classes that verify [Collection] implementations.
+///
+/// ## Purpose
+/// The purpose of this contract is to ensure that a collection's `remove` implementation correctly:
+/// - Removes a single instance of the specified element from the collection.
+/// - Returns `true` if the collection changed as a result of the call.
+/// - Updates the collection size appropriately.
+/// - Handles `null` values according to the collection's configuration.
+/// - Handles incompatible types according to the collection's configuration.
+/// - Throws [UnsupportedOperationException] if the method is not supported by the implementation.
+///
+/// ## Usage Examples
+/// To use this contract, implement it in your test class along with the required support interfaces:
+///
+/// ```java
+/// class MyCollectionRemoveTest implements RemoveContract<String, MyCollection<String>> {
+///     @Override
+///     public CollectionProvider<String, MyCollection<String>> provider() {
+///         return MyCollection::new;
+///     }
+/// }
+/// ```
+///
+/// ## Thread Safety
+/// This contract interface does not provide any thread-safety guarantees. The thread safety of the
+/// tests depends on the [Collection] and [org.soliscode.test.provider.CollectionProvider] implementations being tested.
 ///
 /// @param <E> The element type being tested.
 /// @param <C> The collection type being tested.
@@ -22,13 +48,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /// @since 1.0.0
 public interface RemoveContract<E, C extends Collection<E>> extends CollectionContractSupport<E, C> {
 
-    /// Tests that the `remove` method works on an empty container.
+    /// Tests that the [remove][Collection#remove] method returns `false` when called on an empty collection.
+    ///
+    /// @see Collection#remove
+    /// @throws UnsupportedOperationException if the method is not supported
+    /// @throws AssertionFailedError if any assertions failed
+    @DisplayName("remove(Object) returns false for an empty collection")
     @Test
-    @DisplayName("The remove method can be called on an empty container")
-    default void testRemoveOnEmptyContainer() {
+    default void remove_whenEmpty_returnsFalse() {
         Collection<E> collection = provider().emptyInstance();
         E e = elementProvider().createInstance();
-        if (supportsMethod(CollectionMethods.Remove)) {
+        if (supportsMethod(CollectionMethods.REMOVE)) {
             boolean changed = collection.remove(e);
             assertFalse(changed);
         } else {
@@ -36,17 +66,22 @@ public interface RemoveContract<E, C extends Collection<E>> extends CollectionCo
         }
     }
 
-    /// Tests that the `remove` method works on a container with elements.
-    /// #Implementation Note
-    /// There is no guarantee of the order that the elements are added to the collection, but in case
-    /// they are stored in the same order they are added, this test will remove elements that are added first,
-    /// added lsat, and added in the middle.
+    /// Tests that the [remove][Collection#remove] method works for a collection with elements.
+    ///
+    /// This test verifies that:
+    /// 1. A single element is removed from the collection.
+    /// 2. The method returns `true` indicating the collection has changed.
+    /// 3. The collection no longer contains the removed element.
+    ///
+    /// @see Collection#remove
+    /// @throws UnsupportedOperationException if the method is not supported
+    /// @throws AssertionFailedError if any assertions failed
+    @DisplayName("remove(Object) returns expected results for a collection with elements")
     @Test
-    @DisplayName("The remove method works on a container with elements")
-    default void testRemoveOnContainerWithElements() {
+    default void remove_whenNotEmpty_returnsExpectedResults() {
         List<E> values = elementProvider().createUniqueInstances(DEFAULT_SIZE);
         Collection<E> collection = provider().createInstance(values);
-        if (supportsMethod(CollectionMethods.Remove)) {
+        if (supportsMethod(CollectionMethods.REMOVE)) {
             // Remove element in middle of collection
             int middleIndex = values.size() / 2;
             E middle = values.get(middleIndex);
@@ -60,7 +95,7 @@ public interface RemoveContract<E, C extends Collection<E>> extends CollectionCo
             assertTrue(changed);
             assertFalse(collection.contains(first));
 
-            // Remove first element
+            // Remove last element
             E last = values.getLast();
             changed = collection.remove(last);
             assertTrue(changed);
@@ -80,11 +115,14 @@ public interface RemoveContract<E, C extends Collection<E>> extends CollectionCo
         }
     }
 
-    /// Tests that the `remove` method works with `null` elements.
+    /// Tests that the [remove][Collection#remove] method handles `null` values correctly.
+    ///
+    /// @see Collection#remove
+    /// @throws AssertionFailedError if any assertions failed
+    @DisplayName("remove(Object) handles null values correctly")
     @Test
-    @DisplayName("The remove method works with null elements")
-    default void testRemoveOnContainerWithNulls() {
-        if (supportsMethod(CollectionMethods.Remove) && permitNulls()) {
+    default void remove_withNullValue_returnsExpectedResults() {
+        if (supportsMethod(CollectionMethods.REMOVE) && permitNulls()) {
             List<E> values = elementProvider().createUniqueInstances(2);
             Collection<E> collection = provider().emptyInstance();
             collection.add(values.get(0));
@@ -102,11 +140,14 @@ public interface RemoveContract<E, C extends Collection<E>> extends CollectionCo
         }
     }
 
-    /// Tests that the `remove` method works with incompatible objects.
+    /// Tests that the [remove][Collection#remove] method handles incompatible types correctly.
+    ///
+    /// @see Collection#remove
+    /// @throws AssertionFailedError if any assertions failed
+    @DisplayName("remove(Object) returns false for incompatible types")
     @Test
-    @DisplayName("The remove method works with incompatible types")
-    default void testRemoveOnIncompatibleObject() {
-        if (supportsMethod(CollectionMethods.Remove)) {
+    default void remove_withIncompatibleType_returnsFalse() {
+        if (supportsMethod(CollectionMethods.REMOVE)) {
             Collection<E> collection = provider().createInstanceWithUniqueElements();
             assertFalse(collection.remove(new MatchNothing()));
         }

@@ -243,7 +243,7 @@ public final class AssertStringContains {
     ///
     /// // Configuration validation with descriptive error
     /// List<String> configParams = List.of("database.host", "database.port", "database.name");
-    /// String config = "database.host=localhost\ndatabase.port=5432";
+    /// String config = "database.host=localhost\n database.port=5432";
     /// assertStringContains(
     ///     configParams,
     ///     config,

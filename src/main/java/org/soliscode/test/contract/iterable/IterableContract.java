@@ -16,6 +16,7 @@
 
 package org.soliscode.test.contract.iterable;
 
+import org.soliscode.test.InterfaceMethod;
 import org.soliscode.test.contract.object.ObjectContract;
 
 /// This interface tests if a iterable class has implemented the `Iterable` methods correctly based upon the
@@ -34,4 +35,12 @@ public interface IterableContract<E, I extends Iterable<E>>
         IteratorMethodContract<E, I>,
         ForEachMethodContract<E, I>,
         SpliteratorMethodContract<E, I> {
+
+    /// Used to indicate that the class being tested does not support an optional method.
+    /// @param method the method that the class being tested does not support.
+    void doesNotSupportMethod(InterfaceMethod method);
+
+    default void doesNotSupportModification() {
+        doesNotSupportMethod(IterableMethods.ITERATOR_REMOVE);
+    }
 }

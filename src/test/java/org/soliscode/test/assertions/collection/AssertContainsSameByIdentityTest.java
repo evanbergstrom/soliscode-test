@@ -21,7 +21,7 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
  * {@code equals()} method. The assertion validates that both iterables contain identical object
  * references in any order, with the same multiplicity.
  * 
- * <h3>Key Differences from Equality-Based Assertions</h3>
+ * ### Key Differences from Equality-Based Assertions
  * <p>This assertion differs from {@code assertContainsSame} (equality-based) in critical ways:
  * <ul>
  * <li>Uses {@code ==} comparison instead of {@code equals()} method</li>
@@ -29,8 +29,8 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
  * <li>Only identical object references are considered equivalent</li>
  * <li>Useful for testing object caching, singleton patterns, or reference semantics</li>
  * </ul>
- * 
- * <h3>Key Testing Scenarios</h3>
+ *
+ * ### Key Testing Scenarios
  * <ul>
  * <li>Empty collections - verifies behavior with empty iterables</li>
  * <li>Null handling - ensures proper {@link NullPointerException} for null arguments</li>
@@ -39,15 +39,15 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
  * <li>Size mismatches - tests behavior when collections have different sizes</li>
  * <li>Message handling - tests custom error messages and message suppliers</li>
  * </ul>
- * 
- * <h3>Assertion Method Variants Tested</h3>
+ *
+ * ### Assertion Method Variants Tested
  * <ul>
  * <li>{@link CollectionAssertions#assertContainsSameByIdentity(Iterable, Iterable)} - basic assertion</li>
  * <li>{@link CollectionAssertions#assertContainsSameByIdentity(Iterable, Iterable, String)} - with custom message</li>
  * <li>{@link CollectionAssertions#assertContainsSameByIdentity(Iterable, Iterable, java.util.function.Supplier)} - with message supplier</li>
  * </ul>
- * 
- * <h3>Common Use Cases</h3>
+ *
+ * ### Common Use Cases
  * <p>This assertion is particularly valuable for:
  * <ul>
  * <li>Testing object pooling and caching mechanisms</li>

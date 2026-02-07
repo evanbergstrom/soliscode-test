@@ -19,7 +19,7 @@ package org.soliscode.test.provider;
 import org.jspecify.annotations.NonNull;
 
 /// Provides instances of a class that implements the `Number` interface for the purposes of testing.
-/// This interface extends `ObjectProvider` to add number-specific functionality for retrieving
+/// This interface extends `ObjectProvider` to add_singleElement_returnsTrueAndUpdatesSize number-specific functionality for retrieving
 /// maximum and minimum values of numeric types.
 ///
 /// ## Purpose

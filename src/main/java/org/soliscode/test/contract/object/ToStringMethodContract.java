@@ -54,7 +54,7 @@ public interface ToStringMethodContract<T> extends ContractSupport<T> {
     /// @see Object#toString()
     @Test
     default void testToStringIsConsistent() {
-        if (supportsMethod(ObjectMethods.ToString)) {
+        if (supportsMethod(ObjectMethods.TO_STRING)) {
             T value = provider().createInstance();
             String string1 = value.toString();
             String string2 = value.toString();
@@ -68,7 +68,7 @@ public interface ToStringMethodContract<T> extends ContractSupport<T> {
     /// @see Object#toString()
     @Test
     default void testToStringForEqualValues() {
-        if (supportsMethod(ObjectMethods.ToString)) {
+        if (supportsMethod(ObjectMethods.TO_STRING)) {
             T value = provider().createInstance();
             T other = provider().copyInstance(value);
             String string = value.toString();
@@ -83,7 +83,7 @@ public interface ToStringMethodContract<T> extends ContractSupport<T> {
     /// @see Object#toString()
     @Test
     default void testToStringForDifferentValues() {
-        if (supportsMethod(ObjectMethods.ToString)) {
+        if (supportsMethod(ObjectMethods.TO_STRING)) {
             List<T> values = provider().createUniqueInstances(10);
             long uniqueValues = values.stream().map(Object::toString).distinct().count();
             assertEquals(values.size(), uniqueValues);
@@ -96,7 +96,7 @@ public interface ToStringMethodContract<T> extends ContractSupport<T> {
      /// @see Object#toString()
     @Test
     default void testToStringOverridden() {
-        if (supportsMethod(ObjectMethods.ToString)) {
+        if (supportsMethod(ObjectMethods.TO_STRING)) {
             List<T> values = provider().createUniqueInstances(10);
             for (T value : values) {
                 String defaultString = value.getClass().getName() + '@' + Integer.toHexString(value.hashCode());

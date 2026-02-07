@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Evan Bergstrom
+ * Copyright 2025 Evan Bergstrom
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,23 +16,31 @@
 package org.soliscode.test.breakable;
 
 import org.jspecify.annotations.NonNull;
-import org.soliscode.test.OptionalMethod;
-import org.soliscode.test.contract.CollectionMethods;
+import org.soliscode.test.InterfaceMethod;
+import org.soliscode.test.MethodStatus;
+import org.soliscode.test.contract.collection.CollectionMethods;
 import org.soliscode.test.contract.support.CollectionProviderSupport;
 import org.soliscode.test.provider.CollectionProvider;
 import org.soliscode.test.provider.CollectionProviders;
 import org.soliscode.test.provider.ObjectProvider;
-import org.soliscode.test.util.CollectionTestUtils;
 import org.soliscode.test.util.IterableTestUtils;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 
 /// **Breakable Collection Implementation for Testing**
@@ -45,7 +53,7 @@ import java.util.function.Predicate;
 /// ## Core Functionality
 ///
 /// As a Collection implementation, this class supports all standard collection operations
-/// (add, remove, contains, size, etc.) but can be configured to break these fundamental
+/// (add_singleElement_returnsTrueAndUpdatesSize, remove, contains, size, etc.) but can be configured to break these fundamental
 /// contracts through specific breaks. This enables testing of code that must handle
 /// unexpected collection behaviors.
 ///
@@ -67,24 +75,24 @@ import java.util.function.Predicate;
 /// ### Element Modification Breaks
 ///
 /// #### ADD_DOES_NOT_ADD_ELEMENT
-/// **Purpose**: Forces `add()` method to accept elements but not actually add them to the collection
+/// **Purpose**: Forces `add_singleElement_returnsTrueAndUpdatesSize()` method to accept elements but not actually add_singleElement_returnsTrueAndUpdatesSize them to the collection
 /// **Effect**: Method returns normally but collection remains unchanged
-/// **Use Case**: Testing code that assumes successful add operations modify the collection
+/// **Use Case**: Testing code that assumes successful add_singleElement_returnsTrueAndUpdatesSize operations modify the collection
 ///
 /// #### ADD_ALWAYS_RETURNS_TRUE / ADD_ALWAYS_RETURNS_FALSE
-/// **Purpose**: Forces `add()` method to return incorrect success/failure indicators
+/// **Purpose**: Forces `add_singleElement_returnsTrueAndUpdatesSize()` method to return incorrect success/failure indicators
 /// **Effect**: Return value doesn't match actual operation result
-/// **Use Case**: Testing code that relies on add() return values for control flow
+/// **Use Case**: Testing code that relies on add_singleElement_returnsTrueAndUpdatesSize() return values for control flow
 ///
 /// #### ADD_ALWAYS_RETURNS_OPPOSITE_VALUE
-/// **Purpose**: Forces `add()` method to return the opposite of the correct result
+/// **Purpose**: Forces `add_singleElement_returnsTrueAndUpdatesSize()` method to return the opposite of the correct result
 /// **Effect**: Returns false when element was added, true when it wasn't
 /// **Use Case**: Testing robust error handling when return values are unreliable
 ///
 /// ### Bulk Operation Breaks
 ///
 /// #### ADD_ALL_DOES_NOT_ADD_ANY_ELEMENTS
-/// **Purpose**: Forces `addAll()` to accept but not add any elements
+/// **Purpose**: Forces `addAll()` to accept but not add_singleElement_returnsTrueAndUpdatesSize any elements
 /// **Effect**: Collection remains unchanged despite successful method completion
 /// **Use Case**: Testing bulk operation failure handling
 ///
@@ -191,7 +199,7 @@ import java.util.function.Predicate;
 ///         .withBreak(ADD_ALWAYS_RETURNS_TRUE)
 ///         .build();
 ///
-///     assertTrue(collection.add("test")); // Returns true
+///     assertTrue(collection.add_singleElement_returnsTrueAndUpdatesSize("test")); // Returns true
 ///     assertTrue(collection.isEmpty());   // But element wasn't added
 /// }
 /// ```
@@ -204,8 +212,8 @@ import java.util.function.Predicate;
 ///         .withBreak(SIZE_ALWAYS_RETURNS_ZERO)
 ///         .build();
 ///
-///     collection.add(1);
-///     collection.add(2);
+///     collection.add_singleElement_returnsTrueAndUpdatesSize(1);
+///     collection.add_singleElement_returnsTrueAndUpdatesSize(2);
 ///     assertEquals(0, collection.size());     // Always returns 0
 ///     assertFalse(collection.isEmpty());     // But not actually empty
 /// }
@@ -230,7 +238,7 @@ import java.util.function.Predicate;
 ///
 /// ## Optional Method Support
 ///
-/// This class supports optional method configuration using the OptionalMethod system:
+/// This class supports optional method configuration using the InterfaceMethod system:
 /// - Methods can be disabled to simulate unsupported operations
 /// - UnsupportedOperationException is thrown for disabled methods
 /// - Useful for testing code that handles optional collection methods
@@ -243,11 +251,6 @@ import java.util.function.Predicate;
 /// - **Type Compatibility**: Can be configured to accept or reject incompatible types
 ///
 /// ## Design Considerations
-///
-/// ### Thread Safety
-/// This class is not thread-safe. The underlying collection's thread safety characteristics
-/// determine the overall thread safety behavior. External synchronization is required for
-/// concurrent access.
 ///
 /// ### Performance
 /// - **Normal Operations**: Performance depends on the backing collection (default: ArrayList)
@@ -266,322 +269,660 @@ import java.util.function.Predicate;
 /// @see java.util.Collection
 public class BreakableCollection<E> extends BreakableIterable<E> implements Collection<E> {
 
+    @Serial
+    private static final long serialVersionUID = 1L;
+
     /// The default capacity used for constant size returns when SIZE_ALWAYS_RETURNS_CONSTANT_VALUE break is applied.
     private static final int DEFAULT_CAPACITY = 10;
 
     /// The underlying collection that stores the actual elements.
-    private final @NonNull Collection<E> collection;
+    private transient @NonNull Collection<E> collection;
 
-    /// Flag indicating whether this collection permits null elements.
-    private boolean permitsNulls;
-
-    /// Flag indicating whether this collection permits duplicate elements.
-    private boolean permitsDuplicates;
-
-    /// Flag indicating whether this collection permits elements of incompatible types.
-    private boolean permitsIncompatibleTypes;
+    ///  Field of bit flags that store what is permitted by the collection.
+    private final int permits;
 
     /// The compatible type for elements in this collection, derived from the generic parameter.
     private final @NonNull Class<?> compatibleType;
 
-    /// The [add][Collection#add] method does not add an element to the collection
+    /// Flag indicating whether this collection permits null elements.
+    protected static final int PERMITS_NULLS              = 0b001;
+
+    /// Flag indicating whether this collection permits duplicate elements.
+    protected static final int PERMITS_DUPLICATES         = 0b010;
+
+    /// Flag indicating whether this collection permits elements of incompatible types.
+    protected static final int PERMITS_INCOMPATIBLE_TYPES = 0b100;
+
+    // Default setting for the permits field
+    protected static final int DEFAULT_PERMITS = PERMITS_NULLS | PERMITS_DUPLICATES | PERMITS_INCOMPATIBLE_TYPES;
+
+
+    /// #### ADD_DOES_NOT_ADD_ELEMENT
+    /// **Purpose**: Forces `add_singleElement_returnsTrueAndUpdatesSize()` method to accept elements but not actually add_singleElement_returnsTrueAndUpdatesSize them to the collection
+    /// **Effect**: Method returns normally but collection remains unchanged
+    /// **Affected Methods**: `add_singleElement_returnsTrueAndUpdatesSize(E)`
     /// @see BreakableCollection#add(Object)
     public static final Break ADD_DOES_NOT_ADD_ELEMENT =
             new Break("ADD_DOES_NOT_ADD_ELEMENT");
 
-    /// The [add][Collection#add] method always return a result of `true`, even if the element is not added.
+    /// #### ADD_ALWAYS_RETURNS_TRUE
+    /// **Purpose**: Forces `add_singleElement_returnsTrueAndUpdatesSize()` method to always return a result of `true`, even if the element is not added.
+    /// **Effect**: Method returns `true` regardless of whether the collection was modified.
+    /// **Affected Methods**: `add_singleElement_returnsTrueAndUpdatesSize(E)`
     /// @see BreakableCollection#add(Object)
     public static final Break ADD_ALWAYS_RETURNS_TRUE =
             new Break("ADD_ALWAYS_RETURNS_TRUE");
 
-    /// The [add][java.util.Collection#add] method always return a result of `false`, even if the element is added.
+    /// #### ADD_ALWAYS_RETURNS_FALSE
+    /// **Purpose**: Forces `add_singleElement_returnsTrueAndUpdatesSize()` method to always return a result of `false`, even if the element is added.
+    /// **Effect**: Method returns `false` regardless of whether the collection was modified.
+    /// **Affected Methods**: `add_singleElement_returnsTrueAndUpdatesSize(E)`
     /// @see BreakableCollection#add(Object)
     public static final Break ADD_ALWAYS_RETURNS_FALSE =
             new Break("ADD_ALWAYS_RETURNS_FALSE");
 
-    /// The [add][java.util.Collection#add] method always returns the opposite of the appropriate result.
+    /// #### ADD_ALWAYS_RETURNS_OPPOSITE_VALUE
+    /// **Purpose**: Forces `add_singleElement_returnsTrueAndUpdatesSize()` method to always return the opposite of the appropriate result.
+    /// **Effect**: Method returns `true` if not modified, and `false` if modified.
+    /// **Affected Methods**: `add_singleElement_returnsTrueAndUpdatesSize(E)`
     /// @see BreakableCollection#add(Object)
     public static final Break ADD_ALWAYS_RETURNS_OPPOSITE_VALUE =
             new Break("ADD_ALWAYS_RETURNS_OPPOSITE_VALUE");
 
-    /// The [addAll][java.util.Collection#addAll] method will not add any elements to the collection
+    /// #### ADD_THROWS_WRONG_UNSUPPORTED_EXCEPTION
+    /// **Purpose**: Forces `add_singleElement_returnsTrueAndUpdatesSize()` method to throw the wrong exception when it is not supported.
+    /// **Effect**: Throws `RuntimeException` instead of `UnsupportedOperationException`.
+    /// **Affected Methods**: `add_singleElement_returnsTrueAndUpdatesSize(E)`
+    /// @see BreakableCollection#add(Object)
+    public static final Break ADD_THROWS_WRONG_UNSUPPORTED_EXCEPTION =
+            new Break("ADD_THROWS_WRONG_UNSUPPORTED_EXCEPTION");
+
+    /// #### ADD_IS_NOT_THREAD_SAFE
+    /// **Purpose**: Forces `add_singleElement_returnsTrueAndUpdatesSize()` method to be not thread safe.
+    /// **Effect**: Disables synchronization for the `add_singleElement_returnsTrueAndUpdatesSize` operation.
+    /// **Affected Methods**: `add_singleElement_returnsTrueAndUpdatesSize(E)`
+    /// @see BreakableCollection#add(Object)
+    public static final Break ADD_IS_NOT_THREAD_SAFE =
+            new Break("ADD_IS_NOT_THREAD_SAFE");
+
+    /// #### ADD_ALL_DOES_NOT_ADD_ANY_ELEMENTS
+    /// **Purpose**: Forces `addAll()` method to not add_singleElement_returnsTrueAndUpdatesSize any elements to the collection.
+    /// **Effect**: Method accepts the elements but the collection remains unchanged.
+    /// **Affected Methods**: `addAll(Collection)`
     /// @see BreakableCollection#addAll(Collection)
     public static final Break ADD_ALL_DOES_NOT_ADD_ANY_ELEMENTS =
             new Break("ADD_ALL_DOES_NOT_ADD_ANY_ELEMENTS");
 
-    /// The [addAll][Collection#addAll] method always return a result of `true`, even if the element is not
-    /// added.
+    /// #### ADD_ALL_ALWAYS_RETURNS_TRUE
+    /// **Purpose**: Forces `addAll()` method to always return a result of `true`, even if the element is not added.
+    /// **Effect**: Method returns `true` regardless of whether the collection was modified.
+    /// **Affected Methods**: `addAll(Collection)`
     /// @see BreakableCollection#addAll(Collection)
     public static final Break ADD_ALL_ALWAYS_RETURNS_TRUE =
             new Break("ADD_ALL_ALWAYS_RETURNS_TRUE");
 
-    /// The [addAll][Collection#addAll(Collection)] method always return a result of `false`, even if the element is
-    /// added.
+    /// #### ADD_ALL_ALWAYS_RETURNS_FALSE
+    /// **Purpose**: Forces `addAll()` method to always return a result of `false`, even if the element is added.
+    /// **Effect**: Method returns `false` regardless of whether the collection was modified.
+    /// **Affected Methods**: `addAll(Collection)`
     /// @see BreakableCollection#addAll(Collection)
     public static final Break ADD_ALL_ALWAYS_RETURNS_FALSE =
             new Break("ADD_ALL_ALWAYS_RETURNS_FALSE");
 
-    /// The [addAll][Collection#addAll(Collection)] method always returns the opposite of the appropriate result.
+    /// #### ADD_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE
+    /// **Purpose**: Forces `addAll()` method to always return the opposite of the appropriate result.
+    /// **Effect**: Method returns `true` if not modified, and `false` if modified.
+    /// **Affected Methods**: `addAll(Collection)`
     /// @see BreakableCollection#addAll(Collection)
     public static final Break ADD_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE =
             new Break("ADD_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE");
 
-    /// The [addAll][Collection#addAll(Collection)] method skips the first element to be added.
+    /// #### ADD_ALL_SKIPS_FIRST_ELEMENT
+    /// **Purpose**: Forces `addAll()` method to skip the first element to be added.
+    /// **Effect**: The first element in the input collection is not added.
+    /// **Affected Methods**: `addAll(Collection)`
     /// @see BreakableCollection#addAll(Collection)
     public static final Break ADD_ALL_SKIPS_FIRST_ELEMENT =
             new Break("ADD_ALL_SKIPS_FIRST_ELEMENT");
 
-    /// The [addAll][Collection#addAll(Collection)] method skips the last element to be added.
+    /// #### ADD_ALL_SKIPS_LAST_ELEMENT
+    /// **Purpose**: Forces `addAll()` method to skip the last element to be added.
+    /// **Effect**: The last element in the input collection is not added.
+    /// **Affected Methods**: `addAll(Collection)`
     /// @see BreakableCollection#addAll(Collection)
     public static final Break ADD_ALL_SKIPS_LAST_ELEMENT =
             new Break("ADD_ALL_SKIPS_LAST_ELEMENT");
 
-    /// The [clear][Collection#clear] method doers not remove any elements,
+    /// #### ADD_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION
+    /// **Purpose**: Forces `addAll()` method to throw the wrong exception when it is not supported.
+    /// **Effect**: Throws `RuntimeException` instead of `UnsupportedOperationException`.
+    /// **Affected Methods**: `addAll(Collection)`
+    /// @see BreakableCollection#addAll(Collection)
+    public static final Break ADD_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION =
+            new Break("ADD_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION");
+
+    /// #### ADD_ALL_IS_NOT_THREAD_SAFE
+    /// **Purpose**: Forces `addAll()` method to be not thread safe.
+    /// **Effect**: Disables synchronization for the `addAll` operation.
+    /// **Affected Methods**: `addAll(Collection)`
+    /// @see BreakableCollection#addAll(Collection)
+    public static final Break ADD_ALL_IS_NOT_THREAD_SAFE =
+            new Break("ADD_ALL_IS_NOT_THREAD_SAFE");
+
+    /// #### CLEAR_DOES_NOT_REMOVE_ANY_ELEMENTS
+    /// **Purpose**: Forces `clear()` method to not remove any elements.
+    /// **Effect**: Method completes normally but the collection remains unchanged.
+    /// **Affected Methods**: `clear()`
     /// @see BreakableCollection#clear()
     public static final Break CLEAR_DOES_NOT_REMOVE_ANY_ELEMENTS =
             new Break("CLEAR_DOES_NOT_REMOVE_ANY_ELEMENTS");
 
-    /// The [clear][Collection#clear] method skips the first element,
+    /// #### CLEAR_SKIPS_FIRST_ELEMENT
+    /// **Purpose**: Forces `clear()` method to skip the first element.
+    /// **Effect**: All elements except the first one are removed.
+    /// **Affected Methods**: `clear()`
     /// @see BreakableCollection#clear()
     public static final Break CLEAR_SKIPS_FIRST_ELEMENT =
             new Break("CLEAR_SKIPS_FIRST_ELEMENT");
 
-    /// The [clear][Collection#clear] method skips the last element,
+    /// #### CLEAR_SKIPS_LAST_ELEMENT
+    /// **Purpose**: Forces `clear()` method to skip the last element.
+    /// **Effect**: All elements except the last one are removed.
+    /// **Affected Methods**: `clear()`
     /// @see BreakableCollection#clear()
     public static final Break CLEAR_SKIPS_LAST_ELEMENT =
             new Break("CLEAR_SKIPS_LAST_ELEMENT");
 
-    /// The `contains` method will always return a true.
+    /// #### CLEAR_THROWS_WRONG_UNSUPPORTED_EXCEPTION
+    /// **Purpose**: Forces `clear()` method to throw the wrong exception when it is not supported.
+    /// **Effect**: Throws `RuntimeException` instead of `UnsupportedOperationException`.
+    /// **Affected Methods**: `clear()`
+    /// @see BreakableCollection#clear()
+    public static final Break CLEAR_THROWS_WRONG_UNSUPPORTED_EXCEPTION =
+            new Break("CLEAR_THROWS_WRONG_UNSUPPORTED_EXCEPTION");
+
+    /// #### CLEAR_IS_NOT_THREAD_SAFE
+    /// **Purpose**: Forces `clear()` method to be not thread safe.
+    /// **Effect**: Disables synchronization for the `clear` operation.
+    /// **Affected Methods**: `clear()`
+    /// @see BreakableCollection#clear()
+    public static final Break CLEAR_IS_NOT_THREAD_SAFE =
+            new Break("CLEAR_IS_NOT_THREAD_SAFE");
+
+    /// #### CONTAINS_ALWAYS_RETURNS_TRUE
+    /// **Purpose**: Forces `contains()` method to always return a `true`.
+    /// **Effect**: Method returns `true` regardless of whether the element is present.
+    /// **Affected Methods**: `contains(Object)`
     /// @see BreakableCollection#contains(Object)
     public static final Break CONTAINS_ALWAYS_RETURNS_TRUE =
             new Break("CONTAINS_ALWAYS_RETURNS_TRUE");
 
-    /// The `contains` method will always return a false.
+    /// #### CONTAINS_ALWAYS_RETURNS_FALSE
+    /// **Purpose**: Forces `contains()` method to always return a `false`.
+    /// **Effect**: Method returns `false` regardless of whether the element is present.
+    /// **Affected Methods**: `contains(Object)`
     /// @see BreakableCollection#contains(Object)
     public static final Break CONTAINS_ALWAYS_RETURNS_FALSE =
             new Break("CONTAINS_ALWAYS_RETURNS_FALSE");
 
-    /// The `contains` method will return the opposite value.
+    /// #### CONTAINS_RETURNS_OPPOSITE_VALUE
+    /// **Purpose**: Forces `contains()` method to return the opposite value.
+    /// **Effect**: Method returns `true` if element is absent, and `false` if present.
+    /// **Affected Methods**: `contains(Object)`
     /// @see BreakableCollection#contains(Object)
     public static final Break CONTAINS_RETURNS_OPPOSITE_VALUE =
             new Break("CONTAINS_RETURNS_OPPOSITE_VALUE");
 
-    /// The `containsAll` method will always return a true.
+    /// #### CONTAINS_IS_NOT_THREAD_SAFE
+    /// **Purpose**: Forces `contains()` method to be not thread safe.
+    /// **Effect**: Disables synchronization for the `contains` operation.
+    /// **Affected Methods**: `contains(Object)`
+    /// @see BreakableCollection#contains(Object)
+    public static final Break CONTAINS_IS_NOT_THREAD_SAFE =
+            new Break("CONTAINS_IS_NOT_THREAD_SAFE");
+
+    /// #### CONTAINS_ALL_ALWAYS_RETURNS_TRUE
+    /// **Purpose**: Forces `containsAll()` method to always return a `true`.
+    /// **Effect**: Method returns `true` regardless of whether all elements are present.
+    /// **Affected Methods**: `containsAll(Collection)`
     /// @see BreakableCollection#containsAll(Collection)
     public static final Break CONTAINS_ALL_ALWAYS_RETURNS_TRUE =
             new Break("CONTAINS_ALL_ALWAYS_RETURNS_TRUE");
 
-    /// The `containsAll` method will always return a false.
+    /// #### CONTAINS_ALL_ALWAYS_RETURNS_FALSE
+    /// **Purpose**: Forces `containsAll()` method to always return a `false`.
+    /// **Effect**: Method returns `false` regardless of whether all elements are present.
+    /// **Affected Methods**: `containsAll(Collection)`
     /// @see BreakableCollection#containsAll(Collection)
     public static final Break CONTAINS_ALL_ALWAYS_RETURNS_FALSE =
             new Break("CONTAINS_ALL_ALWAYS_RETURNS_FALSE");
 
-    /// The `containsAll` method will return the opposite value.
+    /// #### CONTAINS_ALL_IS_NOT_THREAD_SAFE
+    /// **Purpose**: Forces `containsAll()` method to be not thread safe.
+    /// **Effect**: Disables synchronization for the `containsAll` operation.
+    /// **Affected Methods**: `containsAll(Collection)`
+    /// @see BreakableCollection#containsAll(Collection)
+    public static final Break CONTAINS_ALL_IS_NOT_THREAD_SAFE =
+            new Break("CONTAINS_ALL_IS_NOT_THREAD_SAFE");
+
+    /// #### CONTAINS_ALL_RETURNS_OPPOSITE_VALUE
+    /// **Purpose**: Forces `containsAll()` method to return the opposite value.
+    /// **Effect**: Method returns `true` if any element is absent, and `false` if all are present.
+    /// **Affected Methods**: `containsAll(Collection)`
     /// @see BreakableCollection#containsAll(Collection)
     public static final Break CONTAINS_ALL_RETURNS_OPPOSITE_VALUE =
             new Break("CONTAINS_ALL_RETURNS_OPPOSITE_VALUE");
 
-    /// The `isEmpty` method will always return a true.
+    /// #### CONTAINS_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION
+    /// **Purpose**: Forces `containsAll()` method to throw the wrong exception when it is not supported.
+    /// **Effect**: Throws `RuntimeException` instead of `UnsupportedOperationException`.
+    /// **Affected Methods**: `containsAll(Collection)`
+    /// @see BreakableCollection#containsAll(Collection)
+    public static final Break CONTAINS_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION =
+            new Break("CONTAINS_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION");
+
+    /// #### IS_EMPTY_ALWAYS_RETURNS_TRUE
+    /// **Purpose**: Forces `isEmpty()` method to always return a `true`.
+    /// **Effect**: Method returns `true` regardless of whether the collection is empty.
+    /// **Affected Methods**: `isEmpty()`
     /// @see BreakableCollection#isEmpty()
     public static final Break IS_EMPTY_ALWAYS_RETURNS_TRUE =
             new Break("IS_EMPTY_ALWAYS_RETURNS_TRUE");
 
-    /// The `isEmpty` method will always return a false.
+    /// #### IS_EMPTY_ALWAYS_RETURNS_FALSE
+    /// **Purpose**: Forces `isEmpty()` method to always return a `false`.
+    /// **Effect**: Method returns `false` regardless of whether the collection is empty.
+    /// **Affected Methods**: `isEmpty()`
     /// @see BreakableCollection#isEmpty()
     public static final Break IS_EMPTY_ALWAYS_RETURNS_FALSE =
             new Break("IS_EMPTY_ALWAYS_RETURNS_FALSE");
 
-    /// The `isEmpty` method will return the opposite value.
+    /// #### IS_EMPTY_RETURNS_OPPOSITE_VALUE
+    /// **Purpose**: Forces `isEmpty()` method to return the opposite value.
+    /// **Effect**: Method returns `true` if not empty, and `false` if empty.
+    /// **Affected Methods**: `isEmpty()`
     /// @see BreakableCollection#isEmpty()
     public static final Break IS_EMPTY_RETURNS_OPPOSITE_VALUE =
             new Break("IS_EMPTY_RETURNS_OPPOSITE_VALUE");
 
-    /// The `remove` method will not remove an element to the collection
+    /// #### IS_EMPTY_IS_NOT_THREAD_SAFE
+    /// **Purpose**: Forces `isEmpty()` method to be not thread safe.
+    /// **Effect**: Disables synchronization for the `isEmpty` operation.
+    /// **Affected Methods**: `isEmpty()`
+    /// @see BreakableCollection#isEmpty()
+    public static final Break IS_EMPTY_IS_NOT_THREAD_SAFE =
+            new Break("IS_EMPTY_IS_NOT_THREAD_SAFE");
+
+    /// #### REMOVE_DOES_NOT_REMOVE_ELEMENT
+    /// **Purpose**: Forces `remove()` method to not remove an element from the collection.
+    /// **Effect**: Method returns normally but the collection remains unchanged.
+    /// **Affected Methods**: `remove(Object)`
     /// @see BreakableCollection#remove(Object)
     public static final Break REMOVE_DOES_NOT_REMOVE_ELEMENT =
             new Break("REMOVE_DOES_NOT_REMOVE_ELEMENT");
 
-    /// The `remove` method always return a result of `true`, even if the element is not removed.
+    /// #### REMOVE_ALWAYS_RETURNS_TRUE
+    /// **Purpose**: Forces `remove()` method to always return a result of `true`, even if the element is not removed.
+    /// **Effect**: Method returns `true` regardless of whether the collection was modified.
+    /// **Affected Methods**: `remove(Object)`
     /// @see BreakableCollection#remove(Object)
     public static final Break REMOVE_ALWAYS_RETURNS_TRUE =
             new Break("REMOVE_ALWAYS_RETURNS_TRUE");
 
-    /// The `remove` method always return a result of `false`, even if the element is removed.
+    /// #### REMOVE_ALWAYS_RETURNS_FALSE
+    /// **Purpose**: Forces `remove()` method to always return a result of `false`, even if the element is removed.
+    /// **Effect**: Method returns `false` regardless of whether the collection was modified.
+    /// **Affected Methods**: `remove(Object)`
     /// @see BreakableCollection#remove(Object)
     public static final Break REMOVE_ALWAYS_RETURNS_FALSE =
             new Break("REMOVE_ALWAYS_RETURNS_FALSE");
 
-    /// The `remove` method always returns the opposite of the appropriate result.
+    /// #### REMOVE_ALWAYS_RETURNS_OPPOSITE_VALUE
+    /// **Purpose**: Forces `remove()` method to always return the opposite of the appropriate result.
+    /// **Effect**: Method returns `true` if not modified, and `false` if modified.
+    /// **Affected Methods**: `remove(Object)`
     /// @see BreakableCollection#remove(Object)
     public static final Break REMOVE_ALWAYS_RETURNS_OPPOSITE_VALUE =
             new Break("REMOVE_ALWAYS_RETURNS_OPPOSITE_VALUE");
 
-    /// The [removeAll][Collection#removeAll] method will not remove any elements to the collection
+    /// #### REMOVE_IS_NOT_THREAD_SAFE
+    /// **Purpose**: Forces `remove()` method to be not thread safe.
+    /// **Effect**: Disables synchronization for the `remove` operation.
+    /// **Affected Methods**: `remove(Object)`
+    /// @see BreakableCollection#remove(Object)
+    public static final Break REMOVE_IS_NOT_THREAD_SAFE =
+            new Break("REMOVE_IS_NOT_THREAD_SAFE");
+
+    /// #### REMOVE_THROWS_WRONG_UNSUPPORTED_EXCEPTION
+    /// **Purpose**: Forces `remove()` method to throw the wrong exception when it is not supported.
+    /// **Effect**: Throws `RuntimeException` instead of `UnsupportedOperationException`.
+    /// **Affected Methods**: `remove(Object)`
+    /// @see BreakableCollection#remove(Object)
+    public static final Break REMOVE_THROWS_WRONG_UNSUPPORTED_EXCEPTION =
+            new Break("REMOVE_THROWS_WRONG_UNSUPPORTED_EXCEPTION");
+
+    /// #### REMOVE_ALL_DOES_NOT_REMOVE_ANY_ELEMENTS
+    /// **Purpose**: Forces `removeAll()` method to not remove any elements from the collection.
+    /// **Effect**: Method accepts the elements but the collection remains unchanged.
+    /// **Affected Methods**: `removeAll(Collection)`
     /// @see BreakableCollection#removeAll(Collection)
     public static final Break REMOVE_ALL_DOES_NOT_REMOVE_ANY_ELEMENTS =
             new Break("REMOVE_ALL_DOES_NOT_REMOVE_ANY_ELEMENTS");
 
-    /// The [removeAll][Collection#removeAll] method always return a result of `true`, even if the element is not
-    /// removed.
+    /// #### REMOVE_ALL_ALWAYS_RETURNS_TRUE
+    /// **Purpose**: Forces `removeAll()` method to always return a result of `true`, even if the element is not removed.
+    /// **Effect**: Method returns `true` regardless of whether the collection was modified.
+    /// **Affected Methods**: `removeAll(Collection)`
     /// @see BreakableCollection#removeAll(Collection)
     public static final Break REMOVE_ALL_ALWAYS_RETURNS_TRUE =
             new Break("REMOVE_ALL_ALWAYS_RETURNS_TRUE");
 
-    /// The [removeAll][Collection#removeAll] method always return a result of `false`, even any of the elements
-    /// are removed.
+    /// #### REMOVE_ALL_ALWAYS_RETURNS_FALSE
+    /// **Purpose**: Forces `removeAll()` method to always return a result of `false`, even any of the elements are removed.
+    /// **Effect**: Method returns `false` regardless of whether the collection was modified.
+    /// **Affected Methods**: `removeAll(Collection)`
     /// @see BreakableCollection#removeAll(Collection)
     public static final Break REMOVE_ALL_ALWAYS_RETURNS_FALSE =
             new Break("REMOVE_ALL_ALWAYS_RETURNS_FALSE");
 
-    /// The [removeAll][Collection#removeAll] method always returns the opposite of the appropriate result.
+    /// #### REMOVE_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE
+    /// **Purpose**: Forces `removeAll()` method to always return the opposite of the appropriate result.
+    /// **Effect**: Method returns `true` if not modified, and `false` if modified.
+    /// **Affected Methods**: `removeAll(Collection)`
     /// @see BreakableCollection#removeAll(Collection)
     public static final Break REMOVE_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE =
             new Break("REMOVE_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE");
 
-    /// The [removeAll][Collection#removeAll] method skips the first element to be removed.
+    /// #### REMOVE_ALL_SKIPS_FIRST_ELEMENT
+    /// **Purpose**: Forces `removeAll()` method to skip the first element to be removed.
+    /// **Effect**: The first element in the input collection is not removed from this collection.
+    /// **Affected Methods**: `removeAll(Collection)`
     /// @see BreakableCollection#removeAll(Collection)
     public static final Break REMOVE_ALL_SKIPS_FIRST_ELEMENT =
             new Break("REMOVE_ALL_SKIPS_FIRST_ELEMENT");
 
-    /// The [removeAll][Collection#removeAll] method skips the last element to be removed.
+    /// #### REMOVE_ALL_SKIPS_LAST_ELEMENT
+    /// **Purpose**: Forces `removeAll()` method to skip the last element to be removed.
+    /// **Effect**: The last element in the input collection is not removed from this collection.
+    /// **Affected Methods**: `removeAll(Collection)`
     /// @see BreakableCollection#removeAll(Collection)
     public static final Break REMOVE_ALL_SKIPS_LAST_ELEMENT =
             new Break("REMOVE_ALL_SKIPS_LAST_ELEMENT");
 
-    /// The [removeIf][Collection#removeIf] method will not remove any elements to the collection
+    /// #### REMOVE_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION
+    /// **Purpose**: Forces `removeAll()` method to throw the wrong exception when it is not supported.
+    /// **Effect**: Throws `RuntimeException` instead of `UnsupportedOperationException`.
+    /// **Affected Methods**: `removeAll(Collection)`
+    /// @see BreakableCollection#removeAll(Collection)
+    public static final Break REMOVE_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION =
+            new Break("REMOVE_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION");
+
+    /// #### REMOVE_ALL_IS_NOT_THREAD_SAFE
+    /// **Purpose**: Forces `removeAll()` method to be not thread safe.
+    /// **Effect**: Disables synchronization for the `removeAll` operation.
+    /// **Affected Methods**: `removeAll(Collection)`
+    /// @see BreakableCollection#removeAll(Collection)
+    public static final Break REMOVE_ALL_IS_NOT_THREAD_SAFE =
+            new Break("REMOVE_ALL_IS_NOT_THREAD_SAFE");
+
+    /// #### REMOVE_IF_DOES_NOT_REMOVE_ANY_ELEMENTS
+    /// **Purpose**: Forces `removeIf()` method to not remove any elements from the collection.
+    /// **Effect**: Method accepts the predicate but the collection remains unchanged.
+    /// **Affected Methods**: `removeIf(Predicate)`
     /// @see BreakableCollection#removeIf(Predicate)
     public static final Break REMOVE_IF_DOES_NOT_REMOVE_ANY_ELEMENTS =
             new Break("REMOVE_IF_DOES_NOT_REMOVE_ANY_ELEMENTS");
 
-    /// The [removeIf][Collection#removeIf] method always return a result of `true`, even if the element is not
-    /// removed.
+    /// #### REMOVE_IF_ALWAYS_RETURNS_TRUE
+    /// **Purpose**: Forces `removeIf()` method to always return a result of `true`, even if no elements are removed.
+    /// **Effect**: Method returns `true` regardless of whether the collection was modified.
+    /// **Affected Methods**: `removeIf(Predicate)`
     /// @see BreakableCollection#removeIf(Predicate)
     public static final Break REMOVE_IF_ALWAYS_RETURNS_TRUE =
             new Break("REMOVE_IF_ALWAYS_RETURNS_TRUE");
 
-    /// The [removeIf][Collection#removeIf] method always return a result of `false`, even any of the elements
-    /// are removed.
+    /// #### REMOVE_IF_ALWAYS_RETURNS_FALSE
+    /// **Purpose**: Forces `removeIf()` method to always return a result of `false`, even if elements are removed.
+    /// **Effect**: Method returns `false` regardless of whether the collection was modified.
+    /// **Affected Methods**: `removeIf(Predicate)`
     /// @see BreakableCollection#removeIf(Predicate)
     public static final Break REMOVE_IF_ALWAYS_RETURNS_FALSE =
             new Break("REMOVE_IF_ALWAYS_RETURNS_FALSE");
 
-    /// The [removeIf][Collection#removeIf] method always returns the opposite of the appropriate result.
+    /// #### REMOVE_IF_ALWAYS_RETURNS_OPPOSITE_VALUE
+    /// **Purpose**: Forces `removeIf()` method to always return the opposite of the appropriate result.
+    /// **Effect**: Method returns `true` if not modified, and `false` if modified.
+    /// **Affected Methods**: `removeIf(Predicate)`
     /// @see BreakableCollection#removeIf(Predicate)
     public static final Break REMOVE_IF_ALWAYS_RETURNS_OPPOSITE_VALUE =
             new Break("REMOVE_IF_ALWAYS_RETURNS_OPPOSITE_VALUE");
 
-    /// The [removeIf][Collection#removeIf] method skips the first element to be removed.
+    /// #### REMOVE_IF_SKIPS_FIRST_ELEMENT
+    /// **Purpose**: Forces `removeIf()` method to skip the first element to be removed.
+    /// **Effect**: The first element that matches the predicate is not removed.
+    /// **Affected Methods**: `removeIf(Predicate)`
     /// @see BreakableCollection#removeIf(Predicate)
     public static final Break REMOVE_IF_SKIPS_FIRST_ELEMENT =
             new Break("REMOVE_IF_SKIPS_FIRST_ELEMENT");
 
-    /// The [removeIf][Collection#removeIf] method skips the last element to be removed.
+    /// #### REMOVE_IF_SKIPS_LAST_ELEMENT
+    /// **Purpose**: Forces `removeIf()` method to skip the last element to be removed.
+    /// **Effect**: The last element that matches the predicate is not removed.
+    /// **Affected Methods**: `removeIf(Predicate)`
     /// @see BreakableCollection#removeIf(Predicate)
     public static final Break REMOVE_IF_SKIPS_LAST_ELEMENT =
             new Break("REMOVE_IF_SKIPS_LAST_ELEMENT");
 
-    /// The [retainAll][java.util.Collection#retainAll] method will not retain any elements to the collection
+    /// #### REMOVE_IF_THROWS_WRONG_UNSUPPORTED_EXCEPTION
+    /// **Purpose**: Forces `removeIf()` method to throw the wrong exception when it is not supported.
+    /// **Effect**: Throws `RuntimeException` instead of `UnsupportedOperationException`.
+    /// **Affected Methods**: `removeIf(Predicate)`
+    /// @see BreakableCollection#removeIf(Predicate)
+    public static final Break REMOVE_IF_THROWS_WRONG_UNSUPPORTED_EXCEPTION =
+            new Break("REMOVE_IF_THROWS_WRONG_UNSUPPORTED_EXCEPTION");
+
+    /// #### REMOVE_IF_IS_NOT_THREAD_SAFE
+    /// **Purpose**: Forces `removeIf()` method to be not thread safe.
+    /// **Effect**: Disables synchronization for the `removeIf` operation.
+    /// **Affected Methods**: `removeIf(Predicate)`
+    /// @see BreakableCollection#removeIf(Predicate)
+    public static final Break REMOVE_IF_IS_NOT_THREAD_SAFE =
+            new Break("REMOVE_IF_IS_NOT_THREAD_SAFE");
+
+    /// #### RETAIN_ALL_DOES_NOT_RETAIN_ANY_ELEMENTS
+    /// **Purpose**: Forces `retainAll()` method to not retain any elements (clears the collection).
+    /// **Effect**: All elements are removed from the collection.
+    /// **Affected Methods**: `retainAll(Collection)`
     /// @see BreakableCollection#retainAll(Collection)
     public static final Break RETAIN_ALL_DOES_NOT_RETAIN_ANY_ELEMENTS =
             new Break("RETAIN_ALL_DOES_NOT_RETAIN_ANY_ELEMENTS");
 
-    /// The [retainAll][java.util.Collection#retainAll] method always return a result of `true`, even if the collection
-    /// is not modified.
+    /// #### RETAIN_ALL_ALWAYS_RETURNS_TRUE
+    /// **Purpose**: Forces `retainAll()` method to always return a result of `true`, even if the collection is not modified.
+    /// **Effect**: Method returns `true` regardless of whether the collection was modified.
+    /// **Affected Methods**: `retainAll(Collection)`
     /// @see BreakableCollection#retainAll(Collection)
     public static final Break RETAIN_ALL_ALWAYS_RETURNS_TRUE =
             new Break("RETAIN_ALL_ALWAYS_RETURNS_TRUE");
 
-    /// The [retainAll][java.util.Collection#retainAll] method always return a result of `false`, even the collection
-    /// is modified
+    /// #### RETAIN_ALL_ALWAYS_RETURNS_FALSE
+    /// **Purpose**: Forces `retainAll()` method to always return a result of `false`, even if the collection is modified.
+    /// **Effect**: Method returns `false` regardless of whether the collection was modified.
+    /// **Affected Methods**: `retainAll(Collection)`
     /// @see BreakableCollection#retainAll(Collection)
     public static final Break RETAIN_ALL_ALWAYS_RETURNS_FALSE =
             new Break("RETAIN_ALL_ALWAYS_RETURNS_FALSE");
 
-    /// The [retainAll][java.util.Collection#retainAll] method always returns the opposite of the appropriate result.
+    /// #### RETAIN_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE
+    /// **Purpose**: Forces `retainAll()` method to always return the opposite of the appropriate result.
+    /// **Effect**: Method returns `true` if not modified, and `false` if modified.
+    /// **Affected Methods**: `retainAll(Collection)`
     /// @see BreakableCollection#retainAll(Collection)
     public static final Break RETAIN_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE =
             new Break("RETAIN_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE");
 
-    /// The [retainAll][java.util.Collection#retainAll] method skips the first element to be retained.
+    /// #### RETAIN_ALL_SKIPS_FIRST_ELEMENT
+    /// **Purpose**: Forces `retainAll()` method to skip the first element to be retained.
+    /// **Effect**: The first element that should have been retained is removed.
+    /// **Affected Methods**: `retainAll(Collection)`
     /// @see BreakableCollection#retainAll(Collection)
     public static final Break RETAIN_ALL_SKIPS_FIRST_ELEMENT =
             new Break("RETAIN_ALL_SKIPS_FIRST_ELEMENT");
 
-    /// The [retainAll][java.util.Collection#retainAll] method skips the last element to be retained.
+    /// #### RETAIN_ALL_SKIPS_LAST_ELEMENT
+    /// **Purpose**: Forces `retainAll()` method to skip the last element to be retained.
+    /// **Effect**: The last element that should have been retained is removed.
+    /// **Affected Methods**: `retainAll(Collection)`
     /// @see BreakableCollection#retainAll(Collection)
     public static final Break RETAIN_ALL_SKIPS_LAST_ELEMENT =
             new Break("RETAIN_ALL_SKIPS_LAST_ELEMENT");
 
-    /// The `size` method will always return zero.
+    /// #### RETAIN_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION
+    /// **Purpose**: Forces `retainAll()` method to throw the wrong exception when it is not supported.
+    /// **Effect**: Throws `RuntimeException` instead of `UnsupportedOperationException`.
+    /// **Affected Methods**: `retainAll(Collection)`
+    /// @see BreakableCollection#retainAll(Collection)
+    public static final Break RETAIN_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION =
+            new Break("RETAIN_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION");
+
+    /// #### RETAIN_ALL_IS_NOT_THREAD_SAFE
+    /// **Purpose**: Forces `retainAll()` method to be not thread safe.
+    /// **Effect**: Disables synchronization for the `retainAll` operation.
+    /// **Affected Methods**: `retainAll(Collection)`
+    /// @see BreakableCollection#retainAll(Collection)
+    public static final Break RETAIN_ALL_IS_NOT_THREAD_SAFE =
+            new Break("RETAIN_ALL_IS_NOT_THREAD_SAFE");
+
+    /// #### SIZE_ALWAYS_RETURNS_ZERO
+    /// **Purpose**: Forces `size()` method to always return zero.
+    /// **Effect**: Method returns `0` regardless of the actual number of elements.
+    /// **Affected Methods**: `size()`
     /// @see BreakableCollection#size()
     public static final Break SIZE_ALWAYS_RETURNS_ZERO =
             new Break("SIZE_ALWAYS_RETURNS_ZERO");
 
-    /// The `size` method will always return a constant value.
+    /// #### SIZE_IS_NOT_THRAD_SAFE
+    /// **Purpose**: Forces `size()` method to be not thread safe.
+    /// **Effect**: Disables synchronization for the `size` operation.
+    /// **Affected Methods**: `size()`
+    /// @see BreakableCollection#size()
+    public static final Break SIZE_IS_NOT_THRAD_SAFE =
+            new Break("SIZE_IS_NOT_THRAD_SAFE");
+
+    /// #### SIZE_ALWAYS_RETURNS_CONSTANT_VALUE
+    /// **Purpose**: Forces `size()` method to always return a constant value.
+    /// **Effect**: Method returns `DEFAULT_CAPACITY` regardless of the actual number of elements.
+    /// **Affected Methods**: `size()`
     /// @see BreakableCollection#size()
     public static final Break SIZE_ALWAYS_RETURNS_CONSTANT_VALUE =
             new Break("SIZE_ALWAYS_RETURNS_CONSTANT_VALUE");
 
-    /// The 'toArray' method will always return an empty array
+    /// #### TO_ARRAY_RETURNS_EMPTY_ARRAY
+    /// **Purpose**: Forces `toArray()` method to always return an empty array.
+    /// **Effect**: Method returns a new `Object[0]` regardless of the collection content.
+    /// **Affected Methods**: `toArray()`
     /// @see BreakableCollection#toArray()
     public static final Break TO_ARRAY_RETURNS_EMPTY_ARRAY =
             new Break("TO_ARRAY_RETURNS_EMPTY_ARRAY");
 
-    /// The 'toArray' method will always return `null`
+    /// #### TO_ARRAY_RETURNS_NULL
+    /// **Purpose**: Forces `toArray()` method to always return `null`.
+    /// **Effect**: Method returns `null` regardless of the collection content.
+    /// **Affected Methods**: `toArray()`
     /// @see BreakableCollection#toArray()
     public static final Break TO_ARRAY_RETURNS_NULL =
             new Break("TO_ARRAY_RETURNS_NULL");
 
-    /// The 'toArray' method will always return an array missing the first element
+    /// #### TO_ARRAY_IS_NOT_THREAD_SAFE
+    /// **Purpose**: Forces `toArray()` method to be not thread safe.
+    /// **Effect**: Disables synchronization for the `toArray` operation.
+    /// **Affected Methods**: `toArray()`
+    /// @see BreakableCollection#toArray()
+    public static final Break TO_ARRAY_IS_NOT_THREAD_SAFE =
+            new Break("TO_ARRAY_IS_NOT_THREAD_SAFE");
+
+    /// #### TO_ARRAY_MISSING_FIRST_ELEMENT
+    /// **Purpose**: Forces `toArray()` method to return an array missing the first element.
+    /// **Effect**: The returned array is smaller by one and does not contain the first element.
+    /// **Affected Methods**: `toArray()`
     /// @see BreakableCollection#toArray()
     public static final Break TO_ARRAY_MISSING_FIRST_ELEMENT =
             new Break("TO_ARRAY_MISSING_FIRST_ELEMENT");
 
-    /// The 'toArray' method will always return an array missing the last element
+    /// #### TO_ARRAY_MISSING_LAST_ELEMENT
+    /// **Purpose**: Forces `toArray()` method to return an array missing the last element.
+    /// **Effect**: The returned array is smaller by one and does not contain the last element.
+    /// **Affected Methods**: `toArray()`
     /// @see BreakableCollection#toArray()
     public static final Break TO_ARRAY_MISSING_LAST_ELEMENT =
             new Break("TO_ARRAY_MISSING_LAST_ELEMENT");
 
-    /// The 'toArray([])' method does not copy the elements into the array
+    /// #### TO_ARRAY_STORE_DOES_NOT_COPY_ELEMENTS
+    /// **Purpose**: Forces `toArray(T[])` method to not copy elements into the array.
+    /// **Effect**: The provided array is returned unchanged (or padded with nulls if larger).
+    /// **Affected Methods**: `toArray(T[])`
     /// @see BreakableCollection#toArray(Object[])
     public static final Break TO_ARRAY_STORE_DOES_NOT_COPY_ELEMENTS =
             new Break("TO_ARRAY_STORE_DOES_NOT_COPY_ELEMENTS");
 
-    /// The 'toArray' method will always return an empty array
+    /// #### TO_ARRAY_STORE_RETURNS_EMPTY_ARRAY
+    /// **Purpose**: Forces `toArray(T[])` method to always return an empty array.
+    /// **Effect**: Method returns an array with all elements set to `null`.
+    /// **Affected Methods**: `toArray(T[])`
     /// @see BreakableCollection#toArray(Object[])
     public static final Break TO_ARRAY_STORE_RETURNS_EMPTY_ARRAY =
             new Break("TO_ARRAY_STORE_RETURNS_EMPTY_ARRAY");
 
-    /// The 'toArray' method will always return `null`
+    /// #### TO_ARRAY_STORE_RETURNS_NULL
+    /// **Purpose**: Forces `toArray(T[])` method to always return `null`.
+    /// **Effect**: Method returns `null` regardless of the collection content.
+    /// **Affected Methods**: `toArray(T[])`
     /// @see BreakableCollection#toArray(Object[])
     public static final Break TO_ARRAY_STORE_RETURNS_NULL =
             new Break("TO_ARRAY_STORE_RETURNS_NULL");
 
-    /// The 'toArray' method will always return an array missing the first element
+    /// #### TO_ARRAY_STORE_MISSING_FIRST_ELEMENT
+    /// **Purpose**: Forces `toArray(T[])` method to return an array missing the first element.
+    /// **Effect**: The returned array does not contain the first element (elements are shifted).
+    /// **Affected Methods**: `toArray(T[])`
     /// @see BreakableCollection#toArray(Object[])
     public static final Break TO_ARRAY_STORE_MISSING_FIRST_ELEMENT =
             new Break("TO_ARRAY_STORE_MISSING_FIRST_ELEMENT");
 
-    /// The 'toArray' method will always return an array missing the last element
+    /// #### TO_ARRAY_STORE_MISSING_LAST_ELEMENT
+    /// **Purpose**: Forces `toArray(T[])` method to return an array missing the last element.
+    /// **Effect**: The returned array does not contain the last element.
+    /// **Affected Methods**: `toArray(T[])`
     /// @see BreakableCollection#toArray(Object[])
     public static final Break TO_ARRAY_STORE_MISSING_LAST_ELEMENT =
             new Break("TO_ARRAY_STORE_MISSING_LAST_ELEMENT");
 
+    /// #### TO_ARRAY_STORE_IS_NOT_THREAD_SAFE
+    /// **Purpose**: Forces `toArray(T[])` method to be not thread safe.
+    /// **Effect**: Disables synchronization for the `toArray(T[])` operation.
+    /// **Affected Methods**: `toArray(T[])`
+    /// @see BreakableCollection#toArray(Object[])
+    public static final Break TO_ARRAY_STORE_IS_NOT_THREAD_SAFE =
+            new Break("TO_ARRAY_STORE_IS_NOT_THREAD_SAFE");
+
     /// Creates an empty collection that has no breaks.
     public BreakableCollection() {
-        this(new ArrayList<>(), new HashSet<>(), 0);
+        this(new ArrayList<>(), new HashSet<>(), new HashMap<>(), DEFAULT_CHARACTERISTICS, DEFAULT_PERMITS,
+                DEFAULT_SAFETY, Object.class);
     }
 
     /// Creates a breakable collection from an existing instance.
     /// @param other the breakable collection to copy.
     public BreakableCollection(final @NonNull BreakableCollection<E> other) {
-        this(new ArrayList<>(other.collection), new HashSet<>(), 0);
+        this(new ArrayList<>(other.collection), new HashSet<>(other.breaks()), new HashMap<>(other.methodStatuses()),
+                other.characteristics(), other.permits(), other.isSafe(), other.compatibleType);
     }
 
     /// Creates a breakable iterable from an iterable.
     /// @param collection the iterator to use for the elements.
     public BreakableCollection(final @NonNull Collection<E> collection) {
-        this(new ArrayList<>(collection), new HashSet<>(), 0);
+        this(new ArrayList<>(collection), new HashSet<>(), new HashMap<>(), DEFAULT_CHARACTERISTICS, DEFAULT_PERMITS,
+                DEFAULT_SAFETY, Object.class);
     }
 
     /// Creates a `BreakableCollection` from en existing collection and specifying the breaks and collection
@@ -589,55 +930,193 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// [BreakableCollection.Builder].
     /// @param c               the initial elements for the breakable collection.
     /// @param breaks          the breaks for the collection.
+    /// @param methodStatuses  the method status configuration.
     /// @param characteristics the characteristics for the collection.
+    /// @param permits         the flags that indicate what types of values are supported by the collection.
+    /// @param elementType     the element type that the collection supports (see [#permitsIncompatibleTypes()].
     /// @throws NullPointerException if either the `c` or the `breaks` parameters are null.
-    public BreakableCollection(final @NonNull Collection<E> c, final @NonNull Collection<Break> breaks,
-                               final int characteristics) {
-        super(c, breaks, characteristics);
+    protected BreakableCollection(final @NonNull Collection<E> c, final @NonNull Set<Break> breaks,
+                                  final @NonNull Map<InterfaceMethod, MethodStatus> methodStatuses,
+                                  final int characteristics, final int permits, final boolean isSafe,
+                                  final @NonNull Class<?> elementType) {
+        super(c, breaks, methodStatuses, characteristics, isSafe);
         this.collection = Objects.requireNonNull(c);
-        this.permitsNulls = true;
-        this.permitsDuplicates = true;
-        this.permitsIncompatibleTypes = true;
-        this.compatibleType = CollectionTestUtils.getGenericParameter(this, 0);
+        this.permits = permits;
+        this.compatibleType = elementType;
+    }
+
+    /// **Static Factory Method for Wrapping Collections with Breaks**
+    ///
+    /// Creates a new BreakableCollection that wraps an existing collection and applies
+    /// the specified set of breaks. This factory method provides a convenient way to
+    /// create breakable collections from existing collection instances without using
+    /// the builder pattern.
+    ///
+    /// ## Purpose and Usage
+    ///
+    /// This method is particularly useful when you have an existing collection that you
+    /// want to make breakable for testing purposes, or when you need to quickly create
+    /// a breakable collection with specific breaks applied.
+    ///
+    /// ### Key Characteristics
+    /// - **Direct Wrapping**: The provided collection becomes the backing store
+    /// - **Break Application**: All specified breaks are immediately active
+    /// - **Default Configuration**: Uses default spliterator characteristics (0)
+    /// - **Type Safety**: Preserves generic type information from the source collection
+    ///
+    /// ## Usage Examples
+    ///
+    /// ### Basic Wrapping with Single Break
+    /// ```java
+    /// List<String> existingList = Arrays.asList("a", "b", "c");
+    /// Set<Break> breaks = Set.of(BreakableCollection.ADD_DOES_NOT_ADD_ELEMENT);
+    ///
+    /// BreakableCollection<String> wrapper = BreakableCollection.wrap(existingList, breaks);
+    ///
+    /// // The wrapped collection now has the break active
+    /// wrapper.add_singleElement_returnsTrueAndUpdatesSize("d"); // Won't actually add_singleElement_returnsTrueAndUpdatesSize due to break
+    /// assertEquals(3, wrapper.size()); // Still original size
+    /// ```
+    ///
+    /// ### Multiple Breaks Application
+    /// ```java
+    /// Set<Integer> numbers = new HashSet<>(Arrays.asList(1, 2, 3));
+    /// Set<Break> multipleBreaks = Set.of(
+    ///     BreakableCollection.CONTAINS_ALWAYS_RETURNS_FALSE,
+    ///     BreakableCollection.SIZE_ALWAYS_RETURNS_ZERO
+    /// );
+    ///
+    /// BreakableCollection<Integer> brokenWrapper = BreakableCollection.wrap(numbers, multipleBreaks);
+    ///
+    /// assertFalse(brokenWrapper.contains(1)); // Returns false due to break
+    /// assertEquals(0, brokenWrapper.size());  // Returns 0 due to break
+    /// ```
+    ///
+    /// ### Testing Scenario Integration
+    /// ```java
+    /// @Test
+    /// void testAlgorithmWithBrokenCollection() {
+    ///     // Start with a working collection
+    ///     List<String> data = new ArrayList<>(Arrays.asList("item1", "item2"));
+    ///
+    ///     // Wrap it with breaks to simulate failures
+    ///     Set<Break> testBreaks = Set.of(ADD_ALL_SKIPS_FIRST_ELEMENT);
+    ///     BreakableCollection<String> testCollection = BreakableCollection.wrap(data, testBreaks);
+    ///
+    ///     // Test algorithm behavior with broken collection
+    ///     MyAlgorithm algorithm = new MyAlgorithm();
+    ///     Result result = algorithm.process(testCollection);
+    ///
+    ///     // Verify algorithm handles broken behavior gracefully
+    ///     assertTrue(result.isValid());
+    /// }
+    /// ```
+    ///
+    /// ## Behavior and Characteristics
+    ///
+    /// ### Collection Relationship
+    /// - **Shared Reference**: The wrapped collection shares the same backing store as the original
+    /// - **Modifications Visible**: Changes made through either reference are visible to both
+    /// - **Break Isolation**: Breaks only affect operations through the BreakableCollection wrapper
+    ///
+    /// ### Default Settings
+    /// The wrap method applies these default configurations:
+    /// - **Permits Nulls**: `true` (allows null elements)
+    /// - **Permits Duplicates**: `true` (allows duplicate elements)
+    /// - **Permits Incompatible Types**: `true` (allows type mixing)
+    /// - **Spliterator Characteristics**: `0` (no special characteristics)
+    ///
+    /// ### Break Activation
+    /// All breaks in the provided set are immediately active and will affect subsequent
+    /// operations on the wrapped collection according to their specific behaviors.
+    ///
+    /// ## Comparison with Builder Pattern
+    ///
+    /// ### When to Use wrap() vs Builder
+    ///
+    /// **Use wrap() when:**
+    /// - You have an existing collection to make breakable
+    /// - You need quick break application without configuration
+    /// - You want to preserve the exact collection instance
+    /// - You're writing simple test scenarios
+    ///
+    /// **Use Builder when:**
+    /// - You need fine-grained configuration control
+    /// - You want to set custom characteristics or constraints
+    /// - You're building collections from scratch
+    /// - You need method chaining for complex setups
+    ///
+    /// ### Example Comparison
+    /// ```java
+    /// // Using wrap() - simple and direct
+    /// List<String> existing = Arrays.asList("a", "b");
+    /// BreakableCollection<String> wrapped = BreakableCollection.wrap(
+    ///     existing, Set.of(ADD_ALWAYS_RETURNS_FALSE)
+    /// );
+    ///
+    /// // Using Builder - more configuration options
+    /// BreakableCollection<String> built = new BreakableCollection.Builder<String>()
+    ///     .addElements("a", "b")
+    ///     .withBreak(ADD_ALWAYS_RETURNS_FALSE)
+    ///     .doesNotPermitNulls()
+    ///     .setCharacteristics(Spliterator.ORDERED)
+    ///     .build();
+    /// ```
+    ///
+    /// ## Design Considerations
+    ///
+    /// ### Thread Safety
+    /// The thread safety of the wrapped BreakableCollection depends entirely on the
+    /// thread safety of the underlying collection. No additional synchronization is provided.
+    ///
+    /// ### Memory Efficiency
+    /// This method is memory-efficient as it doesn't copy the collection elements,
+    /// only creates a wrapper with break functionality.
+    ///
+    /// ### Type Preservation
+    /// The method preserves the generic type information, ensuring type safety is
+    /// maintained throughout the wrapping process.
+    ///
+    /// @param <E> the type of elements in the collection
+    /// @param collection the existing collection to wrap with breakable functionality
+    /// @param breaks the set of breaks to apply to the wrapped collection
+    /// @param methodStatuses the initial method statuses configuration
+    /// @param characteristics the initial spliterator characteristics
+    /// @param permits the initial permits configuration for the collection
+    /// @param isSafe whether the wrapped collection should be thread-safe
+    /// @param elementType the element type that the collection supports
+    /// @return a new BreakableCollection that wraps the provided collection with the specified breaks
+    /// @throws NullPointerException if collection or breaks is null
+    /// @since 1.0.0
+    /// @see BreakableCollection.Builder
+    /// @see BreakableCollection#BreakableCollection(Collection, Set, Map, int, int, boolean, Class)
+    public static <E> BreakableCollection<E> wrap(final @NonNull Collection<E> collection,
+                                                  final @NonNull Set<Break> breaks,
+                                                  final @NonNull Map<InterfaceMethod, MethodStatus> methodStatuses,
+                                                  final int characteristics,
+                                                  final int permits,
+                                                  final boolean isSafe,
+                                                  final Class<?> elementType) {
+        return new BreakableCollection<>(collection, breaks, methodStatuses, characteristics,
+                permits, isSafe, elementType);
     }
 
     /// Indicates if the collection permits null values as elements.
     /// @return `true` if the collection permits `null` elements, `false` if it does not.
     public boolean permitsNulls() {
-        return permitsNulls;
-    }
-
-    /// Sets how the collection handles `null` elements.
-    /// @param permitsNulls specifies if the collection permits null values, `true` if null values are permitted
-    ///                     and `false` if they are not.
-    public void setPermitsNulls(final boolean permitsNulls) {
-        this.permitsNulls = permitsNulls;
+        return (permits & PERMITS_NULLS) != 0;
     }
 
     /// Indicates if the collection permits duplicate elements.
     /// @return `true` if the collection permits duplicate elements, `false` if it does not.
     public boolean permitsDuplicates() {
-        return permitsDuplicates;
-    }
-
-    /// Sets how the collection handles duplicate elements.
-    /// @param permitsDuplicates specifies if the collection permits duplicate values, `true` if duplicate values are
-    ///                          permitted and `false` if they are not.
-    public void setPermitsDuplicates(final boolean permitsDuplicates) {
-        this.permitsDuplicates = permitsDuplicates;
+        return (permits & PERMITS_DUPLICATES) != 0;
     }
 
     /// Indicates if the collection permits elements with incompatible types as arguments.
     /// @return `true` if the collection permits elements with incompatible types, `false` if it does not.
     public boolean permitsIncompatibleTypes() {
-        return permitsIncompatibleTypes;
-    }
-
-    /// Sets how the collection handles elements with incompatible types as arguments.
-    /// @param permitsIncompatibleTypes specifies if the collection permits elements with incompatible types as
-    ///                                 arguments, `true` if duplicate values are permitted and `false` if they are not.
-    public void setPermitsIncompatibleTypes(final boolean permitsIncompatibleTypes) {
-        this.permitsIncompatibleTypes = permitsIncompatibleTypes;
+        return (permits & PERMITS_INCOMPATIBLE_TYPES) != 0;
     }
 
     /// Implements the [size][Collection#size] method from the [Collection] interface. This method can be broken using
@@ -655,12 +1134,13 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// @see Collection#size()
     @Override
     public int size() {
+        checkMethodSupport(CollectionMethods.SIZE);
         if (hasBreak(SIZE_ALWAYS_RETURNS_ZERO)) {
             return 0;
         } else if (hasBreak(SIZE_ALWAYS_RETURNS_CONSTANT_VALUE)) {
             return DEFAULT_CAPACITY;
         } else {
-            return collection.size();
+            return getWithBreakableSafety(SIZE_IS_NOT_THRAD_SAFE, collection::size);
         }
     }
 
@@ -680,15 +1160,17 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// @see Collection#isEmpty()
     @Override
     public boolean isEmpty() {
+        boolean result = getWithBreakableSafety(IS_EMPTY_IS_NOT_THREAD_SAFE, collection::isEmpty);
         if (hasBreak(IS_EMPTY_ALWAYS_RETURNS_TRUE)) {
             return true;
-        } else if (hasBreak(IS_EMPTY_ALWAYS_RETURNS_FALSE)) {
-            return false;
-        } else if (hasBreak(IS_EMPTY_RETURNS_OPPOSITE_VALUE)) {
-            return !collection.isEmpty();
-        } else {
-            return collection.isEmpty();
         }
+        if (hasBreak(IS_EMPTY_ALWAYS_RETURNS_FALSE)) {
+            return false;
+        }
+        if (hasBreak(IS_EMPTY_RETURNS_OPPOSITE_VALUE)) {
+            return !result;
+        }
+        return result;
     }
 
     /// Implements the [contains][Collection#contains] method from the [Collection] interface. This method can be broken
@@ -712,15 +1194,17 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     @Override
     public boolean contains(final Object o) {
         checkArgument(o);
+        boolean result = getWithBreakableSafety(CONTAINS_IS_NOT_THREAD_SAFE, () -> collection.contains(o));
         if (hasBreak(CONTAINS_ALWAYS_RETURNS_TRUE)) {
             return true;
-        } else if (hasBreak(CONTAINS_ALWAYS_RETURNS_FALSE)) {
-            return false;
-        } else if (hasBreak(CONTAINS_RETURNS_OPPOSITE_VALUE)) {
-            return !collection.contains(o);
-        } else {
-            return collection.contains(o);
         }
+        if (hasBreak(CONTAINS_ALWAYS_RETURNS_FALSE)) {
+            return false;
+        }
+        if (hasBreak(CONTAINS_RETURNS_OPPOSITE_VALUE)) {
+            return !result;
+        }
+        return result;
     }
 
     /// Implements the [toArray][Collection#toArray] method from the [Collection] interface. This method can be broken
@@ -797,12 +1281,13 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
         return array;
     }
 
-    /// Implements the [add][Collection#add] method from the [Collection] interface. This method can be broken using
+    /// Implements the [add_singleElement_returnsTrueAndUpdatesSize][Collection#add] method from the [Collection] interface. This method can be broken using
     /// the following collection breaks:
     /// - [ADD_DOES_NOT_ADD_ELEMENT][BreakableCollection#ADD_DOES_NOT_ADD_ELEMENT]
     /// - [ADD_ALWAYS_RETURNS_TRUE][BreakableCollection#ADD_ALWAYS_RETURNS_TRUE]
     /// - [ADD_ALWAYS_RETURNS_FALSE][BreakableCollection#ADD_ALWAYS_RETURNS_FALSE]
     /// - [ADD_ALWAYS_RETURNS_OPPOSITE_VALUE][BreakableCollection#ADD_ALWAYS_RETURNS_OPPOSITE_VALUE]
+    /// - [ADD_THROWS_WRONG_UNSUPPORTED_EXCEPTION][BreakableCollection#ADD_THROWS_WRONG_UNSUPPORTED_EXCEPTION]
     ///
     /// A collection that has any of these breaks can be constructed using the builder:
     /// ```java
@@ -811,11 +1296,11 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     ///         .build();
     /// ```
     /// This is an optional method of the [Collection] interface. Support for this method can be removed using the
-    /// optional method identifier [CollectionMethods#Add]. A collection that does not support the `add` method
+    /// optional method identifier [CollectionMethods#ADD]. A collection that does not support the `add_singleElement_returnsTrueAndUpdatesSize` method
     /// can be constructed using the builder:
     /// ```java
     ///     Collection<Integer> collection = Breakables.buildCollection(1,2,3,4,5)
-    ///         .doesNotSupportsMethod(OptionalCollectionMethod.Add)
+    ///         .doesNotSupportMethod(CollectionMethods.ADD)
     ///         .build();
     /// ```
     /// @return 'true' if the element is added, 'false' if it isn't, or possibly a different value if the collection has
@@ -826,27 +1311,29 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// @throws ClassCastException if the argument is an incompatible type and the collection does not support
     ///         incompatible types.
     /// @throws UnsupportedOperationException if this collection does not support this method.
+    /// @throws IllegalStateException if this method is not supported and the ADD_THROWS_WRONG_UNSUPPORTED_EXCEPTION
+    ///         break is active.
     @Override
     public boolean add(final E e) {
-        if (supportsMethod(CollectionMethods.Add)) {
-            boolean result = false;
-            if (checkNewElement(e)) {
-                if (!hasBreak(ADD_DOES_NOT_ADD_ELEMENT)) {
-                    result = collection.add(e);
-                }
+        checkOptionalMethodSupport(CollectionMethods.ADD, ADD_THROWS_WRONG_UNSUPPORTED_EXCEPTION);
+
+        boolean result = false;
+        if (checkNewElement(e)) {
+            if (!hasBreak(ADD_DOES_NOT_ADD_ELEMENT)) {
+                result = getWithBreakableSafety(ADD_IS_NOT_THREAD_SAFE, () -> collection.add(e));
             }
-            if (hasBreak(ADD_ALWAYS_RETURNS_TRUE)) {
-                return true;
-            } else if (hasBreak(ADD_ALWAYS_RETURNS_FALSE)) {
-                return false;
-            } else if (hasBreak(ADD_ALWAYS_RETURNS_OPPOSITE_VALUE)) {
-                return !result;
-            } else {
-                return result;
-            }
-        } else {
-            throw new UnsupportedOperationException("Unsupported method: add");
         }
+
+        if (hasBreak(ADD_ALWAYS_RETURNS_TRUE)) {
+            return true;
+        }
+        if (hasBreak(ADD_ALWAYS_RETURNS_FALSE)) {
+            return false;
+        }
+        if (hasBreak(ADD_ALWAYS_RETURNS_OPPOSITE_VALUE)) {
+            return !result;
+        }
+        return result;
     }
 
     /// Implements the [remove][Collection#remove] method from the [Collection] interface. This method can be broken
@@ -855,6 +1342,7 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// - [REMOVE_ALWAYS_RETURNS_TRUE][BreakableCollection#REMOVE_ALWAYS_RETURNS_TRUE]
     /// - [REMOVE_ALWAYS_RETURNS_FALSE][BreakableCollection#REMOVE_ALWAYS_RETURNS_FALSE]
     /// - [REMOVE_ALWAYS_RETURNS_OPPOSITE_VALUE][BreakableCollection#REMOVE_ALWAYS_RETURNS_OPPOSITE_VALUE]
+    /// - [REMOVE_THROWS_WRONG_UNSUPPORTED_EXCEPTION][BreakableCollection#REMOVE_THROWS_WRONG_UNSUPPORTED_EXCEPTION]
     ///
     /// A collection that has any of these breaks can be constructed using the builder:
     /// ```java
@@ -863,11 +1351,11 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     ///         .build();
     /// ```
     /// This is an optional method of the [Collection] interface. Support for this method can be removed using the
-    /// optional method identifier [CollectionMethods#Remove]. A collection that does not support the `remove`
+    /// optional method identifier [CollectionMethods#REMOVE]. A collection that does not support the `remove`
     /// method can be constructed using the builder:
     /// ```java
     ///     Collection<Integer> collection = BreakableCollection.of(1,2,3,4,5)
-    ///         .doesNotSupportsMethod(OptionalCollectionMethod.Remove)
+    ///         .doesNotSupportMethod(CollectionMethods.REMOVE)
     ///         .build();
     /// ```
     /// @return 'true' if the element is removed, 'false' if it isn't, or possibly a different value if the collection
@@ -875,26 +1363,28 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// @throws NullPointerException if the argument is `null` and collection does not support `null` values.
     /// @throws ClassCastException if the argument is an incompatible type and the collection does not support
     ///         incompatible types.
+    /// @throws UnsupportedOperationException if the method is not supported.
+    /// @throws IllegalStateException if the method is not supported and the REMOVE_THROWS_WRONG_UNSUPPORTED_EXCEPTION
+    ///         break is active.
     @Override
     public boolean remove(final Object o) {
-        if (supportsMethod(CollectionMethods.Add)) {
-            checkArgument(o);
-            boolean result = false;
-            if (!hasBreak(REMOVE_DOES_NOT_REMOVE_ELEMENT)) {
-                result = collection.remove(o);
-            }
-            if (hasBreak(REMOVE_ALWAYS_RETURNS_TRUE)) {
-                return true;
-            } else if (hasBreak(REMOVE_ALWAYS_RETURNS_FALSE)) {
-                return false;
-            } else if (hasBreak(REMOVE_ALWAYS_RETURNS_OPPOSITE_VALUE)) {
-                return !result;
-            } else {
-                return result;
-            }
-        } else {
-            throw new UnsupportedOperationException("Unsupported method: remove");
+        checkOptionalMethodSupport(CollectionMethods.REMOVE, REMOVE_THROWS_WRONG_UNSUPPORTED_EXCEPTION);
+        checkArgument(o);
+
+        boolean result = false;
+        if (!hasBreak(REMOVE_DOES_NOT_REMOVE_ELEMENT)) {
+            result = getWithBreakableSafety(REMOVE_IS_NOT_THREAD_SAFE, () -> collection.remove(o));
         }
+        if (hasBreak(REMOVE_ALWAYS_RETURNS_TRUE)) {
+            return true;
+        }
+        if (hasBreak(REMOVE_ALWAYS_RETURNS_FALSE)) {
+            return false;
+        }
+        if (hasBreak(REMOVE_ALWAYS_RETURNS_OPPOSITE_VALUE)) {
+            return !result;
+        }
+        return result;
     }
 
     /// Implements the [containsAll][Collection#containsAll] method from the [Collection] interface. This method can b
@@ -917,20 +1407,20 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// @see Collection#containsAll(Collection)
     @Override
     public boolean containsAll(final @NonNull Collection<?> c) {
-        if (supportsMethod(CollectionMethods.Add)) {
-            c.forEach(this::checkArgument);
-            if (hasBreak(CONTAINS_ALL_ALWAYS_RETURNS_TRUE)) {
-                return true;
-            } else if (hasBreak(CONTAINS_ALL_ALWAYS_RETURNS_FALSE)) {
-                return false;
-            } else if (hasBreak(CONTAINS_ALL_RETURNS_OPPOSITE_VALUE)) {
-                return !collection.containsAll(c);
-            } else {
-                return collection.containsAll(c);
-            }
-        } else {
-            throw new UnsupportedOperationException();
+        checkOptionalMethodSupport(CollectionMethods.CONTAINS_ALL, CONTAINS_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION);
+        checkArgumentElements(c);
+
+        boolean result = getWithBreakableSafety(CONTAINS_ALL_IS_NOT_THREAD_SAFE, () -> collection.containsAll(c));
+        if (hasBreak(CONTAINS_ALL_ALWAYS_RETURNS_TRUE)) {
+            return true;
         }
+        if (hasBreak(CONTAINS_ALL_ALWAYS_RETURNS_FALSE)) {
+            return false;
+        }
+        if (hasBreak(CONTAINS_ALL_RETURNS_OPPOSITE_VALUE)) {
+            return !result;
+        }
+        return result;
     }
 
     /// Implements the [addAll][Collection#addAll] method from the [Collection] interface. This method can be broken
@@ -941,6 +1431,7 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// - [ADD_ALL_ALWAYS_RETURNS_TRUE][BreakableCollection#ADD_ALL_ALWAYS_RETURNS_TRUE]
     /// - [ADD_ALL_ALWAYS_RETURNS_FALSE][BreakableCollection#ADD_ALL_ALWAYS_RETURNS_FALSE]
     /// - [ADD_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE][BreakableCollection#ADD_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE]
+    /// - [ADD_THROWS_WRONG_UNSUPPORTED_EXCEPTION][BreakableCollection#ADD_THROWS_WRONG_UNSUPPORTED_EXCEPTION]
     ///
     /// A collection that has any of these breaks can be constructed using the builder:
     /// ```java
@@ -949,11 +1440,11 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     ///         .build();
     /// ```
     /// This is an optional method of the [Collection] interface. Support for this method can be removed using the
-    /// optional method identifier [CollectionMethods#AddAll]. A collection that does not support the `addAll` method
+    /// optional method identifier [CollectionMethods#ADD_ALL]. A collection that does not support the `addAll` method
     /// can be constructed using the builder:
     /// ```java
     ///     Collection<Integer> collection = Breakables.buildCollection(1,2,3,4,5)
-    ///         .doesNotSupportsMethod(OptionalCollectionMethod.AddAll)
+    ///         .doesNotSupportMethod(CollectionMethods.ADD_ALL)
     ///         .build();
     /// ```
     /// @return 'true' if all of the elements are added, 'false' otherwise, or possibly a different value if the
@@ -963,33 +1454,40 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// @throws ClassCastException if the argument contains any elements an incompatible type and the collection does
     ///                            not support incompatible types.
     /// @throws UnsupportedOperationException if this collection does not support this method.
+    /// @throws IllegalStateException if this method is not supported and the ADD_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION
+    ///         break is active.
     @Override
     public boolean addAll(final @NonNull Collection<? extends E> c) {
-        if (supportsMethod(CollectionMethods.AddAll)) {
-            boolean result = false;
-            if (c.stream().allMatch(this::checkNewElement)) {
-                List<E> l = new ArrayList<>(c);
-                if (hasBreak(ADD_ALL_SKIPS_FIRST_ELEMENT)) {
-                    result = collection.addAll(l.subList(1, l.size()));
-                } else if (hasBreak(ADD_ALL_SKIPS_LAST_ELEMENT)) {
-                    result = collection.addAll(l.subList(0, l.size() - 1));
-                } else if (!hasBreak(ADD_ALL_DOES_NOT_ADD_ANY_ELEMENTS)) {
-                    result = collection.addAll(l);
-                }
-            }
+        checkOptionalMethodSupport(CollectionMethods.ADD_ALL, ADD_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION);
 
-            if (hasBreak(ADD_ALL_ALWAYS_RETURNS_TRUE)) {
-                return true;
-            } else if (hasBreak(ADD_ALL_ALWAYS_RETURNS_FALSE)) {
-                return false;
-            } else if (hasBreak(ADD_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE)) {
-                return !result;
-            } else {
-                return result;
+        boolean result = false;
+        if (checkNewArgumentElements(c)) {
+            if (hasBreak(ADD_ALL_SKIPS_FIRST_ELEMENT)) {
+                List<E> l = new ArrayList<>(c);
+                result = getWithBreakableSafety(ADD_ALL_IS_NOT_THREAD_SAFE, () ->
+                        collection.addAll(l.subList(1, l.size()))
+                );
+            } else if (hasBreak(ADD_ALL_SKIPS_LAST_ELEMENT)) {
+                List<E> l = new ArrayList<>(c);
+                result = getWithBreakableSafety(ADD_ALL_IS_NOT_THREAD_SAFE, () ->
+                        collection.addAll(l.subList(0, l.size() - 1))
+                );
+            } else if (!hasBreak(ADD_ALL_DOES_NOT_ADD_ANY_ELEMENTS)) {
+                result = getWithBreakableSafety(ADD_ALL_IS_NOT_THREAD_SAFE, () ->
+                        collection.addAll(c)
+                );
             }
-        } else {
-            throw new UnsupportedOperationException("Unsupported method: add");
         }
+        if (hasBreak(ADD_ALL_ALWAYS_RETURNS_TRUE)) {
+            return true;
+        }
+        if (hasBreak(ADD_ALL_ALWAYS_RETURNS_FALSE)) {
+            return false;
+        }
+        if (hasBreak(ADD_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE)) {
+            return !result;
+        }
+        return result;
     }
 
     /// Implements the [removeAll][Collection#removeAll] method from the [Collection] interface. This method can be
@@ -1000,19 +1498,20 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// - [REMOVE_ALL_ALWAYS_RETURNS_TRUE][BreakableCollection#REMOVE_ALL_ALWAYS_RETURNS_TRUE]
     /// - [REMOVE_ALL_ALWAYS_RETURNS_FALSE][BreakableCollection#REMOVE_ALL_ALWAYS_RETURNS_FALSE]
     /// - [REMOVE_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE][BreakableCollection#REMOVE_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE]
+    /// - [REMOVE_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION][BreakableCollection#REMOVE_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION]
     ///
     /// A collection that has any of these breaks can be constructed using the builder:
     /// ```java
     ///     Collection<Integer> collection = Breakables.buildCollection(1,2,3,4,5)
-    ///         .withBreak(REMOVE_ALL_DOES_NOT_ADD_ANY_ELEMENTS)
+    ///         .withBreak(REMOVE_ALL_DOES_NOT_REMOVE_ANY_ELEMENTS)
     ///         .build();
     /// ```
     /// This is an optional method of the [Collection] interface. Support for this method can be removed using the
-    /// optional method identifier [CollectionMethods#RemoveAll]. A collection that does not support the `removeAll`
+    /// optional method identifier [CollectionMethods#REMOVE_ALL]. A collection that does not support the `removeAll`
     /// method can be constructed using the builder:
     /// ```java
     ///     Collection<Integer> collection = Breakables.buildCollection(1,2,3,4,5)
-    ///         .doesNotSupportsMethod(OptionalCollectionMethod.RemoveAll)
+    ///         .doesNotSupportMethod(CollectionMethods.REMOVE_ALL)
     ///         .build();
     /// ```
     /// @param c collection containing elements to be removed from this collection
@@ -1023,32 +1522,40 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// @throws ClassCastException if the argument contains any elements an incompatible type and the collection does
     ///         not support incompatible types.
     /// @throws UnsupportedOperationException if this collection does not support this method.
+    /// @throws IllegalStateException if this method is not supported and the REMOVE_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION.
+    ///
     /// @see Collection#removeAll(Collection)
     @Override
     public boolean removeAll(final @NonNull Collection<?> c) {
-        if (supportsMethod(CollectionMethods.RemoveAll)) {
-            c.forEach(this::checkArgument);
-            boolean result = false;
-            List<?> l = new ArrayList<>(c);
-            if (hasBreak(REMOVE_ALL_SKIPS_FIRST_ELEMENT)) {
-                result = collection.removeAll(l.subList(1, l.size()));
-            } else if (hasBreak(REMOVE_ALL_SKIPS_LAST_ELEMENT)) {
-                result = collection.removeAll(l.subList(0, l.size() - 1));
-            } else if (!hasBreak(REMOVE_ALL_DOES_NOT_REMOVE_ANY_ELEMENTS)) {
-                result = collection.removeAll(l);
-            }
-            if (hasBreak(REMOVE_ALL_ALWAYS_RETURNS_TRUE)) {
-                return true;
-            } else if (hasBreak(REMOVE_ALL_ALWAYS_RETURNS_FALSE)) {
-                return false;
-            } else if (hasBreak(REMOVE_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE)) {
-                return !result;
-            } else {
-                return result;
-            }
-        } else {
-            throw new UnsupportedOperationException();
+        checkOptionalMethodSupport(CollectionMethods.REMOVE_ALL, REMOVE_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION);
+        checkArgumentElements(c);
+
+        boolean result = false;
+        List<?> l = new ArrayList<>(c);
+        if (hasBreak(REMOVE_ALL_SKIPS_FIRST_ELEMENT)) {
+            result = getWithBreakableSafety(REMOVE_ALL_IS_NOT_THREAD_SAFE, () ->
+                    collection.removeAll(l.subList(1, l.size()))
+            );
+        } else if (hasBreak(REMOVE_ALL_SKIPS_LAST_ELEMENT)) {
+            result = getWithBreakableSafety(REMOVE_ALL_IS_NOT_THREAD_SAFE, () ->
+                    collection.removeAll(l.subList(0, l.size() - 1))
+            );
+        } else if (!hasBreak(REMOVE_ALL_DOES_NOT_REMOVE_ANY_ELEMENTS)) {
+            result = getWithBreakableSafety(REMOVE_ALL_IS_NOT_THREAD_SAFE, () ->
+                    collection.removeAll(l)
+            );
         }
+
+        if (hasBreak(REMOVE_ALL_ALWAYS_RETURNS_TRUE)) {
+            return true;
+        }
+        if (hasBreak(REMOVE_ALL_ALWAYS_RETURNS_FALSE)) {
+            return false;
+        }
+        if (hasBreak(REMOVE_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE)) {
+            return !result;
+        }
+        return result;
     }
 
     /// Implements the [removeIf][Collection#removeIf] method from the [Collection] interface. This method can be broken
@@ -1067,52 +1574,61 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     ///         .build();
     /// ```
     /// This is an optional method of the [Collection] interface. Support for this method can be removed using the
-    /// optional method identifier [CollectionMethods#RemoveIf]. A collection that does not support the `removeIf`
+    /// optional method identifier [CollectionMethods#REMOVE_IF]. A collection that does not support the `removeIf`
     /// method can be constructed using the builder:
     /// ```java
     ///     Collection<Integer> collection = Breakables.buildCollection(1,2,3,4,5)
-    ///         .doesNotSupportsMethod(OptionalCollectionMethod.RemoveIf)
+    ///         .doesNotSupportMethod(CollectionMethods.REMOVE_IF)
     ///         .build();
     /// ```
     /// @param filter a predicate which returns `true` for elements to be removed
     /// @return `true` if any elements were removed
     /// @throws NullPointerException if the specified filter is null
-    /// @throws UnsupportedOperationException if the `removeIf` operation is not supported by this collection
+    /// @throws UnsupportedOperationException if the `removeIf` method is not supported.
+    ///
     /// @see Collection#removeIf(Predicate)
     @Override
     public boolean removeIf(final @NonNull Predicate<? super E> filter) {
-        if (supportsMethod(CollectionMethods.RemoveAll)) {
-            boolean changed = false;
-            if (hasBreak(REMOVE_IF_SKIPS_FIRST_ELEMENT)) {
+        checkOptionalMethodSupport(CollectionMethods.REMOVE_IF, REMOVE_IF_THROWS_WRONG_UNSUPPORTED_EXCEPTION);
+
+        AtomicBoolean result = new AtomicBoolean(false);
+        if (hasBreak(REMOVE_IF_SKIPS_FIRST_ELEMENT)) {
+            runWithBreakableSafety(REMOVE_IF_IS_NOT_THREAD_SAFE, () -> {
                 Iterator<E> i = IterableTestUtils.skipFirstIterator(collection);
                 while (i.hasNext()) {
                     if (filter.test(i.next())) {
                         i.remove();
+                        result.set(true);
                     }
                 }
-            } else if (hasBreak(REMOVE_IF_SKIPS_LAST_ELEMENT)) {
+            });
+        } else if (hasBreak(REMOVE_IF_SKIPS_LAST_ELEMENT)) {
+            runWithBreakableSafety(REMOVE_IF_IS_NOT_THREAD_SAFE, () -> {
                 Iterator<E> i = IterableTestUtils.skipLastIterator(collection);
                 while (i.hasNext()) {
                     if (filter.test(i.next())) {
                         i.remove();
+                        result.set(true);
                     }
                 }
-            } else if (!hasBreak(REMOVE_IF_DOES_NOT_REMOVE_ANY_ELEMENTS)) {
-                changed = Collection.super.removeIf(filter);
-            }
-
-            if (hasBreak(REMOVE_IF_ALWAYS_RETURNS_TRUE)) {
-                return true;
-            } else if (hasBreak(REMOVE_IF_ALWAYS_RETURNS_FALSE)) {
-                return false;
-            } else if (hasBreak(REMOVE_IF_ALWAYS_RETURNS_OPPOSITE_VALUE)) {
-                return !changed;
-            } else {
-                return changed;
-            }
-        } else {
-            throw new UnsupportedOperationException();
+            });
+        } else if (!hasBreak(REMOVE_IF_DOES_NOT_REMOVE_ANY_ELEMENTS)) {
+            boolean changed = getWithBreakableSafety(REMOVE_IF_IS_NOT_THREAD_SAFE, () ->
+                    Collection.super.removeIf(filter)
+            );
+            result.set(changed);
         }
+
+        if (hasBreak(REMOVE_IF_ALWAYS_RETURNS_TRUE)) {
+            return true;
+        }
+        if (hasBreak(REMOVE_IF_ALWAYS_RETURNS_FALSE)) {
+            return false;
+        }
+        if (hasBreak(REMOVE_IF_ALWAYS_RETURNS_OPPOSITE_VALUE)) {
+            return !result.get();
+        }
+        return result.get();
     }
 
     /// Implements the [retainAll][Collection#retainAll] method from the [Collection] interface. This method can be
@@ -1123,19 +1639,20 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// - [RETAIN_ALL_ALWAYS_RETURNS_TRUE][BreakableCollection#RETAIN_ALL_ALWAYS_RETURNS_TRUE]
     /// - [RETAIN_ALL_ALWAYS_RETURNS_FALSE][BreakableCollection#RETAIN_ALL_ALWAYS_RETURNS_FALSE]
     /// - [RETAIN_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE][BreakableCollection#RETAIN_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE]
+    /// = [RETAIN_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION][BreakableCollection#RETAIN_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION].
     ///
     /// A collection that has any of these breaks can be constructed using the builder:
     /// ```java
     ///     Collection<Integer> collection = Breakables.buildCollection(1,2,3,4,5)
-    ///         .withBreak(RETAIN_ALL_DOES_NOT_ADD_ANY_ELEMENTS)
+    ///         .withBreak(RETAIN_ALL_DOES_NOT_RETAIN_ANY_ELEMENTS)
     ///         .build();
     /// ```
     /// This is an optional method of the [Collection] interface. Support for this method can be removed using the
-    /// optional method identifier [CollectionMethods#RetainAll]. A collection that does not support the `retainAll`
+    /// optional method identifier [CollectionMethods#RETAIN_ALL]. A collection that does not support the `retainAll`
     /// method can be constructed using the builder:
     /// ```java
     ///     Collection<Integer> collection = Breakables.buildCollection(1,2,3,4,5)
-    ///         .doesNotSupportsMethod(OptionalCollectionMethod.RetainAll)
+    ///         .doesNotSupportMethod(CollectionMethods.RETAIN_ALL)
     ///         .build();
     /// ```
     /// @return 'true' if the collection is modified, 'false' otherwise, or possibly a different value if the
@@ -1145,31 +1662,41 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// @throws ClassCastException if the argument contains any elements an incompatible type and the collection does
     ///         not support incompatible types.
     /// @throws UnsupportedOperationException if this collection does not support this method.
+    /// @throws IllegalStateException if this metho is not supported and the
+    ///         RETAIN_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION is active.
+    ///
+    /// @see Collection#retainAll(Collection)
     @Override
     public boolean retainAll(final @NonNull Collection<?> c) {
-        if (supportsMethod(CollectionMethods.RetainAll)) {
-            c.forEach(this::checkArgument);
-            boolean result = false;
-            List<?> l = new ArrayList<>(c);
-            if (hasBreak(RETAIN_ALL_SKIPS_FIRST_ELEMENT)) {
-                result = collection.retainAll(l.subList(1, l.size()));
-            } else if (hasBreak(RETAIN_ALL_SKIPS_LAST_ELEMENT)) {
-                result = collection.retainAll(l.subList(0, l.size() - 1));
-            } else if (!hasBreak(RETAIN_ALL_DOES_NOT_RETAIN_ANY_ELEMENTS)) {
-                result = collection.retainAll(l);
-            }
-            if (hasBreak(RETAIN_ALL_ALWAYS_RETURNS_TRUE)) {
-                return true;
-            } else if (hasBreak(RETAIN_ALL_ALWAYS_RETURNS_FALSE)) {
-                return false;
-            } else if (hasBreak(RETAIN_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE)) {
-                return !result;
-            } else {
-                return result;
-            }
-        } else {
-            throw new UnsupportedOperationException("Unsupported method: addAll");
+        checkOptionalMethodSupport(CollectionMethods.RETAIN_ALL, RETAIN_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION);
+        checkArgumentElements(c);
+
+        boolean result = false;
+        List<?> l = new ArrayList<>(c);
+        if (hasBreak(RETAIN_ALL_SKIPS_FIRST_ELEMENT)) {
+            result = getWithBreakableSafety(RETAIN_ALL_IS_NOT_THREAD_SAFE, () ->
+                    collection.retainAll(l.subList(1, l.size()))
+            );
+        } else if (hasBreak(RETAIN_ALL_SKIPS_LAST_ELEMENT)) {
+            result = getWithBreakableSafety(RETAIN_ALL_IS_NOT_THREAD_SAFE, () ->
+                    collection.retainAll(l.subList(0, l.size() - 1))
+            );
+        } else if (!hasBreak(RETAIN_ALL_DOES_NOT_RETAIN_ANY_ELEMENTS)) {
+            result = getWithBreakableSafety(RETAIN_ALL_IS_NOT_THREAD_SAFE, () ->
+                    collection.retainAll(l)
+            );
         }
+
+        if (hasBreak(RETAIN_ALL_ALWAYS_RETURNS_TRUE)) {
+            return true;
+        }
+        if (hasBreak(RETAIN_ALL_ALWAYS_RETURNS_FALSE)) {
+            return false;
+        }
+        if (hasBreak(RETAIN_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE)) {
+            return !result;
+        }
+        return result;
     }
 
     /// Implements the [clear][Collection#clear] method from the [Collection] interface. This method can be broken using
@@ -1177,6 +1704,7 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// - [CLEAR_DOES_NOT_REMOVE_ANY_ELEMENTS][BreakableCollection#CLEAR_DOES_NOT_REMOVE_ANY_ELEMENTS]
     /// - [CLEAR_SKIPS_FIRST_ELEMENT][BreakableCollection#CLEAR_SKIPS_FIRST_ELEMENT]
     /// - [CLEAR_SKIPS_LAST_ELEMENT][BreakableCollection#CLEAR_SKIPS_LAST_ELEMENT]
+    /// - [CLEAR_THROWS_WRONG_UNSUPPORTED_EXCEPTION][BreakableCollection#CLEAR_THROWS_WRONG_UNSUPPORTED_EXCEPTION].
     ///
     /// A collection that has any of these breaks can be constructed using the builder:
     /// ```java
@@ -1184,35 +1712,74 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     ///         .withBreak(CLEAR_DOES_NOT_REMOVE_ANY_ELEMENTS)
     ///         .build();
     /// ```
-    /// @throws UnsupportedOperationException if the `clear` operation is not supported by this collection
+    /// @throws UnsupportedOperationException if the `clear` is not supported.
+    /// @throws IllegalStateException if this method is not supported and the CLEAR_THROWS_WRONG_UNSUPPORTED_EXCEPTION
     /// @see Collection#clear()
     @Override
     public void clear() {
-        if (supportsMethod(CollectionMethods.Clear)) {
-            if (hasBreak(CLEAR_SKIPS_FIRST_ELEMENT)) {
+        checkOptionalMethodSupport(CollectionMethods.CLEAR, CLEAR_THROWS_WRONG_UNSUPPORTED_EXCEPTION);
+        if (hasBreak(CLEAR_SKIPS_FIRST_ELEMENT)) {
+            runWithBreakableSafety(CLEAR_IS_NOT_THREAD_SAFE, () -> {
                 Iterator<E> i = IterableTestUtils.skipFirstIterator(collection);
                 while (i.hasNext()) {
                     i.next();
                     i.remove();
                 }
-            } else if (hasBreak(CLEAR_SKIPS_LAST_ELEMENT)) {
+            });
+        } else if (hasBreak(CLEAR_SKIPS_LAST_ELEMENT)) {
+            runWithBreakableSafety(CLEAR_IS_NOT_THREAD_SAFE, () -> {
                 Iterator<E> i = IterableTestUtils.skipLastIterator(collection);
                 while (i.hasNext()) {
                     i.next();
                     i.remove();
                 }
-            } else if (!hasBreak(CLEAR_DOES_NOT_REMOVE_ANY_ELEMENTS)) {
-                collection.clear();
-            }
-        } else {
-            throw new UnsupportedOperationException("Unsupported method: addAll");
+            });
+        } else if (!hasBreak(CLEAR_DOES_NOT_REMOVE_ANY_ELEMENTS)) {
+            runWithBreakableSafety(CLEAR_IS_NOT_THREAD_SAFE, collection::clear);
         }
     }
+
+
 
     /// returns the elements as an unbroken instance of `Collection'
     /// @return an unbroken collection.
     public @NonNull Collection<E> unbroken() {
         return collection;
+    }
+
+    /// Serialization support for writing the collection state.
+    ///
+    /// This method ensures that the collection's fields, including the inherited
+    /// behavioral modifications, are correctly serialized.
+    ///
+    /// @param out the [ObjectOutputStream] to write to
+    /// @throws IOException if an I/O error occurs
+    @Serial
+    private void writeObject(final ObjectOutputStream out) throws IOException {
+        out.defaultWriteObject();
+        out.writeObject(collection);
+    }
+
+    /// Serialization support for reading the collection state.
+    ///
+    /// This method ensures that the collection's fields, including the inherited
+    /// behavioral modifications, are correctly restored during deserialization.
+    ///
+    /// @param in the [ObjectInputStream] to read from
+    /// @throws IOException if an I/O error occurs
+    /// @throws ClassNotFoundException if the class of a serialized object could not be found
+    @Serial
+    @SuppressWarnings("unchecked")
+    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        Collection<E> c = (Collection<E>) in.readObject();
+        try {
+            var field = BreakableCollection.class.getDeclaredField("collection");
+            field.setAccessible(true);
+            field.set(this, c);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new IOException("Failed to restore collection field", e);
+        }
     }
 
     /// Checks that the argument is valid for this collection. This will check that:
@@ -1223,24 +1790,65 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// @throws ClassCastException if the argument is not compatible and the collection does not permit incompatible
     ///                            types.
     protected void checkArgument(final Object arg) {
-        if (!permitsNulls && arg == null) {
+        if (!permitsNulls() && arg == null) {
             throw new NullPointerException();
         }
-        if (!permitsIncompatibleTypes && compatibleType.isAssignableFrom(arg.getClass())) {
+        if (!permitsIncompatibleTypes() && !compatibleType.isAssignableFrom(arg.getClass())) {
             throw new ClassCastException("incompatible type: " + arg.getClass().getName());
         }
     }
 
-    /// Checks that the element is valid to add to this collection. This will check that the element is not a duplicate,
+    /// Checks that all elements in the specified collection are valid arguments for this collection.
+    ///
+    /// This method iterates through the provided collection and calls [BreakableCollection#checkArgument] for each
+    /// element, ensuring they meet the collection's requirements regarding null values and type compatibility.
+    ///
+    /// @param c the collection of elements to check.
+    /// @throws NullPointerException if the collection contains a `null` element and this collection does not permit
+    ///                            nulls.
+    /// @throws ClassCastException if the collection contains an element with an incompatible type and this collection
+    ///                            does not permit incompatible types.
+    protected void checkArgumentElements(final Collection<?> c) {
+        c.forEach(this::checkArgument);
+    }
+
+    /// Checks that the element is valid to add_singleElement_returnsTrueAndUpdatesSize to this collection. This will check that the element is not a duplicate,
     /// or the collection permits duplicate values.
     /// @param e the element to check.
     /// @return 'true' if the element is valid, 'false' is it is not.
     /// @throws NullPointerException if the argument is 'null' and the collection does not permit nulls.
     /// @throws ClassCastException if the argument is not compatible and the collection does not permit incompatible
     ///                            types.
-    protected boolean checkNewElement(final E e) {
+    protected boolean checkNewElement(final Object e) {
         checkArgument(e);
-        return permitsDuplicates || !collection.contains(e);
+        return permitsDuplicates() || !collection.contains(e);
+    }
+
+    /// Checks that all elements in the specified collection are valid to be added to this collection.
+    ///
+    /// This method iterates through the provided collection and calls [BreakableCollection#checkNewElement] for each
+    /// element. It ensures that all elements satisfy the collection's requirements, including null permissions,
+    /// type compatibility, and duplicate permissions.
+    ///
+    /// @param c the collection of elements to check.
+    /// @return `true` if all elements are valid to be added, `false` otherwise (e.g., if any element is a duplicate
+    ///         and duplicates are not permitted).
+    /// @throws NullPointerException if the collection contains a `null` element and this collection does not permit
+    ///                            nulls.
+    /// @throws ClassCastException if the collection contains an element with an incompatible type and this collection
+    ///                            does not permit incompatible types.
+    protected boolean checkNewArgumentElements(final Collection<?> c) {
+        return c.stream().allMatch(this::checkNewElement);
+    }
+
+    /// Returns the bit flags that indicate what types of values that the collection supports.
+    /// @return the bit flags that indicate what types of values that the collection supports.
+    protected int permits() {
+        return permits;
+    }
+
+    protected Class<?> compatibleType() {
+        return compatibleType;
     }
 
     /// Utility class for implementing builders for subclasses of BreakableCollection.
@@ -1253,15 +1861,10 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
             C extends BreakableCollection<E>, E>
             extends BreakableIterable.AbstractBuilder<B, C, E> {
 
-        /// Flag indicating whether the builder will create collections that permit null elements.
-        private boolean permitsNulls;
+        ///  Field of bit flags that store what is permitted by the collection.
+        private int permits;
 
-        /// Flag indicating whether the builder will create collections that permit duplicate elements.
-        private boolean permitsDuplicates;
-
-        /// Flag indicating whether the builder will create collections that permit incompatible types.
-        private boolean permitsIncompatibleTypes;
-
+        private Class<?> compatibleType = Object.class;
 
         /// Default constructor to be called by default constructors for subclasses.
         /// Initializes the builder with default values: permits nulls, duplicates, and incompatible types.
@@ -1275,9 +1878,7 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
         /// @throws NullPointerException if elements is null
         protected AbstractBuilder(final @NonNull Collection<E> elements) {
             super(Objects.requireNonNull(elements));
-            this.permitsNulls = true;
-            this.permitsDuplicates = true;
-            this.permitsIncompatibleTypes = true;
+            this.permits = DEFAULT_PERMITS;
         }
 
         /// Copy constructor to be called by copy constructors for subclasses.
@@ -1285,16 +1886,15 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
         /// @throws NullPointerException if the argument is `null`.
         protected AbstractBuilder(final AbstractBuilder<B, C, E> other) {
             super(other);
-            this.permitsNulls = other.permitsNulls;
-            this.permitsDuplicates = other.permitsDuplicates;
-            this.permitsIncompatibleTypes = other.permitsIncompatibleTypes;
+            this.permits = other.permits;
+            this.compatibleType = other.compatibleType;
         }
 
         /// Sets the builder to construct a collection that does not permit nulls. By default, the collection will
         /// support `null`.
         /// @return th builder.
         public B doesNotPermitNulls() {
-            permitsNulls = false;
+            permits = permits & ~PERMITS_NULLS;
             return self();
         }
 
@@ -1302,42 +1902,39 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
         /// collection will support duplicate elements.
         /// @return th builder.
         public B doesNotPermitDuplicates() {
-            permitsDuplicates = false;
+            permits = permits & ~PERMITS_DUPLICATES;
             return self();
         }
 
         /// Sets the builder to construct a collection that does not permit incompatible types. By default, the
         /// collection will support incompatible types.
+        /// @param type the type that the collection supports.
         /// @return th builder.
-        public B doesNotPermitIncompatibleTypes() {
-            permitsIncompatibleTypes = false;
+        public B doesNotPermitIncompatibleTypes(final Class<?> type) {
+            permits = permits & ~PERMITS_INCOMPATIBLE_TYPES;
+            this.compatibleType = type;
             return self();
         }
 
         /// Sets the builder to construct a collection that does not support the method provided as the argument.
         /// @param method the method that the collection does not support.
         /// @return the builder.
-        public final B doesNotSupportMethod(final OptionalMethod method) {
+        public final B doesNotSupportMethod(final InterfaceMethod method) {
             doesNotSupport(method);
             return self();
         }
 
-        /// Returns whether the builder will create collections that permit null elements.
-        /// @return true if null elements are permitted, false otherwise
-        public boolean permitsNulls() {
-            return permitsNulls;
+        /// Returns the bit flags that indicate what types of values that the collection supports.
+        /// @return the bit flags that indicate what types of values that the collection supports.
+        protected int permits() {
+            return permits;
         }
 
-        /// Returns whether the builder will create collections that permit duplicate elements.
-        /// @return true if duplicate elements are permitted, false otherwise
-        public boolean permitsDuplicates() {
-            return permitsDuplicates;
-        }
 
-        /// Returns whether the builder will create collections that permit incompatible types.
-        /// @return true if incompatible types are permitted, false otherwise
-        public boolean permitsIncompatibleTypes() {
-            return permitsIncompatibleTypes;
+        /// Return the type supported by the collection.
+        /// @return the type that is supported by the collection.
+        public Class<?> compatibleType() {
+            return compatibleType;
         }
     }
 
@@ -1371,42 +1968,21 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
         /// Build a BreakableCollection objects using the values from the builder.
         /// @return a new BreakableCollection object.
         public BreakableCollection<E> build() {
-            BreakableCollection<E> broken = new BreakableCollection<>(elements(), breaks(), characteristics());
-            broken.setPermitsNulls(permitsNulls());
-            broken.setPermitsDuplicates(permitsDuplicates());
-            broken.setPermitsIncompatibleTypes(permitsIncompatibleTypes());
-            unsupportedMethods().forEach(broken::doesNotSupportMethod);
-            return broken;
+            return new BreakableCollection<>(new ArrayList<>(elements()), new HashSet<>(breaks()),
+                    new HashMap<>(methodStatuses()), characteristics(), permits(), isSafe(), compatibleType());
         }
     }
 
-    /// Creates a collection provider for instances of BreakableCollection, given an element provider.
-    /// @param <E> the element type.
-    /// @param elementProvider the element provider to use.
-    /// @return a collection provider for breakable collections.
     public static <E> @NonNull CollectionProvider<E, BreakableCollection<E>> collectionProvider(
+            final @NonNull Builder<E> builder,
             final @NonNull ObjectProvider<E> elementProvider) {
+        final Builder<E> local = builder.copy();
         return CollectionProviders.from(
-                BreakableCollection::new,
-                BreakableCollection::new,
-                (c) -> new BreakableCollection<>(new ArrayList<>(c)),
-                elementProvider
-        );
-    }
-
-    /// Creates a collection provider for instances of `BreakableCollection`, given an element provider and a set of
-    /// breaks.
-    /// @param <E> the element type.
-    /// @param elementProvider the element provider to use.
-    /// @param breaks the breaks to apply to each instance of `BreakableCollection`.
-    /// @return a collection provider for breakable collections.
-    public static <E> @NonNull CollectionProvider<E, BreakableCollection<E>> collectionProvider(
-            final @NonNull ObjectProvider<E> elementProvider,
-            final @NonNull Set<Break> breaks) {
-        return CollectionProviders.from(
-                () -> new BreakableCollection<>(new ArrayList<>(), breaks, 0),
-                (o) -> new BreakableCollection<>(new ArrayList<>(storage(o)), breaks, 0),
-                (c) -> new BreakableCollection<>(new ArrayList<>(storage(c)), breaks, 0),
+                local::build,
+                (o) -> new BreakableCollection<>(new ArrayList<>(storage(o)), o.breaks(),
+                        new HashMap<>(o.methodStatuses()), o.characteristics(), o.permits(), o.isSafe(),
+                        o.compatibleType),
+                (c) -> local.copy().addElements(storage(c)).build(),
                 elementProvider
         );
     }
@@ -1417,7 +1993,17 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     public interface WithProvider<E> extends CollectionProviderSupport<E, BreakableCollection<E>> {
         @Override
         default @NonNull CollectionProvider<E, BreakableCollection<E>> provider() {
-            return BreakableCollection.collectionProvider(elementProvider());
+            return BreakableCollection.collectionProvider(new Builder<>(), elementProvider());
+        }
+    }
+
+    /// Mixin interface that adds an implementation of the `provider()` method that provides instances of
+    /// `BreakableCollection` that are thread safe.
+    /// @param <E> element type
+    public interface WithThreadSafeProvider<E> extends CollectionProviderSupport<E, BreakableCollection<E>> {
+        @Override
+        default @NonNull CollectionProvider<E, BreakableCollection<E>> provider() {
+            return BreakableCollection.collectionProvider(new Builder<E>().setSafe(true), elementProvider());
         }
     }
 
@@ -1426,6 +2012,66 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
             return b.collection;
         } else {
             return c;
+        }
+    }
+
+    /// Returns a random element from this collection, excluding a specific index.
+    ///
+    /// This method returns a random element from the collection using a deterministic
+    /// random number generator, while attempting to avoid a specific index position.
+    /// It's primarily used by break implementations that need to return arbitrary
+    /// elements instead of the correct ones.
+    ///
+    /// **Behavior:**
+    /// - Returns an element at a random (but deterministic) position
+    /// - Attempts to exclude the specified index (when possible)
+    /// - Uses the same random seed for consistent behavior across test runs
+    /// - For List implementations, uses indexed access for efficiency
+    /// - For other collections, converts to array first
+    ///
+    /// **Algorithm:**
+    /// The method generates random indices until it finds one that doesn't match
+    /// the exclusion index (or until it gives up). This ensures that when simulating
+    /// broken behavior, the returned element is likely different from the expected one.
+    ///
+    /// **Usage:**
+    /// This method is typically used internally by break implementations to simulate
+    /// corrupted collection behavior where the wrong element is returned:
+    /// ```java
+    /// // Example internal usage in a break implementation
+    /// if (hasBreak(PEEK_RETURNS_RANDOM_ELEMENT)) {
+    ///     return randomElementExcludingIndex(0); // Return something other than first element
+    /// }
+    /// ```
+    ///
+    /// **Performance Considerations:**
+    /// - List access is O(1) for ArrayList, O(n) for LinkedList
+    /// - Non-list collections require O(n) array conversion
+    /// - Random index generation adds minimal overhead
+    ///
+    /// @param exclude the index to attempt to exclude when selecting random element; -1 means no exclusion
+    /// @return a random element from the collection, or null if collection is empty
+    /// @see #randomInt()
+    @SuppressWarnings("unchecked")
+    protected E randomElementExcludingIndex(final int exclude) {
+        if (isEmpty()) {
+            return null;
+        }
+
+        int i = 0;
+        int size = size();
+        if (size > 1 || exclude != 0) {
+            do {
+                i = Math.abs(randomInt() % size);
+            } while (i == exclude);
+        }
+
+        if (collection instanceof List<E> list) {
+            return list.get(i);
+        } else {
+            Object[] elements = collection.toArray();
+            // unchecked cast
+            return (E) elements[i];
         }
     }
 }

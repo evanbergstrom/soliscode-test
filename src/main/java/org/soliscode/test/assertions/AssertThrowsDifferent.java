@@ -18,6 +18,7 @@ package org.soliscode.test.assertions;
 
 import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.function.Executable;
+import org.junit.platform.commons.util.UnrecoverableExceptions;
 
 import java.util.Collection;
 import java.util.List;
@@ -41,7 +42,7 @@ public final class AssertThrowsDifferent {
 
     /// Asserts that the executable will throw an exception that is not one of a list of prohibited exception types.
     /// This method executes the provided executable and verifies that it throws an exception, but that the
-    /// thrown exception is NOT an instance of any of the prohibited types. The assertion passes if any exception
+    /// thrown exception is NOT an instance of the prohibited types. The assertion passes if any exception
     /// is thrown that is not an instance of the prohibited types. The assertion fails if no exception is thrown
     /// or if the thrown exception matches one of the prohibited types.
     /// ```java
@@ -77,7 +78,7 @@ public final class AssertThrowsDifferent {
     /// @param prohibitedTypes the collection of exception types that should NOT be thrown
     /// @param executable the executable to test
     /// @throws org.opentest4j.AssertionFailedError if no exception is thrown or if the thrown exception
-    ///         is an instance of any of the prohibited types
+    ///         is an instance of the prohibited types
     /// @throws NullPointerException if {@code prohibitedTypes} or {@code executable} is null
     ///
     /// @see java.lang.Class#isInstance(Object)
@@ -128,7 +129,7 @@ public final class AssertThrowsDifferent {
 
     /// Asserts that the executable will throw an exception that is not one of a list of prohibited exception types.
     /// This method executes the provided executable and verifies that it throws an exception, but that the
-    /// thrown exception is NOT an instance of any of the prohibited types. The assertion passes if any exception
+    /// thrown exception is NOT an instance of the prohibited types. The assertion passes if any exception
     /// is thrown that is not an instance of the prohibited types. The assertion fails if no exception is thrown
     /// or if the thrown exception matches one of the prohibited types.
     /// ```java
@@ -153,7 +154,7 @@ public final class AssertThrowsDifferent {
     /// @param executable the executable to test
     /// @param message the message to include in the exception if the assertion fails
     /// @throws org.opentest4j.AssertionFailedError if no exception is thrown or if the thrown exception
-    ///         is an instance of any of the prohibited types
+    ///         is an instance of the prohibited types
     /// @throws NullPointerException if {@code prohibitedTypes} or {@code executable} is null
     ///
     /// @see java.lang.Class#isInstance(Object)
@@ -192,12 +193,12 @@ public final class AssertThrowsDifferent {
     /// @since 1.0
     public static void assertThrowsDifferent(final @NonNull Class<? extends Throwable> prohibitedType,
                                              final @NonNull Executable executable, final String message) {
-        checkThrowsDifferent(List.of(prohibitedType), executable, message);
+       checkThrowsDifferent(List.of(prohibitedType), executable, message);
     }
 
     /// Asserts that the executable will throw an exception that is not one of a list of prohibited exception types.
     /// This method executes the provided executable and verifies that it throws an exception, but that the
-    /// thrown exception is NOT an instance of any of the prohibited types. The assertion passes if any exception
+    /// thrown exception is NOT an instance of the prohibited types. The assertion passes if any exception
     /// is thrown that is not an instance of the prohibited types. The assertion fails if no exception is thrown
     /// or if the thrown exception matches one of the prohibited types.
     /// ```java
@@ -223,7 +224,7 @@ public final class AssertThrowsDifferent {
     /// @param executable the executable to test
     /// @param messageSupplier the supplier of the message to include in the exception if the assertion fails
     /// @throws org.opentest4j.AssertionFailedError if no exception is thrown or if the thrown exception
-    ///         is an instance of any of the prohibited types
+    ///         is an instance of the prohibited types
     /// @throws NullPointerException if {@code prohibitedTypes} or {@code executable} is null
     ///
     /// @see java.lang.Class#isInstance(Object)
@@ -271,13 +272,16 @@ public final class AssertThrowsDifferent {
                                              final @NonNull Executable executable, final Object messageOrSupplier) {
         try {
             executable.execute();
-        } catch (Throwable actualException) {
+        } catch (Throwable actual) {
             for (Class<?> expectedType : prohibitedTypes) {
-                if (expectedType.isInstance(actualException)) {
+                if (expectedType.isInstance(actual)) {
+                    UnrecoverableExceptions.rethrowIfUnrecoverable(actual);
                     throw assertionFailure()
                             .message(messageOrSupplier)
                             .expected(prohibitedTypes)
-                            .actual(actualException.getClass())
+                            .actual(actual.getClass())
+                            .reason("Unexpected exception type thrown")
+                            .cause(actual)
                             .build();
                 }
             }

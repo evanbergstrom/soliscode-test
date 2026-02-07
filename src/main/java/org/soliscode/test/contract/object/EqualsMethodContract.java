@@ -55,7 +55,7 @@ public interface EqualsMethodContract<T> extends ContractSupport<T> {
     @Test
     @DisplayName("the equals() method is reflexive")
     default void testEqualsIsReflexive() {
-        if (supportsMethod(ObjectMethods.Equals)) {
+        if (supportsMethod(ObjectMethods.EQUALS)) {
             T x = provider().createInstance();
             assertEquals(x, x);
         }
@@ -68,7 +68,7 @@ public interface EqualsMethodContract<T> extends ContractSupport<T> {
     @Test
     @DisplayName("the equals() method is symmetric")
     default void testEqualsIsSymmetric() {
-        if (supportsMethod(ObjectMethods.Equals)) {
+        if (supportsMethod(ObjectMethods.EQUALS)) {
             T x = provider().createInstance();
             T y = provider().copyInstance(x);
             assertEquals(x, y);
@@ -87,7 +87,7 @@ public interface EqualsMethodContract<T> extends ContractSupport<T> {
     @Test
     @DisplayName("the equals() method is transitive")
     default void testEqualsIsTransitive() {
-        if (supportsMethod(ObjectMethods.Equals)) {
+        if (supportsMethod(ObjectMethods.EQUALS)) {
             T x = provider().createInstance();
             T y = provider().copyInstance(x);
             T z = provider().copyInstance(y);
@@ -103,11 +103,11 @@ public interface EqualsMethodContract<T> extends ContractSupport<T> {
     @Test
     @DisplayName("the equals() method is consistent")
     default void testEqualsIsConsistent() {
-        if (supportsMethod(ObjectMethods.Equals)) {
+        if (supportsMethod(ObjectMethods.EQUALS)) {
             T x = provider().createInstance();
             T y = provider().copyInstance(x);
             for (int i = 0; i < CONSISTENCY_REPEATS; i++) {
-                assertEquals(x, y);
+                assertEquals(x, y, "Failed on " + i + " attempt");
             }
         }
     }
@@ -118,7 +118,7 @@ public interface EqualsMethodContract<T> extends ContractSupport<T> {
     /// @see Object#equals(Object)
     @Test
     default void testEqualsForNullValue() {
-        if (supportsMethod(ObjectMethods.Equals)) {
+        if (supportsMethod(ObjectMethods.EQUALS)) {
             T value = provider().createInstance();
             assertNotEquals(null, value);
         }

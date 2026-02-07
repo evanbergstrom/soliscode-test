@@ -13,7 +13,9 @@ import org.soliscode.test.provider.ObjectProvider;
 /// @since 1.0
 public interface WithIntegerElement extends ElementProviderSupport<Integer> {
 
-    /// Returns an elements provider for instances of [Integer]..
+    ObjectProvider<Integer> PROVIDER = new IntegerProvider();
+
+    /// Returns an elements provider for instances of [Integer].
     /// @return an `Integer` element provider.
     default @NonNull ObjectProvider<Integer> elementProvider() {
         return new IntegerProvider();

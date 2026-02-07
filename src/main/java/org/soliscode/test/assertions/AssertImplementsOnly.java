@@ -25,10 +25,10 @@ import static org.soliscode.test.util.CollectionTestUtils.toCSVString;
 /// or other contracts that could change its behavior.
 ///
 /// ## Key Features
-/// - **Interface Validation** - Verifies that objects implement only expected interfaces
-/// - **Custom Error Messages** - Supports custom error messages and message suppliers
-/// - **Detailed Failure Information** - Provides clear information about unexpected interfaces
-/// - **JUnit Integration** - Uses JUnit's assertion failure mechanism for proper test integration
+/// - **Interface Validation** - Verifies that objects implement only expected interfaces.
+/// - **Custom Error Messages** - Supports custom error messages and message suppliers.
+/// - **Detailed Failure Information** - Provides clear information about unexpected interfaces.
+/// - **JUnit Integration** - Uses JUnit's assertion failure mechanism for proper test integration.
 ///
 /// ## Usage Examples
 /// ```java

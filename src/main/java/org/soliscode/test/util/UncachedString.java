@@ -66,9 +66,9 @@ import java.util.stream.IntStream;
 /// ```java
 /// // Test collection behavior with controlled string objects
 /// Set<UncachedString> stringSet = new HashSet<>();
-/// stringSet.add(new UncachedString("alpha"));
-/// stringSet.add(new UncachedString("beta"));
-/// stringSet.add(new UncachedString("alpha"));  // Duplicate value
+/// stringSet.add_singleElement_returnsTrueAndUpdatesSize(new UncachedString("alpha"));
+/// stringSet.add_singleElement_returnsTrueAndUpdatesSize(new UncachedString("beta"));
+/// stringSet.add_singleElement_returnsTrueAndUpdatesSize(new UncachedString("alpha"));  // Duplicate value
 ///
 /// assertEquals(2, stringSet.size());  // Duplicates properly handled
 /// ```
@@ -535,8 +535,8 @@ public class UncachedString implements java.io.Serializable, Comparable<Uncached
     ///
     /// // Hash table usage
     /// Set<UncachedString> stringSet = new HashSet<>();
-    /// stringSet.add(str1);
-    /// stringSet.add(str2); // Won't be added again due to equality
+    /// stringSet.add_singleElement_returnsTrueAndUpdatesSize(str1);
+    /// stringSet.add_singleElement_returnsTrueAndUpdatesSize(str2); // Won't be added again due to equality
     /// assertEquals(1, stringSet.size());
     ///
     /// // Map usage

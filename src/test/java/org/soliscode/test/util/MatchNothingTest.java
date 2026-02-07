@@ -5,7 +5,18 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.soliscode.test.AbstractTest;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -524,7 +535,7 @@ public class MatchNothingTest extends AbstractTest {
         boolean result = isInCollection(matcher, Arrays.asList("a", "b", "c"));
         assertFalse(result); // Should not find it because equals always returns false
 
-        // Even if we add the exact same instance
+        // Even if we add_singleElement_returnsTrueAndUpdatesSize the exact same instance
         List<Object> listWithMatcher = new ArrayList<>();
         listWithMatcher.add(matcher);
         result = isInCollection(matcher, listWithMatcher);

@@ -6,7 +6,7 @@ import java.util.Collection;
 
 /// Provides instances of collections and other iterable types for use in testing.
 ///
-/// This interface extends `ObjectProvider` to add collection-specific functionality for creating
+/// This interface extends `ObjectProvider` to add_singleElement_returnsTrueAndUpdatesSize collection-specific functionality for creating
 /// iterables with controlled element content. It provides methods for creating collections with
 /// various characteristics such as empty, singleton, unique elements, and seed-based generation.
 ///

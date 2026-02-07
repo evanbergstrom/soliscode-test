@@ -9,7 +9,9 @@ import org.soliscode.test.contract.support.WithIntegerElement;
 import org.soliscode.test.provider.CollectionProvider;
 import org.soliscode.test.provider.FunctionalCollectionProvider;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import static org.soliscode.test.assertions.Assertions.assertImplementsOnly;
 import static org.soliscode.test.assertions.collection.CollectionAssertions.assertEquals;
@@ -30,18 +32,22 @@ public class CollectionOnlyTest extends AbstractTest implements CollectionContra
                 (c) -> narrowToCollection(new ArrayList<>(c)), elementProvider());
     }
 
-    /// Test that `CollectionOnly` only implements the `Collection` interface.
+    /// Verifies that [CollectionOnly] only implements the [Collection] interface.
+    ///
+    /// @see CollectionOnly
+    @DisplayName("constructor_whenCalled_returnsCollectionThatImplementsOnlyCollection")
     @Test
-    @DisplayName("CollectionOnly only implements the Collection interface.")
-    public void testCollectionIsOnlyInterface() {
+    public void constructor_whenCalled_returnsCollectionThatImplementsOnlyCollection() {
         Collection<Integer> iterable = new CollectionOnly<>();
         assertImplementsOnly(Collection.class, iterable);
     }
 
-    /// Test that of() creates a collection that only implements the Collection interface.
+    /// Verifies that [CollectionOnly#of] creates a collection that only implements the [Collection] interface.
+    ///
+    /// @see CollectionOnly#of
+    @DisplayName("of_whenCalled_returnsCollectionThatImplementsOnlyCollection")
     @Test
-    @DisplayName("of() creates a collection that only implements the Collection interface.")
-    public void testOfCreatesCollectionOnlyInterface() {
+    public void of_whenCalled_returnsCollectionThatImplementsOnlyCollection() {
         Collection<Integer> empty = CollectionOnly.of();
         assertImplementsOnly(Collection.class, empty);
         assertEquals(List.of(), empty);

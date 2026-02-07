@@ -304,7 +304,7 @@ public final class ReflectionTestUtils {
     /// ## Implementation Details
     ///
     /// The algorithm processes each class/interface in the hierarchy exactly once, adding its
-    /// direct interfaces to both the result set and the traversal stack. The `LinkedHashSet.add()`
+    /// direct interfaces to both the result set and the traversal stack. The `LinkedHashSet.add_singleElement_returnsTrueAndUpdatesSize()`
     /// method returns `false` for duplicates, providing efficient cycle detection while maintaining
     /// insertion order for predictable results.
     ///
@@ -328,7 +328,7 @@ public final class ReflectionTestUtils {
                 result.add(c);
             }
 
-            // add interfaces of this class/interface
+            // add_singleElement_returnsTrueAndUpdatesSize interfaces of this class/interface
             for (Class<?> itf : c.getInterfaces()) {
                 if (result.add(itf)) {
                     // also traverse super-interfaces of this interface

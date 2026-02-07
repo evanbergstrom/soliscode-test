@@ -5,7 +5,15 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.soliscode.test.AbstractTest;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.ConcurrentModificationException;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -94,23 +102,23 @@ public class IdentitySetTest extends AbstractTest {
 
     // Tests for basic Set operations
 
-    /// Test add operation.
+    /// Test add_singleElement_returnsTrueAndUpdatesSize operation.
     @Test
-    @DisplayName("Test add operation")
+    @DisplayName("Test add_singleElement_returnsTrueAndUpdatesSize operation")
     public void testAdd() {
         IdentitySet<String> set = new IdentitySet<>();
         String str = "test";
 
         boolean result = set.add(str);
 
-        assertTrue(result); // IdentitySet.add() always returns true
+        assertTrue(result); // IdentitySet.add_singleElement_returnsTrueAndUpdatesSize() always returns true
         assertEquals(1, set.size());
         assertTrue(set.contains(str));
     }
 
-    /// Test add operation with same reference multiple times.
+    /// Test add_singleElement_returnsTrueAndUpdatesSize operation with same reference multiple times.
     @Test
-    @DisplayName("Test add same reference multiple times")
+    @DisplayName("Test add_singleElement_returnsTrueAndUpdatesSize same reference multiple times")
     public void testAddSameReferenceMultipleTimes() {
         IdentitySet<String> set = new IdentitySet<>();
         String str = "test";
@@ -119,7 +127,7 @@ public class IdentitySetTest extends AbstractTest {
         boolean result2 = set.add(str);
         boolean result3 = set.add(str);
 
-        // All should return true (implementation detail of IdentitySet.add())
+        // All should return true (implementation detail of IdentitySet.add_singleElement_returnsTrueAndUpdatesSize())
         assertTrue(result1);
         assertTrue(result2);
         assertTrue(result3);
@@ -129,9 +137,9 @@ public class IdentitySetTest extends AbstractTest {
         assertTrue(set.contains(str));
     }
 
-    /// Test add operation with equal but different objects.
+    /// Test add_singleElement_returnsTrueAndUpdatesSize operation with equal but different objects.
     @Test
-    @DisplayName("Test add equal but different objects")
+    @DisplayName("Test add_singleElement_returnsTrueAndUpdatesSize equal but different objects")
     public void testAddEqualButDifferentObjects() {
         UncachedString str1 = UncachedString.valueOf("test");
         UncachedString str2 = UncachedString.valueOf("test");

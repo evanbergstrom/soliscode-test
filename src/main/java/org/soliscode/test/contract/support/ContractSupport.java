@@ -24,6 +24,5 @@ import org.soliscode.test.SupportedMethods;
 /// @since 1.0
 public interface ContractSupport<T> extends ProviderSupport<T>, SupportedMethods {
 
-    /// The number of times to repeat the calling of a method to check for the consistency of the results.
     int CONSISTENCY_REPEATS = 10;
 }

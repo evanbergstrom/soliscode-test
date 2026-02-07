@@ -45,7 +45,7 @@ import java.util.function.Supplier;
 /// ## Assertion Categories
 ///
 /// ### Exception Assertions
-/// - **`assertThrowsAny`**: Verifies an exception from a specified set is thrown
+/// - **`assertThrowsAnyOf`**: Verifies an exception from a specified set is thrown
 /// - **`assertThrowsDifferent`**: Verifies an exception other than prohibited types is thrown
 ///
 /// ### Type and Interface Assertions
@@ -69,7 +69,7 @@ import java.util.function.Supplier;
 /// import static org.soliscode.test.assertions.Assertions.*;
 ///
 /// // Test that method throws one of several acceptable exceptions
-/// assertThrowsAny(
+/// assertThrowsAnyOf(
 ///     List.of(IllegalArgumentException.class, NullPointerException.class),
 ///     () -> riskyMethod(null)
 /// );
@@ -133,7 +133,7 @@ import java.util.function.Supplier;
 ///     // SolisCode specialized assertions
 ///     assertImplementsOnly(List.of(MyInterface.class), result);
 ///     assertGreaterThan(result.getScore(), minimumThreshold);
-///     assertThrowsAny(
+///     assertThrowsAnyOf(
 ///         List.of(ValidationException.class, ProcessingException.class),
 ///         () -> result.process()
 ///     );
@@ -185,31 +185,44 @@ public final class Assertions {
     /// All methods are static and the class is final to prevent subclassing.
     private Assertions() { }
 
+    public static void assertThrowsAny(final @NonNull Executable executable) {
+        org.junit.jupiter.api.Assertions.assertThrows(Throwable.class, executable);
+    }
+
+    public static void assertThrowsAny(final @NonNull Executable executable, final String message) {
+        org.junit.jupiter.api.Assertions.assertThrows(Throwable.class, executable, message);
+    }
+
+    public static void assertThrowsAny(final @NonNull Executable executable,
+                                       final Supplier<String> messageSupplier) {
+        org.junit.jupiter.api.Assertions.assertThrows(Throwable.class, executable, messageSupplier);
+    }
+
     /// Asserts that the executable will throw one of a list of possible exception types.
     /// @param expectedTypes the exception types that the executable should throw.
     /// @param executable the executable to test.
-    public static void assertThrowsAny(final @NonNull Collection<Class<? extends Throwable>> expectedTypes,
-                                       final @NonNull Executable executable) {
-        AssertThrowsAny.assertThrowsAny(expectedTypes, executable);
+    public static void assertThrowsAnyOf(final @NonNull Collection<Class<? extends Throwable>> expectedTypes,
+                                         final @NonNull Executable executable) {
+        AssertThrowsAnyOf.assertThrowsAnyOf(expectedTypes, executable);
     }
 
     /// Asserts that the executable will throw one of a list of possible exception types.
     /// @param expectedTypes the exception types that the executable should throw.
     /// @param executable the executable to test.
     /// @param message the message to include in the exception if the assertions fails.
-    public static void assertThrowsAny(final @NonNull Collection<Class<? extends Throwable>> expectedTypes,
-                                       final @NonNull Executable executable, final @Nullable String message) {
-        AssertThrowsAny.assertThrowsAny(expectedTypes, executable, message);
+    public static void assertThrowsAnyOf(final @NonNull Collection<Class<? extends Throwable>> expectedTypes,
+                                         final @NonNull Executable executable, final @Nullable String message) {
+        AssertThrowsAnyOf.assertThrowsAnyOf(expectedTypes, executable, message);
     }
 
     /// Asserts that the executable will throw one of a list of possible exception types.
     /// @param expectedTypes the exception types that the executable should throw.
     /// @param executable the executable to test.
     /// @param messageSupplier the supplier of the message to include in the exception if the assertions fails.
-    public static void assertThrowsAny(final @NonNull Collection<Class<? extends Throwable>> expectedTypes,
-                                       final @NonNull Executable executable,
-                                       final @Nullable Supplier<String> messageSupplier) {
-        AssertThrowsAny.assertThrowsAny(expectedTypes, executable, messageSupplier);
+    public static void assertThrowsAnyOf(final @NonNull Collection<Class<? extends Throwable>> expectedTypes,
+                                         final @NonNull Executable executable,
+                                         final @Nullable Supplier<String> messageSupplier) {
+        AssertThrowsAnyOf.assertThrowsAnyOf(expectedTypes, executable, messageSupplier);
     }
 
     /// Asserts that the executable will throw an exception that is not one of a list of prohibited exception types.
@@ -1064,4 +1077,35 @@ public final class Assertions {
         AssertStringContainsInOrder.assertStringContainsInOrderIgnoreCase(expected, actual, supplier);
     }
 
+    public static void enableDeadlockDetection() {
+        AssertNoDeadlocks.enableDeadlockDetection();
+    }
+
+    /// Asserts that no threads are currently deadlocked.
+    ///
+    /// @throws AssertionError if one or more deadlocked threads are detected.
+    /// @see AssertNoDeadlocks#assertNoDeadlocks()
+    public static void assertNoDeadlocks() {
+        AssertNoDeadlocks.assertNoDeadlocks();
+    }
+
+    /// Asserts that no threads are currently deadlocked, with a custom error message.
+    ///
+    /// @param message the detail message for the [AssertionError]; may be null
+    /// @throws AssertionError if one or more deadlocked threads are detected.
+    /// @see AssertNoDeadlocks#assertNoDeadlocks(String)
+    public static void assertNoDeadlocks(final String message) {
+        AssertNoDeadlocks.assertNoDeadlocks(message);
+    }
+
+    /// Asserts that no threads are currently deadlocked, with a lazily-supplied error message.
+    ///
+    /// @param messageSupplier the supplier for the detail message of the [AssertionError];
+    ///                        must not be null
+    /// @throws AssertionError if one or more deadlocked threads are detected.
+    /// @throws NullPointerException if messageSupplier is null
+    /// @see AssertNoDeadlocks#assertNoDeadlocks(Supplier)
+    public static void assertNoDeadlocks(final @NonNull Supplier<String> messageSupplier) {
+        AssertNoDeadlocks.assertNoDeadlocks(messageSupplier);
+    }
 }

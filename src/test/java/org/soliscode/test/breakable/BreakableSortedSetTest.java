@@ -3,7 +3,11 @@ package org.soliscode.test.breakable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.SortedSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.soliscode.test.breakable.BreakableSortedSet.*;
@@ -16,7 +20,7 @@ import static org.soliscode.test.breakable.BreakableSortedSet.*;
  * simulate faulty or edge-case implementations of the SortedSet interface, enabling thorough testing of
  * code that depends on proper SortedSet behavior.
  *
- * <h3>Purpose and Use Cases</h3>
+ * ### Purpose and Use Cases
  * <p>The {@code BreakableSortedSet} is particularly valuable for:
  * <ul>
  * <li>Testing error handling in code that uses sorted collections</li>
@@ -26,15 +30,15 @@ import static org.soliscode.test.breakable.BreakableSortedSet.*;
  * <li>Verifying defensive programming practices in sorted collection-dependent code</li>
  * </ul>
  *
- * <h3>Breakable Behaviors Tested</h3>
+ * ### Breakable Behaviors Tested
  * <p>This test suite validates the following types of breakable behaviors:
  *
- * <h4>Comparator Breaks</h4>
+ * #### Comparator Breaks
  * <ul>
  * <li>{@code COMPARATOR_ALWAYS_RETURNS_NULL} - Comparator method always returns null</li>
  * </ul>
  *
- * <h4>Navigation Breaks</h4>
+ * #### Navigation Breaks
  * <ul>
  * <li>{@code FIRST_ALWAYS_THROWS_EXCEPTION} - first() method always throws NoSuchElementException</li>
  * <li>{@code FIRST_RETURNS_LAST_ELEMENT} - first() method returns the last element</li>
@@ -48,13 +52,13 @@ import static org.soliscode.test.breakable.BreakableSortedSet.*;
  * <li>{@code LAST_RETURNS_NULL_WHEN_EMPTY} - last() method returns null when empty</li>
  * </ul>
  *
- * <h4>Subset Operation Breaks</h4>
+ * #### Subset Operation Breaks
  * <ul>
  * <li>{@code SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY} - All subset operations return empty sets</li>
  * <li>{@code SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION} - All subset operations throw exceptions</li>
  * </ul>
  *
- * <h3>Testing Strategy</h3>
+ * ### Testing Strategy
  * <p>Each test method focuses on a specific break behavior and verifies that:
  * <ul>
  * <li>The break is correctly applied to the sorted set instance</li>
@@ -66,7 +70,7 @@ import static org.soliscode.test.breakable.BreakableSortedSet.*;
  * <p>The tests use the {@link BreakableSortedSet.Builder} pattern to construct sorted sets with specific
  * breaks, then verify the expected broken behavior through direct method calls and assertions.
  *
- * <h3>Integration with Testing Framework</h3>
+ * ### Integration with Testing Framework
  * <p>These breakable sorted sets are designed to be used in conjunction with collection contract
  * tests to ensure that sorted collection implementations properly handle malformed behavior.
  * This is particularly important for algorithms that depend on sorted set characteristics for
@@ -144,7 +148,7 @@ public class BreakableSortedSetTest {
         // Should throw even with elements present
         brokenSet.addAll(Arrays.asList(3, 1, 2));
         assertFalse(brokenSet.isEmpty());
-        assertThrows(NoSuchElementException.class, () -> brokenSet.first());
+        assertThrows(NoSuchElementException.class, brokenSet::first);
 
         // Verify normal behavior without break
         BreakableSortedSet<Integer> normalSet = new BreakableSortedSet<>();
@@ -153,7 +157,7 @@ public class BreakableSortedSetTest {
 
         // Verify normal exception for empty set
         BreakableSortedSet<Integer> emptySet = new BreakableSortedSet<>();
-        assertThrows(NoSuchElementException.class, () -> emptySet.first());
+        assertThrows(NoSuchElementException.class, emptySet::first);
     }
 
     /**
@@ -200,13 +204,13 @@ public class BreakableSortedSetTest {
                 .addBreak(FIRST_SKIPS_FIRST_ELEMENT)
                 .build();
         singleElementSet.add(1);
-        assertThrows(NoSuchElementException.class, () -> singleElementSet.first());
+        assertThrows(NoSuchElementException.class, singleElementSet::first);
 
         // With empty set, should throw exception
         BreakableSortedSet<Integer> emptySet = new BreakableSortedSet.Builder<Integer>()
                 .addBreak(FIRST_SKIPS_FIRST_ELEMENT)
                 .build();
-        assertThrows(NoSuchElementException.class, () -> emptySet.first());
+        assertThrows(NoSuchElementException.class, emptySet::first);
     }
 
     /**
@@ -272,7 +276,7 @@ public class BreakableSortedSetTest {
         // Should throw even with elements present
         brokenSet.addAll(Arrays.asList(3, 1, 2));
         assertFalse(brokenSet.isEmpty());
-        assertThrows(NoSuchElementException.class, () -> brokenSet.last());
+        assertThrows(NoSuchElementException.class, brokenSet::last);
 
         // Verify normal behavior without break
         BreakableSortedSet<Integer> normalSet = new BreakableSortedSet<>();
@@ -281,7 +285,7 @@ public class BreakableSortedSetTest {
 
         // Verify normal exception for empty set
         BreakableSortedSet<Integer> emptySet = new BreakableSortedSet<>();
-        assertThrows(NoSuchElementException.class, () -> emptySet.last());
+        assertThrows(NoSuchElementException.class, emptySet::last);
     }
 
     /**
@@ -535,7 +539,7 @@ public class BreakableSortedSetTest {
         assertEquals(Integer.valueOf(1), baseSet.first());
 
         // Copy set should throw exception for first()
-        assertThrows(NoSuchElementException.class, () -> copySet.first());
+        assertThrows(NoSuchElementException.class, copySet::first);
     }
 
     /**
@@ -559,7 +563,7 @@ public class BreakableSortedSetTest {
         assertNull(multiBreakSet.comparator());
 
         // First break should be active
-        assertThrows(NoSuchElementException.class, () -> multiBreakSet.first());
+        assertThrows(NoSuchElementException.class, multiBreakSet::first);
 
         // Subset break should be active
         assertTrue(multiBreakSet.subSet("apple", "cherry").isEmpty());
@@ -624,8 +628,8 @@ public class BreakableSortedSetTest {
         BreakableSortedSet<String> emptySet = new BreakableSortedSet<>();
 
         // Empty set operations should throw appropriate exceptions
-        assertThrows(NoSuchElementException.class, () -> emptySet.first());
-        assertThrows(NoSuchElementException.class, () -> emptySet.last());
+        assertThrows(NoSuchElementException.class, emptySet::first);
+        assertThrows(NoSuchElementException.class, emptySet::last);
 
         // Test invalid range parameters
         BreakableSortedSet<String> populatedSet = new BreakableSortedSet<>();

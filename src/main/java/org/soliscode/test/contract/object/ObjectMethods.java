@@ -16,21 +16,37 @@
 
 package org.soliscode.test.contract.object;
 
-import org.soliscode.test.OptionalMethod;
+import org.jspecify.annotations.NonNull;
+import org.soliscode.test.InterfaceMethod;
 
-/// Values used to identify object class methods for use with the [ObjectContract#supportsMethod(OptionalMethod)]
+/// Values used to identify object class methods for use with the [ObjectContract#supportsMethod(InterfaceMethod)]
 /// method.
 ///
 /// @author evanbergstrom
 /// @since 1.0
-public enum ObjectMethods implements OptionalMethod {
+public enum ObjectMethods implements InterfaceMethod {
 
     /// The option al method [Object#equals(Object)].
-    Equals,
+    EQUALS("equals(Object)"),
 
     /// The option al method [Object#hashCode()].
-    HashCode,
+    HASH_CODE("hashCode()"),
 
     /// The option al method [Object#toString()].
-    ToString
+    TO_STRING("toString()"),
+
+    /// The option al method [java.io.Serializable].
+    SERIALIZATION("serialization");
+
+    private final @NonNull String name;
+
+    ObjectMethods(final @NonNull String name) {
+        this.name = name;
+    }
+
+    /// {@inheritDoc}
+    @Override
+    public @NonNull String methodName() {
+        return name;
+    }
 }

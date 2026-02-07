@@ -20,6 +20,7 @@ import org.opentest4j.AssertionFailedError;
 import org.soliscode.test.util.IterableTestUtils;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
@@ -81,22 +82,16 @@ public final class AssertContainsSame {
     private static void checkContainsSame(final Iterable<?> expected, final Iterable<?> actual,
             final Object messageOrSupplier) {
         List<?> actualList = IterableTestUtils.asList(actual);
-        List<?> expectedList = IterableTestUtils.asList(expected);
+        Set<?> expectedSet = IterableTestUtils.asSet(expected);
 
-        if (actualList.size() != expectedList.size()) {
+        if (actualList.size() != expectedSet.size()) {
             throw buildException(expected, actual, messageOrSupplier);
         }
-        while (!actualList.isEmpty() && !expectedList.isEmpty()) {
-            Object o = actualList.getFirst();
-            if (!expectedList.contains(o)) {
+        actualList.forEach((o) -> {
+            if (!expectedSet.remove(o)) {
                 throw buildException(expected, actual, messageOrSupplier);
             }
-            actualList.remove(o);
-            expectedList.remove(o);
-        }
-        if (!expectedList.isEmpty() || !actualList.isEmpty()) {
-            throw buildException(expected, actual, messageOrSupplier);
-        }
+        });
     }
 
     private static AssertionFailedError buildException(final Iterable<?> expected, final Iterable<?> actual,

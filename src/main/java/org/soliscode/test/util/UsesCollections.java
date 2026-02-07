@@ -47,7 +47,7 @@ import java.util.Set;
 ///     @Test
 ///     void testListModification() {
 ///         List<String> names = listOf("Alice", "Bob");
-///         names.add("Charlie");  // This works - list is mutable
+///         names.add_singleElement_returnsTrueAndUpdatesSize("Charlie");  // This works - list is mutable
 ///         assertEquals(3, names.size());
 ///     }
 ///
@@ -143,7 +143,7 @@ import java.util.Set;
 /// ## Performance Considerations
 ///
 /// - **Memory**: Each method creates a new ArrayList with default initial capacity
-/// - **Time Complexity**: O(n) construction time where n is the number of elements
+/// - **Time Complexity**: O(n) construction time is linear with the number of elements
 /// - **Allocation**: One ArrayList allocation per method call
 /// - **Optimization**: JIT compiler can inline these methods for better performance
 ///

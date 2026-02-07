@@ -18,6 +18,8 @@ package org.soliscode.test.breakable;
 
 import org.jspecify.annotations.NonNull;
 
+import java.io.Serializable;
+
 /// Represents a specific way to intentionally break the behavior of collection implementations for testing purposes.
 ///
 /// A Break is a named defect or deviation from the standard contract of a collection interface method.
@@ -48,7 +50,7 @@ import org.jspecify.annotations.NonNull;
 ///
 /// Breaks typically fall into several categories:
 /// - **Iterator breaks**: Affect iterator behavior (hasNext, next, remove, forEachRemaining)
-/// - **Collection breaks**: Affect collection operations (add, remove, contains, size)
+/// - **Collection breaks**: Affect collection operations (add_singleElement_returnsTrueAndUpdatesSize, remove, contains, size)
 /// - **List breaks**: Affect list-specific operations (get, set, indexOf, subList)
 /// - **Spliterator breaks**: Affect spliterator behavior (tryAdvance, trySplit, forEachRemaining)
 /// - **Exception breaks**: Cause methods to throw incorrect exceptions
@@ -61,12 +63,16 @@ import org.jspecify.annotations.NonNull;
 ///
 /// @param description A clear, concise description of how this break modifies the normal behavior
 ///                   of the collection. Should be written in present tense describing the deviation
-///                   (e.g., "iterator skips the first element", "add method always returns false").
+///                   (e.g., "iterator skips the first element", "add_singleElement_returnsTrueAndUpdatesSize method always returns false").
 /// @author Evan Bergstrom
 /// @since 1.0
 /// @see AbstractBreakable
 /// @see BreakableIterable
 /// @see BreakableList
 /// @see BreakableCollection
-public record Break(@NonNull String description) {
+public record Break(@NonNull String description) implements Serializable {
+
+    public String name() {
+        return this.getClass().getSimpleName();
+    }
 }

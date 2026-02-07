@@ -44,12 +44,12 @@
 /// ### Exception Handling Assertions
 /// **Package**: `org.soliscode.test.assertions`
 ///
-/// - **`assertThrowsAny`**: Verifies that an executable throws one of several acceptable exception types
+/// - **`assertThrowsAnyOf`**: Verifies that an executable throws one of several acceptable exception types
 /// - **`assertThrowsDifferent`**: Verifies that an executable throws an exception other than prohibited types
 ///
 /// ```java
 /// // Test method accepts multiple valid exception types
-/// assertThrowsAny(
+/// assertThrowsAnyOf(
 ///     List.of(IllegalArgumentException.class, NullPointerException.class),
 ///     () -> parseInput(invalidData)
 /// );
@@ -144,7 +144,7 @@
 ///     assertImplementsOnly(List.of(MyInterface.class), result);
 ///
 ///     // Exception behavior validation
-///     assertThrowsAny(
+///     assertThrowsAnyOf(
 ///         List.of(ValidationException.class, ProcessingException.class),
 ///         () -> result.processWithRiskyOperation()
 ///     );

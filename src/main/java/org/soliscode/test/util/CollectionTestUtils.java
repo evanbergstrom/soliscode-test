@@ -2,9 +2,7 @@ package org.soliscode.test.util;
 
 import org.jspecify.annotations.NonNull;
 
-import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -45,7 +43,7 @@ public final class CollectionTestUtils {
     }
 
     /// Creates a collection backed by the provided collection that does not accept null values as elements.
-    /// The returned collection will throw a NullPointerException when attempting to add, check for,
+    /// The returned collection will throw a NullPointerException when attempting to add_singleElement_returnsTrueAndUpdatesSize, check for,
     /// or remove null values. This is useful for testing collection implementations that should
     /// not permit null values.
     ///
@@ -156,8 +154,8 @@ public final class CollectionTestUtils {
 
             @Override
             public boolean equals(final Object obj) {
-                if (obj instanceof PreventNullsCollection<?>(Collection<?> collection1)) {
-                    return collection.equals(collection1);
+                if (obj instanceof PreventNullsCollection<?> that) {
+                    return collection.equals(that.collection);
                 } else {
                     return false;
                 }
@@ -170,7 +168,7 @@ public final class CollectionTestUtils {
     }
 
     /// Creates a list backed by the provided list that does not accept null values as elements.
-    /// The returned list will throw a NullPointerException when attempting to add, set, or
+    /// The returned list will throw a NullPointerException when attempting to add_singleElement_returnsTrueAndUpdatesSize, set, or
     /// insert null values. This is useful for testing list implementations that should
     /// not permit null values.
     ///
@@ -233,13 +231,16 @@ public final class CollectionTestUtils {
 
             @Override
             public boolean containsAll(@NonNull final Collection<?> c) {
+                if (c.contains(null)) {
+                    throw new NullPointerException();
+                }
                 //noinspection SlowListContainsAll
                 return list.containsAll(c);
             }
 
             @Override
             public boolean addAll(@NonNull final Collection<? extends E> c) {
-                if (list.contains(null)) {
+                if (c.contains(null)) {
                     throw new NullPointerException();
                 }
                 return list.addAll(c);
@@ -255,11 +256,17 @@ public final class CollectionTestUtils {
 
             @Override
             public boolean removeAll(final @NonNull Collection<?> c) {
+                if (c.contains(null)) {
+                    throw new NullPointerException();
+                }
                 return list.removeAll(c);
             }
 
             @Override
             public boolean retainAll(final @NonNull Collection<?> c) {
+                if (c.contains(null)) {
+                    throw new NullPointerException();
+                }
                 return list.retainAll(c);
             }
 
@@ -328,8 +335,8 @@ public final class CollectionTestUtils {
             public boolean equals(final Object obj) {
                 if (obj == this) {
                     return true;
-                } else if (obj instanceof PreventNullsList<?>(List<?> list1)) {
-                    return list.equals(list1);
+                } else if (obj instanceof PreventNullsList<?> that) {
+                    return list.equals(that.list);
                 } else {
                     return false;
                 }
@@ -392,24 +399,6 @@ public final class CollectionTestUtils {
         l.add(e3);
         return l;
     }
-
-    /// Gets the class of a generic parameter from an instance of the generic class.
-    /// This method uses reflection to extract the type information from the generic
-    /// class declaration. Note that due to type erasure, this may not always work
-    /// as expected at runtime.
-    ///
-    /// @param o an instance of a generic class
-    /// @param parameter the index of the generic parameter to get the class for (currently unused)
-    /// @return the class object for the generic parameter
-    /// @throws NullPointerException if o is null
-    /// @throws ArrayIndexOutOfBoundsException if the class has no type parameters
-    @SuppressWarnings("unchecked")
-    public static Class<?> getGenericParameter(final @NonNull Object o, final int parameter) {
-        TypeVariable<Class<?>> var =
-                (TypeVariable<Class<?>>) Arrays.stream(o.getClass().getTypeParameters()).toArray()[0];
-        return var.getGenericDeclaration();
-    }
-
 
     /// Converts a collection to a comma-separated string representation.
     /// The elements are converted to strings using their toString() method and

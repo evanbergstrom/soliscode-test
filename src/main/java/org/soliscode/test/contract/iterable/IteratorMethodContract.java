@@ -17,7 +17,6 @@
 package org.soliscode.test.contract.iterable;
 
 import org.junit.jupiter.api.Test;
-import org.soliscode.test.contract.CollectionMethods;
 import org.soliscode.test.contract.support.CollectionContractSupport;
 
 import java.util.Collection;
@@ -26,10 +25,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.soliscode.test.util.IterableTestUtils.contains;
 import static org.soliscode.test.util.IterableTestUtils.size;
 
@@ -77,7 +73,7 @@ public interface IteratorMethodContract<E, I extends Iterable<E>> extends Collec
     default void testIteratorRemove() {
         Iterable<E> iterable = provider().createInstanceWithUniqueElements();
         final Iterator<E> iterator = iterable.iterator();
-        if (supportsMethod(CollectionMethods.IteratorRemove)) {
+        if (supportsMethod(IterableMethods.ITERATOR_REMOVE)) {
             while (iterator.hasNext()) {
                 E e = iterator.next();
                 assertTrue(contains(iterable, e));
@@ -98,7 +94,7 @@ public interface IteratorMethodContract<E, I extends Iterable<E>> extends Collec
     /// without first calling `next`, or it is called twice in a row without a call to `next` in between.
     @Test
     default void testIteratorRemoveThrowsOnIllegalState() {
-        if (supportsMethod(CollectionMethods.IteratorRemove)) {
+        if (supportsMethod(IterableMethods.ITERATOR_REMOVE)) {
             final Iterator<E> iterator = provider().createInstanceWithUniqueElements().iterator();
             assertThrows(IllegalStateException.class, iterator::remove);
 

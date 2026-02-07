@@ -27,8 +27,8 @@
 ///     .withBreak(BreakableSet.ADD_RETURNS_TRUE_FOR_DUPLICATES)
 ///     .build();
 ///
-/// brokenSet.add("duplicate");
-/// boolean result = brokenSet.add("duplicate"); // Returns true despite duplicate
+/// brokenSet.add_singleElement_returnsTrueAndUpdatesSize("duplicate");
+/// boolean result = brokenSet.add_singleElement_returnsTrueAndUpdatesSize("duplicate"); // Returns true despite duplicate
 /// ```
 ///
 /// ### Builder Pattern
@@ -51,9 +51,20 @@
 ///   └── BreakableCollection
 ///       ├── BreakableList
 ///       ├── BreakableSequencedCollection
+///       ├── BreakableQueue
+///       │   ├── BreakableDeque
+///       │   │   └── BreakableBlockingDeque
+///       │   ├── BreakableBlockingQueue
+///       │   └── BreakableTransferQueue
 ///       └── BreakableSet
 ///           └── BreakableSortedSet
 ///               └── BreakableNavigableSet
+///
+/// BreakableMap
+///   ├── BreakableSortedMap
+///   │   └── BreakableNavigableMap
+///   └── BreakableConcurrentMap
+///       └── BreakableConcurrentNavigableMap
 /// ```
 ///
 /// ## Available Implementations
@@ -89,6 +100,60 @@
 /// **Purpose**: SequencedCollection implementation with positional insertion/removal violations
 /// **Key Breaks**: First/last access failures, positional addition anomalies, sequence reversal errors
 /// **Use Case**: Testing sequence-dependent algorithms and FIFO/LIFO operations
+///
+/// ### Queue Implementations
+///
+/// #### BreakableQueue
+/// **Purpose**: Queue implementation with FIFO ordering and queue-specific operation violations
+/// **Key Breaks**: Offer/poll failures, peek inconsistencies, queue ordering violations
+/// **Use Case**: Testing queue-based algorithms and producer-consumer patterns
+///
+/// #### BreakableDeque
+/// **Purpose**: Double-ended queue implementation with bidirectional access violations
+/// **Key Breaks**: Head/tail operation failures, bidirectional access inconsistencies
+/// **Use Case**: Testing algorithms that require both stack and queue operations
+///
+/// #### BreakableBlockingQueue
+/// **Purpose**: BlockingQueue implementation with blocking operation and timeout violations
+/// **Key Breaks**: Blocking operation failures, timeout handling errors, capacity violations
+/// **Use Case**: Testing concurrent producer-consumer systems and thread coordination
+///
+/// #### BreakableBlockingDeque
+/// **Purpose**: BlockingDeque implementation combining deque and blocking operation violations
+/// **Key Breaks**: Bidirectional blocking failures, timeout inconsistencies, capacity constraint violations
+/// **Use Case**: Testing complex concurrent algorithms requiring bidirectional blocking operations
+///
+/// #### BreakableTransferQueue
+/// **Purpose**: TransferQueue implementation with direct transfer operation violations
+/// **Key Breaks**: Transfer operation failures, consumer waiting violations, capacity reporting errors
+/// **Use Case**: Testing high-performance producer-consumer systems with direct handoff
+///
+/// ### Map Implementations
+///
+/// #### BreakableMap
+/// **Purpose**: Map implementation with key-value relationship and access violations
+/// **Key Breaks**: Get/put failures, containment check errors, view collection inconsistencies
+/// **Use Case**: Testing algorithms that depend on reliable key-value mappings
+///
+/// #### BreakableSortedMap
+/// **Purpose**: SortedMap implementation with key ordering and navigation violations
+/// **Key Breaks**: Comparator failures, first/last key errors, submap creation failures
+/// **Use Case**: Testing sorted map algorithms and range-based operations
+///
+/// #### BreakableNavigableMap
+/// **Purpose**: NavigableMap implementation with advanced navigation method violations
+/// **Key Breaks**: Ceiling/floor failures, navigation method inconsistencies, descendant view errors
+/// **Use Case**: Testing sophisticated map navigation algorithms and search operations
+///
+/// #### BreakableConcurrentMap
+/// **Purpose**: ConcurrentMap implementation with atomic operation and thread-safety violations
+/// **Key Breaks**: Atomic operation failures, race condition simulation, consistency violations
+/// **Use Case**: Testing concurrent algorithms and thread-safe map operations
+///
+/// #### BreakableConcurrentNavigableMap
+/// **Purpose**: ConcurrentNavigableMap implementation combining concurrent and navigable operation violations
+/// **Key Breaks**: Concurrent navigation failures, atomic navigation operations, thread-safe submap violations
+/// **Use Case**: Testing complex concurrent navigation algorithms and thread-safe sorted map operations
 ///
 /// ### Supporting Infrastructure
 ///
@@ -132,6 +197,12 @@
 /// - **Ordering Violations**: Sorted collections lose ordering guarantees
 /// - **Immutability Violations**: Supposedly immutable views allow modifications
 /// - **Exception Contract Violations**: Methods don't throw expected exceptions
+///
+/// ### Concurrency and Threading Breaks
+/// - **Atomicity Violations**: Atomic operations complete non-atomically
+/// - **Race Condition Simulation**: Methods simulate concurrent access issues
+/// - **Blocking Failures**: Blocking operations return immediately or timeout incorrectly
+/// - **Thread Safety Violations**: Thread-safe collections exhibit non-thread-safe behavior
 ///
 /// ## Testing Patterns
 ///
@@ -197,6 +268,40 @@
 /// }
 /// ```
 ///
+/// ### Concurrent Map Testing
+/// ```java
+/// @Test
+/// void testConcurrentMapAtomicOperations() {
+///     BreakableConcurrentNavigableMap<String, Integer> brokenConcurrentMap =
+///         BreakableConcurrentNavigableMap.<String, Integer>builder()
+///             .addBreak(PUT_IF_ABSENT_IGNORES_EXISTING)
+///             .addBreak(NAVIGATION_RACE_CONDITION)
+///             .addBreak(FIRST_KEY_THROWS_EXCEPTION)
+///             .build();
+///
+///     // Test that concurrent algorithms handle atomic operation failures
+///     ConcurrentProcessor processor = new ConcurrentProcessor();
+///     CompletableFuture<ProcessingResult> result = processor.processAsync(brokenConcurrentMap);
+///     assertTrue(result.join().hasGracefulErrorHandling());
+/// }
+/// ```
+///
+/// ### Blocking Queue Testing
+/// ```java
+/// @Test
+/// void testBlockingQueueTimeouts() {
+///     BreakableBlockingQueue<Task> brokenQueue = new BreakableBlockingQueue.Builder<Task>()
+///         .withBreak(TAKE_ALWAYS_RETURNS_NULL)
+///         .withBreak(OFFER_WITH_TIMEOUT_ALWAYS_RETURNS_FALSE)
+///         .build();
+///
+///     // Test that producer-consumer systems handle blocking failures
+///     ProducerConsumerSystem system = new ProducerConsumerSystem(brokenQueue);
+///     SystemHealth health = system.runForDuration(Duration.ofSeconds(5));
+///     assertTrue(health.hasTimeoutRecovery());
+/// }
+/// ```
+///
 /// ## Integration with Testing Framework
 ///
 /// ### Contract Testing
@@ -243,6 +348,8 @@
 /// - **Interface Completeness**: Every major collection interface has a breakable implementation
 /// - **Method Coverage**: All significant methods can be individually broken
 /// - **Contract Dimensions**: Breaks cover functionality, performance, and exception behavior
+/// - **Concurrency Support**: Full support for concurrent collections including ConcurrentMap, BlockingQueue, and their variants
+/// - **Navigation Support**: Complete coverage of NavigableSet and NavigableMap with all navigation methods
 ///
 /// ### Testing Integration
 /// Designed to work seamlessly with existing testing infrastructure:

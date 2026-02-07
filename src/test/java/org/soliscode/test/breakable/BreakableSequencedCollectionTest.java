@@ -4,23 +4,25 @@ import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.soliscode.test.AbstractTest;
-import org.soliscode.test.contract.CollectionMethods;
-import org.soliscode.test.contract.sequenced.SequencedCollectionContract;
+import org.soliscode.test.contract.sequencedcollection.SequencedCollectionContract;
+import org.soliscode.test.contract.sequencedcollection.SequencedCollectionMethods;
 import org.soliscode.test.contract.support.WithIntegerElement;
 import org.soliscode.test.provider.CollectionProvider;
 import org.soliscode.test.provider.FunctionalCollectionProvider;
 
-import java.util.*;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.SequencedCollection;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.soliscode.test.assertions.collection.CollectionAssertions.*;
 import static org.soliscode.test.assertions.collection.CollectionAssertions.assertEquals;
 
-/// Tests for the [BreakableSequencedCollection] class. These tests determine if the breaks supported by this class
+/// Tests for the `BreakableSequencedCollection` class. These tests determine if the breaks supported by this class
 /// result in the behavior expected.
 ///
 /// @author evanbergstrom
-/// @since 1.0
+/// @since 1.0.0
 /// @see BreakableSequencedCollection
 public class BreakableSequencedCollectionTest extends AbstractTest
         implements SequencedCollectionContract<Integer, BreakableSequencedCollection<Integer>>, WithIntegerElement {
@@ -37,7 +39,7 @@ public class BreakableSequencedCollectionTest extends AbstractTest
 
     // ========== addFirst Tests ==========
 
-    /// Test that the `ADD_FIRST_DOES_NOT_ADD_ELEMENT` break causes the `addFirst` method to not add the element.
+    /// Test that the `ADD_FIRST_DOES_NOT_ADD_ELEMENT` break causes the `addFirst` method to not add_singleElement_returnsTrueAndUpdatesSize the element.
     /// @see BreakableSequencedCollection#addFirst(Object)
     @Test
     @DisplayName("Test the `addFirst` method with the ADD_FIRST_DOES_NOT_ADD_ELEMENT break")
@@ -51,7 +53,7 @@ public class BreakableSequencedCollectionTest extends AbstractTest
         assertDoesNotContain(1, collection);
     }
 
-    /// Test that the `ADD_FIRST_ADDS_TO_END` break causes the `addFirst` method to add the element to the end.
+    /// Test that the `ADD_FIRST_ADDS_TO_END` break causes the `addFirst` method to add_singleElement_returnsTrueAndUpdatesSize the element to the end.
     /// @see BreakableSequencedCollection#addFirst(Object)
     @Test
     @DisplayName("Test the `addFirst` method with the ADD_FIRST_ADDS_TO_END break")
@@ -65,13 +67,13 @@ public class BreakableSequencedCollectionTest extends AbstractTest
         assertContains(1, collection);
     }
 
-    ///  Test 'addFirst' fails when itg is not supported
-    /// @see BreakableSequencedCollection#addFirst
+    /// Test `addFirst` fails when it is not supported.
+    /// @see BreakableSequencedCollection#addFirst(Object)
     @Test
     @DisplayName("Test addFirst method fails when not supported")
     public void testAddFirstFailsWhenNotSupported() {
         BreakableSequencedCollection<Integer> collection = Breakables.buildSequencedCollection(1, 2, 3)
-                .doesNotSupport(CollectionMethods.AddFirst)
+                .doesNotSupport(SequencedCollectionMethods.ADD_FIRST)
                 .build();
 
         assertThrows(UnsupportedOperationException.class, () -> collection.addFirst(0));
@@ -79,7 +81,7 @@ public class BreakableSequencedCollectionTest extends AbstractTest
 
     // ========== addLast Tests ==========
 
-    /// Test that the `ADD_LAST_DOES_NOT_ADD_ELEMENT` break causes the `addLast` method to not add the element.
+    /// Test that the `ADD_LAST_DOES_NOT_ADD_ELEMENT` break causes the `addLast` method to not add_singleElement_returnsTrueAndUpdatesSize the element.
     /// @see BreakableSequencedCollection#addLast(Object)
     @Test
     @DisplayName("Test the `addLast` method with the ADD_LAST_DOES_NOT_ADD_ELEMENT break")
@@ -93,7 +95,7 @@ public class BreakableSequencedCollectionTest extends AbstractTest
         assertDoesNotContain(3, collection);
     }
 
-    /// Test that the `ADD_LAST_ADDS_TO_FRONT` break causes the `addLast` method to add the element to the front.
+    /// Test that the `ADD_LAST_ADDS_TO_FRONT` break causes the `addLast` method to add_singleElement_returnsTrueAndUpdatesSize the element to the front.
     /// @see BreakableSequencedCollection#addLast(Object)
     @Test
     @DisplayName("Test the `addLast` method with the ADD_LAST_ADDS_TO_FRONT break")
@@ -107,13 +109,13 @@ public class BreakableSequencedCollectionTest extends AbstractTest
         assertContains(3, collection);
     }
 
-    ///  Test 'addLast' fails when it is not supported
-    /// @see BreakableSequencedCollection#addLast
+    /// Test `addLast` fails when it is not supported.
+    /// @see BreakableSequencedCollection#addLast(Object)
     @Test
     @DisplayName("Test addLast method fails when not supported")
     public void testAddLastFailsWhenNotSupported() {
         BreakableSequencedCollection<Integer> collection = Breakables.buildSequencedCollection(1, 2, 3)
-                .doesNotSupport(CollectionMethods.AddLast)
+                .doesNotSupport(SequencedCollectionMethods.ADD_LAST)
                 .build();
 
         assertThrows(UnsupportedOperationException.class, () -> collection.addLast(4));
@@ -122,7 +124,7 @@ public class BreakableSequencedCollectionTest extends AbstractTest
 
     // ========== getFirst Tests ==========
 
-    /// Test that the `GET_FIRST_RETURNS_NULL` break causes the `getFirst` method to always return null.
+    /// Test that the `GET_FIRST_RETURNS_NULL` break causes the `getFirst` method to always return `null`.
     /// @see BreakableSequencedCollection#getFirst()
     @Test
     @DisplayName("Test the `getFirst` method with the GET_FIRST_RETURNS_NULL break")
@@ -134,7 +136,7 @@ public class BreakableSequencedCollectionTest extends AbstractTest
         assertNull(collection.getFirst());
     }
 
-    /// Test that the `GET_FIRST_ALWAYS_THROWS` break causes the `getFirst` method to always throw NoSuchElementException.
+    /// Test that the `GET_FIRST_ALWAYS_THROWS` break causes the `getFirst` method to always throw `NoSuchElementException`.
     /// @see BreakableSequencedCollection#getFirst()
     @Test
     @DisplayName("Test the `getFirst` method with the GET_FIRST_ALWAYS_THROWS break")
@@ -170,13 +172,13 @@ public class BreakableSequencedCollectionTest extends AbstractTest
         assertThrows(NoSuchElementException.class, collection::getFirst);
     }
 
-    ///  Test 'getFirst' fails when it is not supported
-    /// @see BreakableSequencedCollection#getFirst
+    /// Test `getFirst` fails when it is not supported.
+    /// @see BreakableSequencedCollection#getFirst()
     @Test
     @DisplayName("Test getFirst method fails when not supported")
     public void testGetFirstFailsWhenNotSupported() {
         BreakableSequencedCollection<Integer> collection = Breakables.buildSequencedCollection(1, 2, 3)
-                .doesNotSupport(CollectionMethods.GetFirst)
+                .doesNotSupport(SequencedCollectionMethods.GET_FIRST)
                 .build();
 
         assertThrows(UnsupportedOperationException.class, collection::getFirst);
@@ -184,7 +186,7 @@ public class BreakableSequencedCollectionTest extends AbstractTest
 
     // ========== getLast Tests ==========
 
-    /// Test that the `GET_LAST_RETURNS_NULL` break causes the `getLast` method to always return null.
+    /// Test that the `GET_LAST_RETURNS_NULL` break causes the `getLast` method to always return `null`.
     /// @see BreakableSequencedCollection#getLast()
     @Test
     @DisplayName("Test the `getLast` method with the GET_LAST_RETURNS_NULL break")
@@ -196,7 +198,7 @@ public class BreakableSequencedCollectionTest extends AbstractTest
         assertNull(collection.getLast());
     }
 
-    /// Test that the `GET_LAST_ALWAYS_THROWS` break causes the `getLast` method to always throw NoSuchElementException.
+    /// Test that the `GET_LAST_ALWAYS_THROWS` break causes the `getLast` method to always throw `NoSuchElementException`.
     /// @see BreakableSequencedCollection#getLast()
     @Test
     @DisplayName("Test the `getLast` method with the GET_LAST_ALWAYS_THROWS break")
@@ -238,7 +240,7 @@ public class BreakableSequencedCollectionTest extends AbstractTest
     @DisplayName("Test getLast method fails when not supported")
     public void testGetLastFailsWhenNotSupported() {
         BreakableSequencedCollection<Integer> collection = Breakables.buildSequencedCollection(1, 2, 3)
-                .doesNotSupport(CollectionMethods.GetLast)
+                .doesNotSupport(SequencedCollectionMethods.GET_LAST)
                 .build();
 
         assertThrows(UnsupportedOperationException.class, collection::getLast);
@@ -296,7 +298,7 @@ public class BreakableSequencedCollectionTest extends AbstractTest
     @DisplayName("Test removeFirst method fails when not supported")
     public void testRemoveFirstFailsWhenNotSupported() {
         BreakableSequencedCollection<Integer> collection = Breakables.buildSequencedCollection(1, 2, 3)
-                .doesNotSupport(CollectionMethods.RemoveFirst)
+                .doesNotSupport(SequencedCollectionMethods.REMOVE_FIRST)
                 .build();
 
         assertThrows(UnsupportedOperationException.class, collection::removeFirst);
@@ -351,12 +353,12 @@ public class BreakableSequencedCollectionTest extends AbstractTest
 
     ///  Test 'removeLast' fails when it is not supported
     /// @see BreakableSequencedCollection#removeLast
-    /// @see CollectionMethods#RemoveLast
+    /// @see SequencedCollectionMethods#REMOVE_LAST
     @Test
     @DisplayName("Test removeLast method fails when not supported")
     public void testRemoveLastFailsWhenNotSupported() {
         BreakableSequencedCollection<Integer> collection = Breakables.buildSequencedCollection(1, 2, 3)
-                .doesNotSupport(CollectionMethods.RemoveLast)
+                .doesNotSupport(SequencedCollectionMethods.REMOVE_LAST)
                 .build();
 
         assertThrows(UnsupportedOperationException.class, collection::removeLast);
@@ -416,24 +418,24 @@ public class BreakableSequencedCollectionTest extends AbstractTest
     @DisplayName("Test reversed method fails when not supported")
     public void testReverseFailsWhenNotSupported() {
         BreakableSequencedCollection<Integer> collection = Breakables.buildSequencedCollection(1, 2, 3)
-                .doesNotSupport(CollectionMethods.Reversed)
+                .doesNotSupport(SequencedCollectionMethods.REVERSED)
                 .build();
         assertThrows(UnsupportedOperationException.class, collection::reversed);
     }
 
     // ========== Combined Breaks Tests ==========
 
-    /// Test multiple breaks working together on add operations.
+    /// Test multiple breaks working together on add_singleElement_returnsTrueAndUpdatesSize operations.
     @Test
-    @DisplayName("Test combined breaks on add operations")
+    @DisplayName("Test combined breaks on add_singleElement_returnsTrueAndUpdatesSize operations")
     public void testCombinedAddBreaks() {
         BreakableSequencedCollection<Integer> collection = Breakables.buildSequencedCollection(2)
                 .addBreak(BreakableSequencedCollection.ADD_FIRST_ADDS_TO_END)
                 .addBreak(BreakableSequencedCollection.ADD_LAST_ADDS_TO_FRONT)
                 .build();
 
-        collection.addFirst(1);  // Should add to end
-        collection.addLast(3);   // Should add to front
+        collection.addFirst(1);  // Should add_singleElement_returnsTrueAndUpdatesSize to end
+        collection.addLast(3);   // Should add_singleElement_returnsTrueAndUpdatesSize to front
         assertEquals(java.util.Arrays.asList(3, 2, 1), collection);
     }
 
@@ -545,12 +547,12 @@ public class BreakableSequencedCollectionTest extends AbstractTest
         BreakableSequencedCollection<Integer> original = Breakables.buildSequencedCollection(1, 2, 3)
                 .addBreak(BreakableSequencedCollection.GET_FIRST_RETURNS_NULL)
                 .build();
+        assertNull(original.getFirst()); // Still broken
 
         BreakableSequencedCollection<Integer> copy = new BreakableSequencedCollection<>(original);
 
         // Copy should have the same elements but different behavior (no breaks copied)
         assertEquals(java.util.Arrays.asList(1, 2, 3), copy);
-        org.junit.jupiter.api.Assertions.assertEquals(1, copy.getFirst()); // No break, should return actual first element
-        assertNull(original.getFirst()); // Still broken
+        assertNull(copy.getFirst()); // No break, should return actual first element
     }
 }

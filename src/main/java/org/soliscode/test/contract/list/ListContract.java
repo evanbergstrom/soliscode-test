@@ -1,7 +1,6 @@
 package org.soliscode.test.contract.list;
 
-import org.soliscode.test.contract.CollectionMethods;
-import org.soliscode.test.contract.sequenced.SequencedCollectionContract;
+import org.soliscode.test.contract.sequencedcollection.SequencedCollectionContract;
 
 import java.util.List;
 
@@ -27,10 +26,12 @@ public interface ListContract<E, L extends List<E>> extends SequencedCollectionC
 
     default void doesNotSupportModification() {
         SequencedCollectionContract.super.doesNotSupportModification();
-        doesNotSupportMethod(CollectionMethods.Set);
-        doesNotSupportMethod(CollectionMethods.AddAtIndex);
-        doesNotSupportMethod(CollectionMethods.RemoveAtIndex);
-        doesNotSupportMethod(CollectionMethods.Sort);
-        doesNotSupportMethod(CollectionMethods.RetainAll);
+        doesNotSupportMethod(ListMethods.ADD_AT_INDEX);
+        doesNotSupportMethod(ListMethods.ADD_ALL_AT_INDEX);
+        doesNotSupportMethod(ListMethods.REMOVE_AT_INDEX);
+        doesNotSupportMethod(ListMethods.REPLACE_ALL);
+        doesNotSupportMethod(ListMethods.SET);
+        doesNotSupportMethod(ListMethods.SORT);
+        doesNotSupportMethod(ListMethods.SUB_LIST);
     }
 }

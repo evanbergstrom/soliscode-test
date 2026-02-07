@@ -28,7 +28,7 @@ import java.util.function.Supplier;
 import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
 
 /// A consumer that checks that is consumes a specified set of objects, consuming each of those objects once, and not
-/// consuming any objects not in the set. This consumer requires that all of the objects in the set are consumed.
+/// consuming any objects not in the set. This consumer requires that all the objects in the set are consumed.
 /// Instead of instantiating this class directly, the [AssertActions] utility class should be used:
 /// ```java
 /// Consumer<Integer> consumer = AssertActions.consumeExactly(Set.of(1, 3, 5, 7));
@@ -58,7 +58,7 @@ public class AssertConsumeExactly<T> implements Consumer<T>, CheckableAction {
     }
 
     /// A consumer that checks that is consumes a specified set of objects. This constructor allows specification of
-    /// a string to be included in the exception of the assertion fails.
+    /// a string to be included in the exception if the assertion fails.
     /// @param expected the set of objects that should be consumed.
     /// @param message the text to include in the exception.
     public AssertConsumeExactly(final @NonNull Iterable<T> expected, final @Nullable String message) {

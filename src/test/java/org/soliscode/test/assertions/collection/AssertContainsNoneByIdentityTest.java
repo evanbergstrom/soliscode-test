@@ -3,9 +3,13 @@ package org.soliscode.test.assertions.collection;
 import org.junit.jupiter.api.Test;
 import org.opentest4j.AssertionFailedError;
 import org.soliscode.test.interfaces.IterableOnly;
-import org.soliscode.test.util.*;
+import org.soliscode.test.util.IterableTestUtils;
+import org.soliscode.test.util.UncachedInteger;
+import org.soliscode.test.util.UncachedString;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.soliscode.test.assertions.collection.CollectionAssertions.assertContainsNoneByIdentity;

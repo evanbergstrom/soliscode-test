@@ -4,9 +4,13 @@ import org.junit.jupiter.api.Test;
 import org.opentest4j.AssertionFailedError;
 import org.soliscode.test.assertions.collection.CollectionAssertions;
 import org.soliscode.test.interfaces.IterableOnly;
-import org.soliscode.test.util.*;
+import org.soliscode.test.util.IterableTestUtils;
+import org.soliscode.test.util.UncachedInteger;
+import org.soliscode.test.util.UncachedString;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.soliscode.test.assertions.collection.CollectionAssertions.assertEqualsByIdentity;
@@ -362,21 +366,20 @@ public class AssertEqualsByIdentityTest {
         UncachedString str1 = new UncachedString("test");
         UncachedString str2 = new UncachedString("test");  // Equal but not identical
         UncachedInteger int1 = UncachedInteger.valueOf(42);
-        Boolean bool1 = Boolean.TRUE;
 
-        List<Object> list1 = Arrays.asList(str1, int1, bool1);
-        List<Object> list2 = Arrays.asList(str1, int1, bool1);  // Same references
+        List<Object> list1 = Arrays.asList(str1, int1, Boolean.TRUE);
+        List<Object> list2 = Arrays.asList(str1, int1, Boolean.TRUE);  // Same references
 
         // Should pass - same object identities
         assertEqualsByIdentity(list1, list2);
 
         // Should fail - different string instance (equal but not identical)
-        List<Object> listWithDifferentString = Arrays.asList(str2, int1, bool1);
+        List<Object> listWithDifferentString = Arrays.asList(str2, int1, Boolean.TRUE);
         assertThrows(AssertionFailedError.class, () -> assertEqualsByIdentity(list1, listWithDifferentString));
 
         // Test with arrays
-        Object[] objArray1 = {str1, int1, bool1};
-        List<Object> equivalentList = Arrays.asList(str1, int1, bool1);
+        Object[] objArray1 = {str1, int1, Boolean.TRUE};
+        List<Object> equivalentList = Arrays.asList(str1, int1, Boolean.TRUE);
         assertEqualsByIdentity(objArray1, equivalentList);
         assertEqualsByIdentity(equivalentList, objArray1);
     }

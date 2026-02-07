@@ -20,7 +20,7 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
  * object reference ({@code obj1 == obj2}), not if they are logically equal according to their
  * {@code equals()} method.
  * 
- * <h3>Key Testing Scenarios</h3>
+ * ### Key Testing Scenarios
  * <ul>
  * <li>Empty collections - verifies behavior with empty iterables</li>
  * <li>Null handling - ensures proper {@link NullPointerException} for null arguments</li>
@@ -28,8 +28,8 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
  * <li>Equal but distinct objects - confirms that logically equal but different instances fail the assertion</li>
  * <li>Message handling - tests custom error messages and message suppliers</li>
  * </ul>
- * 
- * <h3>Assertion Method Variants Tested</h3>
+ *
+ * ### Assertion Method Variants Tested
  * <ul>
  * <li>{@link CollectionAssertions#assertContainsAllByIdentity(Iterable, Iterable)} - basic assertion</li>
  * <li>{@link CollectionAssertions#assertContainsAllByIdentity(Iterable, Iterable, String)} - with custom message</li>

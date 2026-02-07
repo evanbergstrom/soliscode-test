@@ -5,7 +5,7 @@
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](./LICENSE.txt)
 
 SolisCode Test is a Java library that provides tests of classes that implement the standard 
-interfaces in the JDK. this includes all of the collection classes, numeric classes, as well as
+interfaces in the JDK. this includes all the collection classes, numeric classes, as well as
 other interfaces. 
 
 This library is designed to work exclusively with JUnit5, and requires it at compile time. It is meant to be used in
@@ -14,10 +14,10 @@ the JDK.
 
 This library provides support for:\
 - **Contracts** - Classes that test the functionality of individual methods in the standard interfaces.
-- **Interface Restriction** - WRapper classes that restrict the methods of an object to only those in an interface.
+- **Interface Restriction** - Wrapper classes that restrict the methods of an object to only those in an interface.
 - **Assertions** - Assertions that help test collection methods.
 - **Providers** - Provider classes that produce elements for collection tests.
-- **Breakables** - Implementations of the standard collection classes hthat can be programmatically broken in various ways.
+- **Breakables** - Implementations of the standard collection classes that can be programmatically broken in various ways.
 
 > [!NOTE]
 > This library is currently a work in progress. It currently supports testing for the following
@@ -29,6 +29,8 @@ This library provides support for:\
 >       - SequencedCollection 
 >         - List 
 >     - Set
+>       - SortedSet
+>         - NavigableSet
 > 
 > Support for the following interfaces is planned:
 > - Map
@@ -36,8 +38,6 @@ This library provides support for:\
 >     - NavigableMap
 >   - ConcurrentMap
 >     - ConcurrentNavigableMap 
-> - SortedSet
->   - NavigableSet
 > - Queue
 >   - BlockingQueue
 >     - TransferQueue

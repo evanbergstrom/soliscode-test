@@ -17,13 +17,18 @@ package org.soliscode.test.breakable;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import org.soliscode.test.InterfaceMethod;
+import org.soliscode.test.MethodStatus;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -133,7 +138,7 @@ import java.util.TreeSet;
 ///     .withBreak(BreakableSortedSet.FIRST_ALWAYS_THROWS_EXCEPTION)
 ///     .build();
 ///
-/// set.add("element");
+/// set.add_singleElement_returnsTrueAndUpdatesSize("element");
 /// assertThrows(NoSuchElementException.class, () -> set.first()); // Throws despite having elements
 /// ```
 ///
@@ -192,7 +197,7 @@ import java.util.TreeSet;
 ///         .withBreak(FIRST_ALWAYS_THROWS_EXCEPTION)
 ///         .build();
 ///
-///     set.add(1);
+///     set.add_singleElement_returnsTrueAndUpdatesSize(1);
 ///     assertThrows(NoSuchElementException.class, () -> set.first());
 /// }
 /// ```
@@ -330,7 +335,7 @@ import java.util.TreeSet;
 /// @see BreakableSet
 /// @see SortedSet
 /// @see java.util.TreeSet
-public class BreakableSortedSet<E> extends BreakableSet<E> implements SortedSet<E> {
+public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements SortedSet<E> {
 
     /// The backing sorted set that stores the elements in sorted order.
     private final SortedSet<E> sortedSet;
@@ -413,12 +418,14 @@ public class BreakableSortedSet<E> extends BreakableSet<E> implements SortedSet<
     ///
     /// ```java
     /// BreakableSortedSet<String> set = new BreakableSortedSet<>();
-    /// set.add("zebra");
-    /// set.add("apple");
+    /// set.add_singleElement_returnsTrueAndUpdatesSize("zebra");
+    /// set.add_singleElement_returnsTrueAndUpdatesSize("apple");
     /// assertEquals("apple", set.first()); // Elements are sorted
     /// ```
     public BreakableSortedSet() {
-        this(new TreeSet<>(), new ArrayList<>(), 0);
+        //noinspection SortedCollectionWithNonComparableKeys
+        this(new TreeSet<>(), DEFAULT_BREAKS, DEFAULT_METHOD_STATUSES, DEFAULT_CHARACTERISTICS, DEFAULT_PERMITS,
+                DEFAULT_SAFETY, Object.class);
     }
 
     /// Creates a new BreakableSortedSet with the specified comparator.
@@ -428,14 +435,15 @@ public class BreakableSortedSet<E> extends BreakableSet<E> implements SortedSet<
     ///
     /// ```java
     /// BreakableSortedSet<String> set = new BreakableSortedSet<>(String.CASE_INSENSITIVE_ORDER);
-    /// set.add("Zebra");
-    /// set.add("apple");
+    /// set.add_singleElement_returnsTrueAndUpdatesSize("Zebra");
+    /// set.add_singleElement_returnsTrueAndUpdatesSize("apple");
     /// assertEquals("apple", set.first()); // Case-insensitive ordering
     /// ```
     ///
     /// @param comparator the comparator that will be used to order this set
     public BreakableSortedSet(final @Nullable Comparator<? super E> comparator) {
-        this(new TreeSet<>(comparator), new ArrayList<>(), 0);
+        this(new TreeSet<>(comparator), DEFAULT_BREAKS, DEFAULT_METHOD_STATUSES, DEFAULT_CHARACTERISTICS,
+                DEFAULT_PERMITS, DEFAULT_SAFETY, Object.class);
     }
 
     /// Creates a new BreakableSortedSet as a copy of another BreakableSortedSet.
@@ -446,7 +454,8 @@ public class BreakableSortedSet<E> extends BreakableSet<E> implements SortedSet<
     /// @param other the BreakableSortedSet to copy from
     /// @throws NullPointerException if other is null
     public BreakableSortedSet(final @NonNull BreakableSortedSet<E> other) {
-        this(other.sortedSet, new ArrayList<>(), 0);
+        this(new TreeSet<>(other.sortedSet), new HashSet<>(other.breaks()), new HashMap<>(other.methodStatuses()),
+                other.characteristics(), other.permits(), other.isSafe(), other.compatibleType());
     }
 
     /// Creates a new BreakableSortedSet using the specified sorted set as the backing store.
@@ -457,7 +466,8 @@ public class BreakableSortedSet<E> extends BreakableSet<E> implements SortedSet<
     /// @param sortedSet the backing sorted set to use for element storage
     /// @throws NullPointerException if sortedSet is null
     public BreakableSortedSet(final @NonNull SortedSet<E> sortedSet) {
-        this(sortedSet, new ArrayList<>(), 0);
+        this(sortedSet, DEFAULT_BREAKS, DEFAULT_METHOD_STATUSES, DEFAULT_CHARACTERISTICS, DEFAULT_PERMITS,
+                DEFAULT_SAFETY, Object.class);
     }
 
     /// Creates a new BreakableSortedSet with full configuration control.
@@ -467,13 +477,34 @@ public class BreakableSortedSet<E> extends BreakableSet<E> implements SortedSet<
     ///
     /// @param sortedSet the backing sorted set for element storage
     /// @param breaks the collection of breaks to activate
+    /// @param methodStatuses the method status configuration.
     /// @param characteristics the spliterator characteristics
+    /// @param permits         the flags that indicate what types of values are supported by the collection.
     /// @throws NullPointerException if sortedSet or breaks is null
-    public BreakableSortedSet(final @NonNull SortedSet<E> sortedSet,
-                             final @NonNull Collection<Break> breaks,
-                             final int characteristics) {
-        super(sortedSet, breaks, characteristics);
+    protected BreakableSortedSet(final @NonNull SortedSet<E> sortedSet,
+                                 final @NonNull Set<Break> breaks,
+                                 final @NonNull Map<InterfaceMethod, MethodStatus> methodStatuses,
+                                 final int characteristics,
+                                 final int permits,
+                                 final boolean isSafe,
+                                 final Class<?> compatibleType) {
+        super(sortedSet, breaks, methodStatuses, characteristics, permits, DEFAULT_SAFETY, compatibleType);
         this.sortedSet = Objects.requireNonNull(sortedSet);
+    }
+
+    @Override
+    public SortedSet<E> reversed() {
+        if (hasBreak(BreakableSequencedCollection.REVERSED_DOES_NOT_REVERSE_COLLECTION)) {
+            return this;
+        }
+        if (hasBreak(BreakableSequencedCollection.REVERSED_MODIFIES_THE_COLLECTION)) {
+            SortedSet<E> reversed = sortedSet.reversed();
+            sortedSet.clear();
+            sortedSet.addAll(reversed);
+            return this;
+        }
+        return new BreakableSortedSet<>(sortedSet.reversed(), breaks(), methodStatuses(), characteristics(), permits(),
+                isSafe(), compatibleType());
     }
 
     /// Returns the comparator used to order the elements in this set.
@@ -644,7 +675,7 @@ public class BreakableSortedSet<E> extends BreakableSet<E> implements SortedSet<
     /// BreakableSortedSet<Integer> brokenSet = new BreakableSortedSet.Builder<Integer>()
     ///     .withBreak(FIRST_ALWAYS_THROWS_EXCEPTION)
     ///     .build();
-    /// brokenSet.add(1);
+    /// brokenSet.add_singleElement_returnsTrueAndUpdatesSize(1);
     /// assertThrows(NoSuchElementException.class, () -> brokenSet.first()); // Throws despite having elements
     /// ```
     ///
@@ -1082,7 +1113,7 @@ public class BreakableSortedSet<E> extends BreakableSet<E> implements SortedSet<
 
         /// Creates a new builder with a custom backing sorted set implementation.
         ///
-        /// @param elements the elements to add to the set
+        /// @param elements the elements to add_singleElement_returnsTrueAndUpdatesSize to the set
         /// @throws NullPointerException if sortedSet is null
         public Builder(final @NonNull Collection<E> elements) {
             super(elements);
@@ -1134,12 +1165,8 @@ public class BreakableSortedSet<E> extends BreakableSet<E> implements SortedSet<
             final TreeSet<E> storage = new TreeSet<>(comparator());
             storage.addAll(elements());
 
-            BreakableSortedSet<E> broken = new BreakableSortedSet<>(storage, breaks(), characteristics());
-            broken.setPermitsNulls(permitsNulls());
-            broken.setPermitsDuplicates(permitsDuplicates());
-            broken.setPermitsIncompatibleTypes(permitsIncompatibleTypes());
-            unsupportedMethods().forEach(broken::doesNotSupportMethod);
-            return broken;
+            return new BreakableSortedSet<>(storage, new HashSet<>(breaks()), new HashMap<>(methodStatuses()),
+                    characteristics(), permits(), isSafe(), compatibleType());
         }
     }
 }

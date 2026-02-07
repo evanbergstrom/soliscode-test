@@ -21,7 +21,7 @@ package org.soliscode.test;
 /// @author evanbergstrom
 /// @since 1.0
 /// @see org.soliscode.test.contract.support.ContractSupport
-public abstract class AbstractTest extends OptionalMethodSupport {
+public abstract class AbstractTest extends MethodSupport {
 
     /// Default constructor.
     protected AbstractTest() { }

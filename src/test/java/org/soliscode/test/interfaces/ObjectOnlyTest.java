@@ -14,6 +14,7 @@ import org.soliscode.test.provider.ObjectProvider;
 /// @author evanbergstrom
 /// @since 1.0
 /// @see ObjectOnly
+@DisplayName("Tests for the ObjectOnly class")
 public class ObjectOnlyTest extends AbstractTest implements ObjectContract<ObjectOnly> {
 
     @Override
@@ -21,10 +22,12 @@ public class ObjectOnlyTest extends AbstractTest implements ObjectContract<Objec
         return new FunctionalProvider<>(ObjectOnly::new, ObjectOnly::new, ObjectOnly::new);
     }
 
-    /// Test that `ObjectOnly` only implements the `Object` interface.
+    /// Verifies that [ObjectOnly] only implements the [Object] interface.
+    ///
+    /// @see ObjectOnly
+    @DisplayName("constructor_whenCalled_returnsObjectThatImplementsOnlyObject")
     @Test
-    @DisplayName("ObjectOnly only implements the Object interface.")
-    public void testObjectIsOnlyInterface() {
+    public void constructor_whenCalled_returnsObjectThatImplementsOnlyObject() {
         ObjectOnly object = new ObjectOnly();
         Assertions.assertImplementsOnly(Object.class, object);
     }

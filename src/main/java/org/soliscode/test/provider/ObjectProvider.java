@@ -17,10 +17,13 @@
 package org.soliscode.test.provider;
 
 import org.jspecify.annotations.NonNull;
+import org.soliscode.test.util.RecordingSupplier;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -125,7 +128,7 @@ public interface ObjectProvider<T> {
     /// @return A supplier the returns instances of the class that are unique.
     /// @throws IllegalStateException if `get` is called on the supplier more than `uniqueSizeLimit` times.
     /// @complexity _constant time_.
-    default @NonNull Supplier<T> uniqueInstanceSupplier() {
+    default @NonNull RecordingSupplier<T> uniqueInstanceSupplier() {
         return uniqueInstanceSupplier(0);
     }
 
@@ -145,18 +148,26 @@ public interface ObjectProvider<T> {
     /// @return A supplier the returns instances of the class that are unique.
     /// @throws IllegalStateException if `get` is called on the supplier more than `uniqueSizeLimit` times.
     /// @complexity _constant time_.
-    default @NonNull Supplier<T> uniqueInstanceSupplier(final long seed) {
+    default @NonNull RecordingSupplier<T> uniqueInstanceSupplier(final long seed) {
         final ObjectProvider<T> provider = this;
-        return new Supplier<>() {
-            private long i = seed;
+        return new RecordingSupplier<>() {
+            private final AtomicLong i = new AtomicLong(seed);
+            private final List<T> recorded = Collections.synchronizedList(new ArrayList<T>());
 
             @Override
             public T get() {
-                if (i >= uniqueSizeLimit()) {
+                if (i.get() >= uniqueSizeLimit()) {
                     throw new IllegalStateException("cannot create " + i + " unique instances, limit is "
                             + uniqueSizeLimit());
                 }
-                return provider.createInstance(i++);
+                T instance = provider.createInstance(i.getAndIncrement());
+                recorded.add(instance);
+                return instance;
+            }
+
+            @Override
+            public @NonNull List<T> recorded() {
+                return recorded;
             }
         };
     }
@@ -176,14 +187,22 @@ public interface ObjectProvider<T> {
     /// by `upperUniqueLimit()`.
     ///
     /// @return A supplier the returns random instances of the class.
-    default @NonNull Supplier<T> randomInstanceSupplier() {
+    default @NonNull RecordingSupplier<T> randomInstanceSupplier() {
         final ObjectProvider<T> provider = this;
-        return new Supplier<>() {
+        return new RecordingSupplier<>() {
             private final Random r = new Random();
+            private final List<T> recorded = Collections.synchronizedList(new ArrayList<T>());
 
             @Override
             public T get() {
-                return provider.createInstance(r.nextLong(Long.MAX_VALUE));
+                T instance = provider.createInstance(r.nextLong(Long.MAX_VALUE));
+                recorded.add(instance);
+                return instance;
+            }
+
+            @Override
+            public @NonNull List<T> recorded() {
+                return recorded;
             }
         };
     }

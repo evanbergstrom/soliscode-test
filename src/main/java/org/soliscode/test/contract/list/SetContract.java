@@ -2,14 +2,11 @@ package org.soliscode.test.contract.list;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.soliscode.test.contract.CollectionMethods;
 import org.soliscode.test.contract.support.CollectionContractSupport;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 /// This interface tests if a list class has implemented the [set][List#set] method correctly.
 ///
@@ -30,7 +27,7 @@ public interface SetContract<E, L extends List<E>> extends CollectionContractSup
         List<E> updated = values.subList(DEFAULT_SIZE, DEFAULT_SIZE * 2);
         List<E> list = provider().createInstance(original);
 
-        if (supportsMethod(CollectionMethods.Set)) {
+        if (supportsMethod(ListMethods.SET)) {
             for (int i = 0; i < DEFAULT_SIZE; i++) {
                 list.set(i, updated.get(i));
                 assertEquals(updated.get(i), list.get(i));
@@ -46,7 +43,7 @@ public interface SetContract<E, L extends List<E>> extends CollectionContractSup
     @Test
     @DisplayName("Test that the set method works on an empty list")
     default void testSetWithEmptyCollection() {
-        if (supportsMethod(CollectionMethods.Set)) {
+        if (supportsMethod(ListMethods.SET)) {
             List<E> list = provider().emptyInstance();
             E e = elementProvider().createInstance();
             assertThrows(IndexOutOfBoundsException.class, () -> list.set(0, e));
@@ -58,7 +55,7 @@ public interface SetContract<E, L extends List<E>> extends CollectionContractSup
     @Test
     @DisplayName("Test that the set method throws for invalid index")
     default void testSetThrowsForInvalidIndex() {
-        if (supportsMethod(CollectionMethods.Set)) {
+        if (supportsMethod(ListMethods.SET)) {
             List<E> values = elementProvider().createUniqueInstances(DEFAULT_SIZE);
             List<E> list = provider().createInstanceWithUniqueElements();
             E e = elementProvider().createInstance();
@@ -72,7 +69,7 @@ public interface SetContract<E, L extends List<E>> extends CollectionContractSup
     @Test
     @DisplayName("Test that the set method works with a null element")
     default void testSetWithNullElement() {
-        if (supportsMethod(CollectionMethods.Set)) {
+        if (supportsMethod(ListMethods.SET)) {
             List<E> list = provider().createInstanceWithUniqueElements();
             if (permitNulls()) {
                 list.set(1, null);

@@ -24,7 +24,7 @@ package org.soliscode.test.contract.object;
 /// | equals      | getClass             |
 /// | hashCode    | clone                |
 /// | toString    | notify               |
-/// |             | notifyAll            |
+/// | Serializable| notifyAll            |
 /// |             | wait                 |
 /// |             | finalize             |
 ///

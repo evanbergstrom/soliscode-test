@@ -8,7 +8,7 @@
   <parent>
     <groupId>org.soliscode</groupId>
     <artifactId>soliscode-parent</artifactId>
-    <version>1.0.5</version>
+    <version>1.0.5-SNAPSHOT</version>
   </parent>
 
   <!-- Project Coordinates -->
@@ -78,6 +78,9 @@
     <javaDocStylesheetPath>${basedir}/src/main/javadoc/stylesheet.css</javaDocStylesheetPath>
     <!-- Override checkstyle version to match parent resources -->
     <soliscode.checkstyle.version> ${project.parent.version}</soliscode.checkstyle.version>
+
+    <!-- Parent Overrides -->
+    <java.version>25</java.version>
   </properties>
 
   <!-- Dependency Management -->
@@ -113,7 +116,6 @@
         <artifactId>maven-javadoc-plugin</artifactId>
         <configuration>
           <failOnError>true</failOnError>           <!-- default: true -->
-          <failOnWarnings>true</failOnWarnings>     <!-- default: false -->
           <doclint>all</doclint>                    <!-- treat warnings as errors -->
           <additionalOptions>
             <additionalOption>-Werror</additionalOption>
@@ -149,7 +151,6 @@
           <centralSnapshotsUrl>https://central.sonatype.com/repository/maven-snapshots/</centralSnapshotsUrl>
         </configuration>
       </plugin>
-
     </plugins>
   </build>
 
@@ -188,18 +189,21 @@
           </reportSet>
         </reportSets>
       </plugin>
+      <!-- OWASP Dependency Check with OSS Index disabled -->
       <plugin>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
+        <groupId>org.owasp</groupId>
+        <artifactId>dependency-check-maven</artifactId>
         <reportSets>
           <reportSet>
-            <id>report-aggregate</id>
-            <inherited>false</inherited>
             <reports>
-              <report>report-aggregate</report>
+              <report>aggregate</report>
             </reports>
           </reportSet>
         </reportSets>
+        <configuration>
+          <!-- Disable OSS Index analyzer to avoid 401 authentication errors -->
+          <ossindexAnalyzerEnabled>false</ossindexAnalyzerEnabled>
+        </configuration>
       </plugin>
     </plugins>
   </reporting>

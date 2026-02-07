@@ -20,6 +20,7 @@ import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.function.Function;
@@ -82,6 +83,11 @@ public final class CollectionProviders {
     public static <E> CollectionProvider<E, HashSet<E>> provideHashSet(
             final @NonNull ObjectProvider<E> elementProvider) {
         return CollectionProviders.from(HashSet::new, HashSet::new, HashSet::new, elementProvider);
+    }
+
+    public static <E> CollectionProvider<E, Collection<E>> provideSynchronizedCollection(
+            final @NonNull ObjectProvider<E> elementProvider) {
+        return CollectionProviders.wrap(provideArrayList(elementProvider), Collections::synchronizedCollection);
     }
 
     /// Creates a provider that wraps the provided collection from an underlying provider.

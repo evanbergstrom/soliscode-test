@@ -16,7 +16,9 @@
 package org.soliscode.test.breakable;
 
 import org.jspecify.annotations.NonNull;
-import org.soliscode.test.OptionalMethod;
+import org.soliscode.test.InterfaceMethod;
+import org.soliscode.test.MethodStatus;
+import org.soliscode.test.contract.iterable.IterableMethods;
 import org.soliscode.test.contract.support.CollectionProviderSupport;
 import org.soliscode.test.provider.CollectionProvider;
 import org.soliscode.test.provider.CollectionProviders;
@@ -26,8 +28,10 @@ import org.soliscode.test.util.IterableTestUtils;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
@@ -158,13 +162,13 @@ import java.util.function.Consumer;
 ///         .build();
 ///
 ///     List<Integer> processed = new ArrayList<>();
-///     partiallyBroken.forEach(processed::add);
+///     partiallyBroken.forEach(processed::add_singleElement_returnsTrueAndUpdatesSize);
 ///
 ///     assertEquals(Arrays.asList(2, 3, 4), processed); // First and last skipped
 ///
 ///     // Verify full iteration still works
 ///     List<Integer> viaIterator = new ArrayList<>();
-///     partiallyBroken.iterator().forEachRemaining(viaIterator::add);
+///     partiallyBroken.iterator().forEachRemaining(viaIterator::add_singleElement_returnsTrueAndUpdatesSize);
 ///     assertEquals(Arrays.asList(1, 2, 3, 4, 5), viaIterator);
 /// }
 /// ```
@@ -205,7 +209,7 @@ import java.util.function.Consumer;
 ///
 ///     // But forEach should still work (uses direct iterable access)
 ///     List<String> forEachResults = new ArrayList<>();
-///     withIteratorBreaks.forEach(forEachResults::add);
+///     withIteratorBreaks.forEach(forEachResults::add_singleElement_returnsTrueAndUpdatesSize);
 ///     assertEquals(Arrays.asList("a", "b", "c", "d"), forEachResults);
 /// }
 /// ```
@@ -249,7 +253,7 @@ import java.util.function.Consumer;
 ///
 ///     // Test forEach behavior (skips first)
 ///     List<String> forEachResults = new ArrayList<>();
-///     multiplyBroken.forEach(forEachResults::add);
+///     multiplyBroken.forEach(forEachResults::add_singleElement_returnsTrueAndUpdatesSize);
 ///     assertEquals(Arrays.asList("beta", "gamma", "delta"), forEachResults);
 ///
 ///     // Test iterator behavior (appears to have no elements)
@@ -311,7 +315,7 @@ import java.util.function.Consumer;
 /// @author evanbergstrom
 /// @param <E> The elements type for the `Iterable`.
 /// @since 1.0
-public class BreakableIterable<E> extends AbstractBreakable implements Iterable<E> {
+public class BreakableIterable<E> extends BreakableObject<Iterable<E>> implements Iterable<E> {
 
     /// The default capacity used for operations that need a constant size value.
     protected static final int DEFAULT_CAPACITY = 10;
@@ -321,6 +325,9 @@ public class BreakableIterable<E> extends AbstractBreakable implements Iterable<
 
     /// The characteristics flags for the spliterator created by this iterable.
     private final int characteristics;
+
+    /// Default value for the characteristics field
+    protected static final int DEFAULT_CHARACTERISTICS = 0;
 
     /// The method `forEach` does not call the action on any of the elements.
     /// @see BreakableIterable#forEach(Consumer)
@@ -345,59 +352,43 @@ public class BreakableIterable<E> extends AbstractBreakable implements Iterable<
     /// Creates and empty breakable iterable with no breaks. The spliterator for this iterable will have no
     /// characteristics set.
     public BreakableIterable() {
-        super();
-        this.iterable = new ArrayList<>();
-        this.characteristics = 0;
+        this(new ArrayList<>(), new HashSet<>(), new HashMap<>(), DEFAULT_CHARACTERISTICS, DEFAULT_SAFETY);
     }
 
     /// Creates a breakable iterable from an existing instance.
     /// @param other the breakable iterator to copy.
     public BreakableIterable(final @NonNull BreakableIterable<E> other) {
-        super(other);
-        this.iterable = IterableTestUtils.newList(other.iterable);
-        this.characteristics = other.characteristics;
+        this(IterableTestUtils.copy(other.iterable), new HashSet<>(other.breaks()),
+                new HashMap<>(other.methodStatuses()), other.characteristics, other.isSafe());
     }
 
     /// Creates a breakable iterable from an iterable.
     /// @param collection the iterator to use for the elements.
     public BreakableIterable(final @NonNull Collection<E> collection) {
-        this(new ArrayList<>(collection), new HashSet<>(), 0);
+        this(new ArrayList<>(collection), new HashSet<>(), new HashMap<>(), DEFAULT_CHARACTERISTICS, DEFAULT_SAFETY);
     }
 
     /// Creates a breakable iterable from another iterable with a set of breaks and characteristics specified by the
     /// other arguments.
     /// @param i the iterable to use for the elements.
     /// @param breaks the set of breaks to include.
+    /// @param methodStatuses the method status configuration.
     /// @param characteristics the characteristics of the iterable.
-    public BreakableIterable(final @NonNull Iterable<E> i, final @NonNull Collection<Break> breaks,
-                             final int characteristics) {
-        super(breaks);
+    /// @param isSafe whether the iterable is safe for concurrent access.
+    public BreakableIterable(final @NonNull Iterable<E> i, final @NonNull Set<Break> breaks,
+                             final @NonNull Map<InterfaceMethod, MethodStatus> methodStatuses,
+                             final int characteristics, final boolean isSafe) {
+        super(i, breaks, methodStatuses, isSafe);
         this.iterable = i;
         this.characteristics = characteristics;
     }
 
-    /// {@inheritDoc}
     @Override
-    public boolean equals(final Object obj) {
-        if (obj == this) {
-            return true;
-        } else if (obj instanceof BreakableIterable<?> other) {
-            return IterableTestUtils.equals(iterable, other.iterable) && characteristics == other.characteristics;
-        } else {
-            return false;
+    protected boolean valueEquals(final BreakableObject<?> other) {
+        if (other instanceof BreakableIterable<?> that) {
+            return iterable.equals(that.iterable);
         }
-    }
-
-    /// {@inheritDoc}
-    @Override
-    public int hashCode() {
-        return iterable.hashCode();
-    }
-
-    /// {@inheritDoc}
-    @Override
-    public String toString() {
-        return iterable.toString();
+        return false;
     }
 
     /// Implements the [iterator][Iterable#iterator] method from the [Iterable] interface.
@@ -414,7 +405,10 @@ public class BreakableIterable<E> extends AbstractBreakable implements Iterable<
     /// @return An `Iterator` over the elements in this collection.
     @Override
     public @NonNull Iterator<E> iterator() {
-        final BreakableIterator<E> iterator = new BreakableIterator<>(iterable.iterator(), breaks(), characteristics);
+        checkMethodSupport(IterableMethods.ITERATOR);
+
+        final BreakableIterator<E> iterator = new BreakableIterator<>(iterable.iterator(), breaks(), methodStatuses(),
+                characteristics, isSafe());
         unsupportedMethods().forEach(iterator::doesNotSupportMethod);
         return iterator;
     }
@@ -436,9 +430,11 @@ public class BreakableIterable<E> extends AbstractBreakable implements Iterable<
     /// @throws NullPointerException if the specified action is null
     @Override
     public void forEach(final Consumer<? super E> action) {
+        checkMethodSupport(IterableMethods.FOR_EACH);
+
         if (action == null) {
             if (hasBreak(FOR_EACH_THROWS_WRONG_EXCEPTION_FOR_NULL_ARGUMENT)) {
-                throw new RuntimeException();
+                throw new IllegalArgumentException();
             } else {
                 throw new NullPointerException();
             }
@@ -482,7 +478,8 @@ public class BreakableIterable<E> extends AbstractBreakable implements Iterable<
     /// @return a `Spliterator` over the elements in this collection.Ø
     @Override
     public @NonNull Spliterator<E> spliterator() {
-        return new BreakableSpliterator<>(iterable.spliterator(), breaks(), characteristics);
+        return new BreakableSpliterator<>(iterable.spliterator(), breaks(), methodStatuses(), characteristics,
+                isSafe());
     }
 
     /// returns the elements as an unbroken instance of `Iterable'
@@ -498,16 +495,10 @@ public class BreakableIterable<E> extends AbstractBreakable implements Iterable<
     /// @author evanbergstrom
     // CHECKSTYLE:OFF: VisibilityModifier
     protected abstract static class AbstractBuilder<B extends AbstractBuilder<B, C, E>,
-            C extends BreakableIterable<E>, E> {
+            C extends BreakableIterable<E>, E> extends AbstractBreakableBuilder<B, C> {
 
         /// The collection of elements that will be used to create the breakable iterable.
         private final @NonNull Collection<E> elements;
-
-        /// The set of breaks that will be applied to the breakable iterable.
-        private final @NonNull Set<Break> breaks;
-
-        /// The set of optional methods that will not be supported by the breakable iterable.
-        private final @NonNull Set<OptionalMethod> unsupportedMethods;
 
         /// The characteristics flags that will be applied to the spliterator.
         private int characteristics;
@@ -522,9 +513,8 @@ public class BreakableIterable<E> extends AbstractBreakable implements Iterable<
         /// @param elements the initial elements for the builder
         /// @throws NullPointerException if elements is null
         public AbstractBuilder(final @NonNull Collection<E> elements) {
+            super();
             this.elements = elements;
-            this.breaks = new HashSet<>();
-            this.unsupportedMethods = new HashSet<>();
             this.characteristics = 0;
         }
 
@@ -532,35 +522,13 @@ public class BreakableIterable<E> extends AbstractBreakable implements Iterable<
         /// @param other the builder to copy from
         /// @throws NullPointerException if other is null
         protected AbstractBuilder(final @NonNull AbstractBuilder<B, C, E> other) {
+            super(other);
             this.elements = new ArrayList<>(other.elements);
-            this.breaks = new HashSet<>(other.breaks);
-            this.unsupportedMethods = new HashSet<>(other.unsupportedMethods);
             this.characteristics = other.characteristics;
         }
 
-        /// Returns this builder instance for method chaining.
-        /// @return this builder instance
-        public abstract B self();
-
-        /// Creates a copy of this builder.
-        /// @return a new builder instance that is a copy of this one
-        public abstract B copy();
-
-        /// Builds the breakable iterable with the current configuration.
-        /// @return a new breakable iterable instance
-        public abstract C build();
-
-        /// Adds a break to this builder.
-        /// @param aBreak the break to add
-        /// @return this builder for method chaining
-        /// @throws NullPointerException if aBreak is null
-        public final B addBreak(final @NonNull Break aBreak) {
-            breaks.add(aBreak);
-            return self();
-        }
-
         /// Sets the characteristics for the spliterator using bitwise OR with existing characteristics.
-        /// @param newCharacteristics the characteristics to add
+        /// @param newCharacteristics the characteristics to add_singleElement_returnsTrueAndUpdatesSize
         /// @return this builder for method chaining
         /// @see Spliterator
         public final B setCharacteristics(final int newCharacteristics) {
@@ -569,7 +537,7 @@ public class BreakableIterable<E> extends AbstractBreakable implements Iterable<
         }
 
         /// Adds all elements from the specified iterable to this builder.
-        /// @param i the iterable containing elements to add
+        /// @param i the iterable containing elements to add_singleElement_returnsTrueAndUpdatesSize
         /// @return this builder for method chaining
         /// @throws NullPointerException if i is null
         public final B addElements(final @NonNull Iterable<E> i) {
@@ -580,21 +548,12 @@ public class BreakableIterable<E> extends AbstractBreakable implements Iterable<
         }
 
         /// Adds the specified elements to this builder.
-        /// @param e the elements to add
+        /// @param e the elements to add_singleElement_returnsTrueAndUpdatesSize
         /// @return this builder for method chaining
         /// @throws NullPointerException if e is null
         @SafeVarargs
         public final @NonNull B addElements(final @NonNull E... e) {
             Collections.addAll(elements, e);
-            return self();
-        }
-
-        /// Configures the builder so that the resulting iterable does not support the specified method.
-        /// @param method the optional method that should not be supported
-        /// @return this builder for method chaining
-        /// @throws NullPointerException if method is null
-        public final @NonNull B doesNotSupport(final @NonNull OptionalMethod method) {
-            unsupportedMethods.add(method);
             return self();
         }
 
@@ -607,25 +566,11 @@ public class BreakableIterable<E> extends AbstractBreakable implements Iterable<
         }
 
         /**
-         * Returns the breaks that have been added to the builder.
-         * @return The breaks for the collection.
-         */
-        public @NonNull Set<Break> breaks() {
-            return breaks;
-        }
-
-        /**
          * Returns the characteristics that have been added to the builder.
          * @return The characteristics for the collection.
          */
         public int characteristics() {
             return characteristics;
-        }
-
-        /// returns the unsupported methods that have been added to the builder
-        /// @return the set of supported methods for the collection..
-        public @NonNull Set<OptionalMethod> unsupportedMethods() {
-            return unsupportedMethods;
         }
     }
     // CHECKSTYLE:ON: VisibilityModifier
@@ -664,9 +609,7 @@ public class BreakableIterable<E> extends AbstractBreakable implements Iterable<
         /// @return a new BreakableIterable instance
         @Override
         public BreakableIterable<E> build() {
-            BreakableIterable<E> iterator = new BreakableIterable<>(elements(), breaks(), characteristics());
-            unsupportedMethods().forEach(iterator::doesNotSupportMethod);
-            return iterator;
+            return new BreakableIterable<>(elements(), breaks(), methodStatuses(), characteristics(), isSafe());
         }
     }
 
@@ -694,10 +637,25 @@ public class BreakableIterable<E> extends AbstractBreakable implements Iterable<
     public static <E> @NonNull CollectionProvider<E, BreakableIterable<E>> iterableProvider(
             final @NonNull ObjectProvider<E> elementProvider,
             final @NonNull Set<Break> breaks) {
+        return iterableProvider(elementProvider, breaks, Collections.emptyMap());
+    }
+
+    /// Creates a collection provider for instances of BreakableIterable with specific breaks applied.
+    /// @param <E> the element type
+    /// @param elementProvider the element provider to use
+    /// @param breaks the breaks to apply to each instance of BreakableIterable
+    /// @return a collection provider for breakable iterables
+    /// @throws NullPointerException if elementProvider or breaks is null
+    public static <E> @NonNull CollectionProvider<E, BreakableIterable<E>> iterableProvider(
+            final @NonNull ObjectProvider<E> elementProvider,
+            final @NonNull Set<Break> breaks,
+            final @NonNull Map<InterfaceMethod, MethodStatus> methodStatuses) {
         return CollectionProviders.from(
-                () -> new BreakableIterable<>(new ArrayList<>(), breaks, 0),
-                (o) -> new BreakableIterable<>(o.iterable, breaks, o.characteristics),
-                (c) -> new BreakableIterable<>(c, breaks, 0),
+                () -> new BreakableIterable<>(new ArrayList<>(), breaks, methodStatuses, DEFAULT_CHARACTERISTICS,
+                        DEFAULT_SAFETY),
+                (o) -> new BreakableIterable<>(IterableTestUtils.copy(o.iterable),
+                        new HashSet<>(breaks), new HashMap<>(o.methodStatuses()), o.characteristics, o.isSafe()),
+                (c) -> new BreakableIterable<>(c, breaks, methodStatuses, DEFAULT_CHARACTERISTICS, DEFAULT_SAFETY),
                 elementProvider
         );
     }
@@ -712,5 +670,9 @@ public class BreakableIterable<E> extends AbstractBreakable implements Iterable<
         default @NonNull CollectionProvider<E, BreakableIterable<E>> provider() {
             return BreakableIterable.iterableProvider(elementProvider());
         }
+    }
+
+    protected int characteristics() {
+        return characteristics;
     }
 }

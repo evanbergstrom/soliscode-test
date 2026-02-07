@@ -1,15 +1,21 @@
 package org.soliscode.test.breakable;
 
 import org.jspecify.annotations.NonNull;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.soliscode.test.AbstractTest;
-import org.soliscode.test.contract.CollectionMethods;
 import org.soliscode.test.contract.list.ListContract;
+import org.soliscode.test.contract.list.ListMethods;
 import org.soliscode.test.contract.support.WithIntegerElement;
 import org.soliscode.test.provider.CollectionProvider;
 import org.soliscode.test.provider.FunctionalCollectionProvider;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.soliscode.test.assertions.collection.CollectionAssertions.*;
@@ -37,7 +43,7 @@ public class BreakableListTest extends AbstractTest
 
     // ========== addAll(int, Collection) Tests ==========
 
-    /// Test that the `ADD_ALL_AT_INDEX_DOES_NOT_ADD_ANY_ELEMENTS` break causes the `addAll` method to not add elements.
+    /// Test that the `ADD_ALL_AT_INDEX_DOES_NOT_ADD_ANY_ELEMENTS` break causes the `addAll` method to not add_singleElement_returnsTrueAndUpdatesSize elements.
     /// @see BreakableList#addAll(int, Collection)
     @Test
     @DisplayName("Test the `addAll(int, Collection)` method with the ADD_ALL_AT_INDEX_DOES_NOT_ADD_ANY_ELEMENTS break")
@@ -53,7 +59,7 @@ public class BreakableListTest extends AbstractTest
         assertDoesNotContain(5, list);
     }
 
-    /// Test that the `ADD_ALL_AT_INDEX_ADDS_TO_THE_END` break causes the `addAll` method to add to the end.
+    /// Test that the `ADD_ALL_AT_INDEX_ADDS_TO_THE_END` break causes the `addAll` method to add_singleElement_returnsTrueAndUpdatesSize to the end.
     /// @see BreakableList#addAll(int, Collection)
     @Test
     @DisplayName("Test the `addAll(int, Collection)` method with the ADD_ALL_AT_INDEX_ADDS_TO_THE_END break")
@@ -127,12 +133,12 @@ public class BreakableListTest extends AbstractTest
         });
     }
 
-    // ========== add(int, Object) Tests ==========
+    // ========== add_singleElement_returnsTrueAndUpdatesSize(int, Object) Tests ==========
 
-    /// Test that the `ADD_AT_INDEX_DOES_NOT_ADD_THE_ELEMENT` break causes the `add` method to not add the element.
+    /// Test that the `ADD_AT_INDEX_DOES_NOT_ADD_THE_ELEMENT` break causes the `add_singleElement_returnsTrueAndUpdatesSize` method to not add_singleElement_returnsTrueAndUpdatesSize the element.
     /// @see BreakableList#add(int, Object)
     @Test
-    @DisplayName("Test the `add(int, Object)` method with the ADD_AT_INDEX_DOES_NOT_ADD_THE_ELEMENT break")
+    @DisplayName("Test the `add_singleElement_returnsTrueAndUpdatesSize(int, Object)` method with the ADD_AT_INDEX_DOES_NOT_ADD_THE_ELEMENT break")
     public void testAddAtIndexDoesNotAddElementBreak() {
         BreakableList<Integer> list = Breakables.buildList(1, 2, 3)
                 .addBreak(BreakableList.ADD_AT_INDEX_DOES_NOT_ADD_THE_ELEMENT)
@@ -143,16 +149,16 @@ public class BreakableListTest extends AbstractTest
         assertDoesNotContain(4, list);
     }
 
-    /// Test that the `ADD_AT_INDEX_ADDS_AT_NEXT_POSITION` break causes the `add` method to add at the next position.
+    /// Test that the `ADD_AT_INDEX_ADDS_AT_NEXT_POSITION` break causes the `add_singleElement_returnsTrueAndUpdatesSize` method to add_singleElement_returnsTrueAndUpdatesSize at the next position.
     /// @see BreakableList#add(int, Object)
     @Test
-    @DisplayName("Test the `add(int, Object)` method with the ADD_AT_INDEX_ADDS_AT_NEXT_POSITION break")
+    @DisplayName("Test the `add_singleElement_returnsTrueAndUpdatesSize(int, Object)` method with the ADD_AT_INDEX_ADDS_AT_NEXT_POSITION break")
     public void testAddAtIndexAddsAtNextPositionBreak() {
         BreakableList<Integer> list = Breakables.buildList(1, 2, 3)
                 .addBreak(BreakableList.ADD_AT_INDEX_ADDS_AT_NEXT_POSITION)
                 .build();
 
-        list.add(1, 4); // Should add at position 2 instead of 1
+        list.add(1, 4); // Should add_singleElement_returnsTrueAndUpdatesSize at position 2 instead of 1
         assertEquals(Arrays.asList(1, 2, 4, 3), list);
         assertContains(4, list);
     }
@@ -160,7 +166,7 @@ public class BreakableListTest extends AbstractTest
     /// Test that the `ADD_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX` break throws the wrong exception.
     /// @see BreakableList#add(int, Object)
     @Test
-    @DisplayName("Test the `add(int, Object)` method with the ADD_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX break")
+    @DisplayName("Test the `add_singleElement_returnsTrueAndUpdatesSize(int, Object)` method with the ADD_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX break")
     public void testAddAtIndexThrowsWrongExceptionOnBadIndexBreak() {
         BreakableList<Integer> list = Breakables.buildList(1, 2, 3)
                 .addBreak(BreakableList.ADD_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX)
@@ -541,16 +547,16 @@ public class BreakableListTest extends AbstractTest
         assertEquals(Arrays.asList(1, 99, 3, 4), list);
     }
 
-    /// Test multiple breaks working together on add/remove operations.
+    /// Test multiple breaks working together on add_singleElement_returnsTrueAndUpdatesSize/remove operations.
     @Test
-    @DisplayName("Test combined breaks on add/remove operations")
+    @DisplayName("Test combined breaks on add_singleElement_returnsTrueAndUpdatesSize/remove operations")
     public void testCombinedAddRemoveBreaks() {
         BreakableList<Integer> list = Breakables.buildList(1, 2, 3, 4)
                 .addBreak(BreakableList.ADD_AT_INDEX_DOES_NOT_ADD_THE_ELEMENT)
                 .addBreak(BreakableList.REMOVE_AT_INDEX_ALWAYS_RETURNS_NULL)
                 .build();
 
-        list.add(1, 99); // Should not add
+        list.add(1, 99); // Should not add_singleElement_returnsTrueAndUpdatesSize
         assertEquals(Arrays.asList(1, 2, 3, 4), list);
 
         Integer removed = list.remove(1); // Should remove but return null
@@ -567,7 +573,7 @@ public class BreakableListTest extends AbstractTest
                 .addBreak(BreakableList.ADD_ALL_AT_INDEX_ALWAYS_RETURNS_FALSE)
                 .build();
 
-        boolean result = list.addAll(1, Arrays.asList(4, 5)); // Should add to end but return false
+        boolean result = list.addAll(1, Arrays.asList(4, 5)); // Should add_singleElement_returnsTrueAndUpdatesSize to end but return false
         assertFalse(result);
         assertEquals(Arrays.asList(1, 2, 3, 4, 5), list);
     }
@@ -594,9 +600,11 @@ public class BreakableListTest extends AbstractTest
     @Test
     @DisplayName("Test inherited Collection and SequencedCollection breaks")
     public void testInheritedBreaks() {
-        BreakableList<Integer> list = new BreakableList<>(new ArrayList<>(Arrays.asList(1, 2, 3)),
-                Set.of(BreakableCollection.SIZE_ALWAYS_RETURNS_ZERO,
-                       BreakableSequencedCollection.GET_FIRST_RETURNS_NULL), 0);
+        BreakableList<Integer> list = new BreakableList.Builder<Integer>()
+                .addElements(1, 2, 3)
+                .addBreak(BreakableCollection.SIZE_ALWAYS_RETURNS_ZERO)
+                .addBreak(BreakableSequencedCollection.GET_FIRST_RETURNS_NULL)
+                .build();
 
         org.junit.jupiter.api.Assertions.assertEquals(0, list.size()); // From BreakableCollection
         assertNull(list.getFirst()); // From BreakableSequencedCollection
@@ -640,13 +648,12 @@ public class BreakableListTest extends AbstractTest
         BreakableList<Integer> original = Breakables.buildList(1, 2, 3)
                 .addBreak(BreakableList.GET_ALWAYS_RETURNS_NULL)
                 .build();
+        assertNull(original.get(0)); // Still broken
 
         BreakableList<Integer> copy = new BreakableList<>(original);
 
-        // Copy should have the same elements but different behavior (no breaks copied)
         assertEquals(Arrays.asList(1, 2, 3), copy);
-        org.junit.jupiter.api.Assertions.assertEquals(1, copy.get(0)); // No break, should return actual element
-        assertNull(original.get(0)); // Still broken
+        assertNull(copy.get(0)); // No break, should return actual element
     }
 
     /// Test unsupported operations.
@@ -654,10 +661,11 @@ public class BreakableListTest extends AbstractTest
     @Test
     @DisplayName("Test unsupported operations")
     public void testUnsupportedOperations() {
-        BreakableList<Integer> list = new BreakableList<>(new ArrayList<>(Arrays.asList(1, 2, 3)),
-                Collections.emptySet(), 0);
-        list.doesNotSupportMethod(CollectionMethods.Get);
-        list.doesNotSupportMethod(CollectionMethods.Set);
+        BreakableList<Integer> list = new BreakableList.Builder<Integer>()
+                .addElements(1, 2, 3)
+                .doesNotSupportMethod(ListMethods.GET)
+                .doesNotSupportMethod(ListMethods.SET)
+                .build();
 
         assertThrows(UnsupportedOperationException.class, () -> list.get(0));
         assertThrows(UnsupportedOperationException.class, () -> list.set(0, 99));

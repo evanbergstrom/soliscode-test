@@ -17,14 +17,19 @@ package org.soliscode.test.breakable;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import org.soliscode.test.InterfaceMethod;
+import org.soliscode.test.MethodStatus;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.NavigableSet;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -429,10 +434,12 @@ public class BreakableNavigableSet<E> extends BreakableSortedSet<E> implements N
     ///
     /// ```java
     /// BreakableNavigableSet<String> set = new BreakableNavigableSet<>();
-    /// set.add("element");
+    /// set.add_singleElement_returnsTrueAndUpdatesSize("element");
     /// ```
     public BreakableNavigableSet() {
-        this(new TreeSet<>(), new ArrayList<>(), 0);
+        //noinspection SortedCollectionWithNonComparableKeys
+        this(new TreeSet<>(), DEFAULT_BREAKS, DEFAULT_METHOD_STATUSES, DEFAULT_CHARACTERISTICS, DEFAULT_PERMITS,
+                DEFAULT_SAFETY, Object.class);
     }
 
     /// Creates a new BreakableNavigableSet as a shallow copy of another BreakableNavigableSet.
@@ -452,7 +459,8 @@ public class BreakableNavigableSet<E> extends BreakableSortedSet<E> implements N
     /// @param other the BreakableNavigableSet to copy from
     /// @throws NullPointerException if other is null
     public BreakableNavigableSet(final @NonNull BreakableNavigableSet<E> other) {
-        this(other.navigableSet, new ArrayList<>(), 0);
+        this(new TreeSet<>(other.navigableSet), new HashSet<>(other.breaks()), new HashMap<>(other.methodStatuses()),
+                DEFAULT_CHARACTERISTICS, DEFAULT_PERMITS, DEFAULT_SAFETY, Object.class);
     }
 
     /// Creates a new BreakableNavigableSet using the specified navigable set as the backing store.
@@ -474,7 +482,8 @@ public class BreakableNavigableSet<E> extends BreakableSortedSet<E> implements N
     /// @param navigableSet the backing navigable set to use for element storage
     /// @throws NullPointerException if navigableSet is null
     public BreakableNavigableSet(final @NonNull NavigableSet<E> navigableSet) {
-        this(navigableSet, new ArrayList<>(), 0);
+        this(navigableSet, DEFAULT_BREAKS, DEFAULT_METHOD_STATUSES, DEFAULT_CHARACTERISTICS, DEFAULT_PERMITS,
+                DEFAULT_SAFETY, Object.class);
     }
 
     /// Creates a new BreakableNavigableSet with full configuration control.
@@ -493,13 +502,34 @@ public class BreakableNavigableSet<E> extends BreakableSortedSet<E> implements N
     ///
     /// @param navigableSet the backing navigable set for element storage
     /// @param breaks the collection of breaks to activate
+    /// @param methodStatuses the method status configuration.
     /// @param characteristics the spliterator characteristics
+    /// @param permits         the flags that indicate what types of values are supported by the collection.
     /// @throws NullPointerException if navigableSet or breaks is null
-    public BreakableNavigableSet(final @NonNull NavigableSet<E> navigableSet,
-                                 final @NonNull Collection<Break> breaks,
-                                 final int characteristics) {
-        super(navigableSet, breaks, characteristics);
+    protected BreakableNavigableSet(final @NonNull NavigableSet<E> navigableSet,
+                                    final @NonNull Set<Break> breaks,
+                                    final @NonNull Map<InterfaceMethod, MethodStatus> methodStatuses,
+                                    final int characteristics,
+                                    final int permits,
+                                    final boolean isSafe,
+                                    final Class<?> compatibleType) {
+        super(navigableSet, breaks, methodStatuses, characteristics, permits, isSafe, compatibleType);
         this.navigableSet = Objects.requireNonNull(navigableSet);
+    }
+
+    @Override
+    public NavigableSet<E> reversed() {
+        if (hasBreak(BreakableSequencedCollection.REVERSED_DOES_NOT_REVERSE_COLLECTION)) {
+            return this;
+        }
+        if (hasBreak(BreakableSequencedCollection.REVERSED_MODIFIES_THE_COLLECTION)) {
+            NavigableSet<E> reversed = navigableSet.reversed();
+            navigableSet.clear();
+            navigableSet.addAll(reversed);
+            return this;
+        }
+        return new BreakableNavigableSet<>(navigableSet.reversed(), breaks(), methodStatuses(), characteristics(),
+                permits(), isSafe(), compatibleType());
     }
 
     // ========== NavigableSet Implementation ==========
@@ -699,7 +729,7 @@ public class BreakableNavigableSet<E> extends BreakableSortedSet<E> implements N
 
         /**
          * Creates a new builder with the collection of elements.
-         * @param elements The elements to add to the navigable set.
+         * @param elements The elements to add_singleElement_returnsTrueAndUpdatesSize to the navigable set.
          */
         public Builder(final @NonNull Collection<E> elements) {
             super(elements);
@@ -754,12 +784,8 @@ public class BreakableNavigableSet<E> extends BreakableSortedSet<E> implements N
             final NavigableSet<E> storage = new TreeSet<>(comparator());
             storage.addAll(elements());
 
-            BreakableNavigableSet<E> broken = new BreakableNavigableSet<>(storage, breaks(), characteristics());
-            broken.setPermitsNulls(permitsNulls());
-            broken.setPermitsDuplicates(permitsDuplicates());
-            broken.setPermitsIncompatibleTypes(permitsIncompatibleTypes());
-            unsupportedMethods().forEach(broken::doesNotSupportMethod);
-            return broken;
+            return new BreakableNavigableSet<>(storage, new HashSet<>(breaks()), new HashMap<>(methodStatuses()),
+                    characteristics(), permits(), isSafe(), compatibleType());
         }
     }
 }

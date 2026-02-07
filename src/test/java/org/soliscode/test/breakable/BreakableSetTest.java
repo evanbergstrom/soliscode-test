@@ -1,7 +1,8 @@
 package org.soliscode.test.breakable;
 
 import org.jspecify.annotations.NonNull;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.soliscode.test.AbstractTest;
 import org.soliscode.test.contract.collection.CollectionContract;
 import org.soliscode.test.contract.support.WithIntegerElement;
@@ -11,7 +12,6 @@ import org.soliscode.test.util.UsesCollections;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.soliscode.test.assertions.collection.CollectionAssertions.assertEquals;
 
 /// **Test Suite for BreakableSet Implementation**
@@ -67,7 +67,7 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
 /// ### Standard Behavior Validation
 /// Tests verify that BreakableSet behaves like a proper Set implementation:
 /// - Uniqueness of elements
-/// - Proper return values from add operations
+/// - Proper return values from add_singleElement_returnsTrueAndUpdatesSize operations
 /// - Correct size calculations
 /// - Standard iteration behavior
 ///
@@ -92,8 +92,8 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
 /// @Test
 /// void testStandardSetBehavior() {
 ///     BreakableSet<String> set = new BreakableSet<>();
-///     assertTrue(set.add("element"));      // First add succeeds
-///     assertFalse(set.add("element"));     // Duplicate add fails
+///     assertTrue(set.add_singleElement_returnsTrueAndUpdatesSize("element"));      // First add_singleElement_returnsTrueAndUpdatesSize succeeds
+///     assertFalse(set.add_singleElement_returnsTrueAndUpdatesSize("element"));     // Duplicate add_singleElement_returnsTrueAndUpdatesSize fails
 ///     assertEquals(1, set.size());         // Size reflects uniqueness
 /// }
 /// ```
@@ -105,8 +105,8 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
 ///     BreakableSet<String> brokenSet = new BreakableSet.Builder<String>()
 ///         .withBreak(SET_ALLOWS_DUPLICATE_ELEMENTS)
 ///         .build();
-///     assertTrue(brokenSet.add("test"));   // First add succeeds
-///     assertTrue(brokenSet.add("test"));   // Duplicate add also succeeds with break
+///     assertTrue(brokenSet.add_singleElement_returnsTrueAndUpdatesSize("test"));   // First add_singleElement_returnsTrueAndUpdatesSize succeeds
+///     assertTrue(brokenSet.add_singleElement_returnsTrueAndUpdatesSize("test"));   // Duplicate add_singleElement_returnsTrueAndUpdatesSize also succeeds with break
 ///     assertEquals(2, brokenSet.size());   // Size reflects duplicates
 /// }
 /// ```
@@ -179,7 +179,7 @@ public class BreakableSetTest extends AbstractTest
         return FunctionalCollectionProvider.from(
                 BreakableSet::new,
                 BreakableSet::new,
-                elements -> new BreakableSet<Integer>(new java.util.HashSet<>(elements)),
+                elements -> new BreakableSet<>(new java.util.HashSet<>(elements)),
                 elementProvider()
         );
     }
@@ -188,12 +188,12 @@ public class BreakableSetTest extends AbstractTest
     ///
     /// This method informs the contract testing framework that BreakableSet follows
     /// standard Set semantics by not allowing duplicate elements. This affects how
-    /// the automated tests validate add operations, size calculations, and other
+    /// the automated tests validate add_singleElement_returnsTrueAndUpdatesSize operations, size calculations, and other
     /// collection behaviors.
     ///
     /// ### Contract Testing Impact
     /// When this returns false, the contract tests will:
-    /// - Expect `add()` to return false for duplicate elements
+    /// - Expect `add_singleElement_returnsTrueAndUpdatesSize()` to return false for duplicate elements
     /// - Verify that set size doesn't increase when adding duplicates
     /// - Validate that contains() works correctly with unique elements
     /// - Test that collections maintain uniqueness constraints
@@ -243,8 +243,8 @@ public class BreakableSetTest extends AbstractTest
     ///
     /// BreakableSet<String> copy = new BreakableSet<>(original);
     /// // copy has same elements but no breaks
-    /// assertTrue(copy.add("duplicate"));          // Standard behavior
-    /// assertFalse(copy.add("duplicate"));         // Rejects duplicates normally
+    /// assertTrue(copy.add_singleElement_returnsTrueAndUpdatesSize("duplicate"));          // Standard behavior
+    /// assertFalse(copy.add_singleElement_returnsTrueAndUpdatesSize("duplicate"));         // Rejects duplicates normally
     /// ```
     ///
     /// ### Use Cases
@@ -323,7 +323,7 @@ public class BreakableSetTest extends AbstractTest
     @Test
     @DisplayName("Test builder pattern")
     public void testBuilderCollectionConstructor() {
-        BreakableSet<Integer> set = new BreakableSet.Builder<Integer>(List.of(1,2,3))
+        BreakableSet<Integer> set = new BreakableSet.Builder<>(List.of(1,2,3))
                 .addBreak(BreakableCollection.ADD_DOES_NOT_ADD_ELEMENT)
                 .build();
 

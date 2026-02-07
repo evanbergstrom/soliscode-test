@@ -5,7 +5,19 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.soliscode.test.AbstractTest;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -287,7 +299,7 @@ public class MatchEverythingTest extends AbstractTest {
 
         assertTrue(set.add(obj1));
         // Since equals always returns true, obj2 should be considered equal to obj1
-        // and add should return false (element already exists)
+        // and add_singleElement_returnsTrueAndUpdatesSize should return false (element already exists)
         assertFalse(set.add(obj2));
 
         assertEquals(1, set.size());
