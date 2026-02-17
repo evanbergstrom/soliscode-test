@@ -1,9 +1,7 @@
 package org.soliscode.test.contract.collection;
 
-import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.opentest4j.AssertionFailedError;
 import org.soliscode.test.assertions.Assertions;
 import org.soliscode.test.contract.support.CollectionContractSupport;
 
@@ -55,8 +53,13 @@ public interface ToArrayContract<E, C extends Collection<E>> extends CollectionC
 
     /// Tests that the [toArray()][Collection#toArray] method works for an empty collection.
     ///
+    /// This test verifies that:
+    /// 1. Calling `toArray()` on an empty collection returns an empty array.
+    /// 2. The returned array has a length of 0.
+    ///
     /// @see Collection#toArray
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("toArray() returns an empty array for an empty collection")
     @Test
     default void toArray_whenEmpty_returnsEmptyArray() {
@@ -73,7 +76,8 @@ public interface ToArrayContract<E, C extends Collection<E>> extends CollectionC
     /// 3. All elements from the collection are present in the array.
     ///
     /// @see Collection#toArray
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("toArray() returns an array containing all elements")
     @Test
     default void toArray_whenNotEmpty_returnsArrayWithElements() {
@@ -94,8 +98,11 @@ public interface ToArrayContract<E, C extends Collection<E>> extends CollectionC
     /// Tests that the [toArray()][Collection#toArray] method returns a safe array that can be
     /// modified without changing the elements of the container.
     ///
+    /// This test verifies that modifying the returned array does not affect the collection.
+    ///
     /// @see Collection#toArray
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("toArray() returns a safe array")
     @Test
     default void toArray_whenCalled_returnsSafeArray() {
@@ -112,8 +119,12 @@ public interface ToArrayContract<E, C extends Collection<E>> extends CollectionC
 
     /// Tests that the [toArray(T[])][Collection#toArray(Object[])] method works for an empty collection.
     ///
+    /// This test verifies that calling `toArray(T[])` with an empty array on an empty collection
+    /// returns an empty array.
+    ///
     /// @see Collection#toArray(Object[])
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("toArray(T[]) returns an empty array for an empty collection")
     @Test
     @SuppressWarnings("unchecked")
@@ -131,7 +142,8 @@ public interface ToArrayContract<E, C extends Collection<E>> extends CollectionC
     /// 3. All elements from the collection are present in the array.
     ///
     /// @see Collection#toArray(Object[])
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("toArray(T[]) returns an array containing all elements")
     @Test
     @SuppressWarnings("unchecked")
@@ -163,7 +175,8 @@ public interface ToArrayContract<E, C extends Collection<E>> extends CollectionC
     ///
     /// @see Collection#toArray(Object[])
     /// @throws NullPointerException or IllegalArgumentException if the argument array is null
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("toArray(T[]) throws exception when the argument array is null")
     @Test
     @SuppressWarnings("DataFlowIssue")

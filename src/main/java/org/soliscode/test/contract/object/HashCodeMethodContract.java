@@ -28,40 +28,57 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/// This interface tests if a class has implemented the `hashCode()` method correctly. This contract class can be used
-/// individually by a test class, but it is normally used through the [ObjectContract] class:
+/// **Contract for the `Object#hashCode()` method**
+///
+/// This interface defines tests for the `hashCode()` method as specified in [Object].
+/// It verifies stability, equality consistency, and distribution quality.
+///
+/// ## Purpose
+/// The purpose of this contract is to ensure that a class's `hashCode()` implementation follows the
+/// contract defined by [Object#hashCode()], which is essential for correct behavior in hash-based
+/// collections like [java.util.HashMap] and [java.util.HashSet].
+///
+/// ## Usage Examples
+/// This contract is normally used through the [ObjectContract] class:
+///
 /// ```java
 /// public class MyClassTest extends ObjectContract<MyClass> {
 /// }
 /// ```
-/// If a test is using the ObjectContract class, but the class being tested does not implement the hashCode method based
-/// upon the specification in the [Object] class, then it can be omitted from the tests using the
-/// `doesNotSupportMethod()` method:
+///
+/// If a class does not implement `hashCode()` according to the [Object] specification, it can
+/// be omitted using the `doesNotSupportMethod()` method:
+///
 /// ```java
 /// public class MyClassTest extends ObjectContract<MyClass> {
 ///     public MyClassTest() {
-///         doesNotSupportMethod(ObjectMethods.HashCode);
+///         doesNotSupportMethod(ObjectMethods.HASH_CODE);
 ///     }
 /// }
 /// ```
+///
+/// ## Thread Safety
+/// This contract interface does not provide any thread-safety guarantees. The thread safety of the
+/// tests depends on the object and [org.soliscode.test.provider.ObjectProvider] implementations being tested.
+///
 /// @param <T> The type being tested.
 /// @author evanbergstrom
 /// @see Object#hashCode()
 /// @see ObjectContract
-/// @since 1.0
+/// @since 1.0.0
 public interface HashCodeMethodContract<T> extends ContractSupport<T> {
 
     /// The amount to allow the load factor of a hash table to exceed the target.
     double LOAD_FACTOR_ALLOWANCE = 0.10;
 
     /// Tests that the `hashCode()` method consistently returns the same integer value over multiple
-    /// invocations.
+    /// invocations on the same instance.
     ///
     /// @throws org.opentest4j.AssertionFailedError if the test fails.
     /// @see Object#hashCode()
     @Test
-    @DisplayName("hashCode() returns the same integer for multiple invocations.")
-    default void testHashCodeIsStable() {
+    @DisplayName("hashCode() returns the same integer for multiple invocations")
+    default void hashCode_whenRepeated_isConsistent() {
         if (supportsMethod(ObjectMethods.HASH_CODE)) {
             T value = provider().createInstance();
             int hash1 = value.hashCode();
@@ -75,8 +92,8 @@ public interface HashCodeMethodContract<T> extends ContractSupport<T> {
     /// @throws org.opentest4j.AssertionFailedError if the test fails.
     /// @see Object#hashCode()
     @Test
-    @DisplayName("hashCode() returns the same integer for equals values")
-    default void testHashCodeWithEqualValues() {
+    @DisplayName("hashCode() returns the same integer for equal values")
+    default void hashCode_withEqualValues_returnsSameInteger() {
        if (supportsMethod(ObjectMethods.HASH_CODE)) {
            T value = provider().createInstance();
            T other = provider().copyInstance(value);
@@ -86,14 +103,14 @@ public interface HashCodeMethodContract<T> extends ContractSupport<T> {
        }
     }
 
-    /// Tests that the `hashCode()` method returns different values for objects that are not equal. This is not
-    /// strictly required by the `Object` interface, but it will result in improved performance.
+    /// Tests that the `hashCode()` method returns different values for objects that are not equal.
+    /// This is not strictly required by the `Object` interface, but it will result in improved performance.
     ///
     /// @throws org.opentest4j.AssertionFailedError if the test fails.
     /// @see Object#hashCode()
     @Test
-    @DisplayName("hashCode() returns different integer for values that are not equal.")
-    default void testHashDifferentValues() {
+    @DisplayName("hashCode() returns different integers for unequal values")
+    default void hashCode_withUniqueValues_returnsUniqueIntegers() {
         if (supportsMethod(ObjectMethods.HASH_CODE)) {
             List<T> values = provider().createUniqueInstances(10);
             long uniqueValues = values.stream().map(Object::hashCode).distinct().count();
@@ -107,8 +124,8 @@ public interface HashCodeMethodContract<T> extends ContractSupport<T> {
     /// @see Object#hashCode()
     @SuppressWarnings("checkstyle:MagicNumber")
     @Test
-    @DisplayName("hashCode() returns integer that have a uniform distribution.")
-    default void testHashCodeDistribution() {
+    @DisplayName("hashCode() returns integers that have a uniform distribution")
+    default void hashCode_whenCalledManyTimes_hasUniformDistribution() {
         if (supportsMethod(ObjectMethods.HASH_CODE)) {
             final double expectedLoadFactor = 0.75;
             final int numberOfObjects = 1000;

@@ -9,57 +9,50 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-/// Contract for the [Map#size()] method.
+/// **Contract for the `size` method of a `Map`**
 ///
-/// This contract provides tests to ensure that the `size()` method of a `Map`
+/// This contract provides tests to ensure that the [size()][Map#size] method of a `Map`
 /// implementation correctly reports the number of key-value mappings it contains.
-/// It covers both empty maps and maps with elements, and handles cases where
-/// the method might not be supported.
+/// It is designed to be used as a mix-in interface by test classes that verify [Map]
+/// implementations.
 ///
-/// ## Usage Example
+/// ## Purpose
+/// The purpose of this contract is to ensure that a map's `size` implementation
+/// correctly returns the number of key-value mappings in this map.
 ///
-/// To use this contract, implement it in your test class along with the necessary
-/// provider methods:
+/// ## Usage Examples
+/// To use this contract, implement it in your test class along with the required support interfaces:
 ///
 /// ```java
-/// public class MyMapSizeTest implements SizeContract<String, String, MyMap<String, String>> {
+/// class MyMapSizeTest implements SizeContract<String, String, MyMap<String, String>> {
 ///     @Override
 ///     public MapProvider<String, String, MyMap<String, String>> provider() {
-///         return new MyMapProvider();
-///     }
-///
-///     @Override
-///     public ElementProvider<String> keyProvider() {
-///         return new StringProvider();
-///     }
-///
-///     @Override
-///     public ElementProvider<String> valueProvider() {
-///         return new StringProvider();
+///         return MyMap::new;
 ///     }
 /// }
 /// ```
 ///
 /// ## Thread Safety
-///
-/// Implementations of this contract are expected to be thread-safe for use by
-/// the JUnit test runner. The tested `Map` instance itself should be handled
-/// according to its own thread safety guarantees.
+/// This contract interface does not provide any thread-safety guarantees. The thread safety of the
+/// tests depends on the [Map] and [org.soliscode.test.provider.MapProvider] implementations being tested.
 ///
 /// @param <K> The key type being tested.
 /// @param <V> The value type being tested.
 /// @param <M> The map type being tested.
 /// @author evanbergstrom
-/// @see Map#size()
-/// @since 1.0
+/// @see Map#size
+/// @since 1.0.0
 public interface SizeContract<K, V, M extends Map<K, V>> extends MapContractSupport<K, V, M> {
 
-    /// Tests that the `size()` method returns 0 for an empty map.
-    /// @throws UnsupportedOperationException if the `size()` method is not supported.
-    /// @throws AssertionError if the `size()` method does not return 0 for an empty map.
+    /// Tests that the [size][Map#size] method returns 0 for an empty map.
+    ///
+    /// @see Map#size
+    /// @throws UnsupportedOperationException if the method is not supported
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @Test
-    @DisplayName("Test size returns 0 for an empty map")
-    default void testSizeOnEmptyMap() {
+    @DisplayName("size() returns 0 for an empty map")
+    default void size_whenEmpty_returnsZero() {
         Map<K, V> map = provider().emptyInstance();
         if (supportsMethod(MapMethods.SIZE)) {
             assertEquals(0, map.size());
@@ -68,12 +61,15 @@ public interface SizeContract<K, V, M extends Map<K, V>> extends MapContractSupp
         }
     }
 
-    /// Tests that the `size()` method returns the correct value for a map with elements.
-    /// @throws UnsupportedOperationException if the `size()` method is not supported.
-    /// @throws AssertionError if the `size()` method does not return the expected value for a map with elements.
+    /// Tests that the [size][Map#size] method returns the correct value for a map with elements.
+    ///
+    /// @see Map#size
+    /// @throws UnsupportedOperationException if the method is not supported
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @Test
-    @DisplayName("Test size returns correct value for a map with elements")
-    default void testSizeOnMapWithElements() {
+    @DisplayName("size() returns correct value for a map with elements")
+    default void size_whenNotEmpty_returnsCorrectSize() {
         K key = keyProvider().createInstance();
         V value = valueProvider().createInstance();
         Map<K, V> map = provider().createSingleton(key, value);

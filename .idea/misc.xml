@@ -16,6 +16,8 @@
     </option>
   </component>
   <component name="ProjectResources">
+    <resource url="http://maven.apache.org/DECORATION/1.8.0" location="$PROJECT_DIR$" />
+    <resource url="http://maven.apache.org/xsd/decoration-1.8.0.xsd" location="$PROJECT_DIR$" />
     <resource url="https://checkstyle.org/dtds/suppressions_1_2.dtd" location="$PROJECT_DIR$" />
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_25" project-jdk-name="openjdk-25" project-jdk-type="JavaSDK" />

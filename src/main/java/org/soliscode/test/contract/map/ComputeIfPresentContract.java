@@ -8,19 +8,51 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/// Contract for the [Map#computeIfPresent(Object, java.util.function.BiFunction)] method.
+/// **Contract for the `computeIfPresent` method of a `Map`**
+///
+/// This interface defines tests for the [computeIfPresent(K, BiFunction)][Map#computeIfPresent] method.
+/// It is designed to be used as a mix-in interface by test classes that verify [Map]
+/// implementations.
+///
+/// ## Purpose
+/// The purpose of this contract is to ensure that a map's `computeIfPresent` implementation
+/// correctly computes a mapping for the specified key and its current mapped value,
+/// provided the key is present.
+///
+/// ## Usage Examples
+/// To use this contract, implement it in your test class along with the required support interfaces:
+///
+/// ```java
+/// class MyMapComputeIfPresentTest implements ComputeIfPresentContract<String, String, MyMap<String, String>> {
+///     @Override
+///     public MapProvider<String, String, MyMap<String, String>> provider() {
+///         return MyMap::new;
+///     }
+/// }
+/// ```
+///
+/// ## Thread Safety
+/// This contract interface does not provide any thread-safety guarantees. The thread safety of the
+/// tests depends on the [Map] and [org.soliscode.test.provider.MapProvider] implementations being tested.
 ///
 /// @param <K> The key type being tested.
 /// @param <V> The value type being tested.
 /// @param <M> The map type being tested.
 /// @author evanbergstrom
-/// @since 1.0
+/// @see Map#computeIfPresent
+/// @since 1.0.0
 public interface ComputeIfPresentContract<K, V, M extends Map<K, V>> extends MapContractSupport<K, V, M> {
 
-    /// Tests that `computeIfPresent()` returns `null` and does not add_singleElement_returnsTrueAndUpdatesSize if the key is not present.
+    /// Tests that the [computeIfPresent][Map#computeIfPresent] method returns `null` and does not add if the key is
+    /// not present.
+    ///
+    /// @see Map#computeIfPresent
+    /// @throws UnsupportedOperationException if the method is not supported
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @Test
-    @DisplayName("Test computeIfPresent returns null and does not add_singleElement_returnsTrueAndUpdatesSize if the key is not present")
-    default void testComputeIfPresentKeyNotPresent() {
+    @DisplayName("computeIfPresent(K, BiFunction) returns null and does not add if the key is not present")
+    default void computeIfPresent_whenKeyNotPresent_returnsNull() {
         Map<K, V> map = provider().emptyInstance();
         K key = keyProvider().createInstance();
         V value = valueProvider().createInstance();
@@ -31,10 +63,16 @@ public interface ComputeIfPresentContract<K, V, M extends Map<K, V>> extends Map
         }
     }
 
-    /// Tests that `computeIfPresent()` computes and updates the value if the key is present.
+    /// Tests that the [computeIfPresent][Map#computeIfPresent] method computes and updates the value if the key is
+    /// present.
+    ///
+    /// @see Map#computeIfPresent
+    /// @throws UnsupportedOperationException if the method is not supported
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @Test
-    @DisplayName("Test computeIfPresent computes and updates the value if the key is present")
-    default void testComputeIfPresentKeyPresent() {
+    @DisplayName("computeIfPresent(K, BiFunction) computes and updates the value if the key is present")
+    default void computeIfPresent_whenKeyPresent_updatesValue() {
         K key = keyProvider().createInstance();
         V oldValue = valueProvider().createInstance(1);
         V newValue = valueProvider().createInstance(2);

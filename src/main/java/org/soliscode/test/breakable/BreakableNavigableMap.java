@@ -523,6 +523,23 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     }
 
     /// {@inheritDoc}
+    ///
+    /// Returns the greatest key strictly less than the given key, or `null` if there is no such key.
+    /// The behavior can be modified by the following breaks:
+    ///
+    /// **Supported Breaks:**
+    /// - {@link #LOWER_KEY_ALWAYS_RETURNS_NULL} - Returns null regardless of actual content
+    /// - {@link #LOWER_KEY_THROWS_EXCEPTION} - Throws NoSuchElementException
+    /// - {@link #LOWER_KEY_RETURNS_RANDOM_KEY} - Returns arbitrary key from map
+    ///
+    /// **Exception Handling:**
+    /// - Throws UnsupportedOperationException if the method is not supported
+    /// - May throw NoSuchElementException due to LOWER_KEY_THROWS_EXCEPTION break
+    ///
+    /// @param key the key
+    /// @return the greatest key less than `key`, or `null` if there is no such key
+    /// @throws UnsupportedOperationException if the method is not supported
+    /// @see NavigableMap#lowerKey(Object)
     @Override
     public @Nullable K lowerKey(final K key) {
         if (!supportsMethod(NavigableMapMethods.LOWER_KEY)) {
@@ -541,6 +558,23 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     }
 
     /// {@inheritDoc}
+    ///
+    /// Returns a key-value mapping associated with the greatest key less than or equal to the
+    /// given key, or `null` if there is no such key. The behavior can be modified by the following breaks:
+    ///
+    /// **Supported Breaks:**
+    /// - {@link #FLOOR_ENTRY_ALWAYS_RETURNS_NULL} - Returns null regardless of actual content
+    /// - {@link #FLOOR_ENTRY_THROWS_EXCEPTION} - Throws NoSuchElementException
+    /// - {@link #FLOOR_ENTRY_RETURNS_RANDOM_ENTRY} - Returns arbitrary entry from map
+    ///
+    /// **Exception Handling:**
+    /// - Throws UnsupportedOperationException if the method is not supported
+    /// - May throw NoSuchElementException due to FLOOR_ENTRY_THROWS_EXCEPTION break
+    ///
+    /// @param key the key
+    /// @return an entry with the greatest key less than or equal to `key`, or `null` if there is no such key
+    /// @throws UnsupportedOperationException if the method is not supported
+    /// @see NavigableMap#floorEntry(Object)
     @Override
     public Map.@Nullable Entry<K, V> floorEntry(final K key) {
         if (!supportsMethod(NavigableMapMethods.FLOOR_ENTRY)) {
@@ -560,6 +594,23 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     }
 
     /// {@inheritDoc}
+    ///
+    /// Returns the greatest key less than or equal to the given key, or `null` if there is no such key.
+    /// The behavior can be modified by the following breaks:
+    ///
+    /// **Supported Breaks:**
+    /// - {@link #FLOOR_KEY_ALWAYS_RETURNS_NULL} - Returns null regardless of actual content
+    /// - {@link #FLOOR_KEY_THROWS_EXCEPTION} - Throws NoSuchElementException
+    /// - {@link #FLOOR_KEY_RETURNS_RANDOM_KEY} - Returns arbitrary key from map
+    ///
+    /// **Exception Handling:**
+    /// - Throws UnsupportedOperationException if the method is not supported
+    /// - May throw NoSuchElementException due to FLOOR_KEY_THROWS_EXCEPTION break
+    ///
+    /// @param key the key
+    /// @return the greatest key less than or equal to `key`, or `null` if there is no such key
+    /// @throws UnsupportedOperationException if the method is not supported
+    /// @see NavigableMap#floorKey(Object)
     @Override
     public @Nullable K floorKey(final K key) {
         if (!supportsMethod(NavigableMapMethods.FLOOR_KEY)) {
@@ -578,6 +629,23 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     }
 
     /// {@inheritDoc}
+    ///
+    /// Returns a key-value mapping associated with the least key greater than or equal to the
+    /// given key, or `null` if there is no such key. The behavior can be modified by the following breaks:
+    ///
+    /// **Supported Breaks:**
+    /// - {@link #CEILING_ENTRY_ALWAYS_RETURNS_NULL} - Returns null regardless of actual content
+    /// - {@link #CEILING_ENTRY_THROWS_EXCEPTION} - Throws NoSuchElementException
+    /// - {@link #CEILING_ENTRY_RETURNS_RANDOM_ENTRY} - Returns arbitrary entry from map
+    ///
+    /// **Exception Handling:**
+    /// - Throws UnsupportedOperationException if the method is not supported
+    /// - May throw NoSuchElementException due to CEILING_ENTRY_THROWS_EXCEPTION break
+    ///
+    /// @param key the key
+    /// @return an entry with the least key greater than or equal to `key`, or `null` if there is no such key
+    /// @throws UnsupportedOperationException if the method is not supported
+    /// @see NavigableMap#ceilingEntry(Object)
     @Override
     public Map.@Nullable Entry<K, V> ceilingEntry(final K key) {
         if (!supportsMethod(NavigableMapMethods.CEILING_ENTRY)) {
@@ -597,6 +665,23 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     }
 
     /// {@inheritDoc}
+    ///
+    /// Returns the least key greater than or equal to the given key, or `null` if there is no such key.
+    /// The behavior can be modified by the following breaks:
+    ///
+    /// **Supported Breaks:**
+    /// - {@link #CEILING_KEY_ALWAYS_RETURNS_NULL} - Returns null regardless of actual content
+    /// - {@link #CEILING_KEY_THROWS_EXCEPTION} - Throws NoSuchElementException
+    /// - {@link #CEILING_KEY_RETURNS_RANDOM_KEY} - Returns arbitrary key from map
+    ///
+    /// **Exception Handling:**
+    /// - Throws UnsupportedOperationException if the method is not supported
+    /// - May throw NoSuchElementException due to CEILING_KEY_THROWS_EXCEPTION break
+    ///
+    /// @param key the key
+    /// @return the least key greater than or equal to `key`, or `null` if there is no such key
+    /// @throws UnsupportedOperationException if the method is not supported
+    /// @see NavigableMap#ceilingKey(Object)
     @Override
     public @Nullable K ceilingKey(final K key) {
         if (!supportsMethod(NavigableMapMethods.CEILING_KEY)) {
@@ -615,6 +700,23 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     }
 
     /// {@inheritDoc}
+    ///
+    /// Returns a key-value mapping associated with the least key strictly greater than the given key,
+    /// or `null` if there is no such key. The behavior can be modified by the following breaks:
+    ///
+    /// **Supported Breaks:**
+    /// - {@link #HIGHER_ENTRY_ALWAYS_RETURNS_NULL} - Returns null regardless of actual content
+    /// - {@link #HIGHER_ENTRY_THROWS_EXCEPTION} - Throws NoSuchElementException
+    /// - {@link #HIGHER_ENTRY_RETURNS_RANDOM_ENTRY} - Returns arbitrary entry from map
+    ///
+    /// **Exception Handling:**
+    /// - Throws UnsupportedOperationException if the method is not supported
+    /// - May throw NoSuchElementException due to HIGHER_ENTRY_THROWS_EXCEPTION break
+    ///
+    /// @param key the key
+    /// @return an entry with the least key greater than `key`, or `null` if there is no such key
+    /// @throws UnsupportedOperationException if the method is not supported
+    /// @see NavigableMap#higherEntry(Object)
     @Override
     public Map.@Nullable Entry<K, V> higherEntry(final K key) {
         if (!supportsMethod(NavigableMapMethods.HIGHER_ENTRY)) {
@@ -634,6 +736,23 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     }
 
     /// {@inheritDoc}
+    ///
+    /// Returns the least key strictly greater than the given key, or `null` if there is no such key.
+    /// The behavior can be modified by the following breaks:
+    ///
+    /// **Supported Breaks:**
+    /// - {@link #HIGHER_KEY_ALWAYS_RETURNS_NULL} - Returns null regardless of actual content
+    /// - {@link #HIGHER_KEY_THROWS_EXCEPTION} - Throws NoSuchElementException
+    /// - {@link #HIGHER_KEY_RETURNS_RANDOM_KEY} - Returns arbitrary key from map
+    ///
+    /// **Exception Handling:**
+    /// - Throws UnsupportedOperationException if the method is not supported
+    /// - May throw NoSuchElementException due to HIGHER_KEY_THROWS_EXCEPTION break
+    ///
+    /// @param key the key
+    /// @return the least key greater than `key`, or `null` if there is no such key
+    /// @throws UnsupportedOperationException if the method is not supported
+    /// @see NavigableMap#higherKey(Object)
     @Override
     public @Nullable K higherKey(final K key) {
         if (!supportsMethod(NavigableMapMethods.HIGHER_KEY)) {
@@ -652,6 +771,22 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     }
 
     /// {@inheritDoc}
+    ///
+    /// Returns a key-value mapping associated with the least key in this map,
+    /// or `null` if the map is empty. The behavior can be modified by the following breaks:
+    ///
+    /// **Supported Breaks:**
+    /// - {@link #FIRST_ENTRY_ALWAYS_RETURNS_NULL} - Returns null regardless of actual content
+    /// - {@link #FIRST_ENTRY_THROWS_EXCEPTION} - Throws NoSuchElementException
+    /// - {@link #FIRST_ENTRY_RETURNS_RANDOM_ENTRY} - Returns arbitrary entry from map
+    ///
+    /// **Exception Handling:**
+    /// - Throws UnsupportedOperationException if the method is not supported
+    /// - May throw NoSuchElementException due to FIRST_ENTRY_THROWS_EXCEPTION break
+    ///
+    /// @return an entry with the least key, or `null` if this map is empty
+    /// @throws UnsupportedOperationException if the method is not supported
+    /// @see NavigableMap#firstEntry()
     @Override
     public Map.@Nullable Entry<K, V> firstEntry() {
         if (!supportsMethod(NavigableMapMethods.FIRST_ENTRY)) {
@@ -671,6 +806,22 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     }
 
     /// {@inheritDoc}
+    ///
+    /// Returns a key-value mapping associated with the greatest key in this map,
+    /// or `null` if the map is empty. The behavior can be modified by the following breaks:
+    ///
+    /// **Supported Breaks:**
+    /// - {@link #LAST_ENTRY_ALWAYS_RETURNS_NULL} - Returns null regardless of actual content
+    /// - {@link #LAST_ENTRY_THROWS_EXCEPTION} - Throws NoSuchElementException
+    /// - {@link #LAST_ENTRY_RETURNS_RANDOM_ENTRY} - Returns arbitrary entry from map
+    ///
+    /// **Exception Handling:**
+    /// - Throws UnsupportedOperationException if the method is not supported
+    /// - May throw NoSuchElementException due to LAST_ENTRY_THROWS_EXCEPTION break
+    ///
+    /// @return an entry with the greatest key, or `null` if this map is empty
+    /// @throws UnsupportedOperationException if the method is not supported
+    /// @see NavigableMap#lastEntry()
     @Override
     public Map.@Nullable Entry<K, V> lastEntry() {
         if (!supportsMethod(NavigableMapMethods.LAST_ENTRY)) {
@@ -690,6 +841,22 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     }
 
     /// {@inheritDoc}
+    ///
+    /// Retrieves and removes the key-value mapping associated with the least key in this map,
+    /// or `null` if the map is empty. The behavior can be modified by the following breaks:
+    ///
+    /// **Supported Breaks:**
+    /// - {@link #POLL_FIRST_ENTRY_ALWAYS_RETURNS_NULL} - Returns null regardless of content
+    /// - {@link #POLL_FIRST_ENTRY_THROWS_EXCEPTION} - Throws NoSuchElementException
+    /// - {@link #POLL_FIRST_ENTRY_DOES_NOT_REMOVE} - Returns entry but doesn't remove it
+    ///
+    /// **Exception Handling:**
+    /// - Throws UnsupportedOperationException if the method is not supported
+    /// - May throw NoSuchElementException due to POLL_FIRST_ENTRY_THROWS_EXCEPTION break
+    ///
+    /// @return the removed first entry of this map, or `null` if this map is empty
+    /// @throws UnsupportedOperationException if the method is not supported
+    /// @see NavigableMap#pollFirstEntry()
     @Override
     public Map.@Nullable Entry<K, V> pollFirstEntry() {
         if (!supportsMethod(NavigableMapMethods.POLL_FIRST_ENTRY)) {
@@ -708,6 +875,22 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     }
 
     /// {@inheritDoc}
+    ///
+    /// Retrieves and removes the key-value mapping associated with the greatest key in this map,
+    /// or `null` if the map is empty. The behavior can be modified by the following breaks:
+    ///
+    /// **Supported Breaks:**
+    /// - {@link #POLL_LAST_ENTRY_ALWAYS_RETURNS_NULL} - Returns null regardless of content
+    /// - {@link #POLL_LAST_ENTRY_THROWS_EXCEPTION} - Throws NoSuchElementException
+    /// - {@link #POLL_LAST_ENTRY_DOES_NOT_REMOVE} - Returns entry but doesn't remove it
+    ///
+    /// **Exception Handling:**
+    /// - Throws UnsupportedOperationException if the method is not supported
+    /// - May throw NoSuchElementException due to POLL_LAST_ENTRY_THROWS_EXCEPTION break
+    ///
+    /// @return the removed last entry of this map, or `null` if this map is empty
+    /// @throws UnsupportedOperationException if the method is not supported
+    /// @see NavigableMap#pollLastEntry()
     @Override
     public Map.@Nullable Entry<K, V> pollLastEntry() {
         if (!supportsMethod(NavigableMapMethods.POLL_LAST_ENTRY)) {
@@ -726,6 +909,21 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     }
 
     /// {@inheritDoc}
+    ///
+    /// Returns a reverse order view of the mappings contained in this map.
+    /// The behavior can be modified by the following breaks:
+    ///
+    /// **Supported Breaks:**
+    /// - {@link #DESCENDING_MAP_RETURNS_EMPTY_MAP} - Returns an empty navigable map
+    /// - {@link #DESCENDING_MAP_RETURNS_NULL} - Returns null
+    /// - {@link #DESCENDING_MAP_THROWS_EXCEPTION} - Throws UnsupportedOperationException
+    ///
+    /// **Exception Handling:**
+    /// - Throws UnsupportedOperationException if the method is not supported or due to break
+    ///
+    /// @return a reverse order view of this map
+    /// @throws UnsupportedOperationException if the method is not supported
+    /// @see NavigableMap#descendingMap()
     @Override
     public @NonNull NavigableMap<K, V> descendingMap() {
         if (!supportsMethod(NavigableMapMethods.DESCENDING_MAP)) {
@@ -746,6 +944,22 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     }
 
     /// {@inheritDoc}
+    ///
+    /// Returns a {@link NavigableSet} view of the keys contained in this map.
+    /// The behavior can be modified by the following breaks:
+    ///
+    /// **Supported Breaks:**
+    /// - {@link #NAVIGABLE_KEY_SET_RETURNS_EMPTY_SET} - Returns an empty navigable set
+    /// - {@link #NAVIGABLE_KEY_SET_RETURNS_NULL} - Returns null
+    /// - {@link #NAVIGABLE_KEY_SET_THROWS_EXCEPTION} - Throws UnsupportedOperationException
+    ///
+    /// **Exception Handling:**
+    /// - Throws UnsupportedOperationException if the method is not supported or due to break
+    ///
+    /// @return a navigable set view of the keys in this map
+    /// @throws UnsupportedOperationException if the method is not supported
+    /// @see NavigableMap#navigableKeySet()
+    @SuppressWarnings("SortedCollectionWithNonComparableKeys")
     @Override
     public @NonNull NavigableSet<K> navigableKeySet() {
         if (!supportsMethod(NavigableMapMethods.NAVIGABLE_KEY_SET)) {
@@ -765,6 +979,22 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     }
 
     /// {@inheritDoc}
+    ///
+    /// Returns a reverse order {@link NavigableSet} view of the keys contained in this map.
+    /// The behavior can be modified by the following breaks:
+    ///
+    /// **Supported Breaks:**
+    /// - {@link #DESCENDING_KEY_SET_RETURNS_EMPTY_SET} - Returns an empty navigable set
+    /// - {@link #DESCENDING_KEY_SET_RETURNS_NULL} - Returns null
+    /// - {@link #DESCENDING_KEY_SET_THROWS_EXCEPTION} - Throws UnsupportedOperationException
+    ///
+    /// **Exception Handling:**
+    /// - Throws UnsupportedOperationException if the method is not supported or due to break
+    ///
+    /// @return a reverse order navigable set view of the keys in this map
+    /// @throws UnsupportedOperationException if the method is not supported
+    /// @see NavigableMap#descendingKeySet()
+    @SuppressWarnings("SortedCollectionWithNonComparableKeys")
     @Override
     public @NonNull NavigableSet<K> descendingKeySet() {
         if (!supportsMethod(NavigableMapMethods.DESCENDING_KEY_SET)) {
@@ -784,6 +1014,26 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     }
 
     /// {@inheritDoc}
+    ///
+    /// Returns a view of the portion of this map whose keys range from `fromKey` to `toKey`.
+    /// The behavior can be modified by the following breaks:
+    ///
+    /// **Supported Breaks:**
+    /// - {@link #SUB_MAP_FOUR_ARG_RETURNS_EMPTY_MAP} - Returns an empty navigable map
+    /// - {@link #SUB_MAP_FOUR_ARG_RETURNS_NULL} - Returns null
+    /// - {@link #SUB_MAP_FOUR_ARG_THROWS_EXCEPTION} - Throws IllegalArgumentException
+    ///
+    /// **Exception Handling:**
+    /// - Throws UnsupportedOperationException if the method is not supported
+    /// - May throw IllegalArgumentException due to SUB_MAP_FOUR_ARG_THROWS_EXCEPTION break
+    ///
+    /// @param fromKey low endpoint of the keys in the returned map
+    /// @param fromInclusive `true` if the low endpoint is to be included in the returned view
+    /// @param toKey high endpoint of the keys in the returned map
+    /// @param toInclusive `true` if the high endpoint is to be included in the returned view
+    /// @return a view of the portion of this map whose keys range from `fromKey` to `toKey`
+    /// @throws UnsupportedOperationException if the method is not supported
+    /// @see NavigableMap#subMap(Object, boolean, Object, boolean)
     @Override
     public @NonNull NavigableMap<K, V> subMap(final K fromKey, final boolean fromInclusive,
                                              final K toKey, final boolean toInclusive) {
@@ -805,6 +1055,24 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     }
 
     /// {@inheritDoc}
+    ///
+    /// Returns a view of the portion of this map whose keys are less than (or equal to, if `inclusive` is true) `toKey`.
+    /// The behavior can be modified by the following breaks:
+    ///
+    /// **Supported Breaks:**
+    /// - {@link #HEAD_MAP_TWO_ARG_RETURNS_EMPTY_MAP} - Returns an empty navigable map
+    /// - {@link #HEAD_MAP_TWO_ARG_RETURNS_NULL} - Returns null
+    /// - {@link #HEAD_MAP_TWO_ARG_THROWS_EXCEPTION} - Throws IllegalArgumentException
+    ///
+    /// **Exception Handling:**
+    /// - Throws UnsupportedOperationException if the method is not supported
+    /// - May throw IllegalArgumentException due to HEAD_MAP_TWO_ARG_THROWS_EXCEPTION break
+    ///
+    /// @param toKey high endpoint of the keys in the returned map
+    /// @param inclusive `true` if the high endpoint is to be included in the returned view
+    /// @return a view of the portion of this map whose keys are less than (or equal to, if `inclusive` is true) `toKey`
+    /// @throws UnsupportedOperationException if the method is not supported
+    /// @see NavigableMap#headMap(Object, boolean)
     @Override
     public @NonNull NavigableMap<K, V> headMap(final K toKey, final boolean inclusive) {
         if (!supportsMethod(NavigableMapMethods.HEAD_MAP_TWO_ARG)) {
@@ -825,6 +1093,24 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     }
 
     /// {@inheritDoc}
+    ///
+    /// Returns a view of the portion of this map whose keys are greater than (or equal to, if `inclusive` is true) `fromKey`.
+    /// The behavior can be modified by the following breaks:
+    ///
+    /// **Supported Breaks:**
+    /// - {@link #TAIL_MAP_TWO_ARG_RETURNS_EMPTY_MAP} - Returns an empty navigable map
+    /// - {@link #TAIL_MAP_TWO_ARG_RETURNS_NULL} - Returns null
+    /// - {@link #TAIL_MAP_TWO_ARG_THROWS_EXCEPTION} - Throws IllegalArgumentException
+    ///
+    /// **Exception Handling:**
+    /// - Throws UnsupportedOperationException if the method is not supported
+    /// - May throw IllegalArgumentException due to TAIL_MAP_TWO_ARG_THROWS_EXCEPTION break
+    ///
+    /// @param fromKey low endpoint of the keys in the returned map
+    /// @param inclusive `true` if the low endpoint is to be included in the returned view
+    /// @return a view of the portion of this map whose keys are greater than (or equal to, if `inclusive` is true) `fromKey`
+    /// @throws UnsupportedOperationException if the method is not supported
+    /// @see NavigableMap#tailMap(Object, boolean)
     @Override
     public @NonNull NavigableMap<K, V> tailMap(final K fromKey, final boolean inclusive) {
         if (!supportsMethod(NavigableMapMethods.TAIL_MAP_TWO_ARG)) {
@@ -850,6 +1136,8 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     ///
     /// This builder extends BreakableSortedMap.Builder and provides additional configuration
     /// options specific to NavigableMap functionality.
+    /// @param <K> the type of keys maintained by this map
+    /// @param <V> the type of mapped values
     public static class Builder<K, V> extends BreakableSortedMap.AbstractBuilder<Builder<K, V>,
             BreakableNavigableMap<K, V>, K, V> {
 
@@ -859,15 +1147,23 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
             this(new TreeMap<>());
         }
 
+        /// Creates a new Builder by copying configuration from another builder.
+        ///
+        /// @param other the builder to copy configuration from
+        /// @throws NullPointerException if other is null
         public Builder(final @NonNull Builder<K, V> other) {
             super(other);
         }
 
-        /// Creates a new Builder and initialize it with the specified elements.
+        /// Creates a new Builder pre-populated with elements from the specified map.
+        ///
+        /// @param elements the map whose elements are to be placed in the builder
+        /// @throws NullPointerException if elements is null
         public Builder(final @NonNull Map<K, V> elements) {
             super(elements);
         }
 
+        /// {@inheritDoc}
         @Override
         public Builder<K, V> self() {
             return this;
@@ -879,7 +1175,9 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
             return new Builder<>(this);
         }
 
-        /// Builds a new BreakableNavigableMap instance with the configured settings.
+        /// Builds a new [BreakableNavigableMap] instance with the configured settings.
+        ///
+        /// @return a new BreakableNavigableMap instance
         @Override
         public @NonNull BreakableNavigableMap<K, V> build() {
             NavigableMap<K, V> map;
@@ -896,6 +1194,14 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     // ========== Static Factory Methods ==========
 
     /// Creates a BreakableNavigableMap that wraps the specified NavigableMap with the given breaks.
+    ///
+    /// @param <K> the type of keys maintained by the map
+    /// @param <V> the type of mapped values
+    /// @param navigableMap the NavigableMap to wrap
+    /// @param breaks the set of breaks to apply
+    /// @return a new BreakableNavigableMap wrapping the specified map
+    /// @throws NullPointerException if navigableMap or breaks is null
+    /// @since 1.0.0
     public static <K, V> @NonNull BreakableNavigableMap<K, V> wrap(
             final @NonNull NavigableMap<K, V> navigableMap,
             final @NonNull Set<Break> breaks) {
@@ -904,6 +1210,16 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     }
 
     /// Creates a BreakableNavigableMap that wraps the specified NavigableMap with full configuration.
+    ///
+    /// @param <K> the type of keys maintained by the map
+    /// @param <V> the type of mapped values
+    /// @param navigableMap the NavigableMap to wrap
+    /// @param breaks the set of breaks to apply
+    /// @param permitsNullKeys whether the map permits null keys
+    /// @param permitsNullValues whether the map permits null values
+    /// @return a new BreakableNavigableMap wrapping the specified map
+    /// @throws NullPointerException if navigableMap or breaks is null
+    /// @since 1.0.0
     public static <K, V> @NonNull BreakableNavigableMap<K, V> wrap(
             final @NonNull NavigableMap<K, V> navigableMap,
             final @NonNull Set<Break> breaks,

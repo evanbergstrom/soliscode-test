@@ -76,16 +76,13 @@ public final class AssertContainsSameByIdentity {
         if (actualList.size() != expectedList.size()) {
             throw buildException(expected, actual, messageOrSupplier);
         }
-        while (!actualList.isEmpty() && !expectedList.isEmpty()) {
+        while (!actualList.isEmpty()) {
             Object o = actualList.getFirst();
             if (!IterableTestUtils.containsByIdentity(expectedList, o)) {
                 throw buildException(expected, actual, messageOrSupplier);
             }
             actualList.remove(o);
             expectedList.remove(o);
-        }
-        if (!expectedList.isEmpty() || !actualList.isEmpty()) {
-            throw buildException(expected, actual, messageOrSupplier);
         }
     }
 

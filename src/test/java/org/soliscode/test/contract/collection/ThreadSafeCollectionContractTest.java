@@ -1,14 +1,13 @@
 package org.soliscode.test.contract.collection;
 
 import org.jspecify.annotations.NonNull;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.TestFactory;
 import org.soliscode.test.AbstractTest;
 import org.soliscode.test.InterfaceMethod;
-import org.soliscode.test.annotations.Slow;
+import org.soliscode.test.annotations.Nondeterministic;
 import org.soliscode.test.annotations.VerySlow;
 import org.soliscode.test.breakable.Break;
 import org.soliscode.test.breakable.BreakableCollection;
@@ -20,26 +19,55 @@ import org.soliscode.test.provider.CollectionProvider;
 import java.util.Arrays;
 import java.util.Collection;
 
+/// **Contract-based tests for thread-safe `Collection` implementations**
+///
+/// This class provides a comprehensive suite of tests to verify the thread safety
+/// and correctness of [java.util.Collection] implementations under concurrent access.
+/// It uses [BreakableCollection] to simulate various thread-safety violations and
+/// ensures that the [ThreadSafeCollectionContract] correctly identifies these issues.
+///
+/// ## Test Scope
+/// The tests in this class cover:
+/// - Concurrent modifications (add, remove, clear)
+/// - Thread safety of bulk operations under contention
+/// - Consistency of collection state across multiple threads
+///
+/// ## Configuration
+/// - Uses [Integer] elements for testing.
+/// - Employs [BreakableCollection] as the primary implementation under test.
+///
+/// @author evanbergstrom
+/// @see ThreadSafeCollectionContract
+/// @see BreakableCollection
+/// @since 1.0.0
 @DisplayName("Tests for ThreadSafeCollectionContract class")
 public class ThreadSafeCollectionContractTest extends ContractTest<BreakableCollection<Integer>> {
 
-    /// Verifies that the tests all pass when testing a working Collection implementation.
-    /// In this case, instances of `BreakableCollection` are used that have no breaks specified.
+    /// Tests for working thread-safe collection implementations.
+    ///
+    /// This nested class verifies that [ThreadSafeCollectionContract] correctly
+    /// passes when applied to a [BreakableCollection] that is configured as safe
+    /// and has no active breaks.
     @Nested
     class WorkingCollectionTest extends AbstractTest
             implements ThreadSafeCollectionContract<Integer, BreakableCollection<Integer>>,
             BreakableCollection.WithThreadSafeProvider<Integer>, WithIntegerElement {
     }
 
-    /// Dynamically created instance of `CollectionContract` that will run on instances of `BreakableCollection` with a
-    /// specified break. This contract will be expected to fail on certain tests depending on the specific break that
-    /// is being used.
-    @Disabled("Used only for dynamic test generation")
-    protected static final class DynamicBrokenCollectionContract
+    /// A dynamic contract for testing broken thread-safe collection implementations.
+    ///
+    /// This class extends [DynamicContract] to create test instances with specific
+    /// [Break] configurations. It is used to verify that the contract tests fail
+    /// as expected when thread-safety violations are introduced.
+    private static final class DynamicBrokenCollectionContract // private so it is not discovered by JUnit
             extends DynamicContract<BreakableCollection<Integer>, CollectionProvider<Integer, BreakableCollection<Integer>>>
             implements ThreadSafeCollectionContract<Integer, BreakableCollection<Integer>>, WithIntegerElement {
 
-        protected DynamicBrokenCollectionContract(final @NonNull Break b, final @NonNull InterfaceMethod m) {
+        /// Creates a new instance of `DynamicBrokenCollectionContract` with the specified break and method.
+        ///
+        /// @param b the break to apply to the collection
+        /// @param m the method being tested
+        DynamicBrokenCollectionContract(final @NonNull Break b, final @NonNull InterfaceMethod m) {
             super(b, m, (breaks, statuses, test) -> {
                         var builder = new BreakableCollection.Builder<Integer>()
                                 .addBreaks(breaks)
@@ -60,44 +88,42 @@ public class ThreadSafeCollectionContractTest extends ContractTest<BreakableColl
         }
     }
 
-    @SuppressWarnings({"unchecked"})
+    /// {@inheritDoc}
+    ///
+    /// @param b the break to apply to the test object
+    /// @param m the optional method to configure as unsupported
+    /// @return a new [DynamicBrokenCollectionContract] instance
     @Override
-    protected @NonNull DynamicBrokenCollectionContract createTest(final @NonNull Break b,
-                                                                  final @NonNull InterfaceMethod m) {
+    protected @NonNull DynamicContract<?, ?> createTest(final @NonNull Break b, final @NonNull InterfaceMethod m) {
         return new DynamicBrokenCollectionContract(b, m);
     }
 
-
-    @Disabled
-    @Slow
-    @TestFactory
-    public Collection<DynamicTest> dynamicTestsForClearIsSafeUnderContention() {
-        return Arrays.asList(
-                failingTestWithBreak("add_singleElement_returnsTrueAndUpdatesSize() fails with CLEAR_IS_NOT_THREAD_SAFE break",
-                        BreakableCollection.CLEAR_IS_NOT_THREAD_SAFE,
-                        DynamicBrokenCollectionContract::clearIsSafeUnderContention)
-        );
-    }
-
+    /// Test factory for verifying that `add(E)` thread-safety checks correctly identify failures.
+    ///
+    /// This method generates dynamic tests that apply the [BreakableCollection#ADD_IS_NOT_THREAD_SAFE]
+    /// break and verify that the `add` related thread-safety tests fail under contention.
+    ///
+    /// @return a collection of dynamic tests for `add(E)` thread safety
+    /// @see ThreadSafeCollectionContract#add_whenCalledUnderContentionWithItself_isThreadSafe
+    /// @see ThreadSafeCollectionContract#add_whenCalledUnderContentionWithRemove_isThreadSafe
+    /// @see ThreadSafeCollectionContract#add_whenCalledUnderContentionWithRemoveAll_isThreadSafe
+    /// @see ThreadSafeCollectionContract#add_whenCalledUnderContentionWithRemoveIf_isThreadSafe
     @VerySlow
+    @Nondeterministic
     @TestFactory
     public Collection<DynamicTest> dynamicTestsFor_add_whenIsNotThreadSafe_testsFail() {
         return Arrays.asList(
-                failingTestWithBreak("add_singleElement_returnsTrueAndUpdatesSize() with ADD_IS_NOT_THREAD_SAFE break fails under contention with itself",
-                        BreakableCollection.ADD_IS_NOT_THREAD_SAFE,
-                        DynamicBrokenCollectionContract::add_whenCalledUnderContentionWithItself_IsThreadSafe),
+                failsWithBreak(BreakableCollection.ADD_IS_NOT_THREAD_SAFE, DynamicBrokenCollectionContract::add_whenCalledUnderContentionWithItself_isThreadSafe, "add_singleElement_returnsTrueAndUpdatesSize() with ADD_IS_NOT_THREAD_SAFE break fails under contention with itself"
+                ),
 
-                failingTestWithBreak("add_singleElement_returnsTrueAndUpdatesSize() with ADD_IS_NOT_THREAD_SAFE break fails under contention with remove(Object)",
-                        BreakableCollection.ADD_IS_NOT_THREAD_SAFE,
-                        DynamicBrokenCollectionContract::add_whenCalledUnderContentionWithRemove_IsThreadSafe),
+                failsWithBreak(BreakableCollection.ADD_IS_NOT_THREAD_SAFE, DynamicBrokenCollectionContract::add_whenCalledUnderContentionWithRemove_isThreadSafe, "add_singleElement_returnsTrueAndUpdatesSize() with ADD_IS_NOT_THREAD_SAFE break fails under contention with remove(Object)"
+                ),
 
-                failingTestWithBreak("add_singleElement_returnsTrueAndUpdatesSize() with ADD_IS_NOT_THREAD_SAFE break fails under contention with removeAll(Collection<?> c)",
-                        BreakableCollection.ADD_IS_NOT_THREAD_SAFE,
-                        DynamicBrokenCollectionContract::add_whenCalledUnderContentionWithRemoveAll_IsThreadSafe),
+                failsWithBreak(BreakableCollection.ADD_IS_NOT_THREAD_SAFE, DynamicBrokenCollectionContract::add_whenCalledUnderContentionWithRemoveAll_isThreadSafe, "add_singleElement_returnsTrueAndUpdatesSize() with ADD_IS_NOT_THREAD_SAFE break fails under contention with removeAll(Collection<?> c)"
+                ),
 
-                failingTestWithBreak("add_singleElement_returnsTrueAndUpdatesSize() with ADD_IS_NOT_THREAD_SAFE break fails under contention with removeIf(Predicate<? super E> filter)",
-                        BreakableCollection.ADD_IS_NOT_THREAD_SAFE,
-                        DynamicBrokenCollectionContract::add_whenCalledUnderContentionWithRemoveIf_IsThreadSafe)
+                failsWithBreak(BreakableCollection.ADD_IS_NOT_THREAD_SAFE, DynamicBrokenCollectionContract::add_whenCalledUnderContentionWithRemoveIf_isThreadSafe, "add_singleElement_returnsTrueAndUpdatesSize() with ADD_IS_NOT_THREAD_SAFE break fails under contention with removeIf(Predicate<? super E> filter)"
+                )
         );
     }
 }

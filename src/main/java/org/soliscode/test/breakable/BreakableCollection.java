@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serial;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -276,7 +275,7 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     private static final int DEFAULT_CAPACITY = 10;
 
     /// The underlying collection that stores the actual elements.
-    private transient @NonNull Collection<E> collection;
+    private final transient @NonNull Collection<E> collection;
 
     ///  Field of bit flags that store what is permitted by the collection.
     private final int permits;
@@ -293,7 +292,7 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// Flag indicating whether this collection permits elements of incompatible types.
     protected static final int PERMITS_INCOMPATIBLE_TYPES = 0b100;
 
-    // Default setting for the permits field
+    /// Default setting for the permits field
     protected static final int DEFAULT_PERMITS = PERMITS_NULLS | PERMITS_DUPLICATES | PERMITS_INCOMPATIBLE_TYPES;
 
 
@@ -316,7 +315,6 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// #### ADD_ALWAYS_RETURNS_FALSE
     /// **Purpose**: Forces `add_singleElement_returnsTrueAndUpdatesSize()` method to always return a result of `false`, even if the element is added.
     /// **Effect**: Method returns `false` regardless of whether the collection was modified.
-    /// **Affected Methods**: `add_singleElement_returnsTrueAndUpdatesSize(E)`
     /// @see BreakableCollection#add(Object)
     public static final Break ADD_ALWAYS_RETURNS_FALSE =
             new Break("ADD_ALWAYS_RETURNS_FALSE");
@@ -324,15 +322,30 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// #### ADD_ALWAYS_RETURNS_OPPOSITE_VALUE
     /// **Purpose**: Forces `add_singleElement_returnsTrueAndUpdatesSize()` method to always return the opposite of the appropriate result.
     /// **Effect**: Method returns `true` if not modified, and `false` if modified.
-    /// **Affected Methods**: `add_singleElement_returnsTrueAndUpdatesSize(E)`
     /// @see BreakableCollection#add(Object)
     public static final Break ADD_ALWAYS_RETURNS_OPPOSITE_VALUE =
             new Break("ADD_ALWAYS_RETURNS_OPPOSITE_VALUE");
 
+    /// #### ADD_THROWS_WRONG_NULL_EXCEPTION
+    /// **Purpose**: Forces `add_singleElement_returnsTrueAndUpdatesSize()` method to throw the wrong exception when
+    /// it is provided a null value and the collection does not support null values..
+    /// **Effect**: Throws `RuntimeException` instead of `NullPointerException`.
+    /// @see BreakableCollection#add(Object)
+    public static final Break ADD_THROWS_WRONG_NULL_EXCEPTION =
+            new Break("ADD_THROWS_WRONG_NULL_EXCEPTION");
+
+    /// #### ADD_THROWS_WRONG_INCOMPATIBLE_TYPE_EXCEPTION
+    /// **Purpose**: Forces `add_singleElement_returnsTrueAndUpdatesSize()` method to throw the wrong exception when
+    /// it is provided a value with an incompatible type and the collection does not support incompatible types.
+    /// **Effect**: Throws `RuntimeException` instead of `NullPointerException`.
+    /// @see BreakableCollection#add(Object)
+    public static final Break ADD_THROWS_WRONG_INCOMPATIBLE_TYPE_EXCEPTION =
+            new Break("ADD_THROWS_WRONG_INCOMPATIBLE_TYPE_EXCEPTION");
+
     /// #### ADD_THROWS_WRONG_UNSUPPORTED_EXCEPTION
-    /// **Purpose**: Forces `add_singleElement_returnsTrueAndUpdatesSize()` method to throw the wrong exception when it is not supported.
+    /// **Purpose**: Forces `add_singleElement_returnsTrueAndUpdatesSize()` method to throw the wrong exception when
+    /// it is not supported.
     /// **Effect**: Throws `RuntimeException` instead of `UnsupportedOperationException`.
-    /// **Affected Methods**: `add_singleElement_returnsTrueAndUpdatesSize(E)`
     /// @see BreakableCollection#add(Object)
     public static final Break ADD_THROWS_WRONG_UNSUPPORTED_EXCEPTION =
             new Break("ADD_THROWS_WRONG_UNSUPPORTED_EXCEPTION");
@@ -340,7 +353,6 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// #### ADD_IS_NOT_THREAD_SAFE
     /// **Purpose**: Forces `add_singleElement_returnsTrueAndUpdatesSize()` method to be not thread safe.
     /// **Effect**: Disables synchronization for the `add_singleElement_returnsTrueAndUpdatesSize` operation.
-    /// **Affected Methods**: `add_singleElement_returnsTrueAndUpdatesSize(E)`
     /// @see BreakableCollection#add(Object)
     public static final Break ADD_IS_NOT_THREAD_SAFE =
             new Break("ADD_IS_NOT_THREAD_SAFE");
@@ -348,7 +360,6 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// #### ADD_ALL_DOES_NOT_ADD_ANY_ELEMENTS
     /// **Purpose**: Forces `addAll()` method to not add_singleElement_returnsTrueAndUpdatesSize any elements to the collection.
     /// **Effect**: Method accepts the elements but the collection remains unchanged.
-    /// **Affected Methods**: `addAll(Collection)`
     /// @see BreakableCollection#addAll(Collection)
     public static final Break ADD_ALL_DOES_NOT_ADD_ANY_ELEMENTS =
             new Break("ADD_ALL_DOES_NOT_ADD_ANY_ELEMENTS");
@@ -806,7 +817,7 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// **Effect**: Disables synchronization for the `size` operation.
     /// **Affected Methods**: `size()`
     /// @see BreakableCollection#size()
-    public static final Break SIZE_IS_NOT_THRAD_SAFE =
+    public static final Break SIZE_IS_NOT_THREAD_SAFE =
             new Break("SIZE_IS_NOT_THRAD_SAFE");
 
     /// #### SIZE_ALWAYS_RETURNS_CONSTANT_VALUE
@@ -933,6 +944,7 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// @param methodStatuses  the method status configuration.
     /// @param characteristics the characteristics for the collection.
     /// @param permits         the flags that indicate what types of values are supported by the collection.
+    /// @param isSafe          whether the resulting object is safe for concurrent access.
     /// @param elementType     the element type that the collection supports (see [#permitsIncompatibleTypes()].
     /// @throws NullPointerException if either the `c` or the `breaks` parameters are null.
     protected BreakableCollection(final @NonNull Collection<E> c, final @NonNull Set<Break> breaks,
@@ -1140,7 +1152,7 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
         } else if (hasBreak(SIZE_ALWAYS_RETURNS_CONSTANT_VALUE)) {
             return DEFAULT_CAPACITY;
         } else {
-            return getWithBreakableSafety(SIZE_IS_NOT_THRAD_SAFE, collection::size);
+            return getWithBreakableSafety(SIZE_IS_NOT_THREAD_SAFE, collection::size);
         }
     }
 
@@ -1318,7 +1330,7 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
         checkOptionalMethodSupport(CollectionMethods.ADD, ADD_THROWS_WRONG_UNSUPPORTED_EXCEPTION);
 
         boolean result = false;
-        if (checkNewElement(e)) {
+        if (checkNewElement(e, ADD_THROWS_WRONG_NULL_EXCEPTION, ADD_THROWS_WRONG_INCOMPATIBLE_TYPE_EXCEPTION)) {
             if (!hasBreak(ADD_DOES_NOT_ADD_ELEMENT)) {
                 result = getWithBreakableSafety(ADD_IS_NOT_THREAD_SAFE, () -> collection.add(e));
             }
@@ -1798,6 +1810,46 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
         }
     }
 
+    /// Validates the provided argument based on nullability and type compatibility rules.
+    /// Throws appropriate exceptions or breaks the flow as defined by the parameters.
+    ///
+    /// This method ensures that the given `arg` complies with the constraints
+    /// defined in this context. If null values or incompatible types are not permitted,
+    /// it will handle violations using either a `Break` object or specific exceptions.
+    ///
+    /// @param arg              The object to be checked. It can be null or incompatible
+    ///                         with the expected type based on the current settings.
+    /// @param wrongNullBreak   The `Break` instance to handle null value violations.
+    ///                         If `permitsNulls()` is `false` and `arg` is null,
+    ///                         this `Break` is triggered (runtime exception is thrown).
+    ///                         If no `Break` is defined, a [NullPointerException] is thrown instead.
+    /// @param wrongTypeBreak   The `Break` instance to handle type compatibility violations.
+    ///                         If `permitsIncompatibleTypes()` is `false` and `arg`
+    ///                         is not assignable to the compatible type, this `Break` is triggered
+    ///                         (runtime exception is thrown). If no `Break` is defined,
+    ///                         a [ClassCastException] is thrown instead.
+    ///
+    /// @throws NullPointerException  If `arg` is null and `permitsNulls()` is `false`,
+    ///                               and no `Break` is specified to handle the violation.
+    /// @throws ClassCastException    If `arg` is incompatible with the expected type and
+    ///                               `permitsIncompatibleTypes()` is `false`,
+    ///                               and no `Break` is specified to handle the violation.
+    protected void checkArgument(final Object arg, final Break wrongNullBreak, final Break wrongTypeBreak) {
+        if (!permitsNulls() && arg == null) {
+            if (hasBreak(wrongNullBreak)) {
+                throw new RuntimeException();
+            }
+            throw new NullPointerException();
+        }
+        if (!permitsIncompatibleTypes() && !compatibleType.isAssignableFrom(arg.getClass())) {
+            if (hasBreak(wrongTypeBreak)) {
+                throw new RuntimeException();
+            }
+            throw new ClassCastException("incompatible type: " + arg.getClass().getName());
+        }
+    }
+
+
     /// Checks that all elements in the specified collection are valid arguments for this collection.
     ///
     /// This method iterates through the provided collection and calls [BreakableCollection#checkArgument] for each
@@ -1812,8 +1864,25 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
         c.forEach(this::checkArgument);
     }
 
-    /// Checks that the element is valid to add_singleElement_returnsTrueAndUpdatesSize to this collection. This will check that the element is not a duplicate,
-    /// or the collection permits duplicate values.
+    /**
+     * Checks each element in the provided collection to ensure it meets the specified argument
+     * validation conditions. If any element fails validation, the corresponding {@code Break}
+     * action will be triggered.
+     *
+     * @param c                  The collection of elements to be validated.
+     *                           Must not be null or contain unsupported elements.
+     * @param wrongNullBreak     The {@link Break} action to invoke if a null element is found
+     *                           in the collection.
+     * @param wrongTypeBreak     The {@link Break} action to invoke if an element of an
+     *                           unsupported or invalid type is found in the collection.
+     */
+    protected void checkArgumentElements(final Collection<?> c, final Break wrongNullBreak,
+                                         final Break wrongTypeBreak) {
+        c.forEach((e) -> checkArgument(e, wrongNullBreak, wrongTypeBreak));
+    }
+
+    /// Checks that the element is valid to add_singleElement_returnsTrueAndUpdatesSize to this collection.
+    /// This will check that the element is not a duplicate, or the collection permits duplicate values.
     /// @param e the element to check.
     /// @return 'true' if the element is valid, 'false' is it is not.
     /// @throws NullPointerException if the argument is 'null' and the collection does not permit nulls.
@@ -1821,6 +1890,24 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     ///                            types.
     protected boolean checkNewElement(final Object e) {
         checkArgument(e);
+        return permitsDuplicates() || !collection.contains(e);
+    }
+
+    /// Checks if the specified element can be considered new within the current collection.
+    /// This method evaluates the element against duplicate policies and collection content to
+    /// determine whether it is already part of the collection or breaks specified constraints.
+    ///
+    /// @param e               The element to be checked. Must not be `null` and should
+    ///                        be of an acceptable type, as enforced by the provided breaks.
+    /// @param wrongNullBreak  The [Break] instance to trigger if `e` is `null`.
+    ///                        Typically used to enforce non-null constraints.
+    /// @param wrongTypeBreak  The [Break] instance to trigger if `e` is of an unsupported type.
+    ///                        Ensures type-safety when adding elements.
+    /// @return `true` if the element is considered new (i.e., either duplicates are allowed
+    ///         or `e` is not already contained in the collection); `false` otherwise.
+    protected boolean checkNewElement(final Object e, final Break wrongNullBreak,
+                                      final Break wrongTypeBreak) {
+        checkArgument(e, wrongNullBreak, wrongTypeBreak);
         return permitsDuplicates() || !collection.contains(e);
     }
 
@@ -1841,12 +1928,35 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
         return c.stream().allMatch(this::checkNewElement);
     }
 
+    /// Verifies if all elements in the provided collection meet the required conditions.
+    /// Each element is validated using the `checkNewElement` method.
+    ///
+    /// @param c               The collection of elements that need to be checked. Must not be null.
+    /// @param wrongNullBreak  A `Break` instance that will be triggered if any element in
+    ///                        the collection is null.
+    /// @param wrongTypeBreak  A `Break` instance that will be triggered if any element in
+    ///                        the collection is of an incorrect type.
+    /// @return `true` if all elements in the collection meet the required conditions,
+    ///         otherwise `false`.
+    protected boolean checkNewArgumentElements(final Collection<?> c, final Break wrongNullBreak,
+                                               final Break wrongTypeBreak) {
+        return c.stream().allMatch(e -> checkNewElement(e, wrongNullBreak, wrongTypeBreak));
+    }
+
     /// Returns the bit flags that indicate what types of values that the collection supports.
     /// @return the bit flags that indicate what types of values that the collection supports.
     protected int permits() {
         return permits;
     }
 
+    /// Retrieves the compatible type for a specific operation or validation within the system.
+    ///
+    /// This method is used to determine the class type that can be utilized
+    /// or validated in the current context. It ensures type compatibility based
+    /// on the operational requirements as defined in the implementation.
+    ///
+    /// @return the [Class] object representing the compatible type. This value is used
+    ///         to evaluate and confirm type compatibility for the associated logic.
     protected Class<?> compatibleType() {
         return compatibleType;
     }
@@ -1973,6 +2083,19 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
         }
     }
 
+    /// Creates a [CollectionProvider] that manages [BreakableCollection] instances.
+    /// This method utilizes the provided [Builder] and [ObjectProvider] to construct
+    /// collections and provides necessary resource management, ensuring compatibility with specified
+    /// configurations.
+    ///
+    /// @param <E> The type of elements handled by the [CollectionProvider].
+    /// @param builder An instance of [Builder] that provides configuration and behavior
+    ///                customization for creating [BreakableCollection] instances.
+    /// @param elementProvider An [ObjectProvider] responsible for supplying elements
+    ///                        for the collection.
+    /// @return A [CollectionProvider] that facilitates the creation and management of
+    ///         [BreakableCollection] instances. This provider ensures safe construction
+    ///         and behavior of the collections based on the provided builder and element provider.
     public static <E> @NonNull CollectionProvider<E, BreakableCollection<E>> collectionProvider(
             final @NonNull Builder<E> builder,
             final @NonNull ObjectProvider<E> elementProvider) {

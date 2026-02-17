@@ -6,38 +6,45 @@ import org.soliscode.test.contract.iterable.IterableContract;
 
 import java.util.Collection;
 
-/// Test suite for classes that implement the {@link Collection} interface. When implementing  this class, the only
-/// method that will need to be implemented is
-/// [CollectionContractSupport.provider\(\)][org.soliscode.test.contract.support.CollectionContractSupport#provider()].
-/// Also, the following methods will allow the tests to be configured based upon the desired behavior of the collection
-/// class being tested:
+/// **Contract for the `Collection` interface**
 ///
-/// - [permitNulls][CollectionContractConfig#permitNulls]: Specifies the collection permits null value elements.
-/// - [permitDuplicates][CollectionContractConfig#permitDuplicates]: Specifies the collection permits duplicate values.
-/// - [permitIncompatibleTypes][CollectionContractConfig#permitIncompatibleTypes]: Specifies if the collection allows
-///       the search for incompatible values.
+/// This interface defines a comprehensive test suite for classes that implement the [Collection]
+/// interface. It is designed to be used as a mix-in interface by test classes that verify
+/// [Collection] implementations.
 ///
-/// For example, most of the collections from the JDK permit null values, permit duplicate values, and permit the
-/// search for incompatible types. To create a test class for ArrayList, the following constructor would be
-/// appropriate:
+/// ## Purpose
+/// The purpose of this contract is to ensure that a collection implementation correctly:
+/// - Implements all [Collection] methods according to their specifications.
+/// - Handles configuration for nulls, duplicates, and incompatible types.
+/// - Supports marking methods as unsupported.
+///
+/// ## Usage Examples
+/// To use this contract, implement it in your test class and configure it appropriately:
+///
 /// ```java
-///     public class ArrayListTest
-///         extends AbstractTest<Integer>
-///         implements TestCollection<ArrayList<Integer>, Integer>, WithIntegerElement<ArrayList<Integer>> {
-///
-///     public ArrayListTest() {
+/// class MyCollectionTest implements CollectionContract<Integer, MyCollection<Integer>> {
+///     public MyCollectionTest() {
 ///         permitNulls(true);
-///         permitIncompatibleTypes(true);
 ///         permitDuplicates(true);
+///         permitIncompatibleTypes(true);
+///     }
+///
+///     @Override
+///     public CollectionProvider<Integer, MyCollection<Integer>> provider() {
+///         return MyCollection::new;
 ///     }
 /// }
 /// ```
 ///
-/// @param <E> The element type being tested.s
+/// ## Thread Safety
+/// This contract interface does not provide any thread-safety guarantees. The thread safety of the
+/// tests depends on the [Collection] and [org.soliscode.test.provider.CollectionProvider] implementations being tested.
+///
+/// @param <E> The element type being tested.
 /// @param <C> The collection type being tested.
 /// @author evanbergstrom
 /// @see Collection
-/// @since 1.0
+/// @since 1.0.0
 public interface CollectionContract<E, C extends Collection<E>> extends IterableContract<E, C>,
         CollectionContractConfig,
         AddContract<E, C>,
@@ -57,18 +64,19 @@ public interface CollectionContract<E, C extends Collection<E>> extends Iterable
     @Override
     boolean supportsMethod(InterfaceMethod method);
 
-    /// Specific if the test collection supports the methods that allow modification. It is a convenience function to
-    /// set the support state for all the modification methods at once. These methods are:
+    /// Configures the contract to not expect support for all modification methods.
     ///
-    /// - [add_singleElement_returnsTrueAndUpdatesSize\(Object\)][Collection#add(Object)]
-    /// - [addAll\(Collection\)][Collection#addAll(Collection)]
-    /// - [clear\(\)][Collection#clear]
-    /// - [remove\(Object\)][Collection#remove(Object)]
-    /// - [removeAll\(Collection\)][Collection#removeAll(Collection)]
-    /// - [removeIf\(Predicate\)][Collection#removeIf(java.util.function.Predicate)]
-    /// - [retainAll\(Collection\)][Collection#retainAll(Collection)]
-    /// - [size\(\)][Collection#size]
-    /// - [Iterator.remove\(\)][java.util.Iterator#remove()]
+    /// This is a convenience method to disable tests for:
+    /// - [add(Object)][Collection#add]
+    /// - [addAll(Collection)][Collection#addAll]
+    /// - [clear()][Collection#clear]
+    /// - [remove(Object)][Collection#remove]
+    /// - [removeAll(Collection)][Collection#removeAll]
+    /// - [removeIf(Predicate)][Collection#removeIf]
+    /// - [retainAll(Collection)][Collection#retainAll]
+    /// - [Iterator][java.util.Iterator]#remove
+    ///
+    /// @since 1.0.0
     default void doesNotSupportModification() {
         IterableContract.super.doesNotSupportModification();
         doesNotSupportMethod(CollectionMethods.ADD);

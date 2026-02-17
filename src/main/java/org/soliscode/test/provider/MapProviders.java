@@ -94,7 +94,8 @@ public final class MapProviders {
     public static <K, V> @NonNull MapProvider<K, V, LinkedHashMap<K, V>> provideLinkedHashMap(
             final @NonNull ObjectProvider<K> keyProvider,
             final @NonNull ObjectProvider<V> valueProvider) {
-        return MapProviders.from(LinkedHashMap::new, LinkedHashMap::new, LinkedHashMap::new, keyProvider, valueProvider);
+        return MapProviders.from(LinkedHashMap::new, LinkedHashMap::new, LinkedHashMap::new, keyProvider,
+                valueProvider);
     }
 
     /// Creates a provider that wraps the provided map from an underlying provider.

@@ -351,6 +351,8 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     /// @param methodStatuses  the method status configuration.
     /// @param characteristics the characteristics for the collection.
     /// @param permits         the flags that indicate what types of values are supported by the collection.
+    /// @param isSafe          he flag that indicates whether the collection is thread-safe.
+    /// @param compatibleType  the type that elements must be compatible with.
     /// @throws NullPointerException if either the `c` or the `breaks` parameters are null.
     public BreakableList(final @NonNull List<E> c, final @NonNull Set<Break> breaks,
                          final @NonNull Map<InterfaceMethod, MethodStatus> methodStatuses,
@@ -400,27 +402,27 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     /// The [addAll][List#addAll(int,Collection)] method will not add_singleElement_returnsTrueAndUpdatesSize any elements to the collection
     /// @see BreakableList#addAll(int,Collection)
     public static final Break ADD_ALL_AT_INDEX_DOES_NOT_ADD_ANY_ELEMENTS =
-            new Break("addAll(int, Collection) does not add_singleElement_returnsTrueAndUpdatesSize elements");
+            new Break("addAll(int, Collection) does not add elements");
 
     /// The [add_singleElement_returnsTrueAndUpdatesSize][List#add(int,Object)] method will not add_singleElement_returnsTrueAndUpdatesSize an element to the collection
     /// @see BreakableList#add(int,Object)
     public static final Break ADD_AT_INDEX_DOES_NOT_ADD_THE_ELEMENT =
-            new Break("add_singleElement_returnsTrueAndUpdatesSize(int, Object) does not add_singleElement_returnsTrueAndUpdatesSize elements");
+            new Break("add(int, Object) does not elements");
 
     /// The [add_singleElement_returnsTrueAndUpdatesSize][List#add(int,Object)] method adds the element at the next position.
     /// @see BreakableList#add(int,Object)
     public static final Break ADD_AT_INDEX_ADDS_AT_NEXT_POSITION =
-            new Break("add_singleElement_returnsTrueAndUpdatesSize(int,Object) method will not add_singleElement_returnsTrueAndUpdatesSize an element to the collection");
+            new Break("add(int,Object) method will not add an element to the collection");
 
     /// The [add_singleElement_returnsTrueAndUpdatesSize][List#add(int,Object)] method adds the element at the previous position.
     /// @see BreakableList#add(int,Object)
     public static final Break ADD_AT_INDEX_ADDS_AT_PREVIOUS_POSITION =
-            new Break("add_singleElement_returnsTrueAndUpdatesSize(int,Object) method adds the element at the previous position");
+            new Break("add(int,Object) method adds the element at the previous position");
 
     /// The [add_singleElement_returnsTrueAndUpdatesSize][List#add(int,Object)] method throws the wrong exception when the index is out of bounds.
     /// @see BreakableList#add(int,Object)
     public static final Break ADD_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX =
-            new Break("add_singleElement_returnsTrueAndUpdatesSize(int,Object) method throws the wrong exception when the index is out of bounds");
+            new Break("add(int,Object) method throws the wrong exception when the index is out of bounds");
 
     /// The [get][List#get(int)] method always returns `null`
     /// @see BreakableList#get(int)

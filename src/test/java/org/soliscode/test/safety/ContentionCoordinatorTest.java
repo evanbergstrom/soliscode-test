@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /// Unit tests for the [ContentionCoordinator] class.
 @DisplayName("ContentionCoordinator Tests")
+@Nondeterministic
 class ContentionCoordinatorTest extends AbstractTest {
 
     @Test
@@ -232,9 +233,7 @@ class ContentionCoordinatorTest extends AbstractTest {
         });
 
 
-        AssertionError error = assertThrows(AssertionError.class, () -> {
-            coordinator.execute(new Object());
-        });
+        AssertionError error = assertThrows(AssertionError.class, () -> coordinator.execute(new Object()));
 
         // ContentionCoordinator should fail with a timeout first, and then assertNoDeadlocks() should trigger.
         // We expect the deadlock info in the message.

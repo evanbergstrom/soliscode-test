@@ -2,13 +2,13 @@ package org.soliscode.test.contract.list;
 
 import org.jspecify.annotations.NonNull;
 import org.soliscode.test.InterfaceMethod;
-import org.soliscode.test.contract.collection.CollectionContract;
 
 /// Values used to identify collection class methods for use with the
-/// [CollectionContract#supportsMethod(InterfaceMethod)] method.
+/// 'supportsMethod(InterfaceMethod)' method.
 ///
 /// @author evanbergstrom
 /// @since 1.0
+/// @see org.soliscode.test.contract.collection.CollectionContract#supportsMethod(InterfaceMethod)
 public enum ListMethods implements InterfaceMethod {
 
     /// The optional method [java.util.List#addAll(int, java.util.Collection)].
@@ -43,7 +43,7 @@ public enum ListMethods implements InterfaceMethod {
 
     private final String name;
 
-    private ListMethods(final @NonNull String name) {
+    ListMethods(final @NonNull String name) {
         this.name = name;
     }
 

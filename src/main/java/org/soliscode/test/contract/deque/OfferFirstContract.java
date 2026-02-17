@@ -20,9 +20,9 @@ import static org.junit.jupiter.api.Assertions.*;
 public interface OfferFirstContract<E, D extends Deque<E>> extends CollectionContractSupport<E, D> {
 
     /// Tests that the [offerFirst][Deque#offerFirst] method works.
-    @DisplayName("Test that the offerFirst method works")
+    @DisplayName("offerFirst(E) adds a single element and updates size")
     @Test
-    default void offerFirst() {
+    default void offerFirst_singleElement_returnsTrueAndUpdatesSize() {
         if (supportsMethod(DequeMethods.OFFER_FIRST)) {
             D deque = provider().emptyInstance();
             List<E> values = elementProvider().createUniqueInstances(DEFAULT_SIZE);
@@ -40,9 +40,9 @@ public interface OfferFirstContract<E, D extends Deque<E>> extends CollectionCon
     }
 
     /// Tests that the [offerFirst][Deque#offerFirst] method handles null values correctly.
-    @DisplayName("Test that the offerFirst method works with null element values")
+    @DisplayName("offerFirst(E) handles null values based on permission")
     @Test
-    default void offerFirstWithNullValue() {
+    default void offerFirst_withNullValue_handlesCorrectly() {
         if (supportsMethod(DequeMethods.OFFER_FIRST)) {
             D deque = provider().emptyInstance();
             if (permitNulls()) {
@@ -60,9 +60,9 @@ public interface OfferFirstContract<E, D extends Deque<E>> extends CollectionCon
     }
 
     /// Tests that the [offerFirst][Deque#offerFirst] method handles duplicate values correctly.
-    @DisplayName("Test that the offerFirst method works with duplicate element values")
+    @DisplayName("offerFirst(E) handles duplicate values based on permission")
     @Test
-    default void offerFirstWithDuplicateValue() {
+    default void offerFirst_withDuplicateValue_handlesCorrectly() {
         if (supportsMethod(DequeMethods.OFFER_FIRST)) {
             if (permitDuplicates()) {
                 List<E> values = elementProvider().createUniqueInstances(DEFAULT_SIZE);
@@ -83,7 +83,8 @@ public interface OfferFirstContract<E, D extends Deque<E>> extends CollectionCon
             }
         } else {
             D deque = provider().emptyInstance();
-            assertThrows(UnsupportedOperationException.class, () -> deque.offerFirst(elementProvider().createInstance()));
+            assertThrows(UnsupportedOperationException.class,
+                    () -> deque.offerFirst(elementProvider().createInstance()));
         }
     }
 }

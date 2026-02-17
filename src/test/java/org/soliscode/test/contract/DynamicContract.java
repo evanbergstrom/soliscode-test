@@ -24,7 +24,7 @@ import java.util.Set;
 /// @author evanbergstrom
 /// @since 1.0
 public abstract class DynamicContract<T, P extends ObjectProvider<T>> extends AbstractTest
-            implements ProviderSupport<T> {
+        implements ProviderSupport<T> {
 
     /// A constant for an empty set of breaks.
     public static final Set<Break> EMPTY_BREAKS = Collections.emptySet();

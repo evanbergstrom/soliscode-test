@@ -2,7 +2,6 @@ package org.soliscode.test.contract.collection;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.opentest4j.AssertionFailedError;
 import org.soliscode.test.contract.support.CollectionContractSupport;
 import org.soliscode.test.util.CollectionTestUtils;
 import org.soliscode.test.util.MatchNothing;
@@ -45,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /// @param <C> The collection type being tested.
 /// @author evanbergstrom
 /// @see Collection#contains
-/// @since 1.0
+/// @since 1.0.0
 public interface ContainsContract<E, C extends Collection<E>> extends CollectionContractSupport<E, C> {
 
     /// Tests that the [contains][Collection#contains] method works for an empty collection.
@@ -54,7 +53,8 @@ public interface ContainsContract<E, C extends Collection<E>> extends Collection
     /// 1. Calling `contains()` on an empty collection always returns `false` for any element.
     ///
     /// @see Collection#contains
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("contains(Object) returns false for an empty collection")
     @Test
     default void contains_whenEmpty_returnsFalse() {
@@ -72,7 +72,8 @@ public interface ContainsContract<E, C extends Collection<E>> extends Collection
     /// 2. `contains()` returns `false` for elements not present in the collection.
     ///
     /// @see Collection#contains
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("contains(Object) returns expected results for a collection with elements")
     @Test
     default void contains_whenNotEmpty_returnsExpectedResults() {
@@ -98,7 +99,8 @@ public interface ContainsContract<E, C extends Collection<E>> extends Collection
     /// 2. If `null` is permitted, `contains()` still returns `true` for non-null elements.
     ///
     /// @see Collection#contains
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("contains(Object) works for a collection with null elements")
     @Test
     default void contains_withNullValue_returnsTrue() {
@@ -120,7 +122,8 @@ public interface ContainsContract<E, C extends Collection<E>> extends Collection
     /// 1. `contains()` returns `false` when called with an incompatible type.
     ///
     /// @see Collection#contains
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("contains(Object) returns false for incompatible types")
     @Test
     default void contains_withIncompatibleType_returnsFalse() {

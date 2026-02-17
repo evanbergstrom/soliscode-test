@@ -83,7 +83,7 @@ public enum MapMethods implements InterfaceMethod {
 
     private final String name;
 
-    private MapMethods(final @NonNull String name) {
+    MapMethods(final @NonNull String name) {
         this.name = name;
     }
 

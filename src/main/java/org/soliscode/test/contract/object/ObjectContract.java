@@ -16,24 +16,45 @@
 
 package org.soliscode.test.contract.object;
 
-/// This interface tests if a class has implemented the `Object` interface as specified in [Object]. The following
-/// table lists the methods that are tested by this contract interface and the methods that are not tested.
+/// **Contract for the `Object` interface**
 ///
-/// | Tested      | Not Tested           |
-/// | ----------- | -------------------- |
-/// | equals      | getClass             |
-/// | hashCode    | clone                |
-/// | toString    | notify               |
-/// | Serializable| notifyAll            |
-/// |             | wait                 |
-/// |             | finalize             |
+/// This interface provides a comprehensive contract for testing the fundamental methods of
+/// [Object] as specified in its documentation. It combines tests for `equals()`, `hashCode()`,
+/// and `toString()`.
 ///
-/// This interface is a mix-in class that can be used by a test class to test the implementation if the `Object`
-/// interface specification:
+/// The following table lists the methods that are tested by this contract interface and
+/// those that are not:
+///
+/// | Tested        | Not Tested    |
+/// | ------------- | ------------- |
+/// | `equals`      | `getClass`    |
+/// | `hashCode`    | `clone`       |
+/// | `toString`    | `notify`      |
+/// |               | `notifyAll`   |
+/// |               | `wait`        |
+/// |               | `finalize`    |
+///
+/// ## Purpose
+/// The purpose of this contract is to ensure that a class correctly implements the basic
+/// [Object] methods, which is critical for object equality, collection behavior, and
+/// debugging.
+///
+/// ## Usage Examples
+/// This interface is a mix-in class that can be used by a test class:
+///
 /// ```java
 /// public class MyClassTest extends ObjectContract<MyClass> {
+///     @Override
+///     public ObjectProvider<MyClass> provider() {
+///         return MyClass::new;
+///     }
 /// }
 /// ```
+///
+/// ## Thread Safety
+/// This contract interface does not provide any thread-safety guarantees. The thread safety of the
+/// tests depends on the object and [org.soliscode.test.provider.ObjectProvider] implementations being tested.
+///
 /// @param <T> The type being tested.
 /// @author evanbergstrom
 /// @see Object
@@ -41,7 +62,7 @@ package org.soliscode.test.contract.object;
 /// @see EqualsMethodContract
 /// @see HashCodeMethodContract
 /// @see ToStringMethodContract
-/// @since 1.0
+/// @since 1.0.0
 public interface ObjectContract<T>
     extends EqualsMethodContract<T>, HashCodeMethodContract<T>, ToStringMethodContract<T> {
 }

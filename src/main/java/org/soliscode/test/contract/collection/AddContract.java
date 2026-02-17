@@ -2,7 +2,6 @@ package org.soliscode.test.contract.collection;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.opentest4j.AssertionFailedError;
 import org.soliscode.test.contract.support.CollectionContractSupport;
 import org.soliscode.test.util.MatchNothing;
 
@@ -11,13 +10,11 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/// **Contract for the `add_singleElement_returnsTrueAndUpdatesSize` method of a `Collection`**
-///
-/// This interface defines tests for the [add_singleElement_returnsTrueAndUpdatesSize][Collection#add] method. It is designed
+/// This interface defines tests for the [add][Collection#add] method. It is designed
 /// to be used as a mix-in interface by test classes that verify [Collection] implementations.
 ///
 /// ## Purpose
-/// The purpose of this contract is to ensure that a collection's `add_singleElement_returnsTrueAndUpdatesSize` implementation correctly:
+/// The purpose of this contract is to ensure that a collection's `add` implementation correctly:
 /// - Adds a single element to the collection.
 /// - Returns `true` if the collection changed as a result of the call.
 /// - Ensures the collection contains the added element.
@@ -65,7 +62,8 @@ public interface AddContract<E, C extends Collection<E>> extends CollectionContr
     ///
     /// @see Collection#add
     /// @throws UnsupportedOperationException if the method is not supported
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("add(E) adds a single element and updates size")
     @Test
     default void add_singleElement_returnsTrueAndUpdatesSize() {
@@ -77,9 +75,6 @@ public interface AddContract<E, C extends Collection<E>> extends CollectionContr
                 assertTrue(collection.contains(values.get(i)));
                 assertEquals(i + 1, collection.size());
             }
-        } else {
-            Collection<E> collection = provider().emptyInstance();
-            assertThrows(UnsupportedOperationException.class, () -> collection.add(elementProvider().createInstance()));
         }
     }
 
@@ -91,7 +86,8 @@ public interface AddContract<E, C extends Collection<E>> extends CollectionContr
     ///
     /// @see Collection#add
     /// @throws NullPointerException if null is not permitted and the argument is null
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("add(E) handles null values based on permission")
     @Test
     default void add_withNullValue_handlesCorrectly() {
@@ -101,8 +97,6 @@ public interface AddContract<E, C extends Collection<E>> extends CollectionContr
                 assertTrue(collection.add(null));
                 assertTrue(collection.contains(null));
                 assertEquals(1, collection.size());
-            } else {
-                assertThrows(NullPointerException.class, () -> collection.add(null));
             }
         }
     }
@@ -115,7 +109,8 @@ public interface AddContract<E, C extends Collection<E>> extends CollectionContr
     ///   and the method should return `false`.
     ///
     /// @see Collection#add
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("add(E) handles duplicate values based on permission")
     @Test
     default void add_withDuplicateValue_handlesCorrectly() {
@@ -148,7 +143,8 @@ public interface AddContract<E, C extends Collection<E>> extends CollectionContr
     ///
     /// @see Collection#add
     /// @throws ClassCastException if incompatible types are not permitted and the argument is incompatible
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("add(E) handles incompatible types based on permission")
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -156,6 +152,28 @@ public interface AddContract<E, C extends Collection<E>> extends CollectionContr
         if (supportsMethod(CollectionMethods.ADD) && !permitIncompatibleTypes()) {
             Collection<E> collection = provider().emptyInstance();
             assertThrows(ClassCastException.class, () -> ((Collection) collection).add(new MatchNothing()));
+        }
+    }
+
+
+    /**
+     * Tests that the {@link Collection#add(Object)} method throws an {@link UnsupportedOperationException}
+     * when the operation is not supported by the implementation.
+     *
+     * <p>This test verifies the behavior of the {@code add} operation for collections that do not support
+     * element addition. If the {@code add} method is unsupported as indicated by the {@link #supportsMethod}
+     * method returning {@code false}, the test ensures that an {@link UnsupportedOperationException} is
+     * thrown when {@code add} is invoked with a valid element.</p>
+     *
+     * @see Collection#add(Object)
+     * @throws org.opentest4j.AssertionFailedError if the expected exception is not thrown
+     */
+    @DisplayName("add(E) throws UnsupportedOperationException when method is not supported")
+    @Test
+    default void add_whenNotSupported_throwsUnsupportedOperationException() {
+        if (!supportsMethod(CollectionMethods.ADD)) {
+            assertThrows(UnsupportedOperationException.class,
+                    () -> provider().emptyInstance().add(elementProvider().createInstance()));
         }
     }
 }

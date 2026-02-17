@@ -87,6 +87,13 @@ public abstract class MethodSupport implements SupportedMethods {
         methodStatuses.put(method, new MethodStatus(false));
     }
 
+    /// Checks whether all optional methods are supported by this implementation.
+    ///
+    /// This method verifies that there are no methods explicitly marked as unsupported.
+    /// If no methods have been configured, it returns true, as all methods are
+    /// supported by default.
+    ///
+    /// @return true if all optional methods are supported, false otherwise
     public boolean supportsAllMethods() {
         if (methodStatuses.isEmpty()) {
             return true;
@@ -108,6 +115,13 @@ public abstract class MethodSupport implements SupportedMethods {
                 .toList();
     }
 
+    /// Returns an unmodifiable map of the explicitly configured method statuses.
+    ///
+    /// This map contains only those methods that have been explicitly marked as either
+    /// supported or unsupported. Methods not present in this map are considered
+    /// supported by default.
+    ///
+    /// @return an unmodifiable map of method status configurations
     protected @NonNull Map<InterfaceMethod, MethodStatus> methodStatuses() {
         return Collections.unmodifiableMap(methodStatuses);
     }

@@ -226,6 +226,7 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
 
     /// Creates a new BreakableConcurrentNavigableMap with no breaks, wrapping a new ConcurrentSkipListMap.
     /// This constructor provides a default implementation suitable for most testing scenarios.
+    @SuppressWarnings("SortedCollectionWithNonComparableKeys")
     public BreakableConcurrentNavigableMap() {
         this(new ConcurrentSkipListMap<>(), new HashSet<>(), new HashMap<>(), DEFAULT_PERMITS);
     }
@@ -244,6 +245,8 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
     ///
     /// @param concurrentNavigableMap the ConcurrentNavigableMap to wrap and delegate operations to
     /// @param breaks the collection of breaks to apply to this instance
+    /// @param methodStatuses the map of method statuses to track break application
+    /// @param permits the number of permits for concurrent operations
     protected BreakableConcurrentNavigableMap(final ConcurrentNavigableMap<K, V> concurrentNavigableMap,
                                               final Set<Break> breaks,
                                               final @NonNull Map<InterfaceMethod, MethodStatus> methodStatuses,
@@ -625,6 +628,7 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
 
         /// Creates a new Builder with a default ConcurrentSkipListMap as the underlying implementation.
         /// This constructor provides a standard NavigableMap implementation suitable for most testing scenarios.
+        @SuppressWarnings("SortedCollectionWithNonComparableKeys")
         public Builder() {
             super(new ConcurrentSkipListMap<>());
         }
@@ -638,6 +642,8 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
             return this;
         }
 
+        /// Creates a new Builder by copying the state of the builder provided as the parameter.
+        /// @param other The builder to copy.
         public Builder(final Builder<K, V> other) {
             super(other);
         }

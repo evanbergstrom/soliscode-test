@@ -848,10 +848,13 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     ///     arrayDeque, breaks, 0);
     /// ```
     ///
-    /// @param deque the Deque to wrap
-    /// @param breaks the breaks to apply
+    /// @param deque           the Deque to wrap
+    /// @param breaks          the breaks to apply
+    /// @param methodStatuses  the method status configuration.
     /// @param characteristics the spliterator characteristics
     /// @param permits         the flags that indicate what types of values are supported by the collection.
+    /// @param isSafe          whether the resulting object is safe for concurrent access.
+    /// @param componentType   the type of the elements in the collection.
     /// @throws NullPointerException if deque or breaks is null
     protected BreakableDeque(
             final @NonNull Deque<E> deque,
@@ -1697,6 +1700,14 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
         );
     }
 
+    /// Creates and returns a new instance of the `Builder` class.
+    /// This method initializes a builder instance that can be used to configure
+    /// and construct objects of the enclosing class. The builder pattern helps
+    /// simplify object creation and provides flexibility in handling complex
+    /// construction scenarios.
+    ///
+    /// @param <E> The type of the objects that the builder will construct.
+    /// @return A new `Builder` instance for the enclosing class.
     public static <E> Builder<E> builder() {
         return new Builder<>();
     }

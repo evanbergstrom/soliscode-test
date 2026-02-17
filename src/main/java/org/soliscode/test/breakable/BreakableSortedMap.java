@@ -85,6 +85,7 @@ import java.util.TreeMap;
 /// @see Break
 public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements SortedMap<K, V> {
 
+    /// Serial version UID for serialization compatibility.
     @Serial
     private static final long serialVersionUID = 1L;
 
@@ -431,8 +432,11 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
     /// ```
     ///
     /// @param sortedMap the SortedMap to wrap; must not be null
-    /// @param breaks the collection of breaks to apply; must not be null
-    /// @throws NullPointerException if sortedMap or breaks is null, or if existing data
+    /// @param breaks the set of breaks to apply to the wrapped collection
+    /// @param methodStatuses the initial method statuses configuration
+    /// @param permits the initial permits configuration for the collection
+    /// @param isSafe whether the wrapped collection should be thread-safe
+    /// @throws NullPointerException if sortedMap, breaks, or methodStatuses is null, or if existing data
     ///                              violates the specified null policies
     public BreakableSortedMap(final @NonNull SortedMap<K, V> sortedMap,
                               final @NonNull Set<Break> breaks,
@@ -745,29 +749,57 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
 
     // ========== Builder Pattern ==========
 
+    /// Abstract base builder for creating BreakableSortedMap and its subclasses.
+    ///
+    /// This class provides common builder functionality for sorted maps, including
+    /// comparator configuration and map initialization.
+    ///
+    /// @param <B> the type of the builder subclass
+    /// @param <M> the type of BreakableSortedMap being built
+    /// @param <K> the type of keys
+    /// @param <V> the type of values
     public abstract static class AbstractBuilder<B extends AbstractBuilder<B, M, K, V>,
             M extends BreakableSortedMap<K, V>, K, V>
             extends BreakableMap.AbstractBuilder<B, M, K, V> {
 
+        /// The currently configured comparator, or null for natural ordering.
         private Comparator<K> comparator;
 
+        /// Creates a new AbstractBuilder with default configuration.
         public AbstractBuilder() {
             super();
         }
 
+        /// Creates a new AbstractBuilder pre-populated with elements.
+        ///
+        /// @param map the map containing the elements
+        /// @throws NullPointerException if map is null
         public AbstractBuilder(final @NonNull Map<K, V> map) {
             super(map);
         }
 
+        /// Creates a new AbstractBuilder by copying another builder.
+        ///
+        /// @param other the builder to copy
+        /// @throws NullPointerException if other is null
         public AbstractBuilder(final @NonNull AbstractBuilder<B, M, K, V> other) {
             super(other);
+            this.comparator = other.comparator;
         }
 
+        /// Sets the comparator to be used by the built map.
+        ///
+        /// @param newComparator the comparator to use
+        /// @return this builder
+        /// @throws NullPointerException if newComparator is null
         public B setComparator(final @NonNull Comparator<K> newComparator) {
             this.comparator = newComparator;
             return self();
         }
 
+        /// Returns the currently configured comparator.
+        ///
+        /// @return the comparator, or null for natural ordering
         public Comparator<K> comparator() {
             return comparator;
         }
@@ -834,6 +866,7 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
     ///
     /// @param <K> the type of keys maintained by maps built by this builder
     /// @param <V> the type of mapped values in maps built by this builder
+    /// @author evanbergstrom
     /// @since 1.0
     /// @see BreakableSortedMap
     /// @see Break
@@ -889,6 +922,12 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
             super(elements);
         }
 
+        /// Returns this builder instance for method chaining.
+        ///
+        /// This method is used by the abstract base builder to return the correct
+        /// builder type for fluent method chaining.
+        ///
+        /// @return this builder instance
         @Override
         public Builder<K, V> self() {
             return this;
@@ -917,14 +956,19 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
         ///     .addBreak(FIRST_KEY_THROWS_EXCEPTION);
         /// ```
         ///
-        /// @return a new Builder with identical configuration to this one
+        /// @return a new Builder instance with identical configuration
         @Override
         public @NonNull Builder<K, V> copy() {
             return new Builder<>(this);
         }
 
-        /// Creates a builder by copying another builder.
-        /// @param other the builder to copy
+        /// Creates a new Builder by copying the configuration from another builder.
+        ///
+        /// This constructor is primarily used by the {@link #copy()} method to create
+        /// an independent builder instance with the same configuration.
+        ///
+        /// @param other the builder to copy configuration from; must not be null
+        /// @throws NullPointerException if other is null
         public Builder(final @NonNull Builder<K, V> other) {
             super(other);
         }
@@ -1036,6 +1080,7 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
     /// @param <V> the type of mapped values
     /// @param sortedMap the SortedMap to wrap; must not be null
     /// @param breaks the collection of breaks to apply; must not be null
+    /// @param permits the initial permits configuration for the collection
     /// @return a new BreakableSortedMap wrapping the specified SortedMap with the given
     ///         breaks and policies
     /// @throws NullPointerException if sortedMap or breaks is null, or if existing data

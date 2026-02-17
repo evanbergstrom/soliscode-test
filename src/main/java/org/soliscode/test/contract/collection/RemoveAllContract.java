@@ -2,8 +2,6 @@ package org.soliscode.test.contract.collection;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.opentest4j.AssertionFailedError;
-import org.soliscode.test.assertions.Assertions;
 import org.soliscode.test.contract.support.CollectionContractSupport;
 import org.soliscode.test.util.MatchNothing;
 
@@ -48,13 +46,16 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
 /// @param <C> The collection type being tested.
 /// @author evanbergstrom
 /// @see Collection#removeAll
-/// @since 1.0
+/// @since 1.0.0
 public interface RemoveAllContract<E, C extends Collection<E>> extends CollectionContractSupport<E, C> {
 
     /// Tests that the [removeAll][Collection#removeAll] method returns `false` when called on an empty collection.
     ///
+    /// This test verifies that calling `removeAll` on an empty collection returns `false` and does not throw.
+    ///
     /// @see Collection#removeAll
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("removeAll(Collection) returns false for an empty collection")
     @Test
     default void removeAll_whenEmpty_returnsFalse() {
@@ -74,7 +75,8 @@ public interface RemoveAllContract<E, C extends Collection<E>> extends Collectio
     /// 3. The collection no longer contains any of the removed elements.
     ///
     /// @see Collection#removeAll
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("removeAll(Collection) removes argument elements from a non-empty collection")
     @Test
     default void removeAll_whenNotEmpty_removesArgumentElements() {
@@ -103,9 +105,12 @@ public interface RemoveAllContract<E, C extends Collection<E>> extends Collectio
 
     /// Tests that the [removeAll][Collection#removeAll] method handles `null` values correctly.
     ///
+    /// This test verifies behavior when trying to remove `null` from a collection.
+    ///
     /// @see Collection#removeAll
     /// @throws NullPointerException if nulls are not permitted and the argument contains a null element
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("removeAll(Collection) handles null elements based on permission")
     @Test
     default void removeAll_withNullElement_handlesCorrectly() {
@@ -122,8 +127,11 @@ public interface RemoveAllContract<E, C extends Collection<E>> extends Collectio
 
     /// Tests that the [removeAll][Collection#removeAll] method handles incompatible types correctly.
     ///
+    /// This test verifies that `removeAll` returns `false` when called with incompatible types.
+    ///
     /// @see Collection#removeAll
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("removeAll(Collection) returns false for incompatible types")
     @Test
     default void removeAll_withIncompatibleType_returnsFalse() {
@@ -137,6 +145,7 @@ public interface RemoveAllContract<E, C extends Collection<E>> extends Collectio
     ///
     /// @see Collection#removeAll
     /// @throws UnsupportedOperationException if the method is not supported
+    /// @since 1.0.0
     @DisplayName("removeAll(Collection) throws UnsupportedOperationException when not supported")
     @Test
     default void removeAll_whenNotSupported_throwsUnsupportedOperationException() {
@@ -150,7 +159,8 @@ public interface RemoveAllContract<E, C extends Collection<E>> extends Collectio
     ///
     /// @see Collection#removeAll
     /// @throws NullPointerException or IllegalArgumentException if the argument collection is null
-    @SuppressWarnings({"DataFlowIssue", "ThrowableNotThrown"})
+    /// @since 1.0.0
+    @SuppressWarnings("DataFlowIssue")
     @DisplayName("removeAll(Collection) throws exception when argument collection is null")
     @Test
     default void removeAll_withNullCollection_throwsException() {

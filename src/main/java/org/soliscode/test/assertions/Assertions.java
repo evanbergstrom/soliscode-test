@@ -185,96 +185,159 @@ public final class Assertions {
     /// All methods are static and the class is final to prevent subclassing.
     private Assertions() { }
 
+    /// Asserts that the executable will throw a {@link Throwable} of any type.
+    ///
+    /// This is equivalent to {@code assertThrows(Throwable.class, executable)} in JUnit 5.
+    ///
+    /// @param executable the executable to test.
+    /// @throws org.opentest4j.AssertionFailedError if no exception is thrown.
+    /// @see org.junit.jupiter.api.Assertions#assertThrows(Class, Executable)
+    /// @since 1.0.0
     public static void assertThrowsAny(final @NonNull Executable executable) {
         org.junit.jupiter.api.Assertions.assertThrows(Throwable.class, executable);
     }
 
+    /// Asserts that the executable will throw a {@link Throwable} of any type with a custom error message.
+    ///
+    /// @param executable the executable to test.
+    /// @param message the custom message to include in the exception if the assertion fails.
+    /// @throws org.opentest4j.AssertionFailedError if no exception is thrown.
+    /// @see #assertThrowsAny(Executable)
+    /// @since 1.0.0
     public static void assertThrowsAny(final @NonNull Executable executable, final String message) {
         org.junit.jupiter.api.Assertions.assertThrows(Throwable.class, executable, message);
     }
 
+    /// Asserts that the executable will throw a {@link Throwable} of any type with a lazily-evaluated error message.
+    ///
+    /// @param executable the executable to test.
+    /// @param messageSupplier the supplier of the message to include in the exception if the assertion fails.
+    /// @throws org.opentest4j.AssertionFailedError if no exception is thrown.
+    /// @see #assertThrowsAny(Executable)
+    /// @since 1.0.0
     public static void assertThrowsAny(final @NonNull Executable executable,
                                        final Supplier<String> messageSupplier) {
         org.junit.jupiter.api.Assertions.assertThrows(Throwable.class, executable, messageSupplier);
     }
 
     /// Asserts that the executable will throw one of a list of possible exception types.
+    ///
     /// @param expectedTypes the exception types that the executable should throw.
     /// @param executable the executable to test.
+    /// @throws org.opentest4j.AssertionFailedError if no exception is thrown or if the thrown exception
+    ///         is not an instance of one of the expected types.
+    /// @since 1.0.0
     public static void assertThrowsAnyOf(final @NonNull Collection<Class<? extends Throwable>> expectedTypes,
                                          final @NonNull Executable executable) {
         AssertThrowsAnyOf.assertThrowsAnyOf(expectedTypes, executable);
     }
 
-    /// Asserts that the executable will throw one of a list of possible exception types.
+    /// Asserts that the executable will throw one of a list of possible exception types with a custom error message.
+    ///
     /// @param expectedTypes the exception types that the executable should throw.
     /// @param executable the executable to test.
-    /// @param message the message to include in the exception if the assertions fails.
+    /// @param message the message to include in the exception if the assertion fails.
+    /// @throws org.opentest4j.AssertionFailedError if no exception is thrown or if the thrown exception
+    ///         is not an instance of one of the expected types.
+    /// @since 1.0.0
     public static void assertThrowsAnyOf(final @NonNull Collection<Class<? extends Throwable>> expectedTypes,
                                          final @NonNull Executable executable, final @Nullable String message) {
         AssertThrowsAnyOf.assertThrowsAnyOf(expectedTypes, executable, message);
     }
 
-    /// Asserts that the executable will throw one of a list of possible exception types.
+    /// Asserts that the executable will throw one of a list of possible exception types with a lazily-evaluated error
+    /// message.
+    ///
     /// @param expectedTypes the exception types that the executable should throw.
     /// @param executable the executable to test.
-    /// @param messageSupplier the supplier of the message to include in the exception if the assertions fails.
+    /// @param messageSupplier the supplier of the message to include in the exception if the assertion fails.
+    /// @throws org.opentest4j.AssertionFailedError if no exception is thrown or if the thrown exception
+    ///         is not an instance of one of the expected types.
+    /// @since 1.0.0
     public static void assertThrowsAnyOf(final @NonNull Collection<Class<? extends Throwable>> expectedTypes,
                                          final @NonNull Executable executable,
                                          final @Nullable Supplier<String> messageSupplier) {
         AssertThrowsAnyOf.assertThrowsAnyOf(expectedTypes, executable, messageSupplier);
     }
 
-    /// Asserts that the executable will throw an exception that is not one of a list of prohibited exception types.
+    /// Asserts that the executable will throw an exception that is not the prohibited exception type.
+    ///
     /// @param prohibitedType the exception type that the executable should not throw.
     /// @param executable the executable to test.
+    /// @throws org.opentest4j.AssertionFailedError if no exception is thrown or if the thrown exception
+    ///         is an instance of the prohibited type.
+    /// @since 1.0.0
     public static void assertThrowsDifferent(final @NonNull Class<? extends Throwable> prohibitedType,
                                              final @NonNull Executable executable) {
         AssertThrowsDifferent.assertThrowsDifferent(prohibitedType, executable);
     }
 
     /// Asserts that the executable will throw an exception that is not one of a list of prohibited exception types.
+    ///
     /// @param prohibitedTypes the exception types that the executable should not throw.
     /// @param executable the executable to test.
+    /// @throws org.opentest4j.AssertionFailedError if no exception is thrown or if the thrown exception
+    ///         is an instance of one of the prohibited types.
+    /// @since 1.0.0
     public static void assertThrowsDifferent(final @NonNull Collection<Class<? extends Throwable>> prohibitedTypes,
                                              final @NonNull Executable executable) {
         AssertThrowsDifferent.assertThrowsDifferent(prohibitedTypes, executable);
     }
 
-    /// Asserts that the executable will throw an exception that is not one of a list of prohibited exception types.
+    /// Asserts that the executable will throw an exception that is not the prohibited exception type with a custom
+    /// error message.
+    ///
     /// @param prohibitedType the exception type that the executable should not throw.
     /// @param executable the executable to test.
-    /// @param message the message to include in the exception if the assertions fails.
+    /// @param message the message to include in the exception if the assertion fails.
+    /// @throws org.opentest4j.AssertionFailedError if no exception is thrown or if the thrown exception
+    ///         is an instance of the prohibited type.
+    /// @since 1.0.0
     public static void assertThrowsDifferent(final @NonNull Class<? extends Throwable> prohibitedType,
                                              final @NonNull Executable executable,
                                              final @Nullable String message) {
         AssertThrowsDifferent.assertThrowsDifferent(prohibitedType, executable, message);
     }
 
-    /// Asserts that the executable will throw an exception that is not one of a list of prohibited exception types.
+    /// Asserts that the executable will throw an exception that is not one of a list of prohibited exception types
+    /// with a custom error message.
+    ///
     /// @param prohibitedTypes the exception types that the executable should not throw.
     /// @param executable the executable to test.
-    /// @param message the message to include in the exception if the assertions fails.
+    /// @param message the message to include in the exception if the assertion fails.
+    /// @throws org.opentest4j.AssertionFailedError if no exception is thrown or if the thrown exception
+    ///         is an instance of one of the prohibited types.
+    /// @since 1.0.0
     public static void assertThrowsDifferent(final @NonNull Collection<Class<? extends Throwable>> prohibitedTypes,
                                              final @NonNull Executable executable,
                                              final @Nullable String message) {
         AssertThrowsDifferent.assertThrowsDifferent(prohibitedTypes, executable, message);
     }
 
-    /// Asserts that the executable will throw an exception that is not one of a list of prohibited exception types.
+    /// Asserts that the executable will throw an exception that is not one of a list of prohibited exception types
+    /// with a lazily-evaluated error message.
+    ///
     /// @param prohibitedTypes the exception types that the executable should not throw.
     /// @param executable the executable to test.
-    /// @param messageSupplier the supplier of the message to include in the exception if the assertions fails.
+    /// @param messageSupplier the supplier of the message to include in the exception if the assertion fails.
+    /// @throws org.opentest4j.AssertionFailedError if no exception is thrown or if the thrown exception
+    ///         is an instance of one of the prohibited types.
+    /// @since 1.0.0
     public static void assertThrowsDifferent(final @NonNull Collection<Class<? extends Throwable>> prohibitedTypes,
                                              final @NonNull Executable executable,
                                              final @Nullable Supplier<String> messageSupplier) {
         AssertThrowsDifferent.assertThrowsDifferent(prohibitedTypes, executable, messageSupplier);
     }
 
-    /// Asserts that the executable will throw an exception that is not one of a list of prohibited exception types.
+    /// Asserts that the executable will throw an exception that is not the prohibited exception type with a
+    /// lazily-evaluated error message.
+    ///
     /// @param prohibitedType the exception type that the executable should not throw.
     /// @param executable the executable to test.
-    /// @param messageSupplier the supplier of the message to include in the exception if the assertions fails.
+    /// @param messageSupplier the supplier of the message to include in the exception if the assertion fails.
+    /// @throws org.opentest4j.AssertionFailedError if no exception is thrown or if the thrown exception
+    ///         is an instance of the prohibited type.
+    /// @since 1.0.0
     public static void assertThrowsDifferent(final @NonNull Class<? extends Throwable> prohibitedType,
                                              final @NonNull Executable executable,
                                              final @Nullable Supplier<String> messageSupplier) {
@@ -282,29 +345,38 @@ public final class Assertions {
     }
 
 
-    /// Asserts that the object is not a instance of a class.
+    /// Asserts that the object is not an instance of a class.
+    ///
     /// @param expectedType The type that the object being tested is expected *not* to be.
     /// @param actual The object being tested.
     /// @param <T> The type that is not expected.
+    /// @throws org.opentest4j.AssertionFailedError if the object is an instance of the expected type.
+    /// @since 1.0.0
     public static <T> void assertNotInstanceOf(final @NonNull Class<T> expectedType, final @NonNull Object actual) {
         AssertNotInstanceOf.assertNotInstanceOf(expectedType, actual);
     }
 
-    /// Asserts that the object is not a instance of a class.
+    /// Asserts that the object is not an instance of a class with a custom error message.
+    ///
     /// @param expectedType The type that the object being tested is expected *not* to be.
     /// @param actual The object being tested.
+    /// @param message the message to include in the exception if the assertion fails.
     /// @param <T> The type that is not expected.
-    /// @param message the message to include in the exception if the assertions fails.
+    /// @throws org.opentest4j.AssertionFailedError if the object is an instance of the expected type.
+    /// @since 1.0.0
     public static <T> void assertNotInstanceOf(final @NonNull Class<T> expectedType, final @NonNull Object actual,
                                                final @Nullable String message) {
         AssertNotInstanceOf.assertNotInstanceOf(expectedType, actual, message);
     }
 
-    /// Asserts that the object is not a instance of a class.
+    /// Asserts that the object is not an instance of a class with a lazily-evaluated error message.
+    ///
     /// @param expectedType The type that the object being tested is expected *not* to be.
     /// @param actual The object being tested.
+    /// @param messageSupplier the supplier of the message to include in the exception if the assertion fails.
     /// @param <T> The type that is not expected.
-    /// @param messageSupplier the supplier of the message to include in the exception if the assertions fails.
+    /// @throws org.opentest4j.AssertionFailedError if the object is an instance of the expected type.
+    /// @since 1.0.0
     public static <T> void assertNotInstanceOf(final @NonNull Class<T> expectedType, final @NonNull Object actual,
                                                final @Nullable Supplier<String> messageSupplier) {
         AssertNotInstanceOf.assertNotInstanceOf(expectedType, actual, messageSupplier);
@@ -312,56 +384,78 @@ public final class Assertions {
 
     /// Asserts that an object is an instance of a class that implements interfaces only from a set of permitted
     /// interfaces. This will only test for interfaces that the class of the object implements directly.
+    ///
     /// @param expected the classes or interfaces that the object can be an instance of.
     /// @param actual The object being tested.
+    /// @throws org.opentest4j.AssertionFailedError if the object implements interfaces not in the permitted set.
+    /// @since 1.0.0
     public static void assertImplementsOnly(final @NonNull Class<?> expected, final @NonNull Object actual) {
         AssertImplementsOnly.assertImplementsOnly(expected, actual);
     }
 
     /// Asserts that an object is an instance of a class that implements interfaces only from a set of permitted
     /// interfaces. This will only test for interfaces that the class of the object implements directly.
+    ///
     /// @param expected the classes or interfaces that the object can be an instance of.
     /// @param actual The object being tested.
+    /// @throws org.opentest4j.AssertionFailedError if the object implements interfaces not in the permitted set.
+    /// @since 1.0.0
     public static void assertImplementsOnly(final @NonNull Collection<Class<?>> expected,
                                             final @NonNull Object actual) {
         AssertImplementsOnly.assertImplementsOnly(expected, actual);
     }
 
     /// Asserts that an object is an instance of a class that implements interfaces only from a set of permitted
-    /// interfaces. This will only test for interfaces that the class of the object implements directly.
+    /// interfaces. This will only test for interfaces that the class of the object implements directly, with a custom
+    /// error message.
+    ///
     /// @param expected the classes or interfaces that the object can be an instance of.
     /// @param actual The object being tested.
-    /// @param message the message to include in the exception if the assertions fails.
+    /// @param message the message to include in the exception if the assertion fails.
+    /// @throws org.opentest4j.AssertionFailedError if the object implements interfaces not in the permitted set.
+    /// @since 1.0.0
     public static void assertImplementsOnly(final @NonNull Class<?> expected, final @NonNull Object actual,
                                             final @Nullable String message) {
         AssertImplementsOnly.assertImplementsOnly(expected, actual, message);
     }
 
     /// Asserts that an object is an instance of a class that implements interfaces only from a set of permitted
-    /// interfaces. This will only test for interfaces that the class of the object implements directly.
+    /// interfaces. This will only test for interfaces that the class of the object implements directly, with a custom
+    /// error message.
+    ///
     /// @param expected the classes or interfaces that the object can be an instance of.
     /// @param actual The object being tested.
-    /// @param message the message to include in the exception if the assertions fails.
+    /// @param message the message to include in the exception if the assertion fails.
+    /// @throws org.opentest4j.AssertionFailedError if the object implements interfaces not in the permitted set.
+    /// @since 1.0.0
     public static void assertImplementsOnly(final @NonNull Collection<Class<?>> expected, final @NonNull Object actual,
                                             final String message) {
         AssertImplementsOnly.assertImplementsOnly(expected, actual, message);
     }
 
     /// Asserts that an object is an instance of a class that implements interfaces only from a set of permitted
-    /// interfaces. This will only test for interfaces that the class of the object implements directly.
+    /// interfaces. This will only test for interfaces that the class of the object implements directly, with a
+    /// lazily-evaluated error message.
+    ///
     /// @param expected the class or interface that the object can be an instance of.
     /// @param actual The object being tested.
-    /// @param messageSupplier the supplier of the message to include in the exception if the assertions fails.
+    /// @param messageSupplier the supplier of the message to include in the exception if the assertion fails.
+    /// @throws org.opentest4j.AssertionFailedError if the object implements interfaces not in the permitted set.
+    /// @since 1.0.0
     public static void assertImplementsOnly(final @NonNull Class<?> expected, final @NonNull Object actual,
                                             final @Nullable Supplier<String> messageSupplier) {
         AssertImplementsOnly.assertImplementsOnly(expected, actual, messageSupplier);
     }
 
     /// Asserts that an object is an instance of a class that implements interfaces only from a set of permitted
-    /// interfaces. This will only test for interfaces that the class of the object implements directly.
+    /// interfaces. This will only test for interfaces that the class of the object implements directly, with a
+    /// lazily-evaluated error message.
+    ///
     /// @param expected the classes or interfaces that the object can be an instance of.
     /// @param actual The object being tested.
-    /// @param messageSupplier the supplier of the message to include in the exception if the assertions fails.
+    /// @param messageSupplier the supplier of the message to include in the exception if the assertion fails.
+    /// @throws org.opentest4j.AssertionFailedError if the object implements interfaces not in the permitted set.
+    /// @since 1.0.0
     public static void assertImplementsOnly(final @NonNull Collection<Class<?>> expected, final @NonNull Object actual,
                                             final @Nullable Supplier<String> messageSupplier) {
         AssertImplementsOnly.assertImplementsOnly(expected, actual, messageSupplier);
@@ -1077,6 +1171,12 @@ public final class Assertions {
         AssertStringContainsInOrder.assertStringContainsInOrderIgnoreCase(expected, actual, supplier);
     }
 
+    /// Enables deadlock detection.
+    ///
+    /// When enabled, certain assertions can check for deadlocked threads in the JVM.
+    ///
+    /// @see #assertNoDeadlocks()
+    /// @since 1.0.0
     public static void enableDeadlockDetection() {
         AssertNoDeadlocks.enableDeadlockDetection();
     }

@@ -2,7 +2,6 @@ package org.soliscode.test.contract.collection;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.opentest4j.AssertionFailedError;
 import org.soliscode.test.contract.support.CollectionContractSupport;
 
 import java.util.Collection;
@@ -41,7 +40,7 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
 /// @param <C> The collection type being tested.
 /// @author evanbergstrom
 /// @see Collection#clear
-/// @since 1.0
+/// @since 1.0.0
 public interface ClearContract<E, C extends Collection<E>> extends CollectionContractSupport<E, C> {
 
     /// Tests that the [clear][Collection#clear] method works for an empty collection.
@@ -53,7 +52,8 @@ public interface ClearContract<E, C extends Collection<E>> extends CollectionCon
     ///
     /// @see Collection#clear
     /// @throws UnsupportedOperationException if the method is not supported
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("clear() works for an empty collection")
     @Test
     default void clear_whenEmpty_isSuccessful() {
@@ -75,7 +75,8 @@ public interface ClearContract<E, C extends Collection<E>> extends CollectionCon
     ///
     /// @see Collection#clear
     /// @throws UnsupportedOperationException if the method is not supported
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("clear() works for a collection with elements")
     @Test
     default void clear_whenNotEmpty_removesAllElements() {

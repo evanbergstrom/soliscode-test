@@ -2,7 +2,6 @@ package org.soliscode.test.contract.collection;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.opentest4j.AssertionFailedError;
 import org.soliscode.test.contract.support.CollectionContractSupport;
 
 import java.util.Collection;
@@ -40,13 +39,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /// @param <C> The collection type being tested.
 /// @author evanbergstrom
 /// @see Collection#isEmpty
-/// @since 1.0
+/// @since 1.0.0
 public interface IsEmptyContract<E, C extends Collection<E>> extends CollectionContractSupport<E, C> {
 
     /// Tests that the [isEmpty][Collection#isEmpty] method returns `true` for an empty collection.
     ///
+    /// This test verifies that calling `isEmpty()` on an empty collection returns `true`.
+    ///
     /// @see Collection#isEmpty
-    /// @throws AssertionFailedError if the assertion fails
+    /// @throws org.opentest4j.AssertionFailedError if the assertion fails
+    /// @since 1.0.0
     @DisplayName("isEmpty() returns true for an empty collection")
     @Test
     default void isEmpty_whenEmpty_returnsTrue() {
@@ -57,8 +59,11 @@ public interface IsEmptyContract<E, C extends Collection<E>> extends CollectionC
     /// Tests that the [isEmpty][Collection#isEmpty] method returns `false` for a collection with
     /// at least one element.
     ///
+    /// This test verifies that calling `isEmpty()` on a non-empty collection returns `false`.
+    ///
     /// @see Collection#isEmpty
-    /// @throws AssertionFailedError if the assertion fails
+    /// @throws org.opentest4j.AssertionFailedError if the assertion fails
+    /// @since 1.0.0
     @DisplayName("isEmpty() returns false for a collection with elements")
     @Test
     default void isEmpty_whenNotEmpty_returnsFalse() {

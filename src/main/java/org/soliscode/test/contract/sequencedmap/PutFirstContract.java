@@ -8,19 +8,46 @@ import java.util.SequencedMap;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/// Contract for the [SequencedMap#putFirst(Object, Object)] method.
+/// Contract for the `putFirst(K, V)` method of [SequencedMap].
+///
+/// ### Purpose
+/// Verifies that the `putFirst(K, V)` method correctly inserts a mapping at the beginning
+/// of the map's sequencing order, or moves an existing mapping to the front if it's already
+/// present, or handles unsupported operations appropriately.
+///
+/// ### Usage Examples
+///
+/// #### Implementation
+/// ```java
+/// public class MySequencedMapTest implements PutFirstContract<String, String, MySequencedMap<String, String>> {
+///     @Override
+///     public MapProvider<String, String, MySequencedMap<String, String>> provider() {
+///         return new MySequencedMapProvider();
+///     }
+/// }
+/// ```
+///
+/// ### Thread Safety
+/// The tests in this contract are not guaranteed to be thread-safe. If the map implementation
+/// is intended for concurrent use, additional thread-safety tests should be performed.
 ///
 /// @param <K> The key type being tested.
 /// @param <V> The value type being tested.
 /// @param <M> The map type being tested.
+/// @see SequencedMap#putFirst(Object, Object)
 /// @author evanbergstrom
-/// @since 1.0
+/// @since 1.0.0
 public interface PutFirstContract<K, V, M extends SequencedMap<K, V>> extends MapContractSupport<K, V, M> {
 
-    /// Tests that `putFirst()` adds a new entry to the front of the map.
+    /// Verifies that `putFirst(K, V)` adds a new entry to the front of the map or
+    /// throws [UnsupportedOperationException] if not supported.
+    ///
+    /// @throws UnsupportedOperationException if the method is not supported and the contract
+    ///         specifies it should not be.
+    /// @since 1.0.0
     @Test
-    @DisplayName("Test putFirst adds a new entry to the front of the map")
-    default void testPutFirstNewEntry() {
+    @DisplayName("putFirst: with new entry, adds to front and updates size")
+    default void putFirst_withNewEntry_addsToFrontAndUpdatesSize() {
         SequencedMap<K, V> map = provider().emptyInstance();
         K key = keyProvider().createInstance();
         V value = valueProvider().createInstance();
@@ -34,10 +61,15 @@ public interface PutFirstContract<K, V, M extends SequencedMap<K, V>> extends Ma
         }
     }
 
-    /// Tests that `putFirst()` updates and moves an existing entry to the front of the map.
+    /// Verifies that `putFirst(K, V)` updates and moves an existing entry to the front
+    /// of the map or throws [UnsupportedOperationException] if not supported.
+    ///
+    /// @throws UnsupportedOperationException if the method is not supported and the contract
+    ///         specifies it should not be.
+    /// @since 1.0.0
     @Test
-    @DisplayName("Test putFirst updates and moves an existing entry to the front of the map")
-    default void testPutFirstExistingEntry() {
+    @DisplayName("putFirst: with existing entry, updates and moves to front")
+    default void putFirst_withExistingEntry_updatesAndMovesToFront() {
         K key1 = keyProvider().createInstance(1);
         V value1 = valueProvider().createInstance(1);
         K key2 = keyProvider().createInstance(2);

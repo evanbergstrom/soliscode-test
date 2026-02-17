@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
 /// Abstract base class that provides common functionality for implementing breakable collection classes.
@@ -95,7 +96,7 @@ import java.util.function.Supplier;
 /// This is useful for testing scenarios where collections have partial interface implementations.
 ///
 /// @author evanbergstrom
-/// @since 1.0
+/// @since 1.0.0
 /// @see Breakable
 /// @see Break
 /// @see MethodSupport
@@ -110,16 +111,28 @@ public abstract class AbstractBreakable extends MethodSupport implements Breakab
     /// Default value for the safety field
     protected static final boolean DEFAULT_SAFETY = false;
 
+    /// A protected static final set that serves as the default collection of breaks
+    /// within the application. This set is intended to be immutable and initialized
+    /// as an empty set to ensure no breaks are predefined by default.
     protected static final Set<Break> DEFAULT_BREAKS = Collections.emptySet();
 
+    /// A static, immutable map that defines the default statuses for interface methods.
+    ///
+    /// This map provides a baseline configuration linking [InterfaceMethod] instances
+    /// to their corresponding [MethodStatus] values. It is initialized as an empty map
+    /// using [Collections#emptyMap()], indicating no default method-to-status mappings
+    /// are predefined until explicitly populated elsewhere in the application.
     protected static final Map<InterfaceMethod, MethodStatus> DEFAULT_METHOD_STATUSES = Collections.emptyMap();
 
+    /// The breaks that will be applied while running methods
     private final @NonNull Set<Break> breaks;
 
+    /// Random number generator for subclasses.
     private static final Random RANDOM = new Random();
 
-    /// Mutex for synchronizing access to the breakable object.
-    private transient Object mutex;
+    /// Lock for synchronizing access to the breakable object.
+    /// This is used to simulate thread safety or lack thereof based on the safety configuration.
+    private final transient ReentrantLock lock;
 
     /// Serialization support for writing the object state.
     ///
@@ -132,7 +145,7 @@ public abstract class AbstractBreakable extends MethodSupport implements Breakab
     @Serial
     private void writeObject(final ObjectOutputStream out) throws IOException {
         out.defaultWriteObject();
-        out.writeBoolean(mutex != null);
+        out.writeBoolean(lock != null);
     }
 
     /// Serialization support for reading the object state.
@@ -149,11 +162,11 @@ public abstract class AbstractBreakable extends MethodSupport implements Breakab
         in.defaultReadObject();
         if (in.readBoolean()) {
             try {
-                var field = AbstractBreakable.class.getDeclaredField("mutex");
+                var field = AbstractBreakable.class.getDeclaredField("lock");
                 field.setAccessible(true);
-                field.set(this, new Object());
+                field.set(this, new ReentrantLock());
             } catch (NoSuchFieldException | IllegalAccessException e) {
-                throw new IOException("Failed to restore mutex field", e);
+                throw new IOException("Failed to restore lock field", e);
             }
         }
     }
@@ -169,7 +182,7 @@ public abstract class AbstractBreakable extends MethodSupport implements Breakab
     public AbstractBreakable() {
         super();
         this.breaks = new HashSet<>();
-        this.mutex = null;
+        this.lock = null;
     }
 
     /// Creates a breakable object by copying the breaks and optional method support from another breakable object.
@@ -186,7 +199,7 @@ public abstract class AbstractBreakable extends MethodSupport implements Breakab
     public AbstractBreakable(final @NonNull AbstractBreakable other) {
         super(other);
         this.breaks = new HashSet<>(other.breaks);
-        this.mutex = (other.isSafe()) ? new Object() : null;
+        this.lock = (other.isSafe()) ? new ReentrantLock() : null;
     }
 
     /// Creates a breakable object with the specified collection of breaks.
@@ -200,6 +213,7 @@ public abstract class AbstractBreakable extends MethodSupport implements Breakab
     /// @param breaks the collection of breaks to apply to this object; must not be null
     ///               and may be empty to create an unbroken object
     /// @param methodStatuses the method status configuration.
+    /// @param isSafe whether the resulting object is safe for concurrent access.
     /// @throws NullPointerException if breaks is null
     protected AbstractBreakable(final @NonNull Set<Break> breaks,
                                 final @NonNull Map<InterfaceMethod, MethodStatus> methodStatuses,
@@ -207,9 +221,9 @@ public abstract class AbstractBreakable extends MethodSupport implements Breakab
         super(methodStatuses);
         this.breaks = breaks;
         if (isSafe) {
-            this.mutex = new Object();
+            this.lock = new ReentrantLock();
         } else {
-            this.mutex = null;
+            this.lock = null;
         }
 
     }
@@ -252,8 +266,7 @@ public abstract class AbstractBreakable extends MethodSupport implements Breakab
     /// construction, which can be useful for testing scenarios where breaks
     /// need to be applied conditionally.
     ///
-    /// @param aBreak the break to add_singleElement_returnsTrueAndUpdatesSize; must not be null
-    /// @throws NullPointerException if aBreak is null
+    /// @param aBreak the break to add; must not be null
     @Override
     public void addBreak(final @NonNull Break aBreak) {
         this.breaks.add(aBreak);
@@ -269,32 +282,49 @@ public abstract class AbstractBreakable extends MethodSupport implements Breakab
     /// construction, which can be useful for testing scenarios where breaks
     /// need to be applied conditionally.
     ///
-    /// @param newBreaks the collection of breaks to add_singleElement_returnsTrueAndUpdatesSize; must not be null
+    /// @param newBreaks the collection of breaks to add; must not be null
     ///                  but may be empty (which results in no changes)
-    /// @throws NullPointerException if newBreaks is null
     @Override
     public void addBreaks(final @NonNull Collection<Break> newBreaks) {
         this.breaks.addAll(newBreaks);
     }
 
+    /// Returns a random integer.
+    /// @return a random integer
     protected static int randomInt() {
         return RANDOM.nextInt();
     }
 
+    /// Returns a random index within the specified length.
+    /// @param length the maximum length (exclusive)
+    /// @return a random index between 0 (inclusive) and length (exclusive)
     protected static int randomIndex(final int length) {
         return Math.abs(RANDOM.nextInt()) % length;
     }
 
+    /// Returns a message indicating that the specified method is not supported.
+    /// @param method the method that is not supported
+    /// @return the not supported message
     protected static String notSupportedMessage(final @NonNull InterfaceMethod method) {
         return method.methodName() + " is not supported by " + Breakable.class.getSimpleName();
     }
 
+    /// Checks if the specified method is supported.
+    /// @param method the method to check
+    /// @throws UnsupportedOperationException if the method is not supported
     protected void checkMethodSupport(final @NonNull InterfaceMethod method) {
         if (!supportsMethod(method)) {
             throw new UnsupportedOperationException(notSupportedMessage(method));
         }
     }
 
+    /// Checks if the specified optional method is supported.
+    /// If the method is not supported and the specified break is present, a [RuntimeException] is thrown.
+    /// Otherwise, if the method is not supported, an [UnsupportedOperationException] is thrown.
+    /// @param method the method to check
+    /// @param wrongExceptionBreak the break that triggers a [RuntimeException] instead of [UnsupportedOperationException]
+    /// @throws RuntimeException if the method is not supported and the break is present
+    /// @throws UnsupportedOperationException if the method is not supported and the break is not present
     protected void checkOptionalMethodSupport(final @NonNull InterfaceMethod method,
                                               final @NonNull Break wrongExceptionBreak) {
         if (!supportsMethod(method)) {
@@ -305,28 +335,47 @@ public abstract class AbstractBreakable extends MethodSupport implements Breakab
         }
     }
 
+    /// Creates a [RuntimeException] indicating that the wrong exception was thrown.
+    /// @param e the original exception
+    /// @return the new [RuntimeException]
     protected RuntimeException wrongException(final @NonNull Exception e) {
         return new RuntimeException("Threw wrong exception", e);
     }
 
+    /// Checks if the object is configured to be thread-safe.
+    /// @return true if safe, false otherwise
     public boolean isSafe() {
-        return mutex != null;
+        return lock != null;
     }
 
+    /// Executes the specified runnable with synchronization if the object is safe and the safety break is not present.
+    /// @param safetyBreak the break that disables safety
+    /// @param runnable the runnable to execute
     protected void runWithBreakableSafety(final @NonNull Break safetyBreak, final @NonNull Runnable runnable) {
-        if (mutex != null && !hasBreak(safetyBreak)) {
-            synchronized (mutex) {
+        if (lock != null && !hasBreak(safetyBreak)) {
+            try {
+                lock.lock();
                 runnable.run();
+            } finally {
+                lock.unlock();
             }
         } else {
             runnable.run();
         }
     }
 
+    /// Executes the specified supplier with synchronization if the object is safe and the safety break is not present.
+    /// @param <T> the type of the result
+    /// @param safetyBreak the break that disables safety
+    /// @param supplier the supplier to execute
+    /// @return the result from the supplier
     protected <T> T getWithBreakableSafety(final @NonNull Break safetyBreak, final @NonNull Supplier<T> supplier) {
-        if (mutex != null && !hasBreak(safetyBreak)) {
-            synchronized (mutex) {
+        if (lock != null && !hasBreak(safetyBreak)) {
+            try {
+                lock.lock();
                 return supplier.get();
+            } finally {
+                lock.unlock();
             }
         }
         return supplier.get();

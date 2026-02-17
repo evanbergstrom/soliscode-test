@@ -1,5 +1,6 @@
 package org.soliscode.test.contract.object;
 
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.soliscode.test.contract.support.ContractSupport;
@@ -62,29 +63,60 @@ public interface SerializableContract<T extends Serializable> extends ContractSu
     ///         if any exceptions are thrown during serialization.
     @DisplayName("serialization round-trip returns an equal object")
     @Test
-    @SuppressWarnings("unchecked")
     default void serialize_whenCalled_returnsEqualObject() {
         if (supportsMethod(ObjectMethods.SERIALIZATION)) {
             T original = provider().createInstance();
             try {
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-                    oos.writeObject(original);
-                }
-
-                byte[] bytes = baos.toByteArray();
+                byte[] bytes = serialize(original);
                 ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-                T deserialized;
-                try (ObjectInputStream ois = new ObjectInputStream(bais)) {
-                    deserialized = (T) ois.readObject();
-                }
+                T deserialized = deserialize(bytes);
 
                 assertEquals(original, deserialized, "Deserialized object should be equal to the original");
-                assertEquals(original.hashCode(), deserialized.hashCode(),
-                        "Deserialized object should have the same hash code as the original");
+
+                if (supportsMethod(ObjectMethods.HASH_CODE)) {
+                    assertEquals(original.hashCode(), deserialized.hashCode(),
+                            "Deserialized object should have the same hash code as the original");
+                }
             } catch (IOException | ClassNotFoundException e) {
                 fail("Serialization round-trip failed with exception: " + e.getMessage(), e);
             }
+        }
+    }
+
+    /// Serializes the specified object into a byte array.
+    ///
+    /// This method uses standard Java serialization via [java.io.ObjectOutputStream]
+    /// to convert the given [Serializable] object into its byte representation.
+    ///
+    /// @param object the object to serialize
+    /// @return the serialized byte representation of the object
+    /// @throws IOException if an I/O error occurs during serialization
+    /// @since 1.0.0
+    default byte[] serialize(final @NonNull Serializable object) throws java.io.IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+            oos.writeObject(object);
+        }
+        return baos.toByteArray();
+    }
+
+    /// Deserializes an object from the specified byte array.
+    ///
+    /// This method uses standard Java serialization via [java.io.ObjectInputStream]
+    /// to reconstruct an object of type `T` from its byte representation.
+    ///
+    /// @param bytes the byte array containing the serialized object state
+    /// @return the reconstructed object
+    /// @throws IOException if an I/O error occurs during deserialization
+    /// @throws ClassNotFoundException if the class of the serialized object cannot be found
+    /// @since 1.0.0
+    @SuppressWarnings("unchecked")
+    default  T deserialize(final byte[] bytes)
+            throws java.io.IOException, ClassNotFoundException {
+
+        ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+        try (ObjectInputStream ois = new ObjectInputStream(bais)) {
+            return (T) ois.readObject();
         }
     }
 }

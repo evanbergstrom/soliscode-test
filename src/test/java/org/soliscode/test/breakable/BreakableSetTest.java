@@ -254,8 +254,8 @@ public class BreakableSetTest extends AbstractTest
     ///
     /// @see BreakableSet#BreakableSet(BreakableSet)
     @Test
-    @DisplayName("Test copy constructor")
-    public void testCopyConstructor() {
+    @DisplayName("copyConstructor: copies elements from source set")
+    public void copyConstructor_whenGivenConfiguredSet_copiesElements() {
         BreakableSet<Integer> original = new BreakableSet.Builder<Integer>()
                 .addElements(1, 2, 3)
                 .addBreak(BreakableCollection.ADD_DOES_NOT_ADD_ELEMENT)
@@ -310,8 +310,8 @@ public class BreakableSetTest extends AbstractTest
     /// @see BreakableSet.Builder#addBreak(Break)
     /// @see BreakableSet.Builder#build()
     @Test
-    @DisplayName("Test builder pattern")
-    public void testBuilder() {
+    @DisplayName("builder: builds configured set from individual elements")
+    public void builder_withElementsAndBreak_buildsConfiguredSet() {
         BreakableSet<Integer> set = new BreakableSet.Builder<Integer>()
                 .addElements(1, 2, 3)
                 .addBreak(BreakableCollection.ADD_DOES_NOT_ADD_ELEMENT)
@@ -320,9 +320,16 @@ public class BreakableSetTest extends AbstractTest
         assertEquals(setOf(1, 2, 3), set);
     }
 
+    /// Tests the `Builder(Map)` constructor for initializing sets from existing collections.
+    ///
+    /// This test ensures that providing an initial collection to the `Builder` correctly
+    /// initializes the resulting `BreakableSet` with those elements and applies any
+    /// configured breaks.
+    ///
+    /// @see BreakableSet.Builder
     @Test
-    @DisplayName("Test builder pattern")
-    public void testBuilderCollectionConstructor() {
+    @DisplayName("builder: builds configured set from initial collection")
+    public void builder_withInitialElements_buildsConfiguredSet() {
         BreakableSet<Integer> set = new BreakableSet.Builder<>(List.of(1,2,3))
                 .addBreak(BreakableCollection.ADD_DOES_NOT_ADD_ELEMENT)
                 .build();
@@ -363,7 +370,7 @@ public class BreakableSetTest extends AbstractTest
     ///     .build();
     ///
     /// BreakableSet<String> brokenSet = template.copy()
-    ///     .addBreak(SET_ALLOWS_DUPLICATE_ELEMENTS)
+    ///     .addBreak(ADD_RETURNS_TRUE_FOR_DUPLICATES)
     ///     .build();
     ///
     /// // Template remains unmodified for further use
@@ -379,8 +386,8 @@ public class BreakableSetTest extends AbstractTest
     /// @see BreakableSet.Builder#copy()
     /// @see BreakableSet.Builder#build()
     @Test
-    @DisplayName("Test builder copy")
-    public void testBuilderCopy() {
+    @DisplayName("builder.copy(): produces independent builder with inherited config")
+    public void builderCopy_whenCalled_preservesConfiguration() {
         BreakableSet.Builder<Integer> builder = new BreakableSet.Builder<Integer>()
                 .addElements(1, 2, 3)
                 .addBreak(BreakableCollection.ADD_DOES_NOT_ADD_ELEMENT);

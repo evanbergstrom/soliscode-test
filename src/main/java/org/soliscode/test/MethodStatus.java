@@ -5,7 +5,9 @@ package org.soliscode.test;
 /// @param supported true if the method is supported, false if it is not supported
 public record MethodStatus(boolean supported) {
 
+    /// Represents a supported method status.
     public static final MethodStatus SUPPORTED = new MethodStatus(true);
 
+    /// Represents an unsupported method status.
     public static final MethodStatus UNSUPPORTED = new MethodStatus(false);
 }

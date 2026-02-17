@@ -24,5 +24,22 @@ import org.soliscode.test.SupportedMethods;
 /// @since 1.0
 public interface ContractSupport<T> extends ProviderSupport<T>, SupportedMethods {
 
+    /// The number of times an operation should be repeated during consistency testing.
+    ///
+    /// This constant is used in test cases to ensure that operations perform consistently
+    /// when executed multiple times. It defines the default number of repetitions for such
+    /// tests, providing a balance between thorough validation and execution time. The value
+    /// of {@value CONSISTENCY_REPEATS} is considered sufficient for detecting inconsistencies
+    /// in most scenarios.
+    ///
+    /// Usage example:
+    /// <pre>
+    /// for (int i = 0; i < CONSISTENCY_REPEATS; i++) {
+    ///     assertEquals(expected, runOperationUnderTest());
+    /// }
+    /// </pre>
+    ///
+    /// @see ContractSupport
+    /// @since 1.0
     int CONSISTENCY_REPEATS = 10;
 }

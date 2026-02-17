@@ -10,11 +10,29 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.soliscode.test.assertions.collection.CollectionAssertions.assertSameSize;
 
+/**
+ * Test Suite for assertSameSize Collection Assertion
+ *
+ * <p>This test class validates the behavior of the {@code assertSameSize} assertion,
+ * ensuring it correctly identifies when two {@link Iterable} or {@link java.util.Collection}
+ * instances have the same size, while handling various edge cases like empty collections,
+ * null inputs, and size mismatches with custom messages.
+ *
+ * @author evanbergstrom
+ * @since 1.0.0
+ */
 @DisplayName("Tests for AssertIsSame class")
 public class AssertSameSizeTest {
 
     private static final String TEST_MESSAGE = "Test message";
 
+    /**
+     * Verifies that {@code assertSameSize} correctly handles empty collections.
+     *
+     * <p>It ensures that two empty collections are considered to have the same size,
+     * and that a non-empty collection compared to an empty one results in an
+     * {@link AssertionFailedError}.
+     */
     @Test
     public void testAssertSameSizeOnEmptyCollection() {
         Iterable<Integer> empty1 = IterableTestUtils.empty();
@@ -33,6 +51,12 @@ public class AssertSameSizeTest {
         assertThrows(AssertionFailedError.class, () -> CollectionAssertions.assertSameSize(nonEmpty, empty1));
     }
 
+    /**
+     * Verifies that {@code assertSameSize} correctly identifies collections with the same size.
+     *
+     * <p>It ensures that collections with the same number of elements pass the assertion,
+     * while collections with different sizes cause an {@link AssertionFailedError}.
+     */
     @Test
     public void testAssertSameSizeOnNonEmptyCollection() {
         Iterable<Integer> list1 = IterableOnly.of(1);
@@ -44,6 +68,10 @@ public class AssertSameSizeTest {
         assertThrows(AssertionFailedError.class, () -> assertSameSize(list1, list3));
     }
 
+    /**
+     * Verifies that {@code assertSameSize} throws {@link NullPointerException} when either
+     * collection is null.
+     */
     @Test
     public void testAssertSameSizeThrowsOnNullCollection() {
         Iterable<Integer> list1 = IterableOnly.of(1);
@@ -55,12 +83,20 @@ public class AssertSameSizeTest {
         assertThrows(NullPointerException.class, () -> assertSameSize(null, null));
     }
 
+    /**
+     * Verifies that {@code assertSameSize} includes the provided failure message
+     * when the assertion fails due to size mismatch.
+     */
     @Test
     public void testAssertSameSizeWithMessage() {
         assertThrows(AssertionFailedError.class,
                 () -> assertSameSize(IterableOnly.of(1), IterableOnly.of(1, 2), TEST_MESSAGE), TEST_MESSAGE);
     }
 
+    /**
+     * Verifies that {@code assertSameSize} includes the message from the provided
+     * supplier when the assertion fails due to size mismatch.
+     */
     @Test
     public void testAssertSameSizeWithMessageSupplier() {
         assertThrows(AssertionFailedError.class,

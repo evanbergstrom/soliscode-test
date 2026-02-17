@@ -34,7 +34,7 @@ import static org.soliscode.test.assertions.Assertions.assertThrowsAny;
 ///     @TestFactory
 ///     public Collection<DynamicTest> dynamicTests() {
 ///         return List.of(
-///             failingTestWithBreak("testOperation() fails with MY_BREAK",
+///             failsWithBreak("testOperation() fails with MY_BREAK",
 ///                 MyBreakable.MY_BREAK,
 ///                 DynamicBrokenContract::testOperation)
 ///         );
@@ -59,30 +59,28 @@ public abstract class ContractTest<C> {
     /// Creates a dynamic test that is expected to fail with an [AssertionFailedError]
     /// due to a specific break being applied.
     ///
-    /// @param <X> the type of the test contract
+    /// @param <X>         the type of the test contract
+    /// @param aBreak      the break to apply to the test object
+    /// @param test        the test method to call, which is expected to fail
     /// @param description a description for the dynamic test
-    /// @param aBreak the break to apply to the test object
-    /// @param test the test method to call, which is expected to fail
     /// @return a dynamic test instance
-    @SuppressWarnings("ThrowableNotThrown")
-    protected <X> DynamicTest failingTestWithBreak(final @NonNull String description,
-                                                   final @NonNull Break aBreak,
-                                                   final @NonNull Consumer<X> test) {
-        return dynamicTest(description, () -> assertThrowsAny(() -> test.accept(createTest(aBreak))));
+    @SuppressWarnings("unchecked")
+    protected <X> DynamicTest failsWithBreak(final @NonNull Break aBreak, final @NonNull Consumer<X> test,
+                                             final @NonNull String description) {
+        return dynamicTest(description, () -> assertThrowsAny(() -> test.accept((X) createTest(aBreak))));
     }
 
     /// Creates a dynamic test that is expected to fail with an [UnsupportedOperationException]
     /// because the specified method is marked as unsupported.
     ///
-    /// @param <X> the type of the test contract
-    /// @param description a description for the dynamic test
+    /// @param <X>         the type of the test contract
     /// @param unsupported the optional method that is unsupported
-    /// @param test the test method to call, which is expected to fail
+    /// @param test        the test method to call, which is expected to fail
+    /// @param description a description for the dynamic test
     /// @return a dynamic test instance
-    protected <X> DynamicTest passingTestWithUnsupportedMethod(final @NonNull String description,
-                                                               final @NonNull InterfaceMethod unsupported,
-                                                               final @NonNull Consumer<X> test) {
-        return dynamicTest(description, () -> assertDoesNotThrow(() -> test.accept(createTest(unsupported))));
+    @SuppressWarnings("unchecked")
+    protected <X> DynamicTest passesWhenUnsupported(final @NonNull InterfaceMethod unsupported, final @NonNull Consumer<X> test, final @NonNull String description) {
+        return dynamicTest(description, () -> assertDoesNotThrow(() -> test.accept((X) createTest(unsupported))));
     }
 
     /// Creates a dynamic test that is expected to fail with an exception other than
@@ -91,43 +89,38 @@ public abstract class ContractTest<C> {
     /// This is typically used to verify that a [Break] takes precedence or causes a different
     /// failure even when a method is marked as unsupported.
     ///
-    /// @param <X> the type of the test contract
-    /// @param description a description for the dynamic test
+    /// @param <X>         the type of the test contract
     /// @param unsupported the optional method that is unsupported
-    /// @param aBreak the break to apply to the test object
-    /// @param test the test method to call, which is expected to fail with an unexpected exception
+    /// @param aBreak      the break to apply to the test object
+    /// @param test        the test method to call, which is expected to fail with an unexpected exception
+    /// @param description a description for the dynamic test
     /// @return a dynamic test instance
-    protected <X> DynamicTest failingTestWithUnsupportedMethodBreak(final @NonNull String description,
-                                                                    final @NonNull InterfaceMethod unsupported,
-                                                                    final @NonNull Break aBreak,
-                                                                    final @NonNull Consumer<X> test) {
+    @SuppressWarnings("unchecked")
+    protected <X> DynamicTest failsWithUnsupportedBreak(final @NonNull InterfaceMethod unsupported, final @NonNull Break aBreak, final @NonNull Consumer<X> test, final @NonNull String description) {
         return dynamicTest(description, () -> assertThrowsDifferent(UnsupportedOperationException.class,
-                () -> test.accept(createTest(aBreak, unsupported))));
+                () -> test.accept((X) createTest(aBreak, unsupported))));
     }
 
     /// Creates an instance of the test contract with the specified break and optional method status.
     ///
-    /// @param <X> the type of the test contract
     /// @param b the break to apply (may be null)
     /// @param m the optional method to configure (may be null)
     /// @return an instance of the test contract
-    protected abstract <X> @NonNull X createTest(final Break b, final InterfaceMethod m);
+    protected abstract @NonNull DynamicContract<?,?> createTest(final Break b, final InterfaceMethod m);
 
     /// Creates an instance of the test contract with the specified break.
     ///
-    /// @param <X> the type of the test contract
     /// @param b the break to apply
     /// @return an instance of the test contract
-    protected final <X> @NonNull X createTest(final @NonNull Break b) {
+    protected final @NonNull DynamicContract<?,?> createTest(final @NonNull Break b) {
         return createTest(b, null);
     }
 
     /// Creates an instance of the test contract with the specified optional method status.
     ///
-    /// @param <X> the type of the test contract
     /// @param m the optional method to configure
     /// @return an instance of the test contract
-    protected final <X> @NonNull X createTest(final @NonNull InterfaceMethod m) {
+    protected final @NonNull DynamicContract<?,?> createTest(final @NonNull InterfaceMethod m) {
         return createTest(null, m);
     }
 

@@ -12,50 +12,53 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.soliscode.test.breakable.BreakableBlockingDeque.*;
 
-/// Comprehensive test suite for BreakableBlockingDeque functionality.
+/// Comprehensive test suite for `BreakableBlockingDeque` functionality.
 ///
-/// This test class validates all aspects of the BreakableBlockingDeque implementation,
+/// This test class validates all aspects of the `BreakableBlockingDeque` implementation,
 /// including break constants, normal operations, error handling, and builder patterns.
-/// The tests ensure that the BreakableBlockingDeque correctly implements both the
-/// BlockingDeque interface and the Break mechanism.
+/// The tests ensure that the `BreakableBlockingDeque` correctly implements both the
+/// `BlockingDeque` interface and the break mechanism.
 ///
-/// ## Test Categories
+/// ## Purpose
+/// The purpose of this test suite is to ensure that `BreakableBlockingDeque` behaves
+/// correctly both under normal conditions and when specific "breaks" are applied.
+/// It verifies that the blocking operations (`put`, `take`, `offer`, `poll`) respect
+/// the configured breaks and that the builder pattern correctly configures the instance.
 ///
-/// ### Break Testing
-/// - Tests for all 16 break constants covering blocking operations
-/// - Verification of break behavior for putFirst/putLast operations
-/// - Testing break behavior for takeFirst/takeLast operations
-/// - Timeout operation break testing
-/// - InterruptedException handling
+/// ## Usage Examples
+/// ```java
+/// BreakableBlockingDeque.Builder<String> builder = new BreakableBlockingDeque.Builder<>();
+/// builder.addBreak(PUT_FIRST_THROWS_INTERRUPTED_EXCEPTION);
+/// BreakableBlockingDeque<String> deque = builder.build();
 ///
-/// ### Normal Operations
-/// - Basic BlockingDeque functionality
-/// - Integration with LinkedBlockingDeque
-/// - Thread safety verification
-/// - Capacity and blocking behavior
+/// // This will throw InterruptedException as configured
+/// deque.putFirst("item1");
+/// ```
 ///
-/// ### Builder and Factory Methods
-/// - Builder pattern functionality
-/// - Copy constructor behavior
-/// - Static factory methods
-/// - Configuration inheritance
-///
-/// ### Error Handling
-/// - UnsupportedOperationException testing
-/// - Method support configuration
-/// - Exception propagation
+/// ## Thread Safety
+/// These tests are generally execution-thread-confined. While `BreakableBlockingDeque`
+/// itself is designed to be thread-safe (wrapping a `LinkedBlockingDeque`), the tests
+/// primarily verify state and exception behavior in a single-threaded manner, with
+/// some simulation of blocking behavior.
 ///
 /// @author evanbergstrom
-/// @since 1.0
+/// @since 1.0.0
 /// @see BreakableBlockingDeque
 /// @see AbstractTest
+@DisplayName("Tests for BreakableBlockingDeque functionality")
 public class BreakableBlockingDequeTest extends AbstractTest {
+
+    /// Constructs a new BreakableBlockingDequeTest.
+    public BreakableBlockingDequeTest() {
+    }
 
     // ========== Break Testing: Put Operations ==========
 
+    /// Verifies that `putFirst` throws `InterruptedException` when the
+    /// {@link BreakableBlockingDeque#PUT_FIRST_THROWS_INTERRUPTED_EXCEPTION} break is added.
     @Test
-    @DisplayName("Test PUT_FIRST_THROWS_INTERRUPTED_EXCEPTION break")
-    public void testPutFirstThrowsInterruptedException() {
+    @DisplayName("putFirst() - when break added - throws InterruptedException")
+    public void putFirst_whenBreakAdded_throwsInterruptedException() {
         BreakableBlockingDeque.Builder<String> builder = new BreakableBlockingDeque.Builder<>();
         builder.addBreak(PUT_FIRST_THROWS_INTERRUPTED_EXCEPTION);
         BreakableBlockingDeque<String> deque = builder.build();
@@ -63,9 +66,13 @@ public class BreakableBlockingDequeTest extends AbstractTest {
         assertThrows(InterruptedException.class, () -> deque.putFirst("item1"));
     }
 
+    /// Verifies that `putFirst` does not add the element to the deque when the
+    /// {@link BreakableBlockingDeque#PUT_FIRST_DOES_NOT_ADD_ELEMENT} break is added.
+    ///
+    /// @throws InterruptedException if the thread is interrupted
     @Test
-    @DisplayName("Test PUT_FIRST_DOES_NOT_ADD_ELEMENT break")
-    public void testPutFirstDoesNotAddElement() throws InterruptedException {
+    @DisplayName("putFirst() - when break added - does not add element")
+    public void putFirst_whenBreakAdded_doesNotAddElement() throws InterruptedException {
         BreakableBlockingDeque.Builder<String> builder = new BreakableBlockingDeque.Builder<>();
         builder.addBreak(PUT_FIRST_DOES_NOT_ADD_ELEMENT);
         BreakableBlockingDeque<String> deque = builder.build();
@@ -74,9 +81,11 @@ public class BreakableBlockingDequeTest extends AbstractTest {
         assertTrue(deque.isEmpty());
     }
 
+    /// Verifies that `putFirst` throws an exception when the
+    /// {@link BreakableBlockingDeque#PUT_FIRST_THROWS_EXCEPTION} break is added.
     @Test
-    @DisplayName("Test PUT_FIRST_THROWS_EXCEPTION break")
-    public void testPutFirstThrowsException() {
+    @DisplayName("putFirst() - when break added - throws Exception")
+    public void putFirst_whenBreakAdded_throwsException() {
         BreakableBlockingDeque.Builder<String> builder = new BreakableBlockingDeque.Builder<>();
         builder.addBreak(PUT_FIRST_THROWS_EXCEPTION);
         BreakableBlockingDeque<String> deque = builder.build();
@@ -84,9 +93,11 @@ public class BreakableBlockingDequeTest extends AbstractTest {
         assertThrows(IllegalStateException.class, () -> deque.putFirst("item1"));
     }
 
+    /// Verifies that `putLast` throws `InterruptedException` when the
+    /// {@link BreakableBlockingDeque#PUT_LAST_THROWS_INTERRUPTED_EXCEPTION} break is added.
     @Test
-    @DisplayName("Test PUT_LAST_THROWS_INTERRUPTED_EXCEPTION break")
-    public void testPutLastThrowsInterruptedException() {
+    @DisplayName("putLast() - when break added - throws InterruptedException")
+    public void putLast_whenBreakAdded_throwsInterruptedException() {
         BreakableBlockingDeque.Builder<String> builder = new BreakableBlockingDeque.Builder<>();
         builder.addBreak(PUT_LAST_THROWS_INTERRUPTED_EXCEPTION);
         BreakableBlockingDeque<String> deque = builder.build();
@@ -94,9 +105,13 @@ public class BreakableBlockingDequeTest extends AbstractTest {
         assertThrows(InterruptedException.class, () -> deque.putLast("item1"));
     }
 
+    /// Verifies that `putLast` does not add the element to the deque when the
+    /// {@link BreakableBlockingDeque#PUT_LAST_DOES_NOT_ADD_ELEMENT} break is added.
+    ///
+    /// @throws InterruptedException if the thread is interrupted
     @Test
-    @DisplayName("Test PUT_LAST_DOES_NOT_ADD_ELEMENT break")
-    public void testPutLastDoesNotAddElement() throws InterruptedException {
+    @DisplayName("putLast() - when break added - does not add element")
+    public void putLast_whenBreakAdded_doesNotAddElement() throws InterruptedException {
         BreakableBlockingDeque.Builder<String> builder = new BreakableBlockingDeque.Builder<>();
         builder.addBreak(PUT_LAST_DOES_NOT_ADD_ELEMENT);
         BreakableBlockingDeque<String> deque = builder.build();
@@ -105,9 +120,11 @@ public class BreakableBlockingDequeTest extends AbstractTest {
         assertTrue(deque.isEmpty());
     }
 
+    /// Verifies that `putLast` throws an exception when the
+    /// {@link BreakableBlockingDeque#PUT_LAST_THROWS_EXCEPTION} break is added.
     @Test
-    @DisplayName("Test PUT_LAST_THROWS_EXCEPTION break")
-    public void testPutLastThrowsException() {
+    @DisplayName("putLast() - when break added - throws Exception")
+    public void putLast_whenBreakAdded_throwsException() {
         BreakableBlockingDeque.Builder<String> builder = new BreakableBlockingDeque.Builder<>();
         builder.addBreak(PUT_LAST_THROWS_EXCEPTION);
         BreakableBlockingDeque<String> deque = builder.build();
@@ -117,9 +134,13 @@ public class BreakableBlockingDequeTest extends AbstractTest {
 
     // ========== Break Testing: Take Operations ==========
 
+    /// Verifies that `takeFirst` throws `InterruptedException` when the
+    /// {@link BreakableBlockingDeque#TAKE_FIRST_THROWS_INTERRUPTED_EXCEPTION} break is added.
+    ///
+    /// @throws InterruptedException if the thread is interrupted
     @Test
-    @DisplayName("Test TAKE_FIRST_THROWS_INTERRUPTED_EXCEPTION break")
-    public void testTakeFirstThrowsInterruptedException() throws InterruptedException {
+    @DisplayName("takeFirst() - when break added - throws InterruptedException")
+    public void takeFirst_whenBreakAdded_throwsInterruptedException() throws InterruptedException {
         BreakableBlockingDeque.Builder<String> builder = new BreakableBlockingDeque.Builder<>();
         builder.addBreak(TAKE_FIRST_THROWS_INTERRUPTED_EXCEPTION);
         BreakableBlockingDeque<String> deque = builder.build();
@@ -128,9 +149,13 @@ public class BreakableBlockingDequeTest extends AbstractTest {
         assertThrows(InterruptedException.class, deque::takeFirst);
     }
 
+    /// Verifies that `takeFirst` returns `null` when the
+    /// {@link BreakableBlockingDeque#TAKE_FIRST_ALWAYS_RETURNS_NULL} break is added.
+    ///
+    /// @throws InterruptedException if the thread is interrupted
     @Test
-    @DisplayName("Test TAKE_FIRST_ALWAYS_RETURNS_NULL break")
-    public void testTakeFirstAlwaysReturnsNull() throws InterruptedException {
+    @DisplayName("takeFirst() - when break added - returns null")
+    public void takeFirst_whenBreakAdded_returnsNull() throws InterruptedException {
         BreakableBlockingDeque.Builder<String> builder = new BreakableBlockingDeque.Builder<>();
         builder.addBreak(TAKE_FIRST_ALWAYS_RETURNS_NULL);
         BreakableBlockingDeque<String> deque = builder.build();
@@ -139,9 +164,13 @@ public class BreakableBlockingDequeTest extends AbstractTest {
         assertNull(deque.takeFirst());
     }
 
+    /// Verifies that `takeFirst` does not remove the element from the deque when the
+    /// {@link BreakableBlockingDeque#TAKE_FIRST_DOES_NOT_REMOVE_ELEMENT} break is added.
+    ///
+    /// @throws InterruptedException if the thread is interrupted
     @Test
-    @DisplayName("Test TAKE_FIRST_DOES_NOT_REMOVE_ELEMENT break")
-    public void testTakeFirstDoesNotRemoveElement() throws InterruptedException {
+    @DisplayName("takeFirst() - when break added - does not remove element")
+    public void takeFirst_whenBreakAdded_doesNotRemoveElement() throws InterruptedException {
         BreakableBlockingDeque.Builder<String> builder = new BreakableBlockingDeque.Builder<>();
         builder.addBreak(TAKE_FIRST_DOES_NOT_REMOVE_ELEMENT);
         BreakableBlockingDeque<String> deque = builder.build();
@@ -151,9 +180,13 @@ public class BreakableBlockingDequeTest extends AbstractTest {
         assertEquals(1, deque.size()); // Element should still be there
     }
 
+    /// Verifies that `takeLast` throws `InterruptedException` when the
+    /// {@link BreakableBlockingDeque#TAKE_LAST_THROWS_INTERRUPTED_EXCEPTION} break is added.
+    ///
+    /// @throws InterruptedException if the thread is interrupted
     @Test
-    @DisplayName("Test TAKE_LAST_THROWS_INTERRUPTED_EXCEPTION break")
-    public void testTakeLastThrowsInterruptedException() throws InterruptedException {
+    @DisplayName("takeLast() - when break added - throws InterruptedException")
+    public void takeLast_whenBreakAdded_throwsInterruptedException() throws InterruptedException {
         BreakableBlockingDeque.Builder<String> builder = new BreakableBlockingDeque.Builder<>();
         builder.addBreak(TAKE_LAST_THROWS_INTERRUPTED_EXCEPTION);
         BreakableBlockingDeque<String> deque = builder.build();
@@ -162,9 +195,13 @@ public class BreakableBlockingDequeTest extends AbstractTest {
         assertThrows(InterruptedException.class, deque::takeLast);
     }
 
+    /// Verifies that `takeLast` returns `null` when the
+    /// {@link BreakableBlockingDeque#TAKE_LAST_ALWAYS_RETURNS_NULL} break is added.
+    ///
+    /// @throws InterruptedException if the thread is interrupted
     @Test
-    @DisplayName("Test TAKE_LAST_ALWAYS_RETURNS_NULL break")
-    public void testTakeLastAlwaysReturnsNull() throws InterruptedException {
+    @DisplayName("takeLast() - when break added - returns null")
+    public void takeLast_whenBreakAdded_returnsNull() throws InterruptedException {
         BreakableBlockingDeque.Builder<String> builder = new BreakableBlockingDeque.Builder<>();
         builder.addBreak(TAKE_LAST_ALWAYS_RETURNS_NULL);
         BreakableBlockingDeque<String> deque = builder.build();
@@ -173,9 +210,13 @@ public class BreakableBlockingDequeTest extends AbstractTest {
         assertNull(deque.takeLast());
     }
 
+    /// Verifies that `takeLast` does not remove the element from the deque when the
+    /// {@link BreakableBlockingDeque#TAKE_LAST_DOES_NOT_REMOVE_ELEMENT} break is added.
+    ///
+    /// @throws InterruptedException if the thread is interrupted
     @Test
-    @DisplayName("Test TAKE_LAST_DOES_NOT_REMOVE_ELEMENT break")
-    public void testTakeLastDoesNotRemoveElement() throws InterruptedException {
+    @DisplayName("takeLast() - when break added - does not remove element")
+    public void takeLast_whenBreakAdded_doesNotRemoveElement() throws InterruptedException {
         BreakableBlockingDeque.Builder<String> builder = new BreakableBlockingDeque.Builder<>();
         builder.addBreak(TAKE_LAST_DOES_NOT_REMOVE_ELEMENT);
         BreakableBlockingDeque<String> deque = builder.build();
@@ -187,9 +228,13 @@ public class BreakableBlockingDequeTest extends AbstractTest {
 
     // ========== Break Testing: Timeout Operations ==========
 
+    /// Verifies that `offerFirst` with timeout returns `false` when the
+    /// {@link BreakableBlockingDeque#OFFER_FIRST_WITH_TIMEOUT_ALWAYS_RETURNS_FALSE} break is added.
+    ///
+    /// @throws InterruptedException if the thread is interrupted
     @Test
-    @DisplayName("Test OFFER_FIRST_WITH_TIMEOUT_ALWAYS_RETURNS_FALSE break")
-    public void testOfferFirstWithTimeoutAlwaysReturnsFalse() throws InterruptedException {
+    @DisplayName("offerFirst() - with timeout and break added - returns false")
+    public void offerFirst_withTimeoutAndBreakAdded_returnsFalse() throws InterruptedException {
         BreakableBlockingDeque.Builder<String> builder = new BreakableBlockingDeque.Builder<>();
         builder.addBreak(OFFER_FIRST_WITH_TIMEOUT_ALWAYS_RETURNS_FALSE);
         BreakableBlockingDeque<String> deque = builder.build();
@@ -197,9 +242,11 @@ public class BreakableBlockingDequeTest extends AbstractTest {
         assertFalse(deque.offerFirst("item1", 1, TimeUnit.SECONDS));
     }
 
+    /// Verifies that `offerFirst` with timeout throws `InterruptedException` when the
+    /// {@link BreakableBlockingDeque#OFFER_FIRST_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION} break is added.
     @Test
-    @DisplayName("Test OFFER_FIRST_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION break")
-    public void testOfferFirstWithTimeoutThrowsInterruptedException() {
+    @DisplayName("offerFirst() - with timeout and break added - throws InterruptedException")
+    public void offerFirst_withTimeoutAndBreakAdded_throwsInterruptedException() {
         BreakableBlockingDeque.Builder<String> builder = new BreakableBlockingDeque.Builder<>();
         builder.addBreak(OFFER_FIRST_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION);
         BreakableBlockingDeque<String> deque = builder.build();
@@ -208,9 +255,13 @@ public class BreakableBlockingDequeTest extends AbstractTest {
             deque.offerFirst("item1", 1, TimeUnit.SECONDS));
     }
 
+    /// Verifies that `offerLast` with timeout returns `false` when the
+    /// {@link BreakableBlockingDeque#OFFER_LAST_WITH_TIMEOUT_ALWAYS_RETURNS_FALSE} break is added.
+    ///
+    /// @throws InterruptedException if the thread is interrupted
     @Test
-    @DisplayName("Test OFFER_LAST_WITH_TIMEOUT_ALWAYS_RETURNS_FALSE break")
-    public void testOfferLastWithTimeoutAlwaysReturnsFalse() throws InterruptedException {
+    @DisplayName("offerLast() - with timeout and break added - returns false")
+    public void offerLast_withTimeoutAndBreakAdded_returnsFalse() throws InterruptedException {
         BreakableBlockingDeque.Builder<String> builder = new BreakableBlockingDeque.Builder<>();
         builder.addBreak(OFFER_LAST_WITH_TIMEOUT_ALWAYS_RETURNS_FALSE);
         BreakableBlockingDeque<String> deque = builder.build();
@@ -218,9 +269,11 @@ public class BreakableBlockingDequeTest extends AbstractTest {
         assertFalse(deque.offerLast("item1", 1, TimeUnit.SECONDS));
     }
 
+    /// Verifies that `offerLast` with timeout throws `InterruptedException` when the
+    /// {@link BreakableBlockingDeque#OFFER_LAST_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION} break is added.
     @Test
-    @DisplayName("Test OFFER_LAST_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION break")
-    public void testOfferLastWithTimeoutThrowsInterruptedException() {
+    @DisplayName("offerLast() - with timeout and break added - throws InterruptedException")
+    public void offerLast_withTimeoutAndBreakAdded_throwsInterruptedException() {
         BreakableBlockingDeque.Builder<String> builder = new BreakableBlockingDeque.Builder<>();
         builder.addBreak(OFFER_LAST_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION);
         BreakableBlockingDeque<String> deque = builder.build();
@@ -229,9 +282,13 @@ public class BreakableBlockingDequeTest extends AbstractTest {
             deque.offerLast("item1", 1, TimeUnit.SECONDS));
     }
 
+    /// Verifies that `pollFirst` with timeout returns `null` when the
+    /// {@link BreakableBlockingDeque#POLL_FIRST_WITH_TIMEOUT_ALWAYS_RETURNS_NULL} break is added.
+    ///
+    /// @throws InterruptedException if the thread is interrupted
     @Test
-    @DisplayName("Test POLL_FIRST_WITH_TIMEOUT_ALWAYS_RETURNS_NULL break")
-    public void testPollFirstWithTimeoutAlwaysReturnsNull() throws InterruptedException {
+    @DisplayName("pollFirst() - with timeout and break added - returns null")
+    public void pollFirst_withTimeoutAndBreakAdded_returnsNull() throws InterruptedException {
         BreakableBlockingDeque.Builder<String> builder = new BreakableBlockingDeque.Builder<>();
         builder.addBreak(POLL_FIRST_WITH_TIMEOUT_ALWAYS_RETURNS_NULL);
         BreakableBlockingDeque<String> deque = builder.build();
@@ -240,9 +297,13 @@ public class BreakableBlockingDequeTest extends AbstractTest {
         assertNull(deque.pollFirst(1, TimeUnit.SECONDS));
     }
 
+    /// Verifies that `pollFirst` with timeout throws `InterruptedException` when the
+    /// {@link BreakableBlockingDeque#POLL_FIRST_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION} break is added.
+    ///
+    /// @throws InterruptedException if the thread is interrupted
     @Test
-    @DisplayName("Test POLL_FIRST_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION break")
-    public void testPollFirstWithTimeoutThrowsInterruptedException() throws InterruptedException {
+    @DisplayName("pollFirst() - with timeout and break added - throws InterruptedException")
+    public void pollFirst_withTimeoutAndBreakAdded_throwsInterruptedException() throws InterruptedException {
         BreakableBlockingDeque.Builder<String> builder = new BreakableBlockingDeque.Builder<>();
         builder.addBreak(POLL_FIRST_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION);
         BreakableBlockingDeque<String> deque = builder.build();
@@ -252,9 +313,13 @@ public class BreakableBlockingDequeTest extends AbstractTest {
             deque.pollFirst(1, TimeUnit.SECONDS));
     }
 
+    /// Verifies that `pollLast` with timeout returns `null` when the
+    /// {@link BreakableBlockingDeque#POLL_LAST_WITH_TIMEOUT_ALWAYS_RETURNS_NULL} break is added.
+    ///
+    /// @throws InterruptedException if the thread is interrupted
     @Test
-    @DisplayName("Test POLL_LAST_WITH_TIMEOUT_ALWAYS_RETURNS_NULL break")
-    public void testPollLastWithTimeoutAlwaysReturnsNull() throws InterruptedException {
+    @DisplayName("pollLast() - with timeout and break added - returns null")
+    public void pollLast_withTimeoutAndBreakAdded_returnsNull() throws InterruptedException {
         BreakableBlockingDeque.Builder<String> builder = new BreakableBlockingDeque.Builder<>();
         builder.addBreak(POLL_LAST_WITH_TIMEOUT_ALWAYS_RETURNS_NULL);
         BreakableBlockingDeque<String> deque = builder.build();
@@ -263,9 +328,13 @@ public class BreakableBlockingDequeTest extends AbstractTest {
         assertNull(deque.pollLast(1, TimeUnit.SECONDS));
     }
 
+    /// Verifies that `pollLast` with timeout throws `InterruptedException` when the
+    /// {@link BreakableBlockingDeque#POLL_LAST_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION} break is added.
+    ///
+    /// @throws InterruptedException if the thread is interrupted
     @Test
-    @DisplayName("Test POLL_LAST_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION break")
-    public void testPollLastWithTimeoutThrowsInterruptedException() throws InterruptedException {
+    @DisplayName("pollLast() - with timeout and break added - throws InterruptedException")
+    public void pollLast_withTimeoutAndBreakAdded_throwsInterruptedException() throws InterruptedException {
         BreakableBlockingDeque.Builder<String> builder = new BreakableBlockingDeque.Builder<>();
         builder.addBreak(POLL_LAST_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION);
         BreakableBlockingDeque<String> deque = builder.build();
@@ -277,9 +346,12 @@ public class BreakableBlockingDequeTest extends AbstractTest {
 
     // ========== Normal Operations Testing ==========
 
+    /// Tests basic `put` and `take` operations under normal conditions (no breaks).
+    ///
+    /// @throws InterruptedException if the thread is interrupted
     @Test
-    @DisplayName("Test normal blocking deque operations")
-    public void testNormalBlockingDequeOperations() throws InterruptedException {
+    @DisplayName("blockingDeque - when called - executes normal operations")
+    public void blockingDeque_whenCalled_executesNormalOperations() throws InterruptedException {
         BreakableBlockingDeque<String> deque = new BreakableBlockingDeque<>();
 
         // Test basic put/take operations
@@ -291,9 +363,12 @@ public class BreakableBlockingDequeTest extends AbstractTest {
         assertTrue(deque.isEmpty());
     }
 
+    /// Tests timeout operations (`offer` and `poll`) under normal conditions.
+    ///
+    /// @throws InterruptedException if the thread is interrupted
     @Test
-    @DisplayName("Test timeout operations without breaks")
-    public void testTimeoutOperationsWithoutBreaks() throws InterruptedException {
+    @DisplayName("timeoutOperations - when called without breaks - executes normally")
+    public void timeoutOperations_whenCalledWithoutBreaks_executesNormally() throws InterruptedException {
         BreakableBlockingDeque<String> deque = new BreakableBlockingDeque<>();
 
         // Test timeout operations
@@ -305,9 +380,11 @@ public class BreakableBlockingDequeTest extends AbstractTest {
         assertNull(deque.pollFirst(100, TimeUnit.MILLISECONDS)); // Empty deque
     }
 
+    /// Verifies that inherited `Deque` operations function correctly.
+    ///
     @Test
-    @DisplayName("Test inheritance from BreakableDeque")
-    public void testInheritanceFromBreakableDeque() throws InterruptedException {
+    @DisplayName("inheritance - from BreakableDeque - functions correctly")
+    public void inheritance_fromBreakableDeque_functionsCorrectly() {
         BreakableBlockingDeque<String> deque = new BreakableBlockingDeque<>();
 
         // Test inherited Deque operations
@@ -322,9 +399,12 @@ public class BreakableBlockingDequeTest extends AbstractTest {
 
     // ========== Builder and Factory Testing ==========
 
+    /// Tests the builder pattern for configuring multiple breaks.
+    ///
+    /// @throws InterruptedException if the thread is interrupted
     @Test
-    @DisplayName("Test builder pattern")
-    public void testBuilderPattern() throws InterruptedException {
+    @DisplayName("builderPattern - when used - configures breaks")
+    public void builderPattern_whenUsed_configuresBreaks() throws InterruptedException {
         BreakableBlockingDeque.Builder<String> builder = new BreakableBlockingDeque.Builder<>();
         builder.addBreak(PUT_FIRST_THROWS_INTERRUPTED_EXCEPTION);
         builder.addBreak(TAKE_LAST_ALWAYS_RETURNS_NULL);
@@ -335,9 +415,12 @@ public class BreakableBlockingDequeTest extends AbstractTest {
         assertNull(deque.takeLast());
     }
 
+    /// Tests the builder when wrapping an existing {@link java.util.concurrent.BlockingDeque}.
+    ///
+    /// @throws InterruptedException if the thread is interrupted
     @Test
-    @DisplayName("Test builder with existing BlockingDeque")
-    public void testBuilderWithExistingBlockingDeque() throws InterruptedException {
+    @DisplayName("builder - with existing BlockingDeque - wraps correctly")
+    public void builder_withExistingBlockingDeque_wrapsCorrectly() throws InterruptedException {
         LinkedBlockingDeque<String> linkedDeque = new LinkedBlockingDeque<>();
         linkedDeque.putFirst("existing");
 
@@ -349,9 +432,12 @@ public class BreakableBlockingDequeTest extends AbstractTest {
         assertEquals(1, deque.size()); // Element should still be there due to break
     }
 
+    /// Tests the copy constructor to ensure configuration and breaks are inherited.
+    ///
+    /// @throws InterruptedException if the thread is interrupted
     @Test
-    @DisplayName("Test copy constructor")
-    public void testCopyConstructor() throws InterruptedException {
+    @DisplayName("copyConstructor - when called - copies configuration")
+    public void copyConstructor_whenCalled_copiesConfiguration() throws InterruptedException {
         BreakableBlockingDeque.Builder<String> originalBuilder = new BreakableBlockingDeque.Builder<>();
         originalBuilder.addBreak(PUT_FIRST_DOES_NOT_ADD_ELEMENT);
         BreakableBlockingDeque<String> original = originalBuilder.build();
@@ -362,9 +448,12 @@ public class BreakableBlockingDequeTest extends AbstractTest {
         assertTrue(copy.isEmpty()); // Break should be inherited
     }
 
+    /// Tests the `copy` method of the builder.
+    ///
+    /// @throws InterruptedException if the thread is interrupted
     @Test
-    @DisplayName("Test builder copy")
-    public void testBuilderCopy() throws InterruptedException {
+    @DisplayName("builderCopy - when called - creates independent builder with same configuration")
+    public void builderCopy_whenCalled_createsIndependentBuilderWithSameConfiguration() throws InterruptedException {
         BreakableBlockingDeque.Builder<String> originalBuilder = new BreakableBlockingDeque.Builder<>();
         originalBuilder.addBreak(PUT_LAST_DOES_NOT_ADD_ELEMENT);
 
@@ -375,9 +464,12 @@ public class BreakableBlockingDequeTest extends AbstractTest {
         assertTrue(deque.isEmpty()); // Break should be copied
     }
 
+    /// Tests the `wrap` static factory method.
+    ///
+    /// @throws InterruptedException if the thread is interrupted
     @Test
-    @DisplayName("Test wrap factory method")
-    public void testWrapFactoryMethod() throws InterruptedException {
+    @DisplayName("wrap - static factory method - creates wrapped instance")
+    public void wrap_staticFactoryMethod_createsWrappedInstance() throws InterruptedException {
         LinkedBlockingDeque<String> linkedDeque = new LinkedBlockingDeque<>();
         BreakableBlockingDeque<String> deque = BreakableBlockingDeque.wrap(
             linkedDeque, Set.of(TAKE_FIRST_ALWAYS_RETURNS_NULL));
@@ -386,9 +478,12 @@ public class BreakableBlockingDequeTest extends AbstractTest {
         assertNull(deque.takeFirst());
     }
 
+    /// Tests the `wrap` static factory method with characteristics.
+    ///
+    /// @throws InterruptedException if the thread is interrupted
     @Test
-    @DisplayName("Test wrap factory method with characteristics")
-    public void testWrapFactoryMethodWithCharacteristics() throws InterruptedException {
+    @DisplayName("wrap - static factory method with characteristics - creates wrapped instance")
+    public void wrap_staticFactoryMethodWithCharacteristics_createsWrappedInstance() throws InterruptedException {
         LinkedBlockingDeque<String> linkedDeque = new LinkedBlockingDeque<>();
         BreakableBlockingDeque<String> deque = BreakableBlockingDeque.wrap(
             linkedDeque, Set.of(TAKE_LAST_ALWAYS_RETURNS_NULL), 0);
@@ -399,10 +494,11 @@ public class BreakableBlockingDequeTest extends AbstractTest {
 
     // ========== Error Handling Testing ==========
 
+    /// Verifies that methods configured as unsupported throw {@link UnsupportedOperationException}.
     @Test
-    @DisplayName("Test unsupported method exceptions")
-    public void testUnsupportedMethodExceptions() {
-        BreakableBlockingDeque.Builder<String> builder = new BreakableBlockingDeque.Builder<String>();
+    @DisplayName("unsupportedMethods - when configured - throw UnsupportedOperationException")
+    public void unsupportedMethods_whenConfigured_throwUnsupportedOperationException() {
+        BreakableBlockingDeque.Builder<String> builder = new BreakableBlockingDeque.Builder<>();
         builder.doesNotSupport(BlockingDequeMethods.PUT_FIRST);
         builder.doesNotSupport(BlockingDequeMethods.TAKE_FIRST);
         builder.doesNotSupport(BlockingDequeMethods.OFFER_FIRST_TIMEOUT);
@@ -419,9 +515,12 @@ public class BreakableBlockingDequeTest extends AbstractTest {
 
     // ========== Integration Testing ==========
 
+    /// Tests integration with {@link java.util.concurrent.LinkedBlockingDeque} and capacity limits.
+    ///
+    /// @throws InterruptedException if the thread is interrupted
     @Test
-    @DisplayName("Test LinkedBlockingDeque integration")
-    public void testLinkedBlockingDequeIntegration() throws InterruptedException {
+    @DisplayName("linkedBlockingDequeIntegration - when used - functions correctly")
+    public void linkedBlockingDequeIntegration_whenUsed_functionsCorrectly() throws InterruptedException {
         LinkedBlockingDeque<Integer> linkedDeque = new LinkedBlockingDeque<>(10);
         BreakableBlockingDeque.Builder<Integer> builder = new BreakableBlockingDeque.Builder<>(linkedDeque);
         BreakableBlockingDeque<Integer> deque = builder.build();
@@ -436,9 +535,12 @@ public class BreakableBlockingDequeTest extends AbstractTest {
         assertEquals(Integer.valueOf(9), deque.takeLast());
     }
 
+    /// Verifies that multiple breaks added to the same instance all take effect.
+    ///
+    /// @throws InterruptedException if the thread is interrupted
     @Test
-    @DisplayName("Test multiple breaks interaction")
-    public void testMultipleBreaksInteraction() throws InterruptedException {
+    @DisplayName("multipleBreaksInteraction - when added - all breaks take effect")
+    public void multipleBreaksInteraction_whenAdded_allBreaksTakeEffect() throws InterruptedException {
         BreakableBlockingDeque.Builder<String> builder = new BreakableBlockingDeque.Builder<>();
         builder.addBreak(PUT_FIRST_DOES_NOT_ADD_ELEMENT);
         builder.addBreak(PUT_LAST_DOES_NOT_ADD_ELEMENT);
@@ -446,7 +548,7 @@ public class BreakableBlockingDequeTest extends AbstractTest {
         builder.addBreak(TAKE_LAST_ALWAYS_RETURNS_NULL);
         BreakableBlockingDeque<String> deque = builder.build();
 
-        // Add operations should not add_singleElement_returnsTrueAndUpdatesSize elements
+        // Add operations should not add elements
         deque.putFirst("first");
         deque.putLast("last");
         assertTrue(deque.isEmpty());
@@ -456,9 +558,12 @@ public class BreakableBlockingDequeTest extends AbstractTest {
         assertNull(deque.takeLast());
     }
 
+    /// Tests the constructor that uses a default {@link java.util.concurrent.LinkedBlockingDeque}.
+    ///
+    /// @throws InterruptedException if the thread is interrupted
     @Test
-    @DisplayName("Test constructor with LinkedBlockingDeque")
-    public void testConstructorWithLinkedBlockingDeque() throws InterruptedException {
+    @DisplayName("constructor - with LinkedBlockingDeque - functions correctly")
+    public void constructor_withLinkedBlockingDeque_functionsCorrectly() throws InterruptedException {
         BreakableBlockingDeque<String> deque = new BreakableBlockingDeque<>();
 
         // Test that it works with default LinkedBlockingDeque backing
@@ -469,18 +574,22 @@ public class BreakableBlockingDequeTest extends AbstractTest {
         assertEquals("test2", deque.takeLast());
     }
 
+    /// Tests the default constructor of {@link BreakableBlockingDeque}.
     @Test
-    @DisplayName("Test default constructor creates empty blocking deque")
-    public void testDefaultConstructorCreatesEmptyBlockingDeque() {
+    @DisplayName("defaultConstructor - when called - creates empty deque")
+    public void defaultConstructor_whenCalled_createsEmptyDeque() {
         BreakableBlockingDeque<String> deque = new BreakableBlockingDeque<>();
 
         assertTrue(deque.isEmpty());
         assertEquals(0, deque.size());
     }
 
+    /// Tests normal blocking behavior simulation.
+    ///
+    /// @throws InterruptedException if the thread is interrupted
     @Test
-    @DisplayName("Test blocking behavior simulation")
-    public void testBlockingBehaviorSimulation() throws InterruptedException {
+    @DisplayName("blockingBehaviorSimulation - when called - executes normally")
+    public void blockingBehaviorSimulation_whenCalled_executesNormally() throws InterruptedException {
         BreakableBlockingDeque<String> deque = new BreakableBlockingDeque<>();
 
         // Normal blocking behavior - these should not block since deque is unlimited
@@ -491,9 +600,12 @@ public class BreakableBlockingDequeTest extends AbstractTest {
         assertEquals("item2", deque.takeLast());
     }
 
+    /// Tests capacity-constrained behavior.
+    ///
+    /// @throws InterruptedException if the thread is interrupted
     @Test
-    @DisplayName("Test capacity-constrained behavior")
-    public void testCapacityConstrainedBehavior() throws InterruptedException {
+    @DisplayName("capacityConstrainedBehavior - when full - respects constraints")
+    public void capacityConstrainedBehavior_whenFull_respectsConstraints() throws InterruptedException {
         BreakableBlockingDeque.Builder<String> builder = new BreakableBlockingDeque.Builder<>();
         builder.setCapacity(1);
         BreakableBlockingDeque<String> deque = builder.build();
@@ -504,14 +616,16 @@ public class BreakableBlockingDequeTest extends AbstractTest {
         // This should return false due to capacity constraint
         assertFalse(deque.offerFirst("item2", 100, TimeUnit.MILLISECONDS));
 
-        // After taking an element, we should be able to add_singleElement_returnsTrueAndUpdatesSize
+        // After taking an element, we should be able to add
         assertEquals("item1", deque.takeFirst());
         assertTrue(deque.offerLast("item2", 100, TimeUnit.MILLISECONDS));
     }
 
+    /// Verifies break priority when multiple conflicting breaks are applied.
+    ///
     @Test
-    @DisplayName("Test break priority and interaction")
-    public void testBreakPriorityAndInteraction() throws InterruptedException {
+    @DisplayName("breakPriorityAndInteraction - when multiple breaks applied - respects priority")
+    public void breakPriorityAndInteraction_whenMultipleBreaksApplied_respectsPriority() {
         BreakableBlockingDeque.Builder<String> builder = new BreakableBlockingDeque.Builder<>();
         builder.addBreak(OFFER_FIRST_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION);
         builder.addBreak(OFFER_FIRST_WITH_TIMEOUT_ALWAYS_RETURNS_FALSE);
@@ -522,9 +636,12 @@ public class BreakableBlockingDequeTest extends AbstractTest {
             deque.offerFirst("item1", 1, TimeUnit.SECONDS));
     }
 
+    /// Verifies state consistency across multiple heterogeneous operations.
+    ///
+    /// @throws InterruptedException if the thread is interrupted
     @Test
-    @DisplayName("Test state consistency across blocking deque operations")
-    public void testStateConsistencyAcrossBlockingDequeOperations() throws InterruptedException {
+    @DisplayName("stateConsistency - across multiple operations - maintains consistency")
+    public void stateConsistency_acrossMultipleOperations_maintainsConsistency() throws InterruptedException {
         BreakableBlockingDeque<String> deque = new BreakableBlockingDeque<>();
 
         // Perform a mix of operations
@@ -541,5 +658,36 @@ public class BreakableBlockingDequeTest extends AbstractTest {
         assertEquals("new-first", deque.takeFirst());
         assertEquals("new-last", deque.takeLast());
         assertEquals(2, deque.size());
+    }
+
+    /// Demonstrates how to wait for the deque to be non-empty before peeking.
+    /// Since BlockingDeque does not have a blocking peek, we use takeFirst() 
+    /// and then put it back if we only wanted to peek.
+    ///
+    /// @throws InterruptedException if the thread is interrupted
+    @Test
+    @DisplayName("blockingPeek - wait for element then peek - demonstrates pattern")
+    public void blockingPeek_whenCalled_waitsAndPeeks() throws InterruptedException {
+        BreakableBlockingDeque<String> deque = new BreakableBlockingDeque<>();
+        
+        Thread producer = new Thread(() -> {
+            try {
+                Thread.sleep(100);
+                deque.putFirst("produced");
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        });
+        producer.start();
+
+        // Pattern to wait for element then peek
+        // 1. takeFirst() blocks until non-empty
+        String element = deque.takeFirst();
+        // 2. put it back immediately
+        deque.putFirst(element);
+        
+        // 3. now we can peek safely
+        assertEquals("produced", deque.peekFirst());
+        producer.join();
     }
 }

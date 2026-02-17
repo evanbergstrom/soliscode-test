@@ -127,7 +127,9 @@ public class BreakableIterableTest extends AbstractTest
         }
     }
 
+    /// Test the builder addElements methods.
     @Test
+    @DisplayName("Test the addElements methods of the builder.")
     public void testBuilderAddElements() {
         BreakableIterable<Integer> actual1 = Breakables.buildIterable(Integer.class)
                 .addElements(List.of(1,2,3))
@@ -142,8 +144,11 @@ public class BreakableIterableTest extends AbstractTest
         assertContainsSame(List.of(1,2,3), actual2);
     }
 
+    /// Test the builder setCharacteristics method.
+    /// @param characteristics the characteristics to set.
     @ParameterizedTest
     @ValueSource(ints = {ORDERED, DISTINCT, SORTED, SIZED, SUBSIZED, NONNULL, IMMUTABLE, CONCURRENT})
+    @DisplayName("Test the setCharacteristics method of the builder.")
     public void testBuilderSetCharacteristics(final int characteristics) {
         BreakableIterable<Integer> iterable = Breakables.buildIterable(1, 2, 3)
                 .setCharacteristics(characteristics)
@@ -152,7 +157,9 @@ public class BreakableIterableTest extends AbstractTest
         assertEquals(characteristics, iterable.spliterator().characteristics());
     }
 
+    /// Test the builder copy method.
     @Test
+    @DisplayName("The builder copy method creates a correct copy.")
     public void testBuilderCopy() {
         BreakableIterable.Builder<Integer> builder = Breakables.buildIterable(1, 2, 3)
                 .setCharacteristics(ORDERED)
@@ -170,7 +177,9 @@ public class BreakableIterableTest extends AbstractTest
 
     // Tests for Method Support
 
+    /// Test iterator remove without support.
     @Test
+    @DisplayName("iterator.remove() throws UnsupportedOperationException when it is not supported")
     public void testIteratorRemoveWithoutSupport() {
         BreakableIterable<Integer> iterable = Breakables.buildIterable(1, 2, 3)
                 .doesNotSupport(IterableMethods.ITERATOR_REMOVE)
@@ -181,7 +190,9 @@ public class BreakableIterableTest extends AbstractTest
         assertThrows(UnsupportedOperationException.class, iterator::remove);
     }
 
+    /// Test iterator forEachRemaining without support.
     @Test
+    @DisplayName("iterator.forEachRemaining() throws UnsupportedOperationException when it is not supported")
     public void testIteratorForEachRemainingWithoutSupport() {
         BreakableIterable<Integer> iterable = Breakables.buildIterable(1, 2, 3)
                 .doesNotSupport(IterableMethods.ITERATOR_FOR_EACH_REMAINING)
@@ -298,7 +309,7 @@ public class BreakableIterableTest extends AbstractTest
 
     /// Test the static iterableProvider method.
     @Test
-    @DisplayName("Test static iterableProvider method")
+    @DisplayName("Test the iterableProvider static factory method.")
     public void testIterableProvider() {
         CollectionProvider<Integer, BreakableIterable<Integer>> provider =
                 BreakableIterable.iterableProvider(elementProvider());
@@ -312,7 +323,7 @@ public class BreakableIterableTest extends AbstractTest
 
     /// Test the static iterableProvider method with breaks.
     @Test
-    @DisplayName("Test static iterableProvider method with breaks")
+    @DisplayName("Test the iterableProvider static factory method with breaks.")
     public void testIterableProviderWithBreaks() {
         Set<Break> breaks = Set.of(FOR_EACH_DOES_NOT_CALL_ACTION);
         CollectionProvider<Integer, BreakableIterable<Integer>> provider =

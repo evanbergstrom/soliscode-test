@@ -19,23 +19,22 @@ package org.soliscode.test.contract.object;
 import org.jspecify.annotations.NonNull;
 import org.soliscode.test.InterfaceMethod;
 
-/// Values used to identify object class methods for use with the [ObjectContract#supportsMethod(InterfaceMethod)]
-/// method.
+/// Values used to identify object class methods for use with the `supportsMethod(InterfaceMethod)` method.
 ///
 /// @author evanbergstrom
-/// @since 1.0
+/// @since 1.0.0
 public enum ObjectMethods implements InterfaceMethod {
 
-    /// The option al method [Object#equals(Object)].
+    /// The optional method [Object#equals(Object)].
     EQUALS("equals(Object)"),
 
-    /// The option al method [Object#hashCode()].
+    /// The optional method [Object#hashCode()].
     HASH_CODE("hashCode()"),
 
-    /// The option al method [Object#toString()].
+    /// The optional method [Object#toString()].
     TO_STRING("toString()"),
 
-    /// The option al method [java.io.Serializable].
+    /// The optional method [java.io.Serializable].
     SERIALIZATION("serialization");
 
     private final @NonNull String name;

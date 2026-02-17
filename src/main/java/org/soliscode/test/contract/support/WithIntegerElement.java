@@ -13,6 +13,19 @@ import org.soliscode.test.provider.ObjectProvider;
 /// @since 1.0
 public interface WithIntegerElement extends ElementProviderSupport<Integer> {
 
+    /// A constant instance of [ObjectProvider] that supplies elements of type [Integer].
+    ///
+    /// This variable serves as a reusable provider for generating or supplying `Integer` instances
+    /// in testing scenarios or wherever a customizable [ObjectProvider] implementation is required.
+    /// It is specifically defined for use cases involving [Integer] data types and complies
+    /// with the `ElementProviderSupport<Integer>` contract.
+    ///
+    /// **Note:** This implementation relies on [IntegerProvider], which acts
+    /// as the concrete provider of `Integer` elements.
+    ///
+    /// @see IntegerProvider
+    /// @see WithIntegerElement
+    /// @since 1.0
     ObjectProvider<Integer> PROVIDER = new IntegerProvider();
 
     /// Returns an elements provider for instances of [Integer].

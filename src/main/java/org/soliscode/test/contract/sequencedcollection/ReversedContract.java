@@ -9,36 +9,51 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.SequencedCollection;
 
-/// Test for the reversed method in the [SequencedCollection] interface. This contract class can be used individually
-/// by a test class, but it is normally used through the [SequencedCollectionContract] class:
+/// Contract for testing the [reversed][SequencedCollection#reversed] method of a [SequencedCollection].
+///
+/// ### Purpose
+/// Verifies that `reversed()` returns a view of the collection with the elements in reverse order.
+///
+/// ### Usage Example
+/// This contract is typically used through [SequencedCollectionContract]:
 /// ```java
-/// public class MyCollectionTest extends SequencedCollectionContract<Integer, MyCollection<Integer>> {
+/// class MySequencedCollectionTest extends SequencedCollectionContract<String, MySequencedCollection<String>> {
+///     // Inherits all reversed tests
 /// }
 /// ```
-/// If a test is using the SequencedCollectionContract class, but the class being tested does not implement the `reversed`
-/// method based upon the specification in the `SequencedCollection` class, then it can be omitted from the tests using the
-/// `doesNotSupportMethod()` method:
+/// To exclude this contract if the method is not supported:
 /// ```java
-/// public class MyCollectionTest extends SequencedCollectionContract<Integer, MyCollection<Integer>> {
-///     public MyCollectionTest() {
-///         doesNotSupportMethod(SequencedCollectionMethods.Reversed);
+/// class MySequencedCollectionTest extends SequencedCollectionContract<String, MySequencedCollection<String>> {
+///     public MySequencedCollectionTest() {
+///         doesNotSupportMethod(SequencedCollectionMethods.REVERSED);
 ///     }
 /// }
 /// ```
-/// @param <E> The element type being tested.
-/// @param <C> The element type being tested.
+///
+/// ### Thread Safety
+/// The tests in this contract are not thread-safe and should be run in a single-threaded environment
+/// unless the underlying collection implementation specifically guarantees thread safety for these operations.
+///
+/// @param <E> The element type.
+/// @param <C> The collection type being tested.
 /// @author evanbergstrom
-/// @since 1.0
+/// @see SequencedCollection#reversed
+/// @since 1.0.0
 public interface ReversedContract<E, C extends SequencedCollection<E>> extends CollectionContractSupport<E, C> {
 
-    /// Tests that the [reversed][SequencedCollection#reversed] method returns a view =of the collection with the
-    /// elements in the reverse ordering.
+    /// Verifies that [reversed][SequencedCollection#reversed] returns a reversed view of the collection.
+    ///
+    /// The test follows these steps:
+    /// 1. Creates a collection with multiple elements.
+    /// 2. Calls `reversed()` and verifies that the resulting collection contains the same elements
+    ///    but in the opposite order.
     ///
     /// @throws org.opentest4j.AssertionFailedError if the test fails.
     /// @see SequencedCollection#reversed
+    /// @since 1.0.0
+    @DisplayName("reversed() returns a reversed view of the collection")
     @Test
-    @DisplayName("the reverse methods returns a reversed view of the collection.")
-    default void testReversed() {
+    default void reversed_whenCalled_returnsReversedView() {
         if (supportsMethod(SequencedCollectionMethods.REVERSED)) {
             List<E> values = elementProvider().createUniqueInstances(DEFAULT_SIZE);
             SequencedCollection<E> collection = provider().createInstance(values);

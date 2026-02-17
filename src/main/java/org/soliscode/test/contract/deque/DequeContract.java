@@ -1,6 +1,7 @@
 package org.soliscode.test.contract.deque;
 
 import org.soliscode.test.contract.queue.QueueContract;
+import org.soliscode.test.contract.sequencedcollection.SequencedCollectionContract;
 
 import java.util.Deque;
 
@@ -11,8 +12,18 @@ import java.util.Deque;
 /// @param <D> The deque type being tested.
 /// @author evanbergstrom
 /// @since 1.0
-public interface DequeContract<E, D extends Deque<E>> extends QueueContract<E, D>,
-        OfferFirstContract<E, D> {
+public interface DequeContract<E, D extends Deque<E>> extends QueueContract<E, D>, SequencedCollectionContract<E, D>,
+        OfferFirstContract<E, D>,
+        OfferLastContract<E, D>,
+        PollFirstContract<E, D>,
+        PollLastContract<E, D>,
+        PeekFirstContract<E, D>,
+        PeekLastContract<E, D>,
+        RemoveFirstOccurrenceContract<E, D>,
+        RemoveLastOccurrenceContract<E, D>,
+        PushContract<E, D>,
+        PopContract<E, D>,
+        DescendingIteratorContract<E, D> {
 
     @Override
     default void doesNotSupportModification() {
@@ -21,6 +32,8 @@ public interface DequeContract<E, D extends Deque<E>> extends QueueContract<E, D
         doesNotSupportMethod(DequeMethods.OFFER_LAST);
         doesNotSupportMethod(DequeMethods.POLL_FIRST);
         doesNotSupportMethod(DequeMethods.POLL_LAST);
+        doesNotSupportMethod(DequeMethods.REMOVE_FIRST_OCCURRENCES);
+        doesNotSupportMethod(DequeMethods.REMOVE_LAST_OCCURRENCES);
         doesNotSupportMethod(DequeMethods.PUSH);
         doesNotSupportMethod(DequeMethods.POP);
     }

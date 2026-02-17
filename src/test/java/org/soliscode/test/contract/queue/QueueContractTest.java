@@ -1,7 +1,6 @@
 package org.soliscode.test.contract.queue;
 
 import org.jspecify.annotations.NonNull;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Nested;
@@ -12,11 +11,12 @@ import org.soliscode.test.breakable.Break;
 import org.soliscode.test.breakable.BreakableQueue;
 import org.soliscode.test.contract.ContractTest;
 import org.soliscode.test.contract.DynamicContract;
+import org.soliscode.test.contract.dynamic.DynamicBrokenQueueContract;
 import org.soliscode.test.contract.support.WithIntegerElement;
-import org.soliscode.test.provider.CollectionProvider;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 
 import static org.soliscode.test.breakable.BreakableQueue.*;
 
@@ -31,235 +31,185 @@ public class QueueContractTest extends ContractTest<BreakableQueue<Integer>> {
             BreakableQueue.WithProvider<Integer>, WithIntegerElement {
     }
 
-    /// Dynamically created instance of `QueueContract` that will run on instances of `BreakableQueue` with a
-    /// specified break.
-    @Disabled("Used only for dynamic test generation")
-    protected static final class DynamicBrokenQueueContract
-            extends DynamicContract<BreakableQueue<Integer>, CollectionProvider<Integer, BreakableQueue<Integer>>>
-            implements QueueContract<Integer, BreakableQueue<Integer>>, WithIntegerElement {
-
-        protected DynamicBrokenQueueContract(final @NonNull Break b, final @NonNull InterfaceMethod m) {
-            super(b, m, (breaks, statuses, test) ->
-                    BreakableQueue.queueProvider(WithIntegerElement.PROVIDER, breaks, statuses));
-        }
-
-        @Override
-        public boolean supportsMethod(final @NonNull InterfaceMethod method) {
-            return super.supportsMethod(method);
-        }
-
-        @Override
-        public void doesNotSupportMethod(final @NonNull InterfaceMethod method) {
-            super.doesNotSupportMethod(method);
-        }
-    }
-
     @Override
-    protected @NonNull DynamicBrokenQueueContract createTest(final @NonNull Break b,
-                                                            final @NonNull InterfaceMethod m) {
+    protected @NonNull DynamicContract<?, ?> createTest(final @NonNull Break b, final @NonNull InterfaceMethod m) {
         return new DynamicBrokenQueueContract(b, m);
     }
 
     /// Test factory for tests of the offer method that should fail for various breaks.
     ///
     /// @return a collection of dynamic tests of the `offer` method.
-    /// @see OfferContract#offer
+    /// @see OfferContract#offer_singleElement_returnsTrueAndUpdatesSize
     @TestFactory
     public Collection<DynamicTest> dynamicTestsForOffer() {
         return Arrays.asList(
-                failingTestWithBreak("offer() fails with OFFER_DOES_NOT_ADD_ELEMENT break",
-                        OFFER_DOES_NOT_ADD_ELEMENT,
-                        DynamicBrokenQueueContract::offer),
+                failsWithBreak(OFFER_DOES_NOT_ADD_ELEMENT, DynamicBrokenQueueContract::offer_singleElement_returnsTrueAndUpdatesSize, "offer() fails with OFFER_DOES_NOT_ADD_ELEMENT break"
+                ),
 
-                failingTestWithBreak("offer() fails with OFFER_ALWAYS_RETURNS_FALSE break",
-                        OFFER_ALWAYS_RETURNS_FALSE,
-                        DynamicBrokenQueueContract::offer),
+                failsWithBreak(OFFER_ALWAYS_RETURNS_FALSE, DynamicBrokenQueueContract::offer_singleElement_returnsTrueAndUpdatesSize, "offer() fails with OFFER_ALWAYS_RETURNS_FALSE break"
+                ),
 
-                passingTestWithUnsupportedMethod("offer() fails when not supported",
-                        QueueMethods.OFFER,
-                        DynamicBrokenQueueContract::offer)
+                passesWhenUnsupported(QueueMethods.OFFER, DynamicBrokenQueueContract::offer_singleElement_returnsTrueAndUpdatesSize, "offer() fails when not supported"
+                )
         );
     }
 
-    /// Test factory for tests of the offerWithNullValue() method that should fail for various breaks.
+    /// Test factory for tests of the offer_withNullValue_handlesCorrectly() method that should fail for various breaks.
     ///
-    /// @return a collection of dynamic tests of the `offerWithNullValue` method.
-    /// @see OfferContract#offerWithNullValue
+    /// @return a collection of dynamic tests of the `offer_withNullValue_handlesCorrectly` method.
+    /// @see OfferContract#offer_withNullValue_handlesCorrectly
     @TestFactory
     public Collection<DynamicTest> dynamicTestsForOfferWithNullValues() {
         return Arrays.asList(
-                failingTestWithBreak("offerWithNullValue() fails with OFFER_DOES_NOT_ADD_ELEMENT break",
-                        OFFER_DOES_NOT_ADD_ELEMENT,
-                        DynamicBrokenQueueContract::offerWithNullValue),
+                failsWithBreak(OFFER_DOES_NOT_ADD_ELEMENT, DynamicBrokenQueueContract::offer_withNullValue_handlesCorrectly, "offerWithNullValue() fails with OFFER_DOES_NOT_ADD_ELEMENT break"
+                ),
 
-                failingTestWithBreak("offerWithNullValue() fails with OFFER_ALWAYS_RETURNS_FALSE break",
-                        OFFER_ALWAYS_RETURNS_FALSE,
-                        DynamicBrokenQueueContract::offerWithNullValue),
+                failsWithBreak(OFFER_ALWAYS_RETURNS_FALSE, DynamicBrokenQueueContract::offer_withNullValue_handlesCorrectly, "offerWithNullValue() fails with OFFER_ALWAYS_RETURNS_FALSE break"
+                ),
 
-                passingTestWithUnsupportedMethod("offerWithNullValue() fails when not supported",
-                        QueueMethods.OFFER,
-                        DynamicBrokenQueueContract::offerWithNullValue)
+                passesWhenUnsupported(QueueMethods.OFFER, DynamicBrokenQueueContract::offer_withNullValue_handlesCorrectly, "offerWithNullValue() fails when not supported"
+                )
         );
     }
 
-    /// Test factory for tests of the offerWithDuplicateValue() method that should fail for various breaks.
+    /// Test factory for tests of the offer_withDuplicateValue_handlesCorrectly() method that should fail for various breaks.
     ///
-    /// @return a collection of dynamic tests of the `offerWithDuplicateValue` method.
-    /// @see OfferContract#offerWithDuplicateValue
+    /// @return a collection of dynamic tests of the `offer_withDuplicateValue_handlesCorrectly` method.
+    /// @see OfferContract#offer_withDuplicateValue_handlesCorrectly
     @TestFactory
     public Collection<DynamicTest> dynamicTestsForOfferWithDuplicateValues() {
         return Arrays.asList(
-                failingTestWithBreak("offerWithDuplicateValue() fails with OFFER_DOES_NOT_ADD_ELEMENT break",
-                        OFFER_DOES_NOT_ADD_ELEMENT,
-                        DynamicBrokenQueueContract::offerWithDuplicateValue),
+                failsWithBreak(OFFER_DOES_NOT_ADD_ELEMENT, DynamicBrokenQueueContract::offer_withDuplicateValue_handlesCorrectly, "offerWithDuplicateValue() fails with OFFER_DOES_NOT_ADD_ELEMENT break"
+                ),
 
-                failingTestWithBreak("offerWithDuplicateValue() fails with OFFER_ALWAYS_RETURNS_FALSE break",
-                        OFFER_ALWAYS_RETURNS_FALSE,
-                        DynamicBrokenQueueContract::offerWithDuplicateValue),
+                failsWithBreak(OFFER_ALWAYS_RETURNS_FALSE, DynamicBrokenQueueContract::offer_withDuplicateValue_handlesCorrectly, "offerWithDuplicateValue() fails with OFFER_ALWAYS_RETURNS_FALSE break"
+                ),
 
-                passingTestWithUnsupportedMethod("offerWithDuplicateValue() fails when not supported",
-                        QueueMethods.OFFER,
-                        DynamicBrokenQueueContract::offerWithDuplicateValue)
+                passesWhenUnsupported(QueueMethods.OFFER, DynamicBrokenQueueContract::offer_withDuplicateValue_handlesCorrectly, "offerWithDuplicateValue() fails when not supported"
+                )
         );
     }
 
-    /// Test factory for tests of the remove method that should fail for various breaks.
+    /// Test factory for tests of the remove_whenNotEmpty_returnsAndRemovesHead method that should fail for various breaks.
     ///
-    /// @return a collection of dynamic tests of the `remove` method.
-    /// @see RemoveContract#remove
+    /// @return a collection of dynamic tests of the `remove_whenNotEmpty_returnsAndRemovesHead` method.
+    /// @see RemoveContract#remove_whenNotEmpty_returnsAndRemovesHead
     @TestFactory
     public Collection<DynamicTest> dynamicTestsForRemove() {
         return Arrays.asList(
-                failingTestWithBreak("remove() fails with REMOVE_ALWAYS_RETURNS_NULL break",
-                        REMOVE_ALWAYS_RETURNS_NULL,
-                        DynamicBrokenQueueContract::remove),
+                failsWithBreak(REMOVE_ALWAYS_RETURNS_NULL, DynamicBrokenQueueContract::remove_whenNotEmpty_returnsAndRemovesHead, "remove() fails with REMOVE_ALWAYS_RETURNS_NULL break"
+                ),
 
-                failingTestWithBreak("remove() fails with REMOVE_DOES_NOT_REMOVE_ELEMENT break",
-                        REMOVE_DOES_NOT_REMOVE_ELEMENT,
-                        DynamicBrokenQueueContract::remove),
+                failsWithBreak(REMOVE_DOES_NOT_REMOVE_ELEMENT, DynamicBrokenQueueContract::remove_whenNotEmpty_returnsAndRemovesHead, "remove() fails with REMOVE_DOES_NOT_REMOVE_ELEMENT break"
+                ),
 
-                passingTestWithUnsupportedMethod("remove() fails when not supported",
-                        QueueMethods.REMOVE,
-                        DynamicBrokenQueueContract::remove)
+                passesWhenUnsupported(QueueMethods.REMOVE, DynamicBrokenQueueContract::remove_whenNotEmpty_returnsAndRemovesHead, "remove() fails when not supported"
+                )
         );
     }
 
-    /// Test factory for tests of the removeWhenEmpty method that should fail for various breaks.
+    /// Test factory for tests of the remove_whenEmpty_throwsNoSuchElementException method that should fail for various breaks.
     ///
-    /// @return a collection of dynamic tests of the `removeWhenEmpty` method.
-    /// @see RemoveContract#removeWhenEmpty
+    /// @return a collection of dynamic tests of the `remove_whenEmpty_throwsNoSuchElementException` method.
+    /// @see RemoveContract#remove_whenEmpty_throwsNoSuchElementException
     @TestFactory
     public Collection<DynamicTest> dynamicTestsForRemoveWhenEmpty() {
         return Arrays.asList(
-                failingTestWithBreak("removeWhenEmpty() fails with REMOVE_ALWAYS_RETURNS_NULL break",
-                        REMOVE_ALWAYS_RETURNS_NULL,
-                        DynamicBrokenQueueContract::removeWhenEmpty),
+                failsWithBreak(REMOVE_ALWAYS_RETURNS_NULL, DynamicBrokenQueueContract::remove_whenEmpty_throwsNoSuchElementException, "removeWhenEmpty() fails with REMOVE_ALWAYS_RETURNS_NULL break"
+                ),
 
-                passingTestWithUnsupportedMethod("removeWhenEmpty() fails when not supported",
-                        QueueMethods.REMOVE,
-                        DynamicBrokenQueueContract::removeWhenEmpty)
+                passesWhenUnsupported(QueueMethods.REMOVE, DynamicBrokenQueueContract::remove_whenEmpty_throwsNoSuchElementException, "removeWhenEmpty() fails when not supported"
+                )
         );
     }
 
-    /// Test factory for tests of the poll method that should fail for various breaks.
+    /// Test factory for tests of the poll_whenNotEmpty_returnsAndRemovesHead method that should fail for various breaks.
     ///
-    /// @return a collection of dynamic tests of the `poll` method.
-    /// @see PollContract#poll
+    /// @return a collection of dynamic tests of the `poll_whenNotEmpty_returnsAndRemovesHead` method.
+    /// @see PollContract#poll_whenNotEmpty_returnsAndRemovesHead
     @TestFactory
     public Collection<DynamicTest> dynamicTestsForPoll() {
         return Arrays.asList(
-                failingTestWithBreak("poll() fails with POLL_ALWAYS_RETURNS_NULL break",
-                        POLL_ALWAYS_RETURNS_NULL,
-                        DynamicBrokenQueueContract::poll),
+                failsWithBreak(POLL_ALWAYS_RETURNS_NULL, DynamicBrokenQueueContract::poll_whenNotEmpty_returnsAndRemovesHead, "poll() fails with POLL_ALWAYS_RETURNS_NULL break"
+                ),
 
-                failingTestWithBreak("poll() fails with POLL_DOES_NOT_REMOVE_ELEMENT break",
-                        POLL_DOES_NOT_REMOVE_ELEMENT,
-                        DynamicBrokenQueueContract::poll),
+                failsWithBreak(POLL_DOES_NOT_REMOVE_ELEMENT, DynamicBrokenQueueContract::poll_whenNotEmpty_returnsAndRemovesHead, "poll() fails with POLL_DOES_NOT_REMOVE_ELEMENT break"
+                ),
 
-                failingTestWithBreak("poll() fails with POLL_RETURNS_RANDOM_ELEMENT break",
-                        POLL_RETURNS_RANDOM_ELEMENT,
-                        DynamicBrokenQueueContract::poll),
+                failsWithBreak(POLL_RETURNS_RANDOM_ELEMENT, DynamicBrokenQueueContract::poll_whenNotEmpty_returnsAndRemovesHead, "poll() fails with POLL_RETURNS_RANDOM_ELEMENT break"
+                ),
 
-                passingTestWithUnsupportedMethod("poll() fails when not supported",
-                        QueueMethods.POLL,
-                        DynamicBrokenQueueContract::poll)
+                passesWhenUnsupported(QueueMethods.POLL, DynamicBrokenQueueContract::poll_whenNotEmpty_returnsAndRemovesHead, "poll() fails when not supported"
+                )
         );
     }
 
-    /// Test factory for tests of the pollWhenEmpty method that should fail for various breaks.
+    /// Test factory for tests of the poll_whenEmpty_returnsNull method that should fail for various breaks.
     ///
-    /// @return a collection of dynamic tests of the `pollWhenEmpty` method.
-    /// @see PollContract#pollWhenEmpty
+    /// @return a collection of dynamic tests of the `poll_whenEmpty_returnsNull` method.
+    /// @see PollContract#poll_whenEmpty_returnsNull
     @TestFactory
     public Collection<DynamicTest> dynamicTestsForPollWhenEmpty() {
-        return Arrays.asList(
-                passingTestWithUnsupportedMethod("pollWhenEmpty() fails when not supported",
-                        QueueMethods.POLL,
-                        DynamicBrokenQueueContract::pollWhenEmpty)
+        return Collections.singletonList(
+                passesWhenUnsupported(QueueMethods.POLL, DynamicBrokenQueueContract::poll_whenEmpty_returnsNull, "pollWhenEmpty() fails when not supported"
+                )
         );
     }
 
-    /// Test factory for tests of the element method that should fail for various breaks.
+    /// Test factory for tests of the element_whenNotEmpty_returnsHead method that should fail for various breaks.
     ///
-    /// @return a collection of dynamic tests of the `element` method.
-    /// @see ElementContract#element
+    /// @return a collection of dynamic tests of the `element_whenNotEmpty_returnsHead` method.
+    /// @see ElementContract#element_whenNotEmpty_returnsHead
     @TestFactory
     public Collection<DynamicTest> dynamicTestsForElement() {
         return Arrays.asList(
-                failingTestWithBreak("element() fails with ELEMENT_RETURNS_RANDOM_ELEMENT break",
-                        ELEMENT_RETURNS_RANDOM_ELEMENT,
-                        DynamicBrokenQueueContract::element),
+                failsWithBreak(ELEMENT_RETURNS_RANDOM_ELEMENT, DynamicBrokenQueueContract::element_whenNotEmpty_returnsHead, "element() fails with ELEMENT_RETURNS_RANDOM_ELEMENT break"
+                ),
 
-                passingTestWithUnsupportedMethod("element() fails when not supported",
-                        QueueMethods.ELEMENT,
-                        DynamicBrokenQueueContract::element)
+                passesWhenUnsupported(QueueMethods.ELEMENT, DynamicBrokenQueueContract::element_whenNotEmpty_returnsHead, "element() fails when not supported"
+                )
         );
     }
 
-    /// Test factory for tests of the elementWhenEmpty method that should fail for various breaks.
+    /// Test factory for tests of the element_whenEmpty_throwsNoSuchElementException method that should fail for various breaks.
     ///
-    /// @return a collection of dynamic tests of the `elementWhenEmpty` method.
-    /// @see ElementContract#elementWhenEmpty
+    /// @return a collection of dynamic tests of the `element_whenEmpty_throwsNoSuchElementException` method.
+    /// @see ElementContract#element_whenEmpty_throwsNoSuchElementException
     @TestFactory
     public Collection<DynamicTest> dynamicTestsForElementWhenEmpty() {
-        return Arrays.asList(
-                passingTestWithUnsupportedMethod("elementWhenEmpty() fails when not supported",
-                        QueueMethods.ELEMENT,
-                        DynamicBrokenQueueContract::elementWhenEmpty)
+        return Collections.singletonList(
+                passesWhenUnsupported(QueueMethods.ELEMENT, DynamicBrokenQueueContract::element_whenEmpty_throwsNoSuchElementException, "elementWhenEmpty() fails when not supported"
+                )
         );
     }
 
-    /// Test factory for tests of the peek method that should fail for various breaks.
+    /// Test factory for tests of the peek_whenNotEmpty_returnsHead method that should fail for various breaks.
     ///
-    /// @return a collection of dynamic tests of the `peek` method.
-    /// @see PeekContract#peek
+    /// @return a collection of dynamic tests of the `peek_whenNotEmpty_returnsHead` method.
+    /// @see PeekContract#peek_whenNotEmpty_returnsHead
     @TestFactory
     public Collection<DynamicTest> dynamicTestsForPeek() {
         return Arrays.asList(
-                failingTestWithBreak("peek() fails with PEEK_ALWAYS_RETURNS_NULL break",
-                        PEEK_ALWAYS_RETURNS_NULL,
-                        DynamicBrokenQueueContract::peek),
+                failsWithBreak(PEEK_ALWAYS_RETURNS_NULL, DynamicBrokenQueueContract::peek_whenNotEmpty_returnsHead, "peek() fails with PEEK_ALWAYS_RETURNS_NULL break"
+                ),
 
-                failingTestWithBreak("peek() fails with PEEK_RETURNS_RANDOM_ELEMENT break",
-                        PEEK_RETURNS_RANDOM_ELEMENT,
-                        DynamicBrokenQueueContract::peek),
+                failsWithBreak(PEEK_RETURNS_RANDOM_ELEMENT, DynamicBrokenQueueContract::peek_whenNotEmpty_returnsHead, "peek() fails with PEEK_RETURNS_RANDOM_ELEMENT break"
+                ),
 
-                passingTestWithUnsupportedMethod("peek() fails when not supported",
-                        QueueMethods.PEEK,
-                        DynamicBrokenQueueContract::peek)
+                passesWhenUnsupported(QueueMethods.PEEK, DynamicBrokenQueueContract::peek_whenNotEmpty_returnsHead, "peek() fails when not supported"
+                )
         );
     }
 
-    /// Test factory for tests of the peekWhenEmpty method that should fail for various breaks.
+    /// Test factory for tests of the peek_whenEmpty_returnsNull method that should fail for various breaks.
     ///
-    /// @return a collection of dynamic tests of the `peekWhenEmpty` method.
-    /// @see PeekContract#peekWhenEmpty
+    /// @return a collection of dynamic tests of the `peek_whenEmpty_returnsNull` method.
+    /// @see PeekContract#peek_whenEmpty_returnsNull
     @TestFactory
     public Collection<DynamicTest> dynamicTestsForPeekWhenEmpty() {
-        return Arrays.asList(
-                passingTestWithUnsupportedMethod("peekWhenEmpty() fails when not supported",
-                        QueueMethods.PEEK,
-                        DynamicBrokenQueueContract::peekWhenEmpty)
+        return Collections.singletonList(
+                passesWhenUnsupported(QueueMethods.PEEK, DynamicBrokenQueueContract::peek_whenEmpty_returnsNull, "peekWhenEmpty() fails when not supported"
+                )
         );
     }
 }

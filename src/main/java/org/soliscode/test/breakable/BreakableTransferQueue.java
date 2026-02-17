@@ -406,6 +406,7 @@ public class BreakableTransferQueue<E> extends BreakableBlockingQueue<E> impleme
     ///
     /// @param other the BreakableTransferQueue to copy configuration from
     /// @throws NullPointerException if other is null
+    /// @since 1.0.0
     public BreakableTransferQueue(final @NonNull BreakableTransferQueue<E> other) {
         this(new LinkedTransferQueue<>(other.transferQueue), new HashSet<>(other.breaks()),
                 new HashMap<>(other.methodStatuses()), other.characteristics(), other.permits(),
@@ -422,14 +423,18 @@ public class BreakableTransferQueue<E> extends BreakableBlockingQueue<E> impleme
     /// LinkedTransferQueue<String> linkedQueue = new LinkedTransferQueue<>();
     /// Set<Break> breaks = Set.of(TRANSFER_ALWAYS_BLOCKS);
     /// BreakableTransferQueue<String> queue = new BreakableTransferQueue<>(
-    ///     linkedQueue, breaks, 0);
+    ///     linkedQueue, breaks, new HashMap<>(), 0, DEFAULT_PERMITS, true, Object.class);
     /// ```
     ///
-    /// @param transferQueue the TransferQueue to wrap
-    /// @param breaks the breaks to apply
+    /// @param transferQueue   the TransferQueue to wrap
+    /// @param breaks          the breaks to apply
+    /// @param methodStatuses  the method support status for each optional method
     /// @param characteristics the spliterator characteristics
     /// @param permits         the flags that indicate what types of values are supported by the collection.
-    /// @throws NullPointerException if transferQueue or breaks is null
+    /// @param isSafe          indicates whether the collection is safe for concurrent use
+    /// @param compatibleType  the type that is compatible with this collection
+    /// @throws NullPointerException if any of the mandatory parameters are null
+    /// @since 1.0.0
     protected BreakableTransferQueue(
             final @NonNull TransferQueue<E> transferQueue,
             final @NonNull Set<Break> breaks,
@@ -632,33 +637,56 @@ public class BreakableTransferQueue<E> extends BreakableBlockingQueue<E> impleme
     ///
     /// This builder extends BreakableBlockingQueue.Builder and provides additional configuration
     /// options specific to TransferQueue functionality.
+    ///
+    /// @param <E> the type of elements held in the queue to be built
+    /// @author evanbergstrom
+    /// @since 1.0.0
     public static class Builder<E> extends AbstractBuilder<Builder<E>, BreakableTransferQueue<E>, E> {
 
         /// Creates a new Builder with default configuration.
+        ///
+        /// The builder will be initialized with an empty element collection and no breaks.
         public Builder() {
             super(new ArrayDeque<>());
         }
 
+        /// Creates a new Builder by copying configuration from another builder.
+        ///
+        /// @param other the builder to copy configuration from
+        /// @throws NullPointerException if other is null
+        /// @since 1.0.0
         public Builder(final @NonNull Builder<E> other) {
             super(other);
         }
 
+        /// Creates a new Builder pre-populated with elements.
+        ///
+        /// @param elements the elements to be placed in the builder
+        /// @throws NullPointerException if elements is null
+        /// @since 1.0.0
         public Builder(final @NonNull Collection<E> elements) {
             super(elements);
         }
 
+        /// Returns this builder instance for method chaining.
+        ///
+        /// @return this builder
         @Override
         public Builder<E> self() {
             return this;
         }
 
-        /// {@inheritDoc}
+        /// Creates a deep copy of this builder.
+        ///
+        /// @return a new Builder instance with identical configuration
         @Override
         public @NonNull Builder<E> copy() {
             return new Builder<>(this);
         }
 
         /// Builds a new BreakableTransferQueue instance with the configured settings.
+        ///
+        /// @return a new BreakableTransferQueue
         @Override
         public @NonNull BreakableTransferQueue<E> build() {
             return new BreakableTransferQueue<>(new LinkedTransferQueue<>(elements()), breaks(), methodStatuses(),
@@ -669,6 +697,13 @@ public class BreakableTransferQueue<E> extends BreakableBlockingQueue<E> impleme
     // ========== Static Factory Methods ==========
 
     /// Creates a BreakableTransferQueue that wraps the specified TransferQueue with the given breaks.
+    ///
+    /// @param <E>           the type of elements held in the transfer queue
+    /// @param transferQueue the TransferQueue to wrap
+    /// @param breaks        the set of breaks to apply
+    /// @return a new BreakableTransferQueue wrapping the specified queue
+    /// @throws NullPointerException if transferQueue or breaks is null
+    /// @since 1.0.0
     public static <E> @NonNull BreakableTransferQueue<E> wrap(
             final @NonNull TransferQueue<E> transferQueue,
             final @NonNull Set<Break> breaks) {
@@ -677,6 +712,14 @@ public class BreakableTransferQueue<E> extends BreakableBlockingQueue<E> impleme
     }
 
     /// Creates a BreakableTransferQueue that wraps the specified TransferQueue with full configuration.
+    ///
+    /// @param <E>             the type of elements held in the transfer queue
+    /// @param transferQueue   the TransferQueue to wrap
+    /// @param breaks          the set of breaks to apply
+    /// @param characteristics the spliterator characteristics
+    /// @return a new BreakableTransferQueue wrapping the specified queue with given configuration
+    /// @throws NullPointerException if transferQueue or breaks is null
+    /// @since 1.0.0
     public static <E> @NonNull BreakableTransferQueue<E> wrap(
             final @NonNull TransferQueue<E> transferQueue,
             final @NonNull Set<Break> breaks,

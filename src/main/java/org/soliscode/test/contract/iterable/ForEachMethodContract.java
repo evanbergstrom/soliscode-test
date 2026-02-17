@@ -28,31 +28,62 @@ import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-/// This interface tests if a collection class has implemented the `forEach()` method correctly based upon the
-/// specification provided in [Iterable#forEach(Consumer)].
+/// **Contract for the `forEach` method of an `Iterable`**
+///
+/// This interface defines tests for the [forEach(Consumer)][Iterable#forEach] method. It is designed
+/// to be used as a mix-in interface by test classes that verify [Iterable] implementations.
+///
+/// ## Purpose
+/// The purpose of this contract is to ensure that an iterable's `forEach` implementation correctly:
+/// - Calls the specified action for each element in the iterable.
+/// - Does not call the action for an empty iterable.
+/// - Throws [NullPointerException] if the action is `null`.
+///
+/// ## Usage Examples
+/// To use this contract, implement it in your test class along with the required support interfaces:
+///
+/// ```java
+/// class MyIterableForEachTest implements ForEachMethodContract<String, MyIterable<String>> {
+///     @Override
+///     public CollectionProvider<String, MyIterable<String>> provider() {
+///         return MyIterable::new;
+///     }
+/// }
+/// ```
+///
+/// ## Thread Safety
+/// This contract interface does not provide any thread-safety guarantees. The thread safety of the
+/// tests depends on the [Iterable] and [org.soliscode.test.provider.CollectionProvider] implementations being tested.
 ///
 /// @param <E> The element type being tested.
-/// @param <I> The iterator type being tested.
-///
+/// @param <I> The type of the iterable being tested.
 /// @author evanbergstrom
 /// @see Iterable#forEach(Consumer)
-/// @since 1.0
+/// @since 1.0.0
 public interface ForEachMethodContract<E, I extends Iterable<E>> extends CollectionContractSupport<E, I> {
 
-    /// Tests that the [Iterable#forEach] works for an empty collection.
+    /// Tests that the [forEach][Iterable#forEach] method works for an empty collection.
+    ///
+    /// This test verifies that the action is not called for an empty collection.
+    ///
+    /// @since 1.0.0
     @Test
-    @DisplayName("ForEach does not call the action for an iterable with no elements")
-    default void testForEachForEmptyCollection() {
+    @DisplayName("forEach(Consumer) does not call the action for an iterable with no elements")
+    default void forEach_whenEmpty_doesNotCallAction() {
         Iterable<E> iterable = provider().emptyInstance();
         AssertConsumeCount<E> action = AssertActions.consumeCount(0);
         iterable.forEach(action);
         action.assertCheck();
     }
 
-    /// Tests that the `forEach()` works for a collection with elements.
+    /// Tests that the [forEach][Iterable#forEach] method works for a collection with elements.
+    ///
+    /// This test verifies that the action is called exactly once for each element in the collection.
+    ///
+    /// @since 1.0.0
     @Test
-    @DisplayName("ForEach calls the action each element in an iterable")
-    default void testForeEachOverCollectionWithElements() {
+    @DisplayName("forEach(Consumer) calls the action for each element in an iterable")
+    default void forEach_whenNotEmpty_callsActionForEachElement() {
 
         CollectionProvider<E, I> provider = provider();
         Iterable<E> iterable = provider.createInstanceWithUniqueElements();
@@ -61,10 +92,12 @@ public interface ForEachMethodContract<E, I extends Iterable<E>> extends Collect
         action.assertCheck();
     }
 
-    /// Tests that the [Iterable#forEach] throws the correct exception for a `null` action.
+    /// Tests that the [forEach][Iterable#forEach] method throws for a `null` action.
+    ///
+    /// @since 1.0.0
     @Test
-    @DisplayName("ForEach throws a NullPointerException when called with a null action")
-    default void testForEachWithNullAction() {
+    @DisplayName("forEach(Consumer) throws NullPointerException when called with a null action")
+    default void forEach_withNullAction_throwsNullPointerException() {
         Iterable<E> iterable = provider().createInstanceWithUniqueElements();
         Consumer<E> action = null;
         //noinspection ConstantValue

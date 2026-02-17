@@ -85,6 +85,16 @@ public final class CollectionProviders {
         return CollectionProviders.from(HashSet::new, HashSet::new, HashSet::new, elementProvider);
     }
 
+    /// Provides a collection provider that supplies synchronized collections using the provided element provider.
+    /// This method wraps an [ArrayList] collection provider into a synchronized collection
+    /// by utilizing [Collections#synchronizedCollection(Collection)].
+    /// It ensures thread-safety during access to the returned collection instances.
+    ///
+    /// @param <E> the type of elements in the collection.
+    /// @param elementProvider the provider responsible for supplying elements to the collection.
+    ///                        Must not be `null`.
+    /// @return a [CollectionProvider] that provides thread-safe synchronized collections.
+    /// @throws NullPointerException if `elementProvider` is `null`.
     public static <E> CollectionProvider<E, Collection<E>> provideSynchronizedCollection(
             final @NonNull ObjectProvider<E> elementProvider) {
         return CollectionProviders.wrap(provideArrayList(elementProvider), Collections::synchronizedCollection);

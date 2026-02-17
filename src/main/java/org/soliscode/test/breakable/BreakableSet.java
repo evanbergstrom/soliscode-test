@@ -432,9 +432,14 @@ public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
     /// specifics, ensuring type safety and performance characteristics are
     /// maintained throughout the wrapping process.
     ///
-    /// @param <E> the type of elements in the Set
-    /// @param set the existing Set to wrap with breakable functionality
-    /// @param breaks the set of breaks to apply to the wrapped Set
+    /// @param <E>             the type of elements in the Set
+    /// @param set             the existing Set to wrap with breakable functionality
+    /// @param breaks          the set of breaks to apply to the wrapped Set
+    /// @param methodStatuses  the initial method statuses configuration
+    /// @param characteristics the initial spliterator characteristics
+    /// @param permits         the initial permits configuration for the Set
+    /// @param isSafe          whether the wrapped Set should be thread-safe
+    /// @param compatibleType  the element type that the Set supports
     /// @return a new BreakableSet that wraps the provided Set with the specified breaks
     /// @throws NullPointerException if set or breaks is null
     /// @since 1.0.0
@@ -490,7 +495,7 @@ public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
                 return set.add(e);
             }
         } else {
-            throw new UnsupportedOperationException("Unsupported method: add_singleElement_returnsTrueAndUpdatesSize(e)");
+            throw new UnsupportedOperationException("Unsupported method: add(E)");
         }
     }
 

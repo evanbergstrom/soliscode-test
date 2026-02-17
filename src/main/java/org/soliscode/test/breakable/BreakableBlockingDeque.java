@@ -158,13 +158,13 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     public static final Break PUT_FIRST_THROWS_INTERRUPTED_EXCEPTION =
             new Break("PUT_FIRST_THROWS_INTERRUPTED_EXCEPTION");
 
-    /// Break constant that causes putFirst() to accept elements but not actually add_singleElement_returnsTrueAndUpdatesSize them.
+    /// Break constant that causes putFirst() to accept elements but not actually add them.
     ///
     /// When this break is applied, the putFirst() method will return normally but
     /// the element will not be added to the front of the deque.
     ///
     /// **Affected Methods:**
-    /// - {@link #putFirst(Object)} - Returns normally but doesn't add_singleElement_returnsTrueAndUpdatesSize element
+    /// - {@link #putFirst(Object)} - Returns normally but doesn't add element
     ///
     /// **Use Cases:**
     /// - Testing silent putFirst() operation failures
@@ -205,13 +205,13 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     public static final Break PUT_LAST_THROWS_INTERRUPTED_EXCEPTION =
             new Break("PUT_LAST_THROWS_INTERRUPTED_EXCEPTION");
 
-    /// Break constant that causes putLast() to accept elements but not actually add_singleElement_returnsTrueAndUpdatesSize them.
+    /// Break constant that causes putLast() to accept elements but not actually add them.
     ///
     /// When this break is applied, the putLast() method will return normally but
     /// the element will not be added to the back of the deque.
     ///
     /// **Affected Methods:**
-    /// - {@link #putLast(Object)} - Returns normally but doesn't add_singleElement_returnsTrueAndUpdatesSize element
+    /// - {@link #putLast(Object)} - Returns normally but doesn't add element
     ///
     /// **Use Cases:**
     /// - Testing silent putLast() operation failures
@@ -511,24 +511,25 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
                 other.compatibleType());
     }
 
-    /// Creates a BreakableBlockingDeque with the specified configuration.
+    /// Constructs a new `BreakableBlockingDeque` which allows enhanced control over a blocking deque
+    /// by introducing breakpoints and status tracking for method executions. This facilitates flexible,
+    /// interruptible operations in concurrent programming scenarios.
     ///
-    /// This constructor allows full control over the BreakableBlockingDeque configuration,
-    /// including the underlying BlockingDeque, breaks, and spliterator characteristics.
-    ///
-    /// **Usage:**
-    /// ```java
-    /// LinkedBlockingDeque<String> linkedDeque = new LinkedBlockingDeque<>();
-    /// Set<Break> breaks = Set.of(PUT_FIRST_THROWS_INTERRUPTED_EXCEPTION);
-    /// BreakableBlockingDeque<String> deque = new BreakableBlockingDeque<>(
-    ///     linkedDeque, breaks, 0);
-    /// ```
-    ///
-    /// @param blockingDeque the BlockingDeque to wrap
-    /// @param breaks the breaks to apply
-    /// @param characteristics the spliterator characteristics
-    /// @param permits         the flags that indicate what types of values are supported by the collection.
-    /// @throws NullPointerException if blockingDeque or breaks is null
+    /// @param blockingDeque   The underlying [BlockingDeque] instance that this class wraps. It must
+    ///                        not be `null` and should be correctly initialized for proper functioning.
+    /// @param breaks          A [Set] of `Break` instances that define interruption points for certain
+    ///                        operations on the deque. This enables controlled interruptions during deque usage.
+    /// @param methodStatuses  A [Map] mapping `InterfaceMethod` enums to corresponding [MethodStatus]
+    ///                        values. This provides a mechanism to configure and track the execution behavior
+    ///                        of specific methods.
+    /// @param characteristics Integer flags that define configurable properties of this deque, such as
+    ///                        performance characteristics or customization for specific use cases.
+    /// @param permits         The maximum number of permits available to control access to the deque. This parameter
+    ///                        is used to handle concurrency limits during deque operations.
+    /// @param isSafe          A `boolean` flag indicating whether this deque implementation guarantees thread-safety.
+    ///                        If `true`, additional internal mechanisms ensure safe concurrent usage.
+    /// @param compatibleType  The [Class] type that this deque is compatible with. This is typically
+    ///                        used for ensuring type safety and compatibility during deque processing.
     protected BreakableBlockingDeque(
             final @NonNull BlockingDeque<E> blockingDeque,
             final @NonNull Set<Break> breaks,
@@ -541,6 +542,27 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
                 compatibleType);
     }
 
+    // BreakableBlockingDeque cant extend both BreakableDeque and BreakableBlockingQueue, so we need to
+    // re-resolve that annotation differences that were handled in BreakablBlockingQueue.
+
+    /// {@inheritDoc}
+    @Override
+    public boolean add(final @NonNull E e) {   // resolve annotation conflict between Collection and BlockingDeque
+        return super.add(e);
+    }
+
+    /// {@inheritDoc}
+    @Override
+    public boolean offer(final @NonNull E e) { // resolve annotation conflict between queue and BlockingQueue
+        return super.offer(e);
+    }
+
+    /// {@inheritDoc}
+    @Override
+    public void push(final @NonNull E e) { // resolve annotation conflict between Deque and BlockingDeque
+        super.push(e);
+    }
+
     // ========== BlockingDeque Interface Implementation ==========
 
     /// {@inheritDoc}
@@ -550,7 +572,7 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     ///
     /// **Supported Breaks:**
     /// - {@link #PUT_FIRST_THROWS_INTERRUPTED_EXCEPTION} - Throws InterruptedException
-    /// - {@link #PUT_FIRST_DOES_NOT_ADD_ELEMENT} - Returns normally but doesn't add_singleElement_returnsTrueAndUpdatesSize element
+    /// - {@link #PUT_FIRST_DOES_NOT_ADD_ELEMENT} - Returns normally but doesn't add element
     /// - {@link #PUT_FIRST_THROWS_EXCEPTION} - Throws IllegalStateException
     ///
     /// **Exception Handling:**
@@ -583,7 +605,7 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     ///
     /// **Supported Breaks:**
     /// - {@link #PUT_LAST_THROWS_INTERRUPTED_EXCEPTION} - Throws InterruptedException
-    /// - {@link #PUT_LAST_DOES_NOT_ADD_ELEMENT} - Returns normally but doesn't add_singleElement_returnsTrueAndUpdatesSize element
+    /// - {@link #PUT_LAST_DOES_NOT_ADD_ELEMENT} - Returns normally but doesn't add element
     /// - {@link #PUT_LAST_THROWS_EXCEPTION} - Throws IllegalStateException
     ///
     /// **Exception Handling:**
@@ -636,8 +658,9 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
         }
 
         if (hasBreak(TAKE_FIRST_DOES_NOT_REMOVE_ELEMENT)) {
-            // TODO: This should wait for an element if the deque is empty, they call peekFirst()
-            return blockingDeque.peekFirst(); // Return element but don't remove it
+            E e = blockingDeque.takeFirst();
+            blockingDeque.offerFirst(e);
+            return e;
         }
 
         return blockingDeque.takeFirst();
@@ -656,6 +679,7 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     /// **Exception Handling:**
     /// - Throws UnsupportedOperationException if the method is not supported
     /// - May throw InterruptedException due to TAKE_LAST_THROWS_INTERRUPTED_EXCEPTION break
+    @SuppressWarnings("DataFlowIssue")
     @Override
     public @NonNull E takeLast() throws InterruptedException {
         checkMethodSupport(BlockingDequeMethods.TAKE_LAST);
@@ -669,7 +693,9 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
         }
 
         if (hasBreak(TAKE_LAST_DOES_NOT_REMOVE_ELEMENT)) {
-            return blockingDeque.peekLast(); // Return element but don't remove it
+            E first = takeFirst();
+            putFirst(first);
+            return first;
         }
 
         return blockingDeque.takeLast();
@@ -871,32 +897,54 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
 
     // ========== Builder Class ==========
 
+    /// Abstract base builder class for creating [BreakableBlockingDeque] and its subclasses.
+    ///
+    /// This class provides common configuration options for blocking deques, such as capacity control.
+    ///
+    /// @param <B> the type of the builder subclass
+    /// @param <C> the type of the blocking deque being built
+    /// @param <E> the type of elements held in the blocking deque
+    /// @since 1.0.0
     public abstract static class AbstractBuilder<B extends BreakableCollection.AbstractBuilder<B, C, E>,
             C extends BreakableBlockingDeque<E>, E>
             extends BreakableCollection.AbstractBuilder<B, C, E> {
 
         private static final boolean DEFAULT_FAIRNESS = false;
 
+        /// The capacity of the deque. If negative, the deque has no explicit capacity limit.
         private int capacity;
 
+        /// Creates a new AbstractBuilder with default configuration.
         public AbstractBuilder() {
             this.capacity = -1;
         }
 
+        /// Creates a new AbstractBuilder pre-populated with elements.
+        ///
+        /// @param elements the elements to be placed in the builder
         public AbstractBuilder(final @NonNull Collection<E> elements) {
             super(elements);
             this.capacity = -1;
         }
 
+        /// Creates a new AbstractBuilder by copying configuration from another builder.
+        ///
+        /// @param other the builder to copy configuration from
         public AbstractBuilder(final @NonNull AbstractBuilder<B, C, E> other) {
             super(other);
             this.capacity = other.capacity;
         }
 
+        /// Sets the capacity of the blocking deque.
+        ///
+        /// @param capacity the capacity to set; negative for no limit
         public void setCapacity(final int capacity) {
             this.capacity = capacity;
         }
 
+        /// Returns the configured capacity of the blocking deque.
+        ///
+        /// @return the configured capacity
         public int capacity() {
             return capacity;
         }
@@ -906,6 +954,7 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     ///
     /// This builder extends BreakableDeque.Builder and provides additional configuration
     /// options specific to BlockingDeque functionality.
+    /// @param <E> the element type for the collection.
     public static class Builder<E> extends AbstractBuilder<Builder<E>, BreakableBlockingDeque<E>, E> {
 
         /// Creates a new Builder with default configuration.
@@ -979,6 +1028,9 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
             super(other);
         }
 
+        /// Creates a new Builder pre-populated with the specified elements.
+        ///
+        /// @param elements the initial elements to be placed in the blocking deque
         public Builder(final @NonNull Collection<E> elements) {
             super(elements);
         }
@@ -995,6 +1047,9 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
             return new Builder<>(this);
         }
 
+        /// Builds a new [BreakableBlockingDeque] instance with the configured settings.
+        ///
+        /// @return a new BreakableBlockingDeque instance
         @Override
         public @NonNull BreakableBlockingDeque<E> build() {
             BlockingDeque<E> queue;

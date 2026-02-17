@@ -58,6 +58,7 @@ public interface RetainAllContract<E, C extends Collection<E>> extends Collectio
     /// @see Collection#retainAll
     /// @throws UnsupportedOperationException if the method is not supported
     /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("retainAll(Collection) works when called on an empty container")
     @Test
     default void retainAll_whenEmpty_returnsFalse() {
@@ -81,6 +82,7 @@ public interface RetainAllContract<E, C extends Collection<E>> extends Collectio
     /// @see Collection#retainAll
     /// @throws UnsupportedOperationException if the method is not supported
     /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("retainAll(Collection) works on a container with elements")
     @Test
     default void retainAll_whenNotEmpty_returnsExpectedResults() {
@@ -102,12 +104,12 @@ public interface RetainAllContract<E, C extends Collection<E>> extends Collectio
 
     /// Tests that the [retainAll][Collection#retainAll] method works with incompatible types.
     ///
-    /// This test verifies that:
-    /// 1. If the argument collection contains incompatible types, they are not found in the target collection,
-    ///    so everything is removed.
+    /// This test verifies that if the argument collection contains incompatible types, they are not found
+    /// in the target collection, so everything is removed.
     ///
     /// @see Collection#retainAll
     /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("retainAll(Collection) works with incompatible types")
     @Test
     default void retainAll_withIncompatibleType_returnsExpectedResults() {
@@ -120,13 +122,14 @@ public interface RetainAllContract<E, C extends Collection<E>> extends Collectio
 
     /// Tests that the [retainAll][Collection#retainAll] method throws when the argument collection is `null`.
     ///
-    /// # Implementation Notes
+    /// ## Implementation Notes
     /// Any implementations that use the `NonNull` annotation for the collection parameter may throw an
     /// `IllegalArgumentException` here, so either exception type is accepted.
     ///
     /// @see Collection#retainAll
     /// @throws NullPointerException or IllegalArgumentException if the argument collection is null
     /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("retainAll(Collection) throws exception when argument collection is null")
     @Test
     @SuppressWarnings("DataFlowIssue")

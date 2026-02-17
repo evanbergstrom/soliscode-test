@@ -11,35 +11,51 @@ import java.util.SequencedCollection;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-/// Test for the getFirst method in the [SequencedCollection] interface. This contract class can be used individually
-/// by a test class, but it is normally used through the [SequencedCollectionContract] class:
+/// Contract for testing the [getFirst][SequencedCollection#getFirst] method of a [SequencedCollection].
+///
+/// ### Purpose
+/// Verifies that `getFirst()` correctly returns the first element of the collection and
+/// throws the appropriate exception when the collection is empty.
+///
+/// ### Usage Example
+/// This contract is typically used through [SequencedCollectionContract]:
 /// ```java
-/// public class MyCollectionTest extends SequencedCollectionContract<Integer, MyCollection<Integer>> {
+/// class MySequencedCollectionTest extends SequencedCollectionContract<String, MySequencedCollection<String>> {
+///     // Inherits all getFirst tests
 /// }
 /// ```
-/// If a test is using the SequencedCollectionContract class, but the class being tested does not implement the `getFirst`
-/// method based upon the specification in the `SequencedCollection` class, then it can be omitted from the tests using the
-/// `doesNotSupportMethod()` method:
+/// To exclude this contract if the method is not supported:
 /// ```java
-/// public class MyCollectionTest extends SequencedCollectionContract<Integer, MyCollection<Integer>> {
-///     public MyCollectionTest() {
-///         doesNotSupportMethod(SequencedCollectionMethods.GetFirst);
+/// class MySequencedCollectionTest extends SequencedCollectionContract<String, MySequencedCollection<String>> {
+///     public MySequencedCollectionTest() {
+///         doesNotSupportMethod(SequencedCollectionMethods.GET_FIRST);
 ///     }
 /// }
 /// ```
-/// @param <E> The element type being tested.
+///
+/// ### Thread Safety
+/// The tests in this contract are not thread-safe and should be run in a single-threaded environment
+/// unless the underlying collection implementation specifically guarantees thread safety for these operations.
+///
+/// @param <E> The element type.
 /// @param <C> The collection type being tested.
 /// @author evanbergstrom
-/// @since 1.0
+/// @see SequencedCollection#getFirst
+/// @since 1.0.0
 public interface GetFirstContract<E, C extends SequencedCollection<E>> extends CollectionContractSupport<E, C> {
 
-    /// Tests that the [getFirst][SequencedCollection#getFirst] method works.
+    /// Verifies that [getFirst][SequencedCollection#getFirst] returns the first element when the collection is not empty.
+    ///
+    /// The test follows these steps:
+    /// 1. Creates a collection with multiple elements.
+    /// 2. Verifies that `getFirst()` returns the element at the front of the collection.
     ///
     /// @throws org.opentest4j.AssertionFailedError if the test fails.
     /// @see SequencedCollection#getFirst
-    @DisplayName("Test that the getFirst method works")
+    /// @since 1.0.0
+    @DisplayName("getFirst() when not empty returns the first element")
     @Test
-    default void testGetFirst() {
+    default void getFirst_whenNotEmpty_returnsFirstElement() {
         if (supportsMethod(SequencedCollectionMethods.GET_FIRST)) {
             List<E> elements = elementProvider().createUniqueInstances(2);
             SequencedCollection<E> collection = provider().createInstance(elements);
@@ -47,13 +63,19 @@ public interface GetFirstContract<E, C extends SequencedCollection<E>> extends C
         }
     }
 
-    /// Tests that the [getFirst][SequencedCollection#getFirst] method works on an empty collection.
+    /// Verifies that [getFirst][SequencedCollection#getFirst] throws [NoSuchElementException] when the collection is empty.
+    ///
+    /// The test follows these steps:
+    /// 1. Creates an empty collection.
+    /// 2. Verifies that calling `getFirst()` throws a `NoSuchElementException`.
     ///
     /// @throws org.opentest4j.AssertionFailedError if the test fails.
-     /// @see SequencedCollection#getFirst
-    @DisplayName("Test that the getFirst method throws for an empty collection")
+    /// @throws java.util.NoSuchElementException if the collection is empty (expected).
+    /// @see SequencedCollection#getFirst
+    /// @since 1.0.0
+    @DisplayName("getFirst() when empty throws NoSuchElementException")
     @Test
-    default void testGetFirstOnEmptyCollection() {
+    default void getFirst_whenEmpty_throwsNoSuchElementException() {
         if (supportsMethod(SequencedCollectionMethods.GET_FIRST)) {
             SequencedCollection<E> collection = provider().emptyInstance();
             assertThrows(NoSuchElementException.class, collection::getFirst);

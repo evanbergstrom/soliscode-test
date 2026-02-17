@@ -35,7 +35,7 @@ public enum CollectionMethods implements InterfaceMethod {
     REMOVE_ALL("removeAll(Collection)"),
 
     /// The method [java.util.Collection#removeIf(java.util.function.Predicate)].
-    REMOVE_IF("remnoveIf(Predicate)"),
+    REMOVE_IF("removeIf(Predicate)"),
 
     /// The method [java.util.Collection#retainAll(java.util.Collection)].
     RETAIN_ALL("retainAll(Collection)"),

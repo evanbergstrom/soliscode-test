@@ -644,8 +644,9 @@ public class BreakableIterable<E> extends BreakableObject<Iterable<E>> implement
     /// @param <E> the element type
     /// @param elementProvider the element provider to use
     /// @param breaks the breaks to apply to each instance of BreakableIterable
+    /// @param methodStatuses the method statuses to apply to each instance of BreakableIterable.
     /// @return a collection provider for breakable iterables
-    /// @throws NullPointerException if elementProvider or breaks is null
+    /// @throws NullPointerException if elementProvider, breaks, or methodStatuses is null
     public static <E> @NonNull CollectionProvider<E, BreakableIterable<E>> iterableProvider(
             final @NonNull ObjectProvider<E> elementProvider,
             final @NonNull Set<Break> breaks,
@@ -672,6 +673,13 @@ public class BreakableIterable<E> extends BreakableObject<Iterable<E>> implement
         }
     }
 
+    /// Retrieves the characteristics of this BreakableIterable instance. These characteristics
+    /// represent the behavior and properties of the iterable and its associated spliterator.
+    /// Characteristics are encoded as a bitmask, where each bit represents a specific property.
+    ///
+    /// @return an integer encoding the characteristics of the iterable. The value may include
+    ///         properties such as orderedness, distinctiveness, immutability, or concurrency safety
+    ///         as defined by the BreakableIterable implementation.
     protected int characteristics() {
         return characteristics;
     }

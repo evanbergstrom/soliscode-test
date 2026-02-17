@@ -75,8 +75,8 @@ public class BreakableBlockingQueueTest extends AbstractTest {
 
     /// Tests the default constructor functionality and initial state validation.
     @Test
-    @DisplayName("Test default constructor creates empty blocking queue")
-    public void testDefaultConstructor() {
+    @DisplayName("defaultConstructor: creates empty blocking queue")
+    public void defaultConstructor_whenCalled_createsEmptyBlockingQueue() {
         BreakableBlockingQueue<String> queue = new BreakableBlockingQueue<>();
 
         assertTrue(queue.isEmpty());
@@ -88,11 +88,11 @@ public class BreakableBlockingQueueTest extends AbstractTest {
 
     /// Tests the copy constructor behavior and configuration inheritance.
     @Test
-    @DisplayName("Test copy constructor")
-    public void testCopyConstructor() {
-        BreakableBlockingQueue.Builder<String> builder = new BreakableBlockingQueue.Builder<>();
-        builder.addBreak(PUT_THROWS_INTERRUPTED_EXCEPTION);
-        BreakableBlockingQueue<String> original = builder.build();
+    @DisplayName("copyConstructor: copies elements and configuration")
+    public void copyConstructor_whenCalled_copiesElementsAndConfiguration() {
+        BreakableBlockingQueue<String> original = new BreakableBlockingQueue.Builder<String>()
+                .addBreak(PUT_THROWS_INTERRUPTED_EXCEPTION)
+                .build();
 
         original.offer("item1");
         original.offer("item2");
@@ -111,13 +111,13 @@ public class BreakableBlockingQueueTest extends AbstractTest {
 
     /// Tests basic Builder pattern functionality and configuration transfer.
     @Test
-    @DisplayName("Test builder pattern")
-    public void testBuilder() {
+    @DisplayName("builder: builds configured queue")
+    public void builder_withBreaks_buildsConfiguredQueue() {
         try {
-            BreakableBlockingQueue.Builder<String> builder = new BreakableBlockingQueue.Builder<>();
-            builder.addBreak(TAKE_THROWS_INTERRUPTED_EXCEPTION);
-            builder.addBreak(PUT_DOES_NOT_ADD_ELEMENT);
-            BreakableBlockingQueue<String> queue = builder.build();
+            BreakableBlockingQueue<String> queue = new BreakableBlockingQueue.Builder<String>()
+                .addBreak(TAKE_THROWS_INTERRUPTED_EXCEPTION)
+                .addBreak(PUT_DOES_NOT_ADD_ELEMENT)
+                .build();
 
             queue.put("item"); // Should not add_singleElement_returnsTrueAndUpdatesSize due to break
 
@@ -130,8 +130,8 @@ public class BreakableBlockingQueueTest extends AbstractTest {
 
     /// Tests Builder copy functionality and configuration inheritance.
     @Test
-    @DisplayName("Test builder copy")
-    public void testBuilderCopy() {
+    @DisplayName("builder.copy(): produces independent builder with inherited configuration")
+    public void builderCopy_whenCalled_producesIndependentBuilderWithInheritedConfiguration() {
         try {
             BreakableBlockingQueue.Builder<String> original = new BreakableBlockingQueue.Builder<>();
             original.addBreak(PUT_DOES_NOT_ADD_ELEMENT);
@@ -163,23 +163,23 @@ public class BreakableBlockingQueueTest extends AbstractTest {
 
     /// Tests the PUT_THROWS_INTERRUPTED_EXCEPTION break functionality.
     @Test
-    @DisplayName("Test PUT_THROWS_INTERRUPTED_EXCEPTION break")
-    public void testPutThrowsInterruptedException() {
-        BreakableBlockingQueue.Builder<String> builder = new BreakableBlockingQueue.Builder<>();
-        builder.addBreak(PUT_THROWS_INTERRUPTED_EXCEPTION);
-        BreakableBlockingQueue<String> queue = builder.build();
+    @DisplayName("put(E): throws InterruptedException when break active")
+    public void put_whenThrowsInterruptedExceptionBreakActive_throwsInterruptedException() {
+        BreakableBlockingQueue<String> queue = new BreakableBlockingQueue.Builder<String>()
+                .addBreak(PUT_THROWS_INTERRUPTED_EXCEPTION)
+                .build();
 
         assertThrows(InterruptedException.class, () -> queue.put("item"));
     }
 
     /// Tests the PUT_DOES_NOT_ADD_ELEMENT break functionality.
     @Test
-    @DisplayName("Test PUT_DOES_NOT_ADD_ELEMENT break")
-    public void testPutDoesNotAddElement() {
+    @DisplayName("put(E): does not add element when break active")
+    public void put_whenDoesNotAddElementBreakActive_doesNotAddElement() {
         try {
-            BreakableBlockingQueue.Builder<String> builder = new BreakableBlockingQueue.Builder<>();
-            builder.addBreak(PUT_DOES_NOT_ADD_ELEMENT);
-            BreakableBlockingQueue<String> queue = builder.build();
+            BreakableBlockingQueue<String> queue = new BreakableBlockingQueue.Builder<String>()
+                    .addBreak(PUT_DOES_NOT_ADD_ELEMENT)
+                    .build();
 
             queue.put("item1");
             queue.put("item2");
@@ -194,22 +194,22 @@ public class BreakableBlockingQueueTest extends AbstractTest {
 
     /// Tests the PUT_THROWS_EXCEPTION break functionality.
     @Test
-    @DisplayName("Test PUT_THROWS_EXCEPTION break")
-    public void testPutThrowsException() {
-        BreakableBlockingQueue.Builder<String> builder = new BreakableBlockingQueue.Builder<>();
-        builder.addBreak(PUT_THROWS_EXCEPTION);
-        BreakableBlockingQueue<String> queue = builder.build();
+    @DisplayName("put(E): throws IllegalStateException when break active")
+    public void put_whenThrowsExceptionBreakActive_throwsIllegalStateException() {
+        BreakableBlockingQueue<String> queue = new BreakableBlockingQueue.Builder<String>()
+                .addBreak(PUT_THROWS_EXCEPTION)
+                .build();
 
         assertThrows(IllegalStateException.class, () -> queue.put("item"));
     }
 
     /// Tests that put() throws UnsupportedOperationException when method is not supported.
     @Test
-    @DisplayName("Test put() throws when not supported")
-    public void testPutWhenNotSupported() {
-        BreakableBlockingQueue.Builder<String> builder = new BreakableBlockingQueue.Builder<>();
-        builder.doesNotSupport(BlockingQueueMethods.PUT);
-        BreakableBlockingQueue<String> queue = builder.build();
+    @DisplayName("put(E): throws UnsupportedOperationException when not supported")
+    public void put_whenNotSupported_throwsUnsupportedOperationException() {
+        BreakableBlockingQueue<String> queue = new BreakableBlockingQueue.Builder<String>()
+                .doesNotSupport(BlockingQueueMethods.PUT)
+                .build();
 
         assertThrows(UnsupportedOperationException.class, () -> queue.put("item"));
     }
@@ -219,23 +219,23 @@ public class BreakableBlockingQueueTest extends AbstractTest {
     /// Tests the TAKE_THROWS_INTERRUPTED_EXCEPTION break functionality.
     @Disabled
     @Test
-    @DisplayName("Test TAKE_THROWS_INTERRUPTED_EXCEPTION break")
-    public void testTakeThrowsInterruptedException() {
-        BreakableBlockingQueue.Builder<String> builder = new BreakableBlockingQueue.Builder<>();
-        builder.addBreak(TAKE_THROWS_INTERRUPTED_EXCEPTION);
-        BreakableBlockingQueue<String> queue = builder.build();
+    @DisplayName("take(): throws InterruptedException when break active")
+    public void take_whenThrowsInterruptedExceptionBreakActive_throwsInterruptedException() {
+        BreakableBlockingQueue<String> queue = new BreakableBlockingQueue.Builder<String>()
+                .addBreak(TAKE_THROWS_INTERRUPTED_EXCEPTION)
+                .build();
 
         assertThrows(InterruptedException.class, queue::take);
     }
 
     /// Tests the TAKE_ALWAYS_RETURNS_NULL break functionality.
     @Test
-    @DisplayName("Test TAKE_ALWAYS_RETURNS_NULL break")
-    public void testTakeAlwaysReturnsNull() {
+    @DisplayName("take(): always returns null when break active")
+    public void take_whenAlwaysReturnsNullBreakActive_returnsNull() {
         try {
-            BreakableBlockingQueue.Builder<String> builder = new BreakableBlockingQueue.Builder<>();
-            builder.addBreak(TAKE_ALWAYS_RETURNS_NULL);
-            BreakableBlockingQueue<String> queue = builder.build();
+            BreakableBlockingQueue<String> queue = new BreakableBlockingQueue.Builder<String>()
+                    .addBreak(TAKE_ALWAYS_RETURNS_NULL)
+                    .build();
 
             queue.put("item1");
             queue.put("item2");
@@ -249,12 +249,12 @@ public class BreakableBlockingQueueTest extends AbstractTest {
 
     /// Tests the TAKE_DOES_NOT_REMOVE_ELEMENT break functionality.
     @Test
-    @DisplayName("Test TAKE_DOES_NOT_REMOVE_ELEMENT break")
-    public void testTakeDoesNotRemoveElement() {
+    @DisplayName("take(): does not remove element when break active")
+    public void take_whenDoesNotRemoveElementBreakActive_returnsElementWithoutRemoving() {
         try {
-            BreakableBlockingQueue.Builder<String> builder = new BreakableBlockingQueue.Builder<>();
-            builder.addBreak(TAKE_DOES_NOT_REMOVE_ELEMENT);
-            BreakableBlockingQueue<String> queue = builder.build();
+            BreakableBlockingQueue<String> queue = new BreakableBlockingQueue.Builder<String>()
+                    .addBreak(TAKE_DOES_NOT_REMOVE_ELEMENT)
+                    .build();
 
             queue.put("item1");
             queue.put("item2");
@@ -270,11 +270,11 @@ public class BreakableBlockingQueueTest extends AbstractTest {
 
     /// Tests that take() throws UnsupportedOperationException when method is not supported.
     @Test
-    @DisplayName("Test take() throws when not supported")
-    public void testTakeWhenNotSupported() {
-        BreakableBlockingQueue.Builder<String> builder = new BreakableBlockingQueue.Builder<>();
-        builder.doesNotSupport(BlockingQueueMethods.TAKE);
-        BreakableBlockingQueue<String> queue = builder.build();
+    @DisplayName("take(): throws UnsupportedOperationException when not supported")
+    public void take_whenNotSupported_throwsUnsupportedOperationException() {
+        BreakableBlockingQueue<String> queue = new BreakableBlockingQueue.Builder<String>()
+                .doesNotSupport(BlockingQueueMethods.TAKE)
+                .build();
 
         assertThrows(UnsupportedOperationException.class, queue::take);
     }
@@ -283,12 +283,12 @@ public class BreakableBlockingQueueTest extends AbstractTest {
 
     /// Tests the OFFER_WITH_TIMEOUT_ALWAYS_RETURNS_FALSE break functionality.
     @Test
-    @DisplayName("Test OFFER_WITH_TIMEOUT_ALWAYS_RETURNS_FALSE break")
-    public void testOfferWithTimeoutAlwaysReturnsFalse() {
+    @DisplayName("offer(E, long, TimeUnit): always returns false when break active")
+    public void offer_whenTimeoutAlwaysReturnsFalseBreakActive_returnsFalse() {
         try {
-            BreakableBlockingQueue.Builder<String> builder = new BreakableBlockingQueue.Builder<>();
-            builder.addBreak(OFFER_WITH_TIMEOUT_ALWAYS_RETURNS_FALSE);
-            BreakableBlockingQueue<String> queue = builder.build();
+            BreakableBlockingQueue<String> queue = new BreakableBlockingQueue.Builder<String>()
+                    .addBreak(OFFER_WITH_TIMEOUT_ALWAYS_RETURNS_FALSE)
+                    .build();
 
             assertFalse(queue.offer("item1", 1, TimeUnit.SECONDS));
             assertFalse(queue.offer("item2", 100, TimeUnit.MILLISECONDS));
@@ -302,22 +302,22 @@ public class BreakableBlockingQueueTest extends AbstractTest {
 
     /// Tests the OFFER_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION break functionality.
     @Test
-    @DisplayName("Test OFFER_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION break")
-    public void testOfferWithTimeoutThrowsInterruptedException() {
-        BreakableBlockingQueue.Builder<String> builder = new BreakableBlockingQueue.Builder<>();
-        builder.addBreak(OFFER_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION);
-        BreakableBlockingQueue<String> queue = builder.build();
+    @DisplayName("offer(E, long, TimeUnit): throws InterruptedException when break active")
+    public void offer_whenTimeoutThrowsInterruptedExceptionBreakActive_throwsInterruptedException() {
+        BreakableBlockingQueue<String> queue = new BreakableBlockingQueue.Builder<String>()
+                .addBreak(OFFER_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION)
+                .build();
 
         assertThrows(InterruptedException.class, () -> queue.offer("item", 1, TimeUnit.SECONDS));
     }
 
     /// Tests that offer(timeout) throws UnsupportedOperationException when method is not supported.
     @Test
-    @DisplayName("Test offer(timeout) throws when not supported")
-    public void testOfferWithTimeoutWhenNotSupported() {
-        BreakableBlockingQueue.Builder<String> builder = new BreakableBlockingQueue.Builder<>();
-        builder.doesNotSupport(BlockingQueueMethods.OFFER_TIMEOUT);
-        BreakableBlockingQueue<String> queue = builder.build();
+    @DisplayName("offer(E, long, TimeUnit): throws UnsupportedOperationException when not supported")
+    public void offer_whenTimeoutNotSupported_throwsUnsupportedOperationException() {
+        BreakableBlockingQueue<String> queue = new BreakableBlockingQueue.Builder<String>()
+                .doesNotSupport(BlockingQueueMethods.OFFER_TIMEOUT)
+                .build();
 
         assertThrows(UnsupportedOperationException.class, () -> queue.offer("item", 1, TimeUnit.SECONDS));
     }
@@ -326,12 +326,12 @@ public class BreakableBlockingQueueTest extends AbstractTest {
 
     /// Tests the POLL_WITH_TIMEOUT_ALWAYS_RETURNS_NULL break functionality.
     @Test
-    @DisplayName("Test POLL_WITH_TIMEOUT_ALWAYS_RETURNS_NULL break")
-    public void testPollWithTimeoutAlwaysReturnsNull() {
+    @DisplayName("poll(long, TimeUnit): always returns null when break active")
+    public void poll_whenTimeoutAlwaysReturnsNullBreakActive_returnsNull() {
         try {
-            BreakableBlockingQueue.Builder<String> builder = new BreakableBlockingQueue.Builder<>();
-            builder.addBreak(POLL_WITH_TIMEOUT_ALWAYS_RETURNS_NULL);
-            BreakableBlockingQueue<String> queue = builder.build();
+            BreakableBlockingQueue<String> queue = new BreakableBlockingQueue.Builder<String>()
+                    .addBreak(POLL_WITH_TIMEOUT_ALWAYS_RETURNS_NULL)
+                    .build();
 
             queue.put("item1");
             queue.put("item2");
@@ -345,22 +345,22 @@ public class BreakableBlockingQueueTest extends AbstractTest {
 
     /// Tests the POLL_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION break functionality.
     @Test
-    @DisplayName("Test POLL_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION break")
-    public void testPollWithTimeoutThrowsInterruptedException() {
-        BreakableBlockingQueue.Builder<String> builder = new BreakableBlockingQueue.Builder<>();
-        builder.addBreak(POLL_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION);
-        BreakableBlockingQueue<String> queue = builder.build();
+    @DisplayName("poll(long, TimeUnit): throws InterruptedException when break active")
+    public void poll_whenTimeoutThrowsInterruptedExceptionBreakActive_throwsInterruptedException() {
+        BreakableBlockingQueue<String> queue = new BreakableBlockingQueue.Builder<String>()
+                .addBreak(POLL_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION)
+                .build();
 
         assertThrows(InterruptedException.class, () -> queue.poll(1, TimeUnit.SECONDS));
     }
 
     /// Tests that poll(timeout) throws UnsupportedOperationException when method is not supported.
     @Test
-    @DisplayName("Test poll(timeout) throws when not supported")
-    public void testPollWithTimeoutWhenNotSupported() {
-        BreakableBlockingQueue.Builder<String> builder = new BreakableBlockingQueue.Builder<>();
-        builder.doesNotSupport(BlockingQueueMethods.POLL_TIMEOUT);
-        BreakableBlockingQueue<String> queue = builder.build();
+    @DisplayName("poll(long, TimeUnit): throws UnsupportedOperationException when not supported")
+    public void poll_whenTimeoutNotSupported_throwsUnsupportedOperationException() {
+        BreakableBlockingQueue<String> queue = new BreakableBlockingQueue.Builder<String>()
+            .doesNotSupport(BlockingQueueMethods.POLL_TIMEOUT)
+            .build();
 
         assertThrows(UnsupportedOperationException.class, () -> queue.poll(1, TimeUnit.SECONDS));
     }
@@ -368,12 +368,14 @@ public class BreakableBlockingQueueTest extends AbstractTest {
     // ========== Remaining Capacity Method Break Tests ==========
 
     /// Tests the REMAINING_CAPACITY_ALWAYS_RETURNS_ZERO break functionality.
+    /// This test verifies that when the REMAINING_CAPACITY_ALWAYS_RETURNS_ZERO break is applied,
+    /// the remainingCapacity method always returns 0, regardless of the number of elements in the queue.
     @Test
-    @DisplayName("Test REMAINING_CAPACITY_ALWAYS_RETURNS_ZERO break")
-    public void testRemainingCapacityAlwaysReturnsZero() {
-        BreakableBlockingQueue.Builder<String> builder = new BreakableBlockingQueue.Builder<>();
-        builder.addBreak(REMAINING_CAPACITY_ALWAYS_RETURNS_ZERO);
-        BreakableBlockingQueue<String> queue = builder.build();
+    @DisplayName("remainingCapacity(): always returns zero when break active")
+    public void remainingCapacity_whenAlwaysReturnsZeroBreakActive_returnsZero() {
+        BreakableBlockingQueue<String> queue = new BreakableBlockingQueue.Builder<String>()
+            .addBreak(REMAINING_CAPACITY_ALWAYS_RETURNS_ZERO)
+            .build();
 
         assertEquals(0, queue.remainingCapacity()); // Should return 0 due to break
 
@@ -382,27 +384,37 @@ public class BreakableBlockingQueueTest extends AbstractTest {
         assertEquals(0, queue.remainingCapacity());
     }
 
-    /// Tests that remainingCapacity() throws UnsupportedOperationException when method is not supported.
+    /**
+     * Tests that remainingCapacity() throws UnsupportedOperationException when method is not supported.
+     *
+     * This test verifies that if the remainingCapacity method is not supported, calling it
+     * will result in an UnsupportedOperationException being thrown.
+     */
     @Test
-    @DisplayName("Test remainingCapacity() throws when not supported")
-    public void testRemainingCapacityWhenNotSupported() {
-        BreakableBlockingQueue.Builder<String> builder = new BreakableBlockingQueue.Builder<>();
-        builder.doesNotSupport(BlockingQueueMethods.REMAINING_CAPACITY);
-        BreakableBlockingQueue<String> queue = builder.build();
+    @DisplayName("remainingCapacity(): throws UnsupportedOperationException when not supported")
+    public void remainingCapacity_whenNotSupported_throwsUnsupportedOperationException() {
+        BreakableBlockingQueue<String> queue = new BreakableBlockingQueue.Builder<String>()
+                .doesNotSupport(BlockingQueueMethods.REMAINING_CAPACITY)
+                .build();
 
         assertThrows(UnsupportedOperationException.class, queue::remainingCapacity);
     }
 
     // ========== DrainTo Method Break Tests ==========
 
-    /// Tests the DRAIN_TO_ALWAYS_RETURNS_ZERO break functionality.
+    /**
+     * Tests the DRAIN_TO_ALWAYS_RETURNS_ZERO break functionality.
+     *
+     * This test verifies that when the DRAIN_TO_ALWAYS_RETURNS_ZERO break is applied,
+     * the drainTo method always returns 0, regardless of the number of elements in the queue.
+     */
     @Test
-    @DisplayName("Test DRAIN_TO_ALWAYS_RETURNS_ZERO break")
-    public void testDrainToAlwaysReturnsZero() {
+    @DisplayName("drainTo(Collection): always returns zero when break active")
+    public void drainTo_whenAlwaysReturnsZeroBreakActive_returnsZero() {
         try {
-            BreakableBlockingQueue.Builder<String> builder = new BreakableBlockingQueue.Builder<>();
-            builder.addBreak(DRAIN_TO_ALWAYS_RETURNS_ZERO);
-            BreakableBlockingQueue<String> queue = builder.build();
+            BreakableBlockingQueue<String> queue = new BreakableBlockingQueue.Builder<String>()
+                    .addBreak(DRAIN_TO_ALWAYS_RETURNS_ZERO)
+                    .build();
 
             queue.put("item1");
             queue.put("item2");
@@ -421,12 +433,12 @@ public class BreakableBlockingQueueTest extends AbstractTest {
 
     /// Tests the DRAIN_TO_THROWS_EXCEPTION break functionality.
     @Test
-    @DisplayName("Test DRAIN_TO_THROWS_EXCEPTION break")
-    public void testDrainToThrowsException() {
+    @DisplayName("drainTo(Collection): throws IllegalStateException when break active")
+    public void drainTo_whenThrowsExceptionBreakActive_throwsIllegalStateException() {
         try {
-            BreakableBlockingQueue.Builder<String> builder = new BreakableBlockingQueue.Builder<>();
-            builder.addBreak(DRAIN_TO_THROWS_EXCEPTION);
-            BreakableBlockingQueue<String> queue = builder.build();
+            BreakableBlockingQueue<String> queue = new BreakableBlockingQueue.Builder<String>()
+                    .addBreak(DRAIN_TO_THROWS_EXCEPTION)
+                    .build();
 
             queue.put("item");
             List<String> drainedElements = new ArrayList<>();
@@ -440,12 +452,12 @@ public class BreakableBlockingQueueTest extends AbstractTest {
 
     /// Tests the DRAIN_TO_DOES_NOT_REMOVE_ELEMENTS break functionality.
     @Test
-    @DisplayName("Test DRAIN_TO_DOES_NOT_REMOVE_ELEMENTS break")
-    public void testDrainToDoesNotRemoveElements() {
+    @DisplayName("drainTo(Collection): does not remove elements when break active")
+    public void drainTo_whenDoesNotRemoveElementsBreakActive_drainsWithoutRemoving() {
         try {
-            BreakableBlockingQueue.Builder<String> builder = new BreakableBlockingQueue.Builder<>();
-            builder.addBreak(DRAIN_TO_DOES_NOT_REMOVE_ELEMENTS);
-            BreakableBlockingQueue<String> queue = builder.build();
+            BreakableBlockingQueue<String> queue = new BreakableBlockingQueue.Builder<String>()
+                    .addBreak(DRAIN_TO_DOES_NOT_REMOVE_ELEMENTS)
+                    .build();
 
             queue.put("item1");
             queue.put("item2");
@@ -467,11 +479,11 @@ public class BreakableBlockingQueueTest extends AbstractTest {
 
     /// Tests that drainTo() throws UnsupportedOperationException when method is not supported.
     @Test
-    @DisplayName("Test drainTo() throws when not supported")
-    public void testDrainToWhenNotSupported() {
-        BreakableBlockingQueue.Builder<String> builder = new BreakableBlockingQueue.Builder<>();
-        builder.doesNotSupport(BlockingQueueMethods.DRAIN_TO);
-        BreakableBlockingQueue<String> queue = builder.build();
+    @DisplayName("drainTo(Collection): throws UnsupportedOperationException when not supported")
+    public void drainTo_whenNotSupported_throwsUnsupportedOperationException() {
+        BreakableBlockingQueue<String> queue = new BreakableBlockingQueue.Builder<String>()
+                .doesNotSupport(BlockingQueueMethods.DRAIN_TO)
+                .build();
 
         List<String> drainedElements = new ArrayList<>();
         assertThrows(UnsupportedOperationException.class, () -> queue.drainTo(drainedElements));
@@ -479,11 +491,11 @@ public class BreakableBlockingQueueTest extends AbstractTest {
 
     /// Tests that drainTo(maxElements) throws UnsupportedOperationException when method is not supported.
     @Test
-    @DisplayName("Test drainTo(maxElements) throws when not supported")
-    public void testDrainToWithMaxElementsWhenNotSupported() {
-        BreakableBlockingQueue.Builder<String> builder = new BreakableBlockingQueue.Builder<>();
-        builder.doesNotSupport(BlockingQueueMethods.DRAIN_TO_MAX_ELEMENTS);
-        BreakableBlockingQueue<String> queue = builder.build();
+    @DisplayName("drainTo(Collection, int): throws UnsupportedOperationException when not supported")
+    public void drainTo_whenMaxElementsNotSupported_throwsUnsupportedOperationException() {
+        BreakableBlockingQueue<String> queue = new BreakableBlockingQueue.Builder<String>()
+                .doesNotSupport(BlockingQueueMethods.DRAIN_TO_MAX_ELEMENTS)
+                .build();
 
         List<String> drainedElements = new ArrayList<>();
         assertThrows(UnsupportedOperationException.class, () -> queue.drainTo(drainedElements, 5));
@@ -493,8 +505,8 @@ public class BreakableBlockingQueueTest extends AbstractTest {
 
     /// Tests the static wrap factory method functionality.
     @Test
-    @DisplayName("Test wrap factory method")
-    public void testWrapFactoryMethod() {
+    @DisplayName("wrap(): wraps existing blocking queue with breaks")
+    public void wrap_whenGivenQueueAndBreaks_wrapsCorrectly() {
         try {
             LinkedBlockingQueue<String> existingQueue = new LinkedBlockingQueue<>();
             existingQueue.put("apple");
@@ -518,8 +530,8 @@ public class BreakableBlockingQueueTest extends AbstractTest {
 
     /// Tests the static wrap factory method with characteristics.
     @Test
-    @DisplayName("Test wrap factory method with characteristics")
-    public void testWrapFactoryMethodWithCharacteristics() {
+    @DisplayName("wrap(): wraps existing blocking queue with breaks and characteristics")
+    public void wrap_whenGivenQueueBreaksAndCharacteristics_wrapsCorrectly() {
         try {
             LinkedBlockingQueue<String> existingQueue = new LinkedBlockingQueue<>();
             existingQueue.put("test");
@@ -542,8 +554,8 @@ public class BreakableBlockingQueueTest extends AbstractTest {
 
     /// Tests normal blocking queue operations without breaks.
     @Test
-    @DisplayName("Test normal blocking queue operations")
-    public void testNormalBlockingQueueOperations() {
+    @DisplayName("BlockingQueue: verifies normal blocking operations")
+    public void blockingQueue_whenNoBreaks_behavesNormally() {
         try {
             BreakableBlockingQueue<Integer> queue = new BreakableBlockingQueue<>();
 
@@ -567,14 +579,14 @@ public class BreakableBlockingQueueTest extends AbstractTest {
 
     /// Tests blocking queue operations with multiple breaks applied.
     @Test
-    @DisplayName("Test multiple breaks interaction")
-    public void testMultipleBreaks() {
+    @DisplayName("BlockingQueue: verifies interaction of multiple breaks")
+    public void blockingQueue_withMultipleBreaks_appliesAllBreaks() {
         try {
-            BreakableBlockingQueue.Builder<String> builder = new BreakableBlockingQueue.Builder<>();
-            builder.addBreak(PUT_DOES_NOT_ADD_ELEMENT);
-            builder.addBreak(TAKE_ALWAYS_RETURNS_NULL);
-            builder.addBreak(REMAINING_CAPACITY_ALWAYS_RETURNS_ZERO);
-            BreakableBlockingQueue<String> queue = builder.build();
+            BreakableBlockingQueue<String> queue = new BreakableBlockingQueue.Builder<String>()
+                    .addBreak(PUT_DOES_NOT_ADD_ELEMENT)
+                    .addBreak(TAKE_ALWAYS_RETURNS_NULL)
+                    .addBreak(REMAINING_CAPACITY_ALWAYS_RETURNS_ZERO)
+                    .build();
 
             // Test put break
             queue.put("item");
@@ -598,14 +610,14 @@ public class BreakableBlockingQueueTest extends AbstractTest {
 
     /// Tests that BreakableBlockingQueue properly inherits Queue functionality.
     @Test
-    @DisplayName("Test inheritance from BreakableQueue")
-    public void testQueueInheritance() {
+    @DisplayName("BlockingQueue: verifies inheritance from BreakableQueue and BreakableCollection")
+    public void blockingQueue_whenInheritedBreaksActive_appliesInheritedBreaks() {
         try {
-            BreakableBlockingQueue.Builder<String> builder = new BreakableBlockingQueue.Builder<>();
-            builder.addBreak(BreakableCollection.SIZE_ALWAYS_RETURNS_ZERO); // Collection-level break
-            builder.addBreak(BreakableQueue.POLL_ALWAYS_RETURNS_NULL);       // Queue-level break
-            builder.addBreak(PUT_DOES_NOT_ADD_ELEMENT);                      // BlockingQueue-level break
-            BreakableBlockingQueue<String> queue = builder.build();
+            BreakableBlockingQueue<String> queue = new BreakableBlockingQueue.Builder<String>()
+                    .addBreak(BreakableCollection.SIZE_ALWAYS_RETURNS_ZERO)  // Collection-level break
+                    .addBreak(BreakableQueue.POLL_ALWAYS_RETURNS_NULL)       // Queue-level break
+                    .addBreak(PUT_DOES_NOT_ADD_ELEMENT)                      // BlockingQueue-level break
+                    .build();
 
             queue.put("item1"); // Should not add_singleElement_returnsTrueAndUpdatesSize due to BlockingQueue break
             queue.offer("item2"); // This should add_singleElement_returnsTrueAndUpdatesSize normally
@@ -626,8 +638,8 @@ public class BreakableBlockingQueueTest extends AbstractTest {
 
     /// Tests add_singleElement_returnsTrueAndUpdatesSize() method inherited from Collection interface.
     @Test
-    @DisplayName("Test add_singleElement_returnsTrueAndUpdatesSize() method from Collection")
-    public void testAddMethod() {
+    @DisplayName("add(E): adds elements to the queue")
+    public void add_whenCalled_addsElements() {
         BreakableBlockingQueue<String> queue = new BreakableBlockingQueue<>();
 
         assertTrue(queue.add("item1"));
@@ -639,8 +651,8 @@ public class BreakableBlockingQueueTest extends AbstractTest {
 
     /// Tests that capacity constraints are properly handled.
     @Test
-    @DisplayName("Test capacity constraints")
-    public void testCapacityConstraints() {
+    @DisplayName("BlockingQueue: verifies capacity constraints")
+    public void blockingQueue_whenAtCapacity_respectsConstraints() {
         try {
             // Create a small capacity queue
             BlockingQueue<String> smallQueue = new java.util.concurrent.ArrayBlockingQueue<>(1);
@@ -658,8 +670,8 @@ public class BreakableBlockingQueueTest extends AbstractTest {
 
     /// Tests drain operations with various collection types.
     @Test
-    @DisplayName("Test drain operations")
-    public void testDrainOperations() {
+    @DisplayName("drainTo: verifies various drain scenarios")
+    public void drainTo_whenCalled_drainsElementsCorrectly() {
         try {
             BreakableBlockingQueue<String> queue = new BreakableBlockingQueue<>();
 

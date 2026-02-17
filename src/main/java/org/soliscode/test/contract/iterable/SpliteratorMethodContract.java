@@ -32,13 +32,38 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.*;
 import static org.soliscode.test.util.IterableTestUtils.contains;
 import static org.soliscode.test.util.IterableTestUtils.size;
 
-/// This interface tests if a collection class has implemented the [spliterator()][Iterable#spliterator] method
-/// correctly and that the spliterator that is returned satisfies the [Spliterator] contract.
+/// **Contract for the `spliterator` method of an `Iterable`**
+///
+/// This interface defines tests for the [spliterator()][Iterable#spliterator] method. It is designed
+/// to be used as a mix-in interface by test classes that verify [Iterable] implementations.
+///
+/// ## Purpose
+/// The purpose of this contract is to ensure that an iterable's `spliterator` implementation correctly:
+/// - Returns a [Spliterator] that satisfies the [Spliterator] contract.
+/// - Correctly reports characteristics.
+/// - Handles empty collections and non-empty collections.
+/// - Correctly implements `estimateSize`, `getExactSizeIfKnown`, `tryAdvance`, `forEachRemaining`, and `trySplit`.
+///
+/// ## Usage Examples
+/// To use this contract, implement it in your test class along with the required support interfaces:
+///
+/// ```java
+/// class MyIterableSpliteratorTest implements SpliteratorMethodContract<String, MyIterable<String>> {
+///     @Override
+///     public CollectionProvider<String, MyIterable<String>> provider() {
+///         return MyIterable::new;
+///     }
+/// }
+/// ```
+///
+/// ## Thread Safety
+/// This contract interface does not provide any thread-safety guarantees. The thread safety of the
+/// tests depends on the [Iterable] and [org.soliscode.test.provider.CollectionProvider] implementations being tested.
 ///
 /// @param <E> The element type being tested.
-/// @param <I> The type for the iterator being tested.
+/// @param <I> The type of the iterable being tested.
 /// @author evanbergstrom
-/// @see Collection#spliterator
+/// @see Iterable#spliterator
 /// @see Spliterator
 /// @since 1.0.0
 @SuppressWarnings("MagicConstant")
@@ -48,9 +73,13 @@ public interface SpliteratorMethodContract<E, I extends Iterable<E>> extends Ite
     int[] CHARACTERISTIC_VALUES = {SIZED, SUBSIZED, SORTED, CONCURRENT,  DISTINCT, IMMUTABLE, NONNULL};
 
     /// Tests that the [Spliterator#hasCharacteristics(int)] method works.
+    ///
+    /// This test verifies that `hasCharacteristics` returns results consistent with `characteristics()`.
+    ///
+    /// @since 1.0.0
     @Test
-    @DisplayName("The hasCharacteristics method works")
-    default void testHasCharacteristic() {
+    @DisplayName("hasCharacteristics(int) returns results consistent with characteristics()")
+    default void hasCharacteristics_whenCalled_isConsistentWithCharacteristics() {
         Iterable<E> iterable = provider().emptyInstance();
         Spliterator<E> iterator = iterable.spliterator();
 
@@ -61,9 +90,13 @@ public interface SpliteratorMethodContract<E, I extends Iterable<E>> extends Ite
     }
 
     /// Tests that the [Spliterator#getExactSizeIfKnown] method works on an empty collection.
+    ///
+    /// This test verifies that `getExactSizeIfKnown()` returns 0 if SIZED, else -1.
+    ///
+    /// @since 1.0.0
     @Test
-    @DisplayName("The getExactSizeIfKnown method can be called on an empty container")
-    default void testSpliteratorGetExactSizeIfKnownOnAnEmptyCollection() {
+    @DisplayName("getExactSizeIfKnown() returns 0 for empty sized spliterator")
+    default void getExactSizeIfKnown_whenEmpty_returnsExpectedValue() {
         Iterable<E> iterable = provider().emptyInstance();
         Spliterator<E> iterator = iterable.spliterator();
         long size = iterator.getExactSizeIfKnown();
@@ -76,9 +109,13 @@ public interface SpliteratorMethodContract<E, I extends Iterable<E>> extends Ite
     }
 
     /// Tests that the [Spliterator#getExactSizeIfKnown] method works on a collection with elements.
+    ///
+    /// This test verifies that `getExactSizeIfKnown()` returns the correct size if SIZED, else -1.
+    ///
+    /// @since 1.0.0
     @Test
-    @DisplayName("The getExactSizeIfKnown method can be called on a container with elements")
-    default void testSpliteratorGetExactSizeIfKnownOnACollectionWithElements() {
+    @DisplayName("getExactSizeIfKnown() returns correct size for non-empty sized spliterator")
+    default void getExactSizeIfKnown_whenNotEmpty_returnsExpectedValue() {
         Iterable<E> iterable = provider().createInstanceWithUniqueElements();
         Spliterator<E> iterator = iterable.spliterator();
         long size = iterator.getExactSizeIfKnown();
@@ -91,9 +128,11 @@ public interface SpliteratorMethodContract<E, I extends Iterable<E>> extends Ite
     }
 
     /// Tests that the [Spliterator#estimateSize] method works on an empty collection.
+    ///
+    /// @since 1.0.0
     @Test
-    @DisplayName("The estimateSize method can be called on an empty container")
-    default void testSpliteratorEstimateSizeOnAnEmptyCollection() {
+    @DisplayName("estimateSize() returns 0 for empty sized spliterator")
+    default void estimateSize_whenEmpty_returnsExpectedValue() {
         Iterable<E> iterable = provider().emptyInstance();
         Spliterator<E> iterator = iterable.spliterator();
         long size = iterator.estimateSize();
@@ -104,9 +143,11 @@ public interface SpliteratorMethodContract<E, I extends Iterable<E>> extends Ite
     }
 
     /// Tests that the [Spliterator#estimateSize] method works on a collection with elements.
+    ///
+    /// @since 1.0.0
     @Test
-    @DisplayName("The Spliterator.estimateSize method can be called on a container with elements")
-    default void testSpliteratorEstimateSizeOnACollectionWithElements() {
+    @DisplayName("estimateSize() returns correct size for non-empty sized spliterator")
+    default void estimateSize_whenNotEmpty_returnsExpectedValue() {
         Iterable<E> iterable = provider().createInstanceWithUniqueElements();
         Spliterator<E> iterator = iterable.spliterator();
         long size = iterator.estimateSize();
@@ -123,9 +164,11 @@ public interface SpliteratorMethodContract<E, I extends Iterable<E>> extends Ite
     }
 
     /// Tests that the [Spliterator#forEachRemaining] method works on an empty collection.
+    ///
+    /// @since 1.0.0
     @Test
-    @DisplayName("The Spliterator.forEachRemaining method can be called on an empty container")
-    default void testSpliteratorForEachRemainingOnAnEmptyCollection() {
+    @DisplayName("forEachRemaining(Consumer) does not call action for empty spliterator")
+    default void forEachRemaining_whenEmpty_doesNotCallAction() {
         Iterable<E> iterable = provider().emptyInstance();
         Spliterator<E> iterator = iterable.spliterator();
 
@@ -135,9 +178,11 @@ public interface SpliteratorMethodContract<E, I extends Iterable<E>> extends Ite
     }
 
     /// Tests that the [Spliterator#forEachRemaining] method works on a collection with elements.
+    ///
+    /// @since 1.0.0
     @Test
-    @DisplayName("The Spliterator.forEachRemaining method can be called on a container with elements")
-    default void testSpliteratorForEachRemainingOnACollectionWithElements() {
+    @DisplayName("forEachRemaining(Consumer) traverses all elements for non-empty spliterator")
+    default void forEachRemaining_whenNotEmpty_traversesAllElements() {
         Iterable<E> iterable = provider().createInstanceWithUniqueElements();
         Spliterator<E> iterator = iterable.spliterator();
 
@@ -153,9 +198,11 @@ public interface SpliteratorMethodContract<E, I extends Iterable<E>> extends Ite
     }
 
     /// Tests that the [Spliterator#tryAdvance] method works on an empty collection.
+    ///
+    /// @since 1.0.0
     @Test
-    @DisplayName("The Spliterator.tryAdvance method can be called on an empty container")
-    default void testSpliteratorTryAdvanceOnAnEmptyCollection() {
+    @DisplayName("tryAdvance(Consumer) returns false for empty spliterator")
+    default void tryAdvance_whenEmpty_returnsFalse() {
         Iterable<E> iterable = provider().emptyInstance();
         Spliterator<E> iterator = iterable.spliterator();
 
@@ -165,9 +212,11 @@ public interface SpliteratorMethodContract<E, I extends Iterable<E>> extends Ite
     }
 
     /// Tests that the [Spliterator#tryAdvance] method works on a collection with elements.
+    ///
+    /// @since 1.0.0
     @Test
-    @DisplayName("The Spliterator.tryAdvance method can be called on a container with elements")
-    default void testSpliteratorTryAdvanceOnACollectionWithElements() {
+    @DisplayName("tryAdvance(Consumer) traverses all elements for non-empty spliterator")
+    default void tryAdvance_whenNotEmpty_traversesAllElements() {
         Iterable<E> iterable = provider().createInstanceWithUniqueElements();
         Spliterator<E> iterator = iterable.spliterator();
 
@@ -185,9 +234,11 @@ public interface SpliteratorMethodContract<E, I extends Iterable<E>> extends Ite
     }
 
     /// Tests that the [Spliterator#trySplit] method works on an empty collection.
+    ///
+    /// @since 1.0.0
     @Test
-    @DisplayName("The Spliterator.trySplit method can be called on an empty container")
-    default void testSpliteratorTrySplitOnAnEmptyCollection() {
+    @DisplayName("trySplit() returns null for empty spliterator")
+    default void trySplit_whenEmpty_returnsNull() {
         Iterable<E> iterable = provider().emptyInstance();
         Spliterator<E> iterator = iterable.spliterator();
 
@@ -196,9 +247,11 @@ public interface SpliteratorMethodContract<E, I extends Iterable<E>> extends Ite
     }
 
     /// Tests that the [Spliterator#trySplit] method works on a collection with elements.
+    ///
+    /// @since 1.0.0
     @Test
-    @DisplayName("The Spliterator.trySplit method can be called on a container with elements")
-    default void testSpliteratorTrySplitOnACollectionWithElements() {
+    @DisplayName("trySplit() returns non-null spliterator for non-empty spliterator")
+    default void trySplit_whenNotEmpty_returnsNonNullSpliterator() {
         Iterable<E> iterable = provider().createInstanceWithUniqueElements();
         Spliterator<E> iterator = iterable.spliterator();
 

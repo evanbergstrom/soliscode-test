@@ -2,7 +2,6 @@ package org.soliscode.test.contract.collection;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.opentest4j.AssertionFailedError;
 import org.soliscode.test.contract.support.CollectionContractSupport;
 
 import java.util.Collection;
@@ -47,13 +46,16 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
 /// @see Collection#stream
 /// @see Collection#parallelStream
 /// @see Stream
-/// @since 1.0
+/// @since 1.0.0
 public interface StreamContract<E, C extends Collection<E>> extends CollectionContractSupport<E, C> {
 
     /// Tests that the [stream][Collection#stream] method works for an empty collection.
     ///
+    /// This test verifies that calling `stream()` on an empty collection returns an empty stream.
+    ///
     /// @see Collection#stream
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("stream() returns an empty stream for an empty collection")
     @Test
     default void stream_whenEmpty_returnsEmptyStream() {
@@ -64,8 +66,12 @@ public interface StreamContract<E, C extends Collection<E>> extends CollectionCo
 
     /// Tests that the [stream][Collection#stream] method works for a collection with elements.
     ///
+    /// This test verifies that calling `stream()` on a non-empty collection returns a stream
+    /// containing all elements.
+    ///
     /// @see Collection#stream
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("stream() returns a stream containing all elements for a non-empty collection")
     @Test
     default void stream_whenNotEmpty_returnsStreamWithElements() {
@@ -77,8 +83,11 @@ public interface StreamContract<E, C extends Collection<E>> extends CollectionCo
 
     /// Tests that the [parallelStream][Collection#parallelStream] method works for an empty collection.
     ///
+    /// This test verifies that calling `parallelStream()` on an empty collection returns an empty stream.
+    ///
     /// @see Collection#parallelStream
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("parallelStream() returns an empty stream for an empty collection")
     @Test
     default void parallelStream_whenEmpty_returnsEmptyStream() {
@@ -89,8 +98,12 @@ public interface StreamContract<E, C extends Collection<E>> extends CollectionCo
 
     /// Tests that the [parallelStream][Collection#parallelStream] method works for a collection with elements.
     ///
+    /// This test verifies that calling `parallelStream()` on a non-empty collection returns a stream
+    /// containing all elements.
+    ///
     /// @see Collection#parallelStream
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("parallelStream() returns a stream containing all elements for a non-empty collection")
     @Test
     default void parallelStream_whenNotEmpty_returnsStreamWithElements() {

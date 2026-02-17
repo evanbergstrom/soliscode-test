@@ -16,6 +16,7 @@
 
 package org.soliscode.test.contract.object;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.soliscode.test.contract.support.ContractSupport;
 
@@ -24,27 +25,44 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
-/// This interface tests if a class has implemented the `toString()` method correctly. This contract class can be used
-/// individually by a test class, but it is normally used through the [ObjectContract] class:
+/// **Contract for the `Object#toString()` method**
+///
+/// This interface defines tests for the `toString()` method as specified in [Object].
+/// It verifies consistency, equality correlation, and that the method has been overridden.
+///
+/// ## Purpose
+/// The purpose of this contract is to ensure that a class's `toString()` implementation follows the
+/// contract defined by [Object#toString()], providing a concise but informative representation
+/// of the object.
+///
+/// ## Usage Examples
+/// This contract is normally used through the [ObjectContract] class:
+///
 /// ```java
 /// public class MyClassTest extends ObjectContract<MyClass> {
 /// }
 /// ```
-/// If a test is using the ObjectContract class, but the class being tested does not implement the toString method based
-/// upon the specification in the [Object] class, then it can be omitted from the tests using the
-/// `doesNotSupportMethod()` method:
+///
+/// If a class does not implement `toString()` according to the [Object] specification, it can
+/// be omitted using the `doesNotSupportMethod()` method:
+///
 /// ```java
 /// public class MyClassTest extends ObjectContract<MyClass> {
 ///     public MyClassTest() {
-///         doesNotSupportMethod(ObjectMethods.ToString);
+///         doesNotSupportMethod(ObjectMethods.TO_STRING);
 ///     }
 /// }
 /// ```
+///
+/// ## Thread Safety
+/// This contract interface does not provide any thread-safety guarantees. The thread safety of the
+/// tests depends on the object and [org.soliscode.test.provider.ObjectProvider] implementations being tested.
+///
 /// @param <T> The type being tested.
 /// @author evanbergstrom
 /// @see Object#toString()
 /// @see ObjectContract
-/// @since 1.0
+/// @since 1.0.0
 public interface ToStringMethodContract<T> extends ContractSupport<T> {
 
     /// Tests that the `toString()` method consistently returns the same string value over multiple
@@ -53,7 +71,8 @@ public interface ToStringMethodContract<T> extends ContractSupport<T> {
     /// @throws org.opentest4j.AssertionFailedError if the test fails.
     /// @see Object#toString()
     @Test
-    default void testToStringIsConsistent() {
+    @DisplayName("toString() is consistent")
+    default void toString_whenRepeated_isConsistent() {
         if (supportsMethod(ObjectMethods.TO_STRING)) {
             T value = provider().createInstance();
             String string1 = value.toString();
@@ -62,12 +81,13 @@ public interface ToStringMethodContract<T> extends ContractSupport<T> {
         }
     }
 
-    /// Tests that the `toString()` method returns the same value for two strings that are equal.
+    /// Tests that the `toString()` method returns the same value for two objects that are equal.
     ///
     /// @throws org.opentest4j.AssertionFailedError if the test fails.
     /// @see Object#toString()
     @Test
-    default void testToStringForEqualValues() {
+    @DisplayName("toString() returns the same value for equal objects")
+    default void toString_withEqualValues_returnsSameString() {
         if (supportsMethod(ObjectMethods.TO_STRING)) {
             T value = provider().createInstance();
             T other = provider().copyInstance(value);
@@ -82,7 +102,8 @@ public interface ToStringMethodContract<T> extends ContractSupport<T> {
     /// @throws org.opentest4j.AssertionFailedError if the test fails.
     /// @see Object#toString()
     @Test
-    default void testToStringForDifferentValues() {
+    @DisplayName("toString() returns different values for unique objects")
+    default void toString_withUniqueValues_returnsUniqueStrings() {
         if (supportsMethod(ObjectMethods.TO_STRING)) {
             List<T> values = provider().createUniqueInstances(10);
             long uniqueValues = values.stream().map(Object::toString).distinct().count();
@@ -90,12 +111,14 @@ public interface ToStringMethodContract<T> extends ContractSupport<T> {
         }
     }
 
-    /// Tests that the `toString()` method has been overridden.
+    /// Tests that the `toString()` method has been overridden and does not return the default
+    /// implementation (ClassName@hashCode).
     ///
     /// @throws org.opentest4j.AssertionFailedError if the test fails.
-     /// @see Object#toString()
+    /// @see Object#toString()
     @Test
-    default void testToStringOverridden() {
+    @DisplayName("toString() is overridden")
+    default void toString_whenCalled_isOverridden() {
         if (supportsMethod(ObjectMethods.TO_STRING)) {
             List<T> values = provider().createUniqueInstances(10);
             for (T value : values) {

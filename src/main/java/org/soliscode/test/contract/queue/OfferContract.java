@@ -9,20 +9,59 @@ import java.util.Queue;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/// This interface tests if a queue class has implemented the [offer][Queue#offer] method
-/// correctly.
+/// **Contract for the `offer` method of a `Queue`**
+///
+/// This interface defines tests for the [offer(E)][Queue#offer] method. It is designed
+/// to be used as a mix-in interface by test classes that verify [Queue] implementations.
+///
+/// ## Purpose
+/// The purpose of this contract is to ensure that a queue's `offer` implementation correctly:
+/// - Inserts the specified element into this queue if it is possible to do so immediately
+///   without violating capacity restrictions.
+/// - Returns `true` if the element was added, else `false`.
+/// - Handles `null` values according to the queue's configuration.
+/// - Handles duplicate values according to the queue's configuration.
+/// - Throws [UnsupportedOperationException] if the method is not supported.
+///
+/// ## Usage Examples
+/// To use this contract, implement it in your test class along with the required support interfaces:
+///
+/// ```java
+/// class MyQueueOfferTest implements OfferContract<String, MyQueue<String>> {
+///     @Override
+///     public CollectionProvider<String, MyQueue<String>> provider() {
+///         return MyQueue::new;
+///     }
+/// }
+/// ```
+///
+/// ## Thread Safety
+/// This contract interface does not provide any thread-safety guarantees. The thread safety of the
+/// tests depends on the [Queue] and [org.soliscode.test.provider.CollectionProvider] implementations being tested.
 ///
 /// @param <E> The element type being tested.
 /// @param <Q> The queue type being tested.
 /// @author evanbergstrom
 /// @see Queue#offer
-/// @since 1.0
+/// @since 1.0.0
 public interface OfferContract<E, Q extends Queue<E>> extends CollectionContractSupport<E, Q> {
 
-    /// Tests that the [offer][Queue#offer] method works.
-    @DisplayName("Test that the offer method works")
+    /// Tests that the [offer][Queue#offer] method successfully adds an element to the queue.
+    ///
+    /// This test verifies that:
+    /// 1. A single element is added to the queue.
+    /// 2. The method returns `true` if the element was added.
+    /// 3. The queue contains the added element after the call.
+    /// 4. The size of the queue increases appropriately.
+    /// 5. If `offer` is not supported, it verifies that [UnsupportedOperationException] is thrown.
+    ///
+    /// @see Queue#offer
+    /// @throws UnsupportedOperationException if the method is not supported
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
+    @DisplayName("offer(E) adds a single element and updates size")
     @Test
-    default void offer() {
+    default void offer_singleElement_returnsTrueAndUpdatesSize() {
         if (supportsMethod(QueueMethods.OFFER)) {
             Q queue = provider().emptyInstance();
             List<E> values = elementProvider().createUniqueInstances(DEFAULT_SIZE);
@@ -37,10 +76,21 @@ public interface OfferContract<E, Q extends Queue<E>> extends CollectionContract
         }
     }
 
-    /// Tests that the [offer][Queue#offer] method handles null values correctly.
-    @DisplayName("Test that the offer method works with null element values")
+    /// Tests that the [offer][Queue#offer] method handles `null` values correctly.
+    ///
+    /// This test verifies the behavior based on [CollectionContractSupport#permitNulls()]:
+    /// - If `null` is permitted: Adding `null` should succeed, and the queue should contain `null`.
+    /// - If `null` is not permitted: Adding `null` should throw [NullPointerException].
+    /// - If `offer` is not supported, it verifies that [UnsupportedOperationException] is thrown.
+    ///
+    /// @see Queue#offer
+    /// @throws NullPointerException if null is not permitted and the argument is null
+    /// @throws UnsupportedOperationException if the method is not supported
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
+    @DisplayName("offer(E) handles null values based on permission")
     @Test
-    default void offerWithNullValue() {
+    default void offer_withNullValue_handlesCorrectly() {
         if (supportsMethod(QueueMethods.OFFER)) {
             Q queue = provider().emptyInstance();
             if (permitNulls()) {
@@ -58,9 +108,19 @@ public interface OfferContract<E, Q extends Queue<E>> extends CollectionContract
 
 
     /// Tests that the [offer][Queue#offer] method handles duplicate values correctly.
-    @DisplayName("Test that the offer method works with duplicate element values")
+    ///
+    /// This test verifies the behavior based on [CollectionContractSupport#permitDuplicates()]:
+    /// - If duplicates are permitted: Adding an existing element should succeed and increase the queue size.
+    /// - If duplicates are not permitted: Adding an existing element should return `false` and not increase size.
+    /// - If `offer` is not supported, it verifies that [UnsupportedOperationException] is thrown.
+    ///
+    /// @see Queue#offer
+    /// @throws UnsupportedOperationException if the method is not supported
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
+    @DisplayName("offer(E) handles duplicate values based on permission")
     @Test
-    default void offerWithDuplicateValue() {
+    default void offer_withDuplicateValue_handlesCorrectly() {
         if (supportsMethod(QueueMethods.OFFER)) {
             if (permitDuplicates()) {
                 List<E> values = elementProvider().createUniqueInstances(DEFAULT_SIZE);

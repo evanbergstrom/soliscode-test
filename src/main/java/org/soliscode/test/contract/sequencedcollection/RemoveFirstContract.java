@@ -11,35 +11,54 @@ import java.util.SequencedCollection;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/// Test for the removeFirst method in the [SequencedCollection] interface. This contract class can be used individually
-/// by a test class, but it is normally used through the [SequencedCollectionContract] class:
+/// Contract for testing the [removeFirst][SequencedCollection#removeFirst] method of a [SequencedCollection].
+///
+/// ### Purpose
+/// Verifies that `removeFirst()` correctly removes and returns the first element of the collection,
+/// handles unsupported operations, and throws the appropriate exception when the collection is empty.
+///
+/// ### Usage Example
+/// This contract is typically used through [SequencedCollectionContract]:
 /// ```java
-/// public class MyCollectionTest extends SequencedCollectionContract<Integer, MyCollection<Integer>> {
+/// class MySequencedCollectionTest extends SequencedCollectionContract<String, MySequencedCollection<String>> {
+///     // Inherits all removeFirst tests
 /// }
 /// ```
-/// If a test is using the SequencedCollectionContract class, but the class being tested does not implement the
-/// `removeFirst` method based upon the specification in the `SequencedCollection` class, then it can be omitted from
-/// the tests using the `doesNotSupportMethod()` method:
+/// To exclude this contract if the method is not supported:
 /// ```java
-/// public class MyCollectionTest extends SequencedCollectionContract<Integer, MyCollection<Integer>> {
-///     public MyCollectionTest() {
-///         doesNotSupportMethod(SequencedCollectionMethods.RemoveFirst);
+/// class MySequencedCollectionTest extends SequencedCollectionContract<String, MySequencedCollection<String>> {
+///     public MySequencedCollectionTest() {
+///         doesNotSupportMethod(SequencedCollectionMethods.REMOVE_FIRST);
 ///     }
 /// }
 /// ```
+///
+/// ### Thread Safety
+/// The tests in this contract are not thread-safe and should be run in a single-threaded environment
+/// unless the underlying collection implementation specifically guarantees thread safety for these operations.
+///
 /// @param <E> The element type.
 /// @param <C> The collection type being tested.
 /// @author evanbergstrom
-/// @since 1.0
+/// @see SequencedCollection#removeFirst
+/// @since 1.0.0
 public interface RemoveFirstContract<E, C extends SequencedCollection<E>> extends CollectionContractSupport<E, C> {
 
-    /// Tests that the [removeFirst][SequencedCollection#removeFirst] method works.
+    /// Verifies that [removeFirst][SequencedCollection#removeFirst] removes and returns the first element when not empty.
+    ///
+    /// The test follows these steps:
+    /// 1. Creates a collection with multiple elements.
+    /// 2. Iteratively calls `removeFirst()` and verifies that:
+    ///    - The returned element is the one that was at the front.
+    ///    - The collection no longer contains the removed element.
+    /// 3. If `REMOVE_FIRST` is not supported, verifies that `UnsupportedOperationException` is thrown.
     ///
     /// @throws org.opentest4j.AssertionFailedError if the test fails.
     /// @see SequencedCollection#removeFirst
-    @DisplayName("Test that the removeFirst method works")
+    /// @since 1.0.0
+    @DisplayName("removeFirst() when not empty removes and returns the first element")
     @Test
-    default void testRemoveFirst() {
+    default void removeFirst_whenNotEmpty_removesAndReturnsFirstElement() {
         List<E> elements = elementProvider().createUniqueInstances(DEFAULT_SIZE);
         if (supportsMethod(SequencedCollectionMethods.REMOVE_FIRST)) {
             SequencedCollection<E> collection = provider().emptyInstance();
@@ -55,13 +74,20 @@ public interface RemoveFirstContract<E, C extends SequencedCollection<E>> extend
         }
     }
 
-    /// Tests that the [removeFirst][SequencedCollection#removeFirst] method works for an empty collection.
+    /// Verifies that [removeFirst][SequencedCollection#removeFirst] throws [NoSuchElementException] when the collection is empty.
+    ///
+    /// The test follows these steps:
+    /// 1. Creates an empty collection.
+    /// 2. Verifies that calling `removeFirst()` throws a `NoSuchElementException`.
+    /// 3. If `REMOVE_FIRST` is not supported, verifies that either `UnsupportedOperationException` or `NoSuchElementException` is thrown.
     ///
     /// @throws org.opentest4j.AssertionFailedError if the test fails.
+    /// @throws java.util.NoSuchElementException if the collection is empty (expected).
     /// @see SequencedCollection#removeFirst
-    @DisplayName("Test that the removeFirst method throws for an empty collection")
+    /// @since 1.0.0
+    @DisplayName("removeFirst() when empty throws NoSuchElementException")
     @Test
-    default void testRemoveFirstOnEmptyCollection() {
+    default void removeFirst_whenEmpty_throwsNoSuchElementException() {
         if (supportsMethod(SequencedCollectionMethods.REMOVE_FIRST)) {
             SequencedCollection<E> collection = provider().emptyInstance();
             assertThrows(NoSuchElementException.class, collection::removeFirst);

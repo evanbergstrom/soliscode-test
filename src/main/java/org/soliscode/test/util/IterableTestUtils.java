@@ -222,6 +222,10 @@ public final class IterableTestUtils {
         return list;
     }
 
+    /// Returns the first element of the iterable.
+    /// @param <E> the type of the element.
+    /// @param iterable the iterable to get the first element from.
+    /// @return the first element of the iterable, or `null` if the iterable is empty.
     public static <E> E first(final Iterable<E> iterable) {
         Iterator<E> iter = iterable.iterator();
         if (iter.hasNext()) {
@@ -230,6 +234,10 @@ public final class IterableTestUtils {
         return null;
     }
 
+    /// Returns the last element of the iterable.
+    /// @param <E> the type of the element.
+    /// @param iterable the iterable to get the last element from.
+    /// @return the last element of the iterable, or `null` if the iterable is empty.
     public static <E> E last(final Iterable<E> iterable) {
         Iterator<E> iter = iterable.iterator();
         E last = null;

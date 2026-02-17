@@ -14,8 +14,30 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 
+/// **Tests for the `UncachedInteger` class**
+///
+/// This class provides tests for the [UncachedInteger] utility class, ensuring it
+/// behaves as expected, particularly regarding its lack of value caching.
+/// It also implements the [IntegerContract] to verify that [UncachedInteger]
+/// fulfills the requirements of an integer-like object in the SolisCode test framework.
+///
+/// ## Test Scope
+/// - **Value Retrieval**: Verifies that `valueOf()` correctly converts primitive integers.
+/// - **Identity Verification**: Ensures that `valueOf()` returns distinct instances for the same value.
+/// - **Contract Compliance**: Validates compliance with [IntegerContract].
+///
+/// @author evanbergstrom
+/// @see UncachedInteger
+/// @see IntegerContract
+/// @since 1.0.0
 public class UncachedIntegerTest extends AbstractTest implements IntegerContract<UncachedInteger> {
 
+    /// Returns the provider for creating and managing `UncachedInteger` instances.
+    ///
+    /// The provider uses an anonymous [IntegerNumberProvider] implementation to
+    /// wrap [UncachedInteger] instantiation and state tracking.
+    ///
+    /// @return an [IntegerNumberProvider] for `UncachedInteger`
     @Override
     public @NonNull IntegerNumberProvider<UncachedInteger> provider() {
         return new IntegerNumberProvider<>() {
@@ -65,18 +87,23 @@ public class UncachedIntegerTest extends AbstractTest implements IntegerContract
         };
     }
 
+    /// Tests that the `valueOf()` method correctly wraps primitive integer values.
     @Test
     @DisplayName("The valueOf() method works.")
-    public void testValueOfWorks() {
+    public void valueOf_whenCalled_isSuccessful() {
         for (int i = -10; i < 10; i++) {
             UncachedInteger a = UncachedInteger.valueOf(i);
             assertEquals(i, a.intValue());
         }
     }
 
+    /// Tests that the `valueOf()` method does not cache instances.
+    ///
+    /// Unlike [Integer#valueOf(int)], which caches values in the range -128 to 127,
+    /// [UncachedInteger#valueOf(int)] must return a new instance every time it is called.
     @Test
     @DisplayName("The valueOf() method does not cache values")
-    public void testValueOfDoesNotCacheValues() {
+    public void valueOf_whenCalled_doesNotCacheValues() {
         for (int i = -10; i < 10; i++) {
             UncachedInteger a = UncachedInteger.valueOf(i);
             UncachedInteger b = UncachedInteger.valueOf(i);

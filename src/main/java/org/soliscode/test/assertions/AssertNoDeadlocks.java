@@ -131,7 +131,7 @@ public final class AssertNoDeadlocks {
                     if (messageOrSupplier instanceof Supplier<?> supplier) {
                         prefix = supplier.get().toString() + " ==> ";
                     } else {
-                        prefix = messageOrSupplier.toString() + " ==> ";
+                        prefix = messageOrSupplier + " ==> ";
                     }
                 }
 

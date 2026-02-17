@@ -43,7 +43,7 @@ import static org.soliscode.test.util.IterableTestUtils.*;
 ///
 /// - **Size reporting errors**: always zero, off by one
 /// - **Key/value containment check failures**: always false, opposite value
-/// - **Get/put operation failures**: always returns null, does not add_singleElement_returnsTrueAndUpdatesSize pair
+/// - **Get/put operation failures**: always returns null, does not add pair
 /// - **Iteration and view collection failures**: skips first pair, returns empty set
 /// - **Java 8+ functional method failures**: `compute`, `merge`, `forEach` failures
 /// - **Removal operation failures**: does not remove key, always returns null
@@ -124,14 +124,52 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /// A bit flag representing whether null keys are permitted in a given data structure.
+    ///
+    /// This flag is used internally to signify if a specific implementation allows null keys.
+    /// The presence of this flag with a value of `1` indicates that null keys are permissible,
+    /// while its absence or a value of `0` indicates they are not.
     protected static final int PERMITS_NULL_KEYS = 0b0001;
 
+    /// Bitmask constant indicating whether null values are permitted in a given context.
+    ///
+    /// This constant is used to configure or check if null values are allowed in data structures
+    /// or operations. When this bit is set in a configuration, it implies that null values
+    /// are permissible. Otherwise, null values may be rejected or handled differently.
     protected static final int PERMITS_NULL_VALUES = 0b0010;
 
+    /// Bitmask flag to indicate that certain keys in a dataset or configuration are incompatible
+    /// and cannot be used together within the current context or operation.
+    ///
+    /// This constant is primarily used to enforce specific rules or constraints related to
+    /// key usage, ensuring operational consistency and preventing logical conflicts.
     protected static final int PERMITS_INCOMPATIBLE_KEYS = 0b0100;
 
+    /// Flag indicating that the system permits incompatible values in certain configurations
+    /// or operations.
+    ///
+    /// This constant is represented as a binary flag with the value `0b1000`. It is
+    /// used in scenarios where configurations or workflows explicitly allow incompatible
+    /// values to be handled without raising errors or exceptions, depending on the
+    /// implementation's tolerance for such cases.
     protected static final int PERMITS_INCOMPATIBLE_VALUES = 0b1000;
 
+
+    /// Default permission flags used to configure the behavior of key-value
+    /// mappings in the system. This variable is a bitwise OR combination
+    /// of multiple permission constants that govern specific handling rules.
+    /// The permissions included are:
+    ///
+    ///   - `PERMITS_NULL_KEYS` - Allows mapping of keys that are null.
+    ///   - `PERMITS_NULL_VALUES` - Allows mapping of values that are null.
+    ///   - `PERMITS_INCOMPATIBLE_KEYS` - Allows mapping of keys that might
+    ///      not be inherently compatible with the storage mechanism.
+    ///   - `PERMITS_INCOMPATIBLE_VALUES` - Allows mapping of values that
+    ///      might not be inherently compatible with the storage mechanism.
+    ///
+    /// This field is declared as `protected` to allow subclass access
+    /// and as `static` to ensure consistent behavior across all instances.
+    /// Being `final`, the value assigned to this field is immutable.
     protected static final int DEFAULT_PERMITS = PERMITS_NULL_KEYS | PERMITS_NULL_VALUES
             | PERMITS_INCOMPATIBLE_KEYS | PERMITS_INCOMPATIBLE_VALUES;
 
@@ -552,14 +590,14 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
 
     // ========== put(Object, Object) method breaks ==========
 
-    /// Break constant that causes `put(K, V)` to not add_singleElement_returnsTrueAndUpdatesSize the pair to the map.
+    /// Break constant that causes `put(K, V)` to not add the pair to the map.
     ///
     /// **Affected Methods:**
-    /// - {@link #put(Object, Object)} - Does not add_singleElement_returnsTrueAndUpdatesSize entry
+    /// - {@link #put(Object, Object)} - Does not add entry
     ///
     /// @since 1.0
     public static final Break PUT_DOES_NOT_ADD_PAIR =
-            new Break("put(Object,Object) does not add_singleElement_returnsTrueAndUpdatesSize the pair");
+            new Break("put(Object,Object) does not add the pair");
 
     /// Break constant that causes `put(K, V)` to always return `null`.
     ///
@@ -572,14 +610,14 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
 
     // ========== putAll(Map) method breaks ==========
 
-    /// Break constant that causes `putAll(Map)` to not add_singleElement_returnsTrueAndUpdatesSize any pairs to the map.
+    /// Break constant that causes `putAll(Map)` to not add any pairs to the map.
     ///
     /// **Affected Methods:**
-    /// - {@link #putAll(Map)} - Does not add_singleElement_returnsTrueAndUpdatesSize entries
+    /// - {@link #putAll(Map)} - Does not add entries
     ///
     /// @since 1.0
     public static final Break PUT_ALL_DOES_NOT_ADD_ANY_PAIRS =
-            new Break("putAll(Map) does not add_singleElement_returnsTrueAndUpdatesSize any pairs");
+            new Break("putAll(Map) does not add any pairs");
 
     // ========== putIfAbsent(Object,Object) method breaks ==========
 
@@ -985,7 +1023,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// - {@link #SIZE_IS_OFF_BY_ONE} - Returns actual size minus 1
     ///
     /// @return the number of key-value mappings in this map
-    /// @throws UnsupportedOperationException if the `size` operation is not supported by this map
+    /// @throws UnsupportedOperationException if this map does not support the 'size' operation
     /// @see java.util.Map#size()
     @Override
     public int size() {
@@ -1012,7 +1050,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// - {@link #IS_EMPTY_RETURNS_OPPOSITE_VALUE} - Returns the opposite of the actual emptiness state
     ///
     /// @return true if this map contains no key-value mappings
-    /// @throws UnsupportedOperationException if the `isEmpty` operation is not supported by this map
+    /// @throws UnsupportedOperationException if this map does not support the 'isEmpty' operation
     /// @see java.util.Map#isEmpty()
     @Override
     public boolean isEmpty() {
@@ -1044,7 +1082,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// @return true if this map contains a mapping for the specified key
     /// @throws ClassCastException if the key is of an inappropriate type for this map
     /// @throws NullPointerException if the specified key is null and this map does not permit null keys
-    /// @throws UnsupportedOperationException if the `containsKey` operation is not supported by this map
+    /// @throws UnsupportedOperationException if this map does not support the 'containsKey' operation
     /// @see java.util.Map#containsKey(Object)
     @Override
     public boolean containsKey(final Object key) {
@@ -1077,7 +1115,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// @return true if this map maps one or more keys to the specified value
     /// @throws ClassCastException if the value is of an inappropriate type for this map
     /// @throws NullPointerException if the specified value is null and this map does not permit null values
-    /// @throws UnsupportedOperationException if the `containsValue` operation is not supported by this map
+    /// @throws UnsupportedOperationException if this map does not support the 'containsValue' operation
     /// @see java.util.Map#containsValue(Object)
     @Override
     public boolean containsValue(final Object value) {
@@ -1110,7 +1148,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// @return the value to which the specified key is mapped, or null if this map contains no mapping for the key
     /// @throws ClassCastException if the key is of an inappropriate type for this map
     /// @throws NullPointerException if the specified key is null and this map does not permit null keys
-    /// @throws UnsupportedOperationException if the `get` operation is not supported by this map
+    /// @throws UnsupportedOperationException if this map does not support the 'get' operation
     /// @see java.util.Map#get(Object)
     @Override
     public V get(final Object key) {
@@ -1133,13 +1171,13 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// that might occur in faulty `Map` implementations.
     ///
     /// ## Supported Breaks
-    /// - {@link #PUT_DOES_NOT_ADD_PAIR} - Does not actually add the key-value pair to the map
+    /// - {@link #PUT_DOES_NOT_ADD_PAIR} - Does not add the key-value pair to the map
     /// - {@link #PUT_ALWAYS_RETURNS_NULL} - Always returns null regardless of previous value
     ///
     /// @param key key with which the specified value is to be associated
     /// @param value value to be associated with the specified key
     /// @return the previous value associated with key, or null if there was no mapping for key
-    /// @throws UnsupportedOperationException if the `put` operation is not supported by this map
+    /// @throws UnsupportedOperationException if this map does not support the 'put' operation
     /// @throws ClassCastException if the class of the specified key or value prevents it from being stored in this map
     /// @throws NullPointerException if the specified key or value is null and this map does not permit null keys or
     ///                              values
@@ -1178,7 +1216,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// @return the previous value associated with key, or null if there was no mapping for key
     /// @throws ClassCastException if the key is of an inappropriate type for this map
     /// @throws NullPointerException if the specified key is null and this map does not permit null keys
-    /// @throws UnsupportedOperationException if the `remove` operation is not supported by this map
+    /// @throws UnsupportedOperationException if this map does not support the 'remove' operation
     /// @see java.util.Map#remove(Object)
     @Override
     public V remove(final Object key) {
@@ -1206,7 +1244,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// - {@link #PUT_ALL_DOES_NOT_ADD_ANY_PAIRS} - Does not add any of the key-value pairs to the map
     ///
     /// @param m mappings to be stored in this map
-    /// @throws UnsupportedOperationException if the `putAll` operation is not supported by this map
+    /// @throws UnsupportedOperationException if this map does not support the 'putAll' operation
     /// @throws ClassCastException if the class of a key or value in the specified map prevents it from being stored in this map
     /// @throws NullPointerException if the specified map is null, or if this map does not permit null keys or values, and the specified map contains null keys or values
     /// @throws IllegalArgumentException if some property of a key or value in the specified map prevents it from being stored in this map
@@ -1239,7 +1277,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// - {@link #CLEAR_DOES_NOT_REMOVE_FIRST_PAIR} - Removes all pairs except the first one in iteration order
     /// - {@link #CLEAR_DOES_NOT_REMOVE_LAST_PAIR} - Removes all pairs except the last one in iteration order
     ///
-    /// @throws UnsupportedOperationException if the `clear` operation is not supported by this map
+    /// @throws UnsupportedOperationException if this map does not support the 'clear' operation
     /// @see java.util.Map#clear()
     @Override
     public void clear() {
@@ -1301,7 +1339,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
 
     private int keySetPermits(final int mapPermits) {
         return (((mapPermits & PERMITS_NULL_KEYS) != 0) ? BreakableCollection.PERMITS_NULLS  : 0)
-                | (((mapPermits & PERMITS_INCOMPATIBLE_KEYS) != 0) ? BreakableCollection.PERMITS_INCOMPATIBLE_TYPES : 0);
+             | (((mapPermits & PERMITS_INCOMPATIBLE_KEYS) != 0) ? BreakableCollection.PERMITS_INCOMPATIBLE_TYPES : 0);
     }
 
     /// Returns a `Collection` view of the values contained in this map.
@@ -1314,7 +1352,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// - {@link #VALUES_RETURNS_NULL_WHEN_EMPTY} - Returns null when the map is empty instead of an empty collection
     ///
     /// @return a collection view of the values contained in this map
-    /// @throws UnsupportedOperationException if the `values` operation is not supported by this map
+    /// @throws UnsupportedOperationException if this map does not support the 'values' operation
     /// @see java.util.Map#values()
     @Override
     @SuppressWarnings("DataFlowIssue") // may violate @NonNull contract
@@ -1343,7 +1381,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// - {@link #ENTRY_SET_RETURNS_NULL_WHEN_EMPTY} - Returns null when the map is empty instead of an empty set
     ///
     /// @return a set view of the mappings contained in this map
-    /// @throws UnsupportedOperationException if the `entrySet` operation is not supported by this map
+    /// @throws UnsupportedOperationException if this map does not support the 'entrySet' operation
     /// @see java.util.Map#entrySet()
     @SuppressWarnings("DataFlowIssue") // may violate @NonNull contract
     @Override
@@ -1378,7 +1416,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// @return the value to which the specified key is mapped, or defaultValue if this map contains no mapping for the key
     /// @throws ClassCastException if the key is of an inappropriate type for this map
     /// @throws NullPointerException if the specified key is null and this map does not permit null keys
-    /// @throws UnsupportedOperationException if the `getOrDefault` operation is not supported by this map
+    /// @throws UnsupportedOperationException if this map does not support the 'getOrDefault' operation
     /// @see java.util.Map#getOrDefault(Object, Object)
     @Override
     public V getOrDefault(final Object key, final V defaultValue) {
@@ -1409,7 +1447,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     ///
     /// @param action the action to be performed for each entry
     /// @throws NullPointerException if the specified action is null
-    /// @throws UnsupportedOperationException if the `forEach` operation is not supported by this map
+    /// @throws UnsupportedOperationException if this map does not support the 'forEach' operation
     /// @see java.util.Map#forEach(BiConsumer)
     @Override
     public void forEach(final BiConsumer<? super K, ? super V> action) {
@@ -1454,7 +1492,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// - {@link #REPLACE_ALL_SKIPS_THE_LAST_PAIR} - Skips replacing the last entry in iteration order
     ///
     /// @param function the function to apply to each entry
-    /// @throws UnsupportedOperationException if the `replaceAll` operation is not supported by this map
+    /// @throws UnsupportedOperationException if this map does not support the 'replaceAll' operation
     /// @throws ClassCastException if the class of a replacement value prevents it from being stored in this map
     /// @throws NullPointerException if the specified function is null, or if a replacement value is null and this map does not permit null values
     /// @throws IllegalArgumentException if some property of a replacement value prevents it from being stored in this map
@@ -1504,7 +1542,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// @param key key with which the specified value is to be associated
     /// @param value value to be associated with the specified key
     /// @return the previous value associated with the specified key, or null if there was no mapping for the key
-    /// @throws UnsupportedOperationException if the `putIfAbsent` operation is not supported by this map
+    /// @throws UnsupportedOperationException if this map does not support the 'putIfAbsent' operation
     /// @throws ClassCastException if the key or value is of an inappropriate type for this map
     /// @throws NullPointerException if the specified key or value is null and this map does not permit null keys or values
     /// @throws IllegalArgumentException if some property of the specified key or value prevents it from being stored in this map
@@ -1582,7 +1620,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// that might occur in faulty `Map` implementations.
     ///
     /// ## Supported Breaks
-    /// - {@link #REPLACE_3_ARG_DOES_NOT_REPLACE_VALUE} - Does not actually replace the value but returns whether it would have been replaced
+    /// - {@link #REPLACE_3_ARG_DOES_NOT_REPLACE_VALUE} - Does not replace the value but returns whether it would have been replaced
     /// - {@link #REPLACE_3_ARG_ONLY_MATCHES_KEY} - Only checks if the key exists, ignoring the old value match requirement
     /// - {@link #REPLACE_3_ARG_ALWAYS_RETURNS_TRUE} - Always returns true regardless of whether anything was replaced
     /// - {@link #REPLACE_3_ARG_ALWAYS_RETURNS_FALSE} - Always returns false regardless of whether anything was replaced
@@ -1592,7 +1630,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// @param oldValue value expected to be associated with the specified key
     /// @param newValue value to be associated with the specified key
     /// @return true if the value was replaced
-    /// @throws UnsupportedOperationException if the `replace` operation is not supported by this map
+    /// @throws UnsupportedOperationException if this map does not support the 'replace' operation
     /// @throws ClassCastException if the class of a specified key or value prevents it from being stored in this map
     /// @throws NullPointerException if a specified key or value is null and this map does not permit null keys or values
     /// @throws IllegalArgumentException if some property of a specified key or value prevents it from being stored in this map
@@ -1633,13 +1671,13 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// that might occur in faulty `Map` implementations.
     ///
     /// ## Supported Breaks
-    /// - {@link #REPLACE_2_ARG_DOES_NOT_REPLACE_VALUE} - Does not actually replace the value but returns the current value
+    /// - {@link #REPLACE_2_ARG_DOES_NOT_REPLACE_VALUE} - Does not replace the value but returns the current value
     /// - {@link #REPLACE_2_ARG_ALWAYS_RETURNS_NULL} - Always returns null regardless of the previous value
     ///
     /// @param key key with which the specified value is associated
     /// @param value value to be associated with the specified key
     /// @return the previous value associated with the specified key, or null if there was no mapping for the key
-    /// @throws UnsupportedOperationException if the `replace` operation is not supported by this map
+    /// @throws UnsupportedOperationException if this map does not support the 'replace' operation
     /// @throws ClassCastException if the class of the specified key or value prevents it from being stored in this map
     /// @throws NullPointerException if the specified key or value is null and this map does not permit null keys or values
     /// @throws IllegalArgumentException if some property of the specified key or value prevents it from being stored in this map
@@ -1679,7 +1717,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// @param mappingFunction the function to compute a value
     /// @return the current (existing or computed) value associated with the specified key, or null if the computed value is null
     /// @throws NullPointerException if the specified key is null and this map does not permit null keys, or the mappingFunction is null
-    /// @throws UnsupportedOperationException if the `computeIfAbsent` operation is not supported by this map
+    /// @throws UnsupportedOperationException if this map does not support the 'computeIfAbsent' operation
     /// @throws ClassCastException if the class of the specified key or value prevents it from being stored in this map
     /// @throws IllegalArgumentException if some property of the specified key or value prevents it from being stored in this map
     /// @see java.util.Map#computeIfAbsent(Object, Function)
@@ -1722,7 +1760,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// @param remappingFunction the function to compute a value
     /// @return the new value associated with the specified key, or null if none
     /// @throws NullPointerException if the specified key is null and this map does not permit null keys, or the remappingFunction is null
-    /// @throws UnsupportedOperationException if the `computeIfPresent` operation is not supported by this map
+    /// @throws UnsupportedOperationException if this map does not support the 'computeIfPresent' operation
     /// @throws ClassCastException if the class of the specified key or value prevents it from being stored in this map
     /// @throws IllegalArgumentException if some property of the specified key or value prevents it from being stored in this map
     /// @see java.util.Map#computeIfPresent(Object, BiFunction)
@@ -1764,7 +1802,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// @param remappingFunction the function to compute a value
     /// @return the new value associated with the specified key, or null if none
     /// @throws NullPointerException if the specified key is null and this map does not permit null keys, or the remappingFunction is null
-    /// @throws UnsupportedOperationException if the `compute` operation is not supported by this map
+    /// @throws UnsupportedOperationException if this map does not support the 'compute' operation
     /// @throws ClassCastException if the class of the specified key or value prevents it from being stored in this map
     /// @throws IllegalArgumentException if some property of the specified key or value prevents it from being stored in this map
     /// @see java.util.Map#compute(Object, BiFunction)
@@ -1803,7 +1841,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// @param value the non-null value to be merged with the existing value associated with the key or to be associated with the key, if no existing value or a null value is associated with the key
     /// @param remappingFunction the function to recompute a value if present
     /// @return the new value associated with the specified key, or null if no value is associated with the key
-    /// @throws UnsupportedOperationException if the `merge` operation is not supported by this map
+    /// @throws UnsupportedOperationException if this map does not support the 'merge' operation
     /// @throws ClassCastException if the class of the specified key or value prevents it from being stored in this map
     /// @throws NullPointerException if the specified key is null and this map does not permit null keys or the value or remappingFunction is null
     /// @throws IllegalArgumentException if some property of the specified key or value prevents it from being stored in this map
@@ -1915,12 +1953,21 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
         return new BreakableMap<>(map, breaks, statuses, permits, isSafe);
     }
 
-    /// Abstract builder for `BreakableMap` and its subclasses.
+    /// Abstract base class for implementing builders for `BreakableMap` and its subclasses.
     ///
-    /// @param <B> the builder type
-    /// @param <M> the map type
-    /// @param <K> the key type
-    /// @param <V> the value type
+    /// This class provides a framework for creating customizable and extendable builders
+    /// for map-like structures. It supports configuration options such as permitting or
+    /// disallowing null keys/values and adding individual key-value pairs.
+    ///
+    /// The builder uses a map internally to store the elements to be added, along with
+    /// configuration flags to control its behavior.
+    ///
+    /// This class is designed to be extended by concrete builder implementations.
+    ///
+    /// @param <B> the type of the builder subclass for fluent API support
+    /// @param <M> the type of map being built, extending `BreakableMap`
+    /// @param <K> the type of keys in the map
+    /// @param <V> the type of values in the map
     /// @since 1.0
     public abstract static class AbstractBuilder<B extends AbstractBuilder<B, M, K, V>,
                                                   M extends BreakableMap<K, V>, K, V>
@@ -1931,6 +1978,10 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
 
         private int permits = DEFAULT_PERMITS;
 
+        /// Constructs a new `AbstractBuilder` instance and initializes the internal state.
+        ///
+        /// This default constructor sets up an empty map for holding builder elements. The map is
+        /// used internally to manage key-value pairs that are eventually built into the final object.
         protected AbstractBuilder() {
             this.elements = new HashMap<>();
         }

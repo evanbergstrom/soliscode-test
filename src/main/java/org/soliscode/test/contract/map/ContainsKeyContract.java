@@ -9,19 +9,49 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.soliscode.test.contract.map.MapMethods.CONTAINS_KEY;
 
-/// Contract for the [Map#containsKey(Object)] method.
+/// **Contract for the `containsKey` method of a `Map`**
+///
+/// This interface defines tests for the [containsKey(Object)][Map#containsKey] method.
+/// It is designed to be used as a mix-in interface by test classes that verify [Map]
+/// implementations.
+///
+/// ## Purpose
+/// The purpose of this contract is to ensure that a map's `containsKey` implementation
+/// correctly returns `true` if the map contains a mapping for the specified key.
+///
+/// ## Usage Examples
+/// To use this contract, implement it in your test class along with the required support interfaces:
+///
+/// ```java
+/// class MyMapContainsKeyTest implements ContainsKeyContract<String, String, MyMap<String, String>> {
+///     @Override
+///     public MapProvider<String, String, MyMap<String, String>> provider() {
+///         return MyMap::new;
+///     }
+/// }
+/// ```
+///
+/// ## Thread Safety
+/// This contract interface does not provide any thread-safety guarantees. The thread safety of the
+/// tests depends on the [Map] and [org.soliscode.test.provider.MapProvider] implementations being tested.
 ///
 /// @param <K> The key type being tested.
 /// @param <V> The value type being tested.
 /// @param <M> The map type being tested.
 /// @author evanbergstrom
-/// @since 1.0
+/// @see Map#containsKey
+/// @since 1.0.0
 public interface ContainsKeyContract<K, V, M extends Map<K, V>> extends MapContractSupport<K, V, M> {
 
-    /// Tests that `containsKey()` returns `false` for a key not in the map.
+    /// Tests that the [containsKey][Map#containsKey] method returns `false` for an empty map.
+    ///
+    /// @see Map#containsKey
+    /// @throws UnsupportedOperationException if the method is not supported
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @Test
-    @DisplayName("Test containsKey returns false for a non-existent key")
-    default void testContainsKeyOnEmptyMap() {
+    @DisplayName("containsKey(Object) returns false for an empty map")
+    default void containsKey_whenEmpty_returnsFalse() {
         Map<K, V> map = provider().emptyInstance();
         K key = keyProvider().createInstance();
         if (supportsMethod(CONTAINS_KEY)) {
@@ -31,10 +61,15 @@ public interface ContainsKeyContract<K, V, M extends Map<K, V>> extends MapContr
         }
     }
 
-    /// Tests that `containsKey()` returns `true` for a key that is in the map.
+    /// Tests that the [containsKey][Map#containsKey] method returns `true` for an existing key.
+    ///
+    /// @see Map#containsKey
+    /// @throws UnsupportedOperationException if the method is not supported
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @Test
-    @DisplayName("Test containsKey returns true for an existing key")
-    default void testContainsKeyOnMapWithElements() {
+    @DisplayName("containsKey(Object) returns true for an existing key")
+    default void containsKey_whenNotEmpty_returnsTrue() {
         K key = keyProvider().createInstance();
         V value = valueProvider().createInstance();
         Map<K, V> map = provider().createSingleton(key, value);

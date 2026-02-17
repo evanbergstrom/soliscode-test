@@ -10,17 +10,48 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-/// This interface tests if a list class has implemented the [sort][List#add(Object)] method correctly.
+/// **Contract for the `add` method of a `List`**
+///
+/// This interface defines tests for the [add(E)][List#add] method. It is designed
+/// to be used as a mix-in interface by test classes that verify [List] implementations.
+///
+/// ## Purpose
+/// The purpose of this contract is to ensure that a list's `add` implementation correctly:
+/// - Appends the specified element to the end of the list.
+/// - Returns `true` if the list changed as a result of the call.
+///
+/// ## Usage Examples
+/// To use this contract, implement it in your test class along with the required support interfaces:
+///
+/// ```java
+/// class MyListAddTest implements ListAddContract<String, MyList<String>> {
+///     @Override
+///     public CollectionProvider<String, MyList<String>> provider() {
+///         return MyList::new;
+///     }
+/// }
+/// ```
+///
+/// ## Thread Safety
+/// This contract interface does not provide any thread-safety guarantees. The thread safety of the
+/// tests depends on the [List] and [org.soliscode.test.provider.CollectionProvider] implementations being tested.
 ///
 /// @param <E> The element type being tested.
 /// @param <L> The list type being tested.
 /// @author evanbergstrom
-/// @since 1.0
 /// @see List#add(Object)
+/// @since 1.0.0
 public interface ListAddContract<E, L extends List<E>> extends AddContract<E, L> {
 
-    /// Tests that the [add_singleElement_returnsTrueAndUpdatesSize][List#add] method works.
-    @DisplayName("Test that the add_singleElement_returnsTrueAndUpdatesSize method appends to the end of the list")
+    /// Tests that the [add][List#add] method successfully appends elements to the end of the list.
+    ///
+    /// This test verifies that each call to `add(E)` places the new element at the end of the list.
+    ///
+    /// @see List#add(Object)
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
+    @Override
+    @DisplayName("add(E) appends to the end of the list")
     @Test
     default void add_singleElement_returnsTrueAndUpdatesSize() {
         if (supportsMethod(CollectionMethods.ADD)) {
@@ -36,5 +67,4 @@ public interface ListAddContract<E, L extends List<E>> extends AddContract<E, L>
             assertThrows(UnsupportedOperationException.class, () -> list.add(elementProvider().createInstance()));
         }
     }
-
 }

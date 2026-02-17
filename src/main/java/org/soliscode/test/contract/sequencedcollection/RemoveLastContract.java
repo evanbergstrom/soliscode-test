@@ -11,35 +11,54 @@ import java.util.SequencedCollection;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/// Test for the `removeLast method` in the [SequencedCollection] interface. This contract class can be used
-/// individually by a test class, but it is normally used through the [SequencedCollectionContract] class:
+/// Contract for testing the [removeLast][SequencedCollection#removeLast] method of a [SequencedCollection].
+///
+/// ### Purpose
+/// Verifies that `removeLast()` correctly removes and returns the last element of the collection,
+/// handles unsupported operations, and throws the appropriate exception when the collection is empty.
+///
+/// ### Usage Example
+/// This contract is typically used through [SequencedCollectionContract]:
 /// ```java
-/// public class MyCollectionTest extends SequencedCollectionContract<Integer, MyCollection<Integer>> {
+/// class MySequencedCollectionTest extends SequencedCollectionContract<String, MySequencedCollection<String>> {
+///     // Inherits all removeLast tests
 /// }
 /// ```
-/// If a test is using the SequencedCollectionContract class, but the class being tested does not implement the
-/// `removeLast` method based upon the specification in the `SequencedCollection` class, then it can be omitted from
-/// the tests using the `doesNotSupportMethod()` method:
+/// To exclude this contract if the method is not supported:
 /// ```java
-/// public class MyCollectionTest extends SequencedCollectionContract<Integer, MyCollection<Integer>> {
-///     public MyCollectionTest() {
-///         doesNotSupportMethod(SequencedCollectionMethods.RemoveLast);
+/// class MySequencedCollectionTest extends SequencedCollectionContract<String, MySequencedCollection<String>> {
+///     public MySequencedCollectionTest() {
+///         doesNotSupportMethod(SequencedCollectionMethods.REMOVE_LAST);
 ///     }
 /// }
 /// ```
-/// @param <E> The element type being tested.
+///
+/// ### Thread Safety
+/// The tests in this contract are not thread-safe and should be run in a single-threaded environment
+/// unless the underlying collection implementation specifically guarantees thread safety for these operations.
+///
+/// @param <E> The element type.
 /// @param <C> The collection type being tested.
 /// @author evanbergstrom
-/// @since 1.0
+/// @see SequencedCollection#removeLast
+/// @since 1.0.0
 public interface RemoveLastContract<E, C extends SequencedCollection<E>> extends CollectionContractSupport<E, C> {
 
-    /// Tests that the [removeLast][SequencedCollection#removeLast] method works with a collection with elements.
+    /// Verifies that [removeLast][SequencedCollection#removeLast] removes and returns the last element when not empty.
+    ///
+    /// The test follows these steps:
+    /// 1. Creates a collection with multiple elements.
+    /// 2. Iteratively calls `removeLast()` and verifies that:
+    ///    - The returned element is the one that was at the back.
+    ///    - The collection no longer contains the removed element.
+    /// 3. If `REMOVE_LAST` is not supported, verifies that `UnsupportedOperationException` is thrown.
     ///
     /// @throws org.opentest4j.AssertionFailedError if the test fails.
     /// @see SequencedCollection#removeLast
-    @DisplayName("Test that the removeLast method works")
+    /// @since 1.0.0
+    @DisplayName("removeLast() when not empty removes and returns the last element")
     @Test
-    default void testRemoveLast() {
+    default void removeLast_whenNotEmpty_removesAndReturnsLastElement() {
         List<E> elements = elementProvider().createUniqueInstances(DEFAULT_SIZE);
         if (supportsMethod(SequencedCollectionMethods.REMOVE_LAST)) {
             SequencedCollection<E> collection = provider().emptyInstance();
@@ -56,13 +75,20 @@ public interface RemoveLastContract<E, C extends SequencedCollection<E>> extends
         }
     }
 
-    /// Tests that the [removeLast][SequencedCollection#removeLast] method works for an empty collection.
+    /// Verifies that [removeLast][SequencedCollection#removeLast] throws [NoSuchElementException] when the collection is empty.
+    ///
+    /// The test follows these steps:
+    /// 1. Creates an empty collection.
+    /// 2. Verifies that calling `removeLast()` throws a `NoSuchElementException`.
+    /// 3. If `REMOVE_LAST` is not supported, verifies that either `UnsupportedOperationException` or `NoSuchElementException` is thrown.
     ///
     /// @throws org.opentest4j.AssertionFailedError if the test fails.
+    /// @throws java.util.NoSuchElementException if the collection is empty (expected).
     /// @see SequencedCollection#removeLast
-    @DisplayName("Test that the removeLast method throws for an empty collection")
+    /// @since 1.0.0
+    @DisplayName("removeLast() when empty throws NoSuchElementException")
     @Test
-    default void testRemoveLastOnEmptyCollection() {
+    default void removeLast_whenEmpty_throwsNoSuchElementException() {
         if (supportsMethod(SequencedCollectionMethods.REMOVE_LAST)) {
             SequencedCollection<E> collection = provider().emptyInstance();
             assertThrows(NoSuchElementException.class, collection::removeLast);

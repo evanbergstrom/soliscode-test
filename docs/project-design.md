@@ -1,6 +1,6 @@
 # Library Design Principles
 The following are the design principles for SolisCode Test. they include the design principles as described in
-the [Design Principles](common-design-principals.md) document.
+the [Design Principles](common-design-principles.md) document.
 
 ## Project Overview
 

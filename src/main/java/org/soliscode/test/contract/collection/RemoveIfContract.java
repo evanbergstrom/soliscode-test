@@ -2,12 +2,10 @@ package org.soliscode.test.contract.collection;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.opentest4j.AssertionFailedError;
 import org.soliscode.test.contract.support.CollectionContractSupport;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Predicate;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.soliscode.test.assertions.collection.CollectionAssertions.assertContainsNone;
@@ -50,9 +48,12 @@ public interface RemoveIfContract<E, C extends Collection<E>> extends Collection
 
     /// Tests that the [removeIf][Collection#removeIf] method returns `false` when called on an empty collection.
     ///
+    /// This test verifies that calling `removeIf` on an empty collection returns `false` and does not throw.
+    ///
     /// @see Collection#removeIf
     /// @throws UnsupportedOperationException if the method is not supported
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("removeIf(Predicate) returns false for an empty collection")
     @Test
     default void removeIf_whenEmpty_returnsFalse() {
@@ -74,7 +75,8 @@ public interface RemoveIfContract<E, C extends Collection<E>> extends Collection
     ///
     /// @see Collection#removeIf
     /// @throws UnsupportedOperationException if the method is not supported
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("removeIf(Predicate) returns expected results for a collection with elements")
     @Test
     default void removeIf_whenNotEmpty_returnsExpectedResults() {
@@ -107,7 +109,8 @@ public interface RemoveIfContract<E, C extends Collection<E>> extends Collection
     ///
     /// @see Collection#removeIf
     /// @throws NullPointerException if the filter is null
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @SuppressWarnings("DataFlowIssue")
     @DisplayName("removeIf(Predicate) throws NullPointerException when filter is null")
     @Test

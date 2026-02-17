@@ -29,22 +29,51 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.soliscode.test.util.IterableTestUtils.contains;
 import static org.soliscode.test.util.IterableTestUtils.size;
 
-/// This interface tests if a iterable class has implemented the `iterator()` method
-/// correctly and that the iterator that is returned satisfies the [Iterator] contract.
+/// **Contract for the `iterator` method of an `Iterable`**
+///
+/// This interface defines tests for the [iterator()][Iterable#iterator] method. It is designed
+/// to be used as a mix-in interface by test classes that verify [Iterable] implementations.
+///
+/// ## Purpose
+/// The purpose of this contract is to ensure that an iterable's `iterator` implementation correctly:
+/// - Returns an [Iterator] that traverses all elements.
+/// - Handles empty collections.
+/// - Correctly implements [Iterator#hasNext], [Iterator#next], [Iterator#remove], and [Iterator#forEachRemaining].
+/// - Throws appropriate exceptions (e.g., [NoSuchElementException], [IllegalStateException]).
+///
+/// ## Usage Examples
+/// To use this contract, implement it in your test class along with the required support interfaces:
+///
+/// ```java
+/// class MyIterableIteratorTest implements IteratorMethodContract<String, MyIterable<String>> {
+///     @Override
+///     public CollectionProvider<String, MyIterable<String>> provider() {
+///         return MyIterable::new;
+///     }
+/// }
+/// ```
+///
+/// ## Thread Safety
+/// This contract interface does not provide any thread-safety guarantees. The thread safety of the
+/// tests depends on the [Iterable] and [org.soliscode.test.provider.CollectionProvider] implementations being tested.
 ///
 /// @param <E> The element type being tested.
-/// @param <I> The type of the iterator being tested.</I>
-///
+/// @param <I> The type of the iterable being tested.
 /// @author evanbergstrom
-/// @see Collection#iterator
+/// @see Iterable#iterator
 /// @see Iterator
 /// @since 1.0.0
 public interface IteratorMethodContract<E, I extends Iterable<E>> extends CollectionContractSupport<E, I> {
 
 
     /// Tests that the [Iterator#hasNext] and [Iterator#next] methods work for an empty collection.
+    ///
+    /// This test verifies that calling `next()` on an iterator for an empty collection throws
+    /// [NoSuchElementException].
+    ///
+    /// @since 1.0.0
     @Test
-    default void testIteratorOverEmptyCollection() {
+    default void iterator_whenEmpty_returnsEmptyIterator() {
         Iterator<E> iterator = provider().emptyInstance().iterator();
         assertFalse(iterator.hasNext());
 
@@ -52,8 +81,13 @@ public interface IteratorMethodContract<E, I extends Iterable<E>> extends Collec
     }
 
     /// Tests that the [Iterator#hasNext] and [Iterator#next] methods work for a collection with elements.
+    ///
+    /// This test verifies that the iterator traverses all elements in the collection and then
+    /// throws [NoSuchElementException].
+    ///
+    /// @since 1.0.0
     @Test
-    default void testIteratorOverCollectionWithElements() {
+    default void iterator_whenNotEmpty_traversesAllElements() {
         Iterable<E> iterable = provider().createInstanceWithUniqueElements();
         Iterator<E> iterator = iterable.iterator();
         int count = 0;
@@ -69,8 +103,13 @@ public interface IteratorMethodContract<E, I extends Iterable<E>> extends Collec
 
 
     /// Tests that the [Iterator#remove] method works.
+    ///
+    /// This test verifies that elements removed via the iterator are no longer present in
+    /// the iterable.
+    ///
+    /// @since 1.0.0
     @Test
-    default void testIteratorRemove() {
+    default void iteratorRemove_whenSupported_removesElements() {
         Iterable<E> iterable = provider().createInstanceWithUniqueElements();
         final Iterator<E> iterator = iterable.iterator();
         if (supportsMethod(IterableMethods.ITERATOR_REMOVE)) {
@@ -90,10 +129,12 @@ public interface IteratorMethodContract<E, I extends Iterable<E>> extends Collec
     }
 
 
-    /// Tests that the [Iterator#remove] method throws and [IllegalStateException] if it is called
+    /// Tests that the [Iterator#remove] method throws an [IllegalStateException] if it is called
     /// without first calling `next`, or it is called twice in a row without a call to `next` in between.
+    ///
+    /// @since 1.0.0
     @Test
-    default void testIteratorRemoveThrowsOnIllegalState() {
+    default void iteratorRemove_whenCalledInvalidly_throwsIllegalStateException() {
         if (supportsMethod(IterableMethods.ITERATOR_REMOVE)) {
             final Iterator<E> iterator = provider().createInstanceWithUniqueElements().iterator();
             assertThrows(IllegalStateException.class, iterator::remove);
@@ -106,9 +147,11 @@ public interface IteratorMethodContract<E, I extends Iterable<E>> extends Collec
     }
 
 
-    ///Tests that the [Iterator#forEachRemaining] method works over an entire collection.
+    /// Tests that the [Iterator#forEachRemaining] method works over an entire collection.
+    ///
+    /// @since 1.0.0
     @Test
-    default void testForEachRemainingOverEntireCollection() {
+    default void forEachRemaining_whenCalledAtStart_traversesEntireCollection() {
         final Iterable<E> iterable = provider().createInstanceWithUniqueElements();
         final Iterator<E> iterator = iterable.iterator();
         final AtomicInteger count = new AtomicInteger();
@@ -120,8 +163,10 @@ public interface IteratorMethodContract<E, I extends Iterable<E>> extends Collec
     }
 
     /// Tests that the [Iterator#forEachRemaining] method works over the remaining collection.
+    ///
+    /// @since 1.0.0
     @Test
-    default void testForEachRemainingOverPartialCollection() {
+    default void forEachRemaining_whenCalledInMiddle_traversesRemainingElements() {
         final Iterable<E> iterable = provider().createInstanceWithUniqueElements();
         final Iterator<E> iterator = iterable.iterator();
 
@@ -141,9 +186,11 @@ public interface IteratorMethodContract<E, I extends Iterable<E>> extends Collec
         assertEquals(size(iterable) - middle, count.get());
     }
 
-    /// Tests that the [Iterator#forEachRemaining[] method throws for null action.
+    /// Tests that the [Iterator#forEachRemaining] method throws for null action.
+    ///
+    /// @since 1.0.0
     @Test
-    default void testForEachRemainingForNullAction() {
+    default void forEachRemaining_withNullAction_throwsNullPointerException() {
         final Iterator<E> iterator = provider().createInstanceWithUniqueElements().iterator();
 
         assertThrows(NullPointerException.class, () -> iterator.forEachRemaining(null));

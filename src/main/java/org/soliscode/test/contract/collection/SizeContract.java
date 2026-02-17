@@ -2,7 +2,6 @@ package org.soliscode.test.contract.collection;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.opentest4j.AssertionFailedError;
 import org.soliscode.test.contract.support.CollectionContractSupport;
 
 import java.util.Collection;
@@ -10,14 +9,18 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-/// Contract for the [Collection#size()] method.
+/// **Contract for the `size` method of a `Collection`**
 ///
 /// This contract provides tests to ensure that the `size()` method of a `Collection`
 /// implementation correctly reports the number of elements it contains.
 /// It covers both empty collections and collections with multiple elements.
 ///
-/// ## Usage Example
+/// ## Purpose
+/// The purpose of this contract is to ensure that a collection's `size` implementation correctly:
+/// - Returns 0 if the collection contains no elements.
+/// - Returns the correct count of elements if the collection is not empty.
 ///
+/// ## Usage Examples
 /// To use this contract, implement it in your test class along with the necessary
 /// provider methods:
 ///
@@ -25,34 +28,34 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /// public class MyCollectionSizeTest implements SizeContract<String, MyCollection<String>> {
 ///     @Override
 ///     public CollectionProvider<String, MyCollection<String>> provider() {
-///         return new MyCollectionProvider();
+///         return MyCollection::new;
 ///     }
 ///
 ///     @Override
-///     public ElementProvider<String> elementProvider() {
+///     public ObjectProvider<String> elementProvider() {
 ///         return new StringProvider();
 ///     }
 /// }
 /// ```
 ///
 /// ## Thread Safety
-///
-/// Implementations of this contract are expected to be thread-safe for use by
-/// the JUnit test runner. The tested `Collection` instance itself should be
-/// handled according to its own thread safety guarantees.
+/// This contract interface does not provide any thread-safety guarantees. The thread safety of the
+/// tests depends on the [Collection] and [org.soliscode.test.provider.CollectionProvider] implementations being tested.
 ///
 /// @param <E> The element type being tested.
 /// @param <C> The collection type being tested.
 /// @author evanbergstrom
 /// @see Collection#size()
-/// @since 1.0
+/// @since 1.0.0
 public interface SizeContract<E, C extends Collection<E>> extends CollectionContractSupport<E, C> {
 
     /// Tests that the [size()][Collection#size] method works for an empty collection.
     ///
+    /// This test verifies that calling `size()` on an empty collection returns 0.
+    ///
     /// @see Collection#size()
-    /// @throws UnsupportedOperationException if the `size()` method is not supported.
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("size() returns 0 for an empty collection")
     @Test
     default void size_whenEmpty_returnsZero() {
@@ -62,9 +65,11 @@ public interface SizeContract<E, C extends Collection<E>> extends CollectionCont
 
     /// Tests that the [size()][Collection#size] method works for a collection with elements.
     ///
+    /// This test verifies that calling `size()` on collections of various sizes returns the correct count.
+    ///
     /// @see Collection#size()
-    /// @throws UnsupportedOperationException if the `size()` method is not supported.
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("size() returns the correct number of elements for a collection with elements")
     @Test
     default void size_whenNotEmpty_returnsCorrectSize() {

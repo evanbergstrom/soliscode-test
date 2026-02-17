@@ -2,13 +2,13 @@ package org.soliscode.test.contract.navigablemap;
 
 import org.jspecify.annotations.NonNull;
 import org.soliscode.test.InterfaceMethod;
-import org.soliscode.test.contract.collection.CollectionContract;
 
 /// Values used to identify collection class methods for use with the
-/// [CollectionContract#supportsMethod(InterfaceMethod)] method.
+/// 'CollectionContract#supportsMethod(InterfaceMethod)' method.
 ///
 /// @author evanbergstrom
 /// @since 1.0
+/// @see org.soliscode.test.contract.collection.CollectionContract#supportsMethod(InterfaceMethod)
 public enum NavigableMapMethods implements InterfaceMethod {
 
     /// The method [lowerEntry][java.util.NavigableMap#lowerEntry(Object)]

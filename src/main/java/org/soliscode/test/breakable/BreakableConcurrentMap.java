@@ -373,6 +373,11 @@ public class BreakableConcurrentMap<K, V> extends BreakableMap<K, V> implements 
 
     /// The underlying ConcurrentMap that this BreakableConcurrentMap wraps.
     /// All operations delegate to this map unless breaks are applied.
+    ///
+    /// This map is initialized during construction and provides the actual storage
+    /// and concurrency control for the breakable implementation.
+    ///
+    /// @see ConcurrentMap
     private final @NonNull ConcurrentMap<K, V> concurrentMap;
 
     // ========== Constructors ==========
@@ -423,22 +428,24 @@ public class BreakableConcurrentMap<K, V> extends BreakableMap<K, V> implements 
 
     }
 
-    /// Creates a BreakableConcurrentMap with the specified configuration.
+    /// Constructs a `BreakableConcurrentMap` instance that serves as a wrapper
+    /// around the provided [ConcurrentMap], enabling support for breaking operations
+    /// based on predefined conditions and method statuses. This implementation allows
+    /// augmentation of concurrency support by applying controlled interruptions on specific
+    /// map methods.
     ///
-    /// This constructor allows full control over the BreakableConcurrentMap configuration,
-    /// including the underlying ConcurrentMap and breaks.
-    ///
-    /// **Usage:**
-    /// ```java
-    /// ConcurrentHashMap<String, Integer> hashMap = new ConcurrentHashMap<>();
-    /// Collection<Break> breaks = List.of(PUT_IF_ABSENT_IGNORES_EXISTING);
-    /// BreakableConcurrentMap<String, Integer> map = new BreakableConcurrentMap<>(
-    ///     hashMap, breaks);
-    /// ```
-    ///
-    /// @param concurrentMap the ConcurrentMap to wrap
-    /// @param breaks the breaks to apply
-    /// @throws NullPointerException if concurrentMap or breaks is null
+    /// @param concurrentMap The underlying [ConcurrentMap] implementation that
+    ///                      this class will delegate its operations to. Must not be `null`.
+    /// @param breaks A [Set] of [Break] conditions that define the operational
+    ///               interruptions. Each `Break` influences the behavior of this map
+    ///               based on predefined rules. Must not be `null`.
+    /// @param methodStatuses A [Map] that associates [InterfaceMethod] definitions
+    ///                       with their corresponding [MethodStatus]. This configuration
+    ///                       determines the allowed operations and their statuses. Must not
+    ///                       be `null`.
+    /// @param permits The maximum number of active permits allowed for concurrent operations.
+    ///                This parameter manages concurrency constraints and must be a non-negative
+    ///                integer.
     protected BreakableConcurrentMap(
             final @NonNull ConcurrentMap<K, V> concurrentMap,
             final @NonNull Set<Break> breaks,
@@ -451,19 +458,29 @@ public class BreakableConcurrentMap<K, V> extends BreakableMap<K, V> implements 
     // Note: ConcurrentMap doesn't add_singleElement_returnsTrueAndUpdatesSize new methods beyond Map since Java 8,
     // but provides stronger atomicity guarantees
 
-    /// {@inheritDoc}
-    ///
     /// Associates the specified value with the specified key in this map if it is not already present.
-    /// This is an atomic operation. The behavior can be modified by the following breaks:
     ///
-    /// **Supported Breaks:**
-    /// - {@link #PUT_IF_ABSENT_IGNORES_EXISTING} - Ignores existing mappings
-    /// - {@link #PUT_IF_ABSENT_ALWAYS_RETURNS_NULL} - Always returns null
-    /// - {@link #PUT_IF_ABSENT_DOES_NOT_ADD_PAIR} - Returns correct value but doesn't add_singleElement_returnsTrueAndUpdatesSize mapping
+    /// This method provides an atomic implementation of `putIfAbsent` as specified by the
+    /// [ConcurrentMap] interface. The operation is atomic with respect to the underlying map.
     ///
-    /// **Exception Handling:**
-    /// - Throws UnsupportedOperationException if the method is not supported
-    /// - Delegates to parent BreakableMap for null handling and other breaks
+    /// ### Behavioral Modifications (Breaks)
+    ///
+    /// The standard atomic behavior can be intentionally broken using the following constants:
+    /// - {@link #PUT_IF_ABSENT_IGNORES_EXISTING}: Bypasses the "if absent" check and always puts the value.
+    /// - {@link #PUT_IF_ABSENT_ALWAYS_RETURNS_NULL}: Performs the operation but always reports success via `null` return.
+    /// - {@link #PUT_IF_ABSENT_DOES_NOT_ADD_PAIR}: Checks the state and returns what it would have done, but performs no write.
+    ///
+    /// @param key key with which the specified value is to be associated
+    /// @param value value to be associated with the specified key
+    /// @return the previous value associated with the specified key, or `null` if there was no mapping for the key.
+    ///         (A `null` return can also indicate that the map previously associated `null` with the key,
+    ///         if the implementation supports null values.)
+    /// @throws UnsupportedOperationException if the `PUT_IF_ABSENT` operation is marked as unsupported
+    /// @throws ClassCastException if the key or value is of an inappropriate type for this map
+    /// @throws NullPointerException if the specified key is null and this map does not permit null keys
+    /// @throws IllegalArgumentException if some property of the specified key or value prevents it from being stored in this map
+    /// @see java.util.concurrent.ConcurrentMap#putIfAbsent(Object, Object)
+    /// @since 1.0.0
     @Override
     public @Nullable V putIfAbsent(final @NonNull K key, final V value) {
         checkMethodSupport(MapMethods.PUT_IF_ABSENT);
@@ -488,19 +505,26 @@ public class BreakableConcurrentMap<K, V> extends BreakableMap<K, V> implements 
         return super.putIfAbsent(key, value);
     }
 
-    /// {@inheritDoc}
-    ///
     /// Removes the entry for a key only if currently mapped to the given value.
-    /// This is an atomic operation. The behavior can be modified by the following breaks:
     ///
-    /// **Supported Breaks:**
-    /// - {@link #REMOVE_TWO_ARG_IGNORES_VALUE} - Ignores value matching
-    /// - {@link #REMOVE_TWO_ARG_ALWAYS_RETURNS_FALSE} - Always returns false
-    /// - {@link #REMOVE_TWO_ARG_DOES_NOT_REMOVE_PAIR} - Returns true but doesn't remove mapping
+    /// This method provides an atomic implementation of `remove` as specified by the
+    /// [ConcurrentMap] interface.
     ///
-    /// **Exception Handling:**
-    /// - Throws UnsupportedOperationException if the method is not supported
-    /// - Delegates to parent BreakableMap for null handling and other breaks
+    /// ### Behavioral Modifications (Breaks)
+    ///
+    /// The standard atomic behavior can be intentionally broken using the following constants:
+    /// - {@link #REMOVE_TWO_ARG_IGNORES_VALUE}: Removes the key regardless of its current value.
+    /// - {@link #REMOVE_TWO_ARG_ALWAYS_RETURNS_FALSE}: Never removes anything and always returns `false`.
+    /// - {@link #REMOVE_TWO_ARG_DOES_NOT_REMOVE_PAIR}: Simulates the check and returns the result, but performs no removal.
+    ///
+    /// @param key key with which the specified value is associated
+    /// @param value value expected to be associated with the specified key
+    /// @return `true` if the value was removed
+    /// @throws UnsupportedOperationException if the `REMOVE_TWO_ARG` operation is marked as unsupported
+    /// @throws ClassCastException if the key or value is of an inappropriate type for this map
+    /// @throws NullPointerException if the specified key is null and this map does not permit null keys
+    /// @see ConcurrentMap#remove(Object, Object)
+    /// @since 1.0.0
     @Override
     public boolean remove(final @NonNull Object key, final Object value) {
         checkMethodSupport(MapMethods.REMOVE_TWO_ARG);
@@ -523,19 +547,28 @@ public class BreakableConcurrentMap<K, V> extends BreakableMap<K, V> implements 
         return super.remove(key, value);
     }
 
-    /// {@inheritDoc}
-    ///
     /// Replaces the entry for a key only if currently mapped to the given value.
-    /// This is an atomic operation. The behavior can be modified by the following breaks:
     ///
-    /// **Supported Breaks:**
-    /// - {@link #REPLACE_THREE_ARG_IGNORES_OLD_VALUE} - Ignores old value matching
-    /// - {@link #REPLACE_THREE_ARG_ALWAYS_RETURNS_FALSE} - Always returns false
-    /// - {@link #REPLACE_THREE_ARG_DOES_NOT_REPLACE_VALUE} - Returns true but doesn't replace value
+    /// This method provides an atomic implementation of `replace` as specified by the
+    /// [ConcurrentMap] interface.
     ///
-    /// **Exception Handling:**
-    /// - Throws UnsupportedOperationException if the method is not supported
-    /// - Delegates to parent BreakableMap for null handling and other breaks
+    /// ### Behavioral Modifications (Breaks)
+    ///
+    /// The standard atomic behavior can be intentionally broken using the following constants:
+    /// - {@link #REPLACE_THREE_ARG_IGNORES_OLD_VALUE}: Replaces the value even if the current value doesn't match `oldValue`.
+    /// - {@link #REPLACE_THREE_ARG_ALWAYS_RETURNS_FALSE}: Never replaces anything and always returns `false`.
+    /// - {@link #REPLACE_THREE_ARG_DOES_NOT_REPLACE_VALUE}: Simulates the check and returns the result, but performs no replacement.
+    ///
+    /// @param key key with which the specified value is associated
+    /// @param oldValue value expected to be associated with the specified key
+    /// @param newValue value to be associated with the specified key
+    /// @return `true` if the value was replaced
+    /// @throws UnsupportedOperationException if the `REPLACE_THREE_ARG` operation is marked as unsupported
+    /// @throws ClassCastException if the class of the specified key or value prevents it from being stored in this map
+    /// @throws NullPointerException if a specified key or value is null, and this map does not permit null keys or values
+    /// @throws IllegalArgumentException if some property of a specified key or value prevents it from being stored in this map
+    /// @see ConcurrentMap#replace(Object, Object, Object)
+    /// @since 1.0.0
     @Override
     public boolean replace(final @NonNull K key, final @NonNull V oldValue, final @NonNull V newValue) {
         checkMethodSupport(MapMethods.REPLACE_THREE_ARG);
@@ -562,18 +595,26 @@ public class BreakableConcurrentMap<K, V> extends BreakableMap<K, V> implements 
         return super.replace(key, oldValue, newValue);
     }
 
-    /// {@inheritDoc}
-    ///
     /// Replaces the entry for a key only if it is currently mapped to some value.
-    /// This is an atomic operation. The behavior can be modified by the following breaks:
     ///
-    /// **Supported Breaks:**
-    /// - {@link #REPLACE_TWO_ARG_ALWAYS_RETURNS_NULL} - Always returns null
-    /// - {@link #REPLACE_TWO_ARG_DOES_NOT_REPLACE_VALUE} - Returns old value but doesn't replace
+    /// This method provides an atomic implementation of `replace` as specified by the
+    /// [ConcurrentMap] interface.
     ///
-    /// **Exception Handling:**
-    /// - Throws UnsupportedOperationException if the method is not supported
-    /// - Delegates to parent BreakableMap for null handling and other breaks
+    /// ### Behavioral Modifications (Breaks)
+    ///
+    /// The standard atomic behavior can be intentionally broken using the following constants:
+    /// - {@link #REPLACE_TWO_ARG_ALWAYS_RETURNS_NULL}: Performs the replacement but always returns `null` as if the key was missing.
+    /// - {@link #REPLACE_TWO_ARG_DOES_NOT_REPLACE_VALUE}: Returns the current value but performs no replacement.
+    ///
+    /// @param key key with which the specified value is associated
+    /// @param value value to be associated with the specified key
+    /// @return the previous value associated with the specified key, or `null` if there was no mapping for the key.
+    /// @throws UnsupportedOperationException if the `REPLACE_TWO_ARG` operation is marked as unsupported
+    /// @throws ClassCastException if the class of the specified key or value prevents it from being stored in this map
+    /// @throws NullPointerException if the specified key or value is null, and this map does not permit null keys or values
+    /// @throws IllegalArgumentException if some property of the specified key or value prevents it from being stored in this map
+    /// @see ConcurrentMap#replace(Object, Object)
+    /// @since 1.0.0
     @Override
     public @Nullable V replace(final @NonNull K key, final @NonNull V value) {
         checkMethodSupport(MapMethods.REPLACE_TWO_ARG);
@@ -593,18 +634,25 @@ public class BreakableConcurrentMap<K, V> extends BreakableMap<K, V> implements 
         return super.replace(key, value);
     }
 
-    /// {@inheritDoc}
-    ///
     /// Attempts to compute a mapping for the specified key and its current mapped value,
-    /// or null if there is no current mapping. This is an atomic operation.
-    /// The behavior can be modified by the following breaks:
+    /// or null if there is no current mapping.
     ///
-    /// **Supported Breaks:**
-    /// - {@link #COMPUTE_RACE_CONDITION} - Simulates race condition behavior
-    /// - Inherits all breaks from parent BreakableMap
+    /// This method provides an atomic implementation of `compute` as specified by the
+    /// [ConcurrentMap] interface.
     ///
-    /// **Exception Handling:**
-    /// - Delegates to parent BreakableMap for full break support
+    /// ### Behavioral Modifications (Breaks)
+    ///
+    /// The standard atomic behavior can be intentionally broken using the following constants:
+    /// - {@link #COMPUTE_RACE_CONDITION}: Simulates race condition behavior by performing the operation twice.
+    ///
+    /// @param key key with which the specified value is to be associated
+    /// @param remappingFunction the function to compute a value
+    /// @return the new value associated with the specified key, or null if none
+    /// @throws UnsupportedOperationException if the `COMPUTE` operation is marked as unsupported
+    /// @throws NullPointerException if the specified key is null and this map does not permit null keys,
+    ///         or if the remappingFunction is null
+    /// @see ConcurrentMap#compute(Object, BiFunction)
+    /// @since 1.0.0
     @Override
     public @Nullable V compute(final K key,
                                final @NonNull BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
@@ -621,18 +669,26 @@ public class BreakableConcurrentMap<K, V> extends BreakableMap<K, V> implements 
         return super.compute(key, remappingFunction);
     }
 
-    /// {@inheritDoc}
-    ///
     /// If the specified key is not already associated with a value, attempts to compute its value
-    /// and enters it into the map. This is an atomic operation.
-    /// The behavior can be modified by the following breaks:
+    /// and enters it into the map.
     ///
-    /// **Supported Breaks:**
-    /// - {@link #COMPUTE_IF_ABSENT_RACE_CONDITION} - Simulates race condition behavior
-    /// - Inherits all breaks from parent BreakableMap
+    /// This method provides an atomic implementation of `computeIfAbsent` as specified by the
+    /// [ConcurrentMap] interface.
     ///
-    /// **Exception Handling:**
-    /// - Delegates to parent BreakableMap for full break support
+    /// ### Behavioral Modifications (Breaks)
+    ///
+    /// The standard atomic behavior can be intentionally broken using the following constants:
+    /// - {@link #COMPUTE_IF_ABSENT_RACE_CONDITION}: Simulates race condition behavior by checking existence separately.
+    ///
+    /// @param key key with which the specified value is to be associated
+    /// @param mappingFunction the function to compute a value
+    /// @return the current (existing or computed) value associated with the specified key,
+    ///         or null if the computed value is null
+    /// @throws UnsupportedOperationException if the `COMPUTE_IF_ABSENT` operation is marked as unsupported
+    /// @throws NullPointerException if the specified key is null and this map does not permit null keys,
+    ///         or if the mappingFunction is null
+    /// @see ConcurrentMap#computeIfAbsent(Object, Function)
+    /// @since 1.0.0
     @Override
     public @Nullable V computeIfAbsent(final K key, final @NonNull Function<? super K, ? extends V> mappingFunction) {
         checkMethodSupport(MapMethods.COMPUTE_IF_ABSENT);
@@ -651,18 +707,25 @@ public class BreakableConcurrentMap<K, V> extends BreakableMap<K, V> implements 
         return super.computeIfAbsent(key, mappingFunction);
     }
 
-    /// {@inheritDoc}
-    ///
     /// If the value for the specified key is present, attempts to compute a new mapping
-    /// given the key and its current mapped value. This is an atomic operation.
-    /// The behavior can be modified by the following breaks:
+    /// given the key and its current mapped value.
     ///
-    /// **Supported Breaks:**
-    /// - {@link #COMPUTE_IF_PRESENT_RACE_CONDITION} - Simulates race condition behavior
-    /// - Inherits all breaks from parent BreakableMap
+    /// This method provides an atomic implementation of `computeIfPresent` as specified by the
+    /// [ConcurrentMap] interface.
     ///
-    /// **Exception Handling:**
-    /// - Delegates to parent BreakableMap for full break support
+    /// ### Behavioral Modifications (Breaks)
+    ///
+    /// The standard atomic behavior can be intentionally broken using the following constants:
+    /// - {@link #COMPUTE_IF_PRESENT_RACE_CONDITION}: Simulates race condition behavior by checking existence separately.
+    ///
+    /// @param key key with which the specified value is to be associated
+    /// @param remappingFunction the function to compute a value
+    /// @return the new value associated with the specified key, or null if none
+    /// @throws UnsupportedOperationException if the `COMPUTE_IF_PRESENT` operation is marked as unsupported
+    /// @throws NullPointerException if the specified key is null and this map does not permit null keys,
+    ///         or if the remappingFunction is null
+    /// @see ConcurrentMap#computeIfPresent(Object, BiFunction)
+    /// @since 1.0.0
     @Override
     public @Nullable V computeIfPresent(final K key,
                                     final @NonNull BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
@@ -689,18 +752,28 @@ public class BreakableConcurrentMap<K, V> extends BreakableMap<K, V> implements 
         return super.computeIfPresent(key, remappingFunction);
     }
 
-    /// {@inheritDoc}
-    ///
     /// If the specified key is not already associated with a value or is associated with null,
-    /// associates it with the given non-null value. This is an atomic operation.
-    /// The behavior can be modified by the following breaks:
+    /// associates it with the given non-null value.
     ///
-    /// **Supported Breaks:**
-    /// - {@link #MERGE_RACE_CONDITION} - Simulates race condition behavior
-    /// - Inherits all breaks from parent BreakableMap
+    /// This method provides an atomic implementation of `merge` as specified by the
+    /// [ConcurrentMap] interface.
     ///
-    /// **Exception Handling:**
-    /// - Delegates to parent BreakableMap for full break support
+    /// ### Behavioral Modifications (Breaks)
+    ///
+    /// The standard atomic behavior can be intentionally broken using the following constants:
+    /// - {@link #MERGE_RACE_CONDITION}: Simulates race condition behavior by performing operations separately.
+    ///
+    /// @param key key with which the resulting value is to be associated
+    /// @param value the non-null value to be merged with the existing value
+    ///        associated with the key or, if no existing value or a null value
+    ///        is associated with the key, to be associated with the key
+    /// @param remappingFunction the function to recompute a value if present
+    /// @return the new value associated with the specified key, or null if no value is associated with the key
+    /// @throws UnsupportedOperationException if the `MERGE` operation is marked as unsupported
+    /// @throws NullPointerException if the specified key is null and this map does not permit null keys,
+    ///         or if the value or remappingFunction is null
+    /// @see ConcurrentMap#merge(Object, Object, BiFunction)
+    /// @since 1.0.0
     @Override
     public @Nullable V merge(final K key, final @NonNull V value,
                              final @NonNull BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
@@ -732,18 +805,38 @@ public class BreakableConcurrentMap<K, V> extends BreakableMap<K, V> implements 
     /// Builder class for creating BreakableConcurrentMap instances with fluent configuration.
     ///
     /// This builder extends BreakableMap.Builder and provides additional configuration
-    /// options specific to ConcurrentMap functionality.
+    /// options specific to ConcurrentMap functionality. It allows setting up a
+    /// [BreakableConcurrentMap] with specific breaks and method support statuses.
+    ///
+    /// @param <K> the type of keys maintained by the built concurrent map
+    /// @param <V> the type of mapped values
+    /// @see BreakableConcurrentMap
+    /// @since 1.0.0
     public static class Builder<K, V> extends BreakableMap.Builder<K, V> {
 
         /// Creates a new Builder with default configuration.
+        ///
+        /// The builder starts with:
+        /// - An empty element set
+        /// - No breaks
+        /// - All methods supported
+        /// - Default null permits
         public Builder() {
             super();
         }
 
+        /// Creates a new Builder by copying configuration from another builder.
+        ///
+        /// @param other the builder to copy configuration from
+        /// @throws NullPointerException if other is null
         public Builder(final @NonNull Builder<K, V> other) {
             super(other);
         }
 
+        /// Creates a new Builder pre-populated with elements from the specified map.
+        ///
+        /// @param map the map whose elements are to be placed in the builder
+        /// @throws NullPointerException if map is null
         public Builder(final @NonNull Map<K, V> map) {
             super(map);
         }
@@ -771,6 +864,18 @@ public class BreakableConcurrentMap<K, V> extends BreakableMap<K, V> implements 
     // ========== Static Factory Methods ==========
 
     /// Creates a BreakableConcurrentMap that wraps the specified ConcurrentMap with the given breaks.
+    ///
+    /// This factory method provides a convenient way to create a breakable wrapper around
+    /// an existing concurrent map instance with a set of predefined breaks.
+    ///
+    /// @param <K> the type of keys maintained by the map
+    /// @param <V> the type of mapped values
+    /// @param concurrentMap the ConcurrentMap to wrap
+    /// @param breaks the set of breaks to apply to the map
+    /// @return a new BreakableConcurrentMap wrapping the specified map
+    /// @throws NullPointerException if concurrentMap or breaks is null
+    /// @see #BreakableConcurrentMap(ConcurrentMap, Set, Map, int)
+    /// @since 1.0.0
     public static <K, V> @NonNull BreakableConcurrentMap<K, V> wrap(
             final @NonNull ConcurrentMap<K, V> concurrentMap,
             final @NonNull Set<Break> breaks) {

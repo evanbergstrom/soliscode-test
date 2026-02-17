@@ -2,7 +2,6 @@ package org.soliscode.test.contract.collection;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.opentest4j.AssertionFailedError;
 import org.soliscode.test.contract.support.CollectionContractSupport;
 import org.soliscode.test.util.MatchNothing;
 
@@ -50,9 +49,12 @@ public interface RemoveContract<E, C extends Collection<E>> extends CollectionCo
 
     /// Tests that the [remove][Collection#remove] method returns `false` when called on an empty collection.
     ///
+    /// This test verifies that calling `remove` on an empty collection returns `false` and does not throw.
+    ///
     /// @see Collection#remove
     /// @throws UnsupportedOperationException if the method is not supported
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("remove(Object) returns false for an empty collection")
     @Test
     default void remove_whenEmpty_returnsFalse() {
@@ -75,7 +77,8 @@ public interface RemoveContract<E, C extends Collection<E>> extends CollectionCo
     ///
     /// @see Collection#remove
     /// @throws UnsupportedOperationException if the method is not supported
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("remove(Object) returns expected results for a collection with elements")
     @Test
     default void remove_whenNotEmpty_returnsExpectedResults() {
@@ -117,8 +120,11 @@ public interface RemoveContract<E, C extends Collection<E>> extends CollectionCo
 
     /// Tests that the [remove][Collection#remove] method handles `null` values correctly.
     ///
+    /// This test verifies that adding and then removing `null` works correctly if permitted.
+    ///
     /// @see Collection#remove
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("remove(Object) handles null values correctly")
     @Test
     default void remove_withNullValue_returnsExpectedResults() {
@@ -142,8 +148,11 @@ public interface RemoveContract<E, C extends Collection<E>> extends CollectionCo
 
     /// Tests that the [remove][Collection#remove] method handles incompatible types correctly.
     ///
+    /// This test verifies that calling `remove` with an incompatible type returns `false`.
+    ///
     /// @see Collection#remove
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("remove(Object) returns false for incompatible types")
     @Test
     default void remove_withIncompatibleType_returnsFalse() {

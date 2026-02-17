@@ -62,6 +62,8 @@ public interface AddAllContract<E, C extends Collection<E>> extends CollectionCo
     /// 1. Elements from a source collection are added to the target collection.
     /// 2. The method returns `true` indicating the collection has changed.
     /// 3. If `addAll` is not supported, it verifies that [UnsupportedOperationException] is thrown.
+    ///
+    /// @since 1.0.0
     @DisplayName("addAll(Collection) adds all argument elements to an empty collection")
     @Test
     default void addAll_whenContainerIsEmpty_addsAllArgumentElements() {
@@ -71,9 +73,6 @@ public interface AddAllContract<E, C extends Collection<E>> extends CollectionCo
 
             assertTrue(collection.addAll(unmodifiableCollection(values)));
             assertContainsSameByIdentity(values, collection);
-        } else {
-            Collection<E> collection = provider().emptyInstance();
-            assertThrows(UnsupportedOperationException.class, () -> collection.addAll(Collections.emptyList()));
         }
     }
 
@@ -82,6 +81,8 @@ public interface AddAllContract<E, C extends Collection<E>> extends CollectionCo
     /// This test verifies that:
     /// 1. Adding an empty collection to the target collection returns `false`.
     /// 2. The target collection remains unchanged.
+    ///
+    /// @since 1.0.0
     @DisplayName("addAll(Collection) returns false when adding an empty collection")
     @Test
     default void addAll_withEmptyCollection_returnsFalse() {
@@ -93,6 +94,8 @@ public interface AddAllContract<E, C extends Collection<E>> extends CollectionCo
     }
 
     /// Tests that the [addAll][Collection#addAll] method throws [NullPointerException] when the argument is `null`.
+    ///
+    /// @since 1.0.0
     @DisplayName("addAll(Collection) throws NullPointerException when the argument is null")
     @Test
     default void addAll_withNullCollection_throwsNullPointerException() {
@@ -108,6 +111,8 @@ public interface AddAllContract<E, C extends Collection<E>> extends CollectionCo
     /// This test verifies the behavior based on [CollectionContractSupport#permitNulls()]:
     /// - If `null` is permitted: Adding a collection containing `null` should succeed.
     /// - If `null` is not permitted: Adding a collection containing `null` should throw [NullPointerException].
+    ///
+    /// @since 1.0.0
     @DisplayName("addAll(Collection) handles null values based on permission")
     @Test
     default void addAll_withNullValue_handlesCorrectly() {
@@ -130,6 +135,8 @@ public interface AddAllContract<E, C extends Collection<E>> extends CollectionCo
     /// - If duplicates are permitted: Adding existing elements should increase the collection size.
     /// - If duplicates are not permitted: Adding existing elements should not increase the collection size,
     ///   and the method should return `false` if no elements were added.
+    ///
+    /// @since 1.0.0
     @DisplayName("addAll(Collection) handles duplicate values based on permission")
     @Test
     @SuppressWarnings("RedundantCollectionOperation")
@@ -158,6 +165,8 @@ public interface AddAllContract<E, C extends Collection<E>> extends CollectionCo
     /// - If incompatible types are not permitted: Adding a collection with incompatible types should throw [ClassCastException].
     /// - If incompatible types are permitted: The behavior is implementation-dependent, but usually it should either
     ///   work or throw [ClassCastException] depending on how strict the implementation is.
+    ///
+    /// @since 1.0.0
     @DisplayName("addAll(Collection) handles incompatible types based on permission")
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -166,6 +175,25 @@ public interface AddAllContract<E, C extends Collection<E>> extends CollectionCo
             Collection<E> collection = provider().emptyInstance();
             Collection incompatibleValues = Collections.singletonList(new MatchNothing());
             assertThrows(ClassCastException.class, () -> collection.addAll(incompatibleValues));
+        }
+    }
+
+    /// Verifies that the [Collection#addAll(Collection)] method throws [UnsupportedOperationException]
+    /// when the operation is not supported by the collection implementation.
+    ///
+    /// This test ensures compliance with the [Collection] contract, which specifies that an
+    /// `UnsupportedOperationException` must be thrown if the `addAll` method is optional
+    /// and not supported by the collection being tested.
+    ///
+    /// @throws AssertionError if the `addAll(Collection)` method does not throw [UnsupportedOperationException]
+    ///         for unsupported collections.
+    /// @since 1.0.0
+    @DisplayName("addAll(Collection) throws UnsupportedOperationException when not supported")
+    @Test
+    default void addAll_whenNotSupported_throwsUnsupportedOperationException() {
+        if (!supportsMethod(CollectionMethods.ADD_ALL)) {
+            assertThrows(UnsupportedOperationException.class,
+                    () -> provider().emptyInstance().addAll(Collections.emptyList()));
         }
     }
 }

@@ -61,39 +61,31 @@ import java.util.List;
 public class ArrayListTest extends AbstractTest
         implements ListContract<Integer, ArrayList<Integer>>, WithArrayList<Integer>, WithIntegerElement {
 
-    /**
-     * Constructs a new ArrayListTest with default configuration.
-     *
-     * <p>The default ArrayList configuration permits:
-     * <ul>
-     * <li>Null values (inherited from WithIntegerElement)</li>
-     * <li>Duplicate values (standard List behavior)</li>
-     * <li>All modification operations</li>
-     * </ul>
-     */
+    /// Constructs a new ArrayListTest with default configuration.
+    ///
+    /// The default ArrayList configuration permits:
+    /// - Null values (inherited from WithIntegerElement)
+    /// - Duplicate values (standard List behavior)
+    /// - All modification operations
     public ArrayListTest() {
     }
 
-    /**
-     * Tests ArrayList wrapped with {@link Collections#unmodifiableList(List)} to verify proper
-     * handling of modification attempts.
-     *
-     * <p>This nested test class validates that unmodifiable List wrappers correctly throw
-     * {@link UnsupportedOperationException} for all modification operations while still
-     * supporting read-only operations like get, size, and iteration.
-     *
-     * <p>The test automatically configures the framework to expect modification operations
-     * to fail by calling {@link ListContract#doesNotSupportModification()}.
-     */
+    /// Tests ArrayList wrapped with {@link Collections#unmodifiableList(List)} to verify proper
+    /// handling of modification attempts.
+    ///
+    /// This nested test class validates that unmodifiable List wrappers correctly throw
+    /// {@link UnsupportedOperationException} for all modification operations while still
+    /// supporting read-only operations like get, size, and iteration.
+    ///
+    /// The test automatically configures the framework to expect modification operations
+    /// to fail by calling {@link ListContract#doesNotSupportModification()}.
     @Nested
     @DisplayName("Test the TestList interface using an ArrayList that is unmodifiable")
     public class UnmodifiableArrayListTest extends AbstractTest
             implements ListContract<Integer, List<Integer>>, WithIntegerElement {
 
-        /**
-         * Constructs a new UnmodifiableArrayListTest and configures it to expect
-         * modification operations to throw {@link UnsupportedOperationException}.
-         */
+        /// Constructs a new UnmodifiableArrayListTest and configures it to expect
+        /// modification operations to throw {@link UnsupportedOperationException}.
         public UnmodifiableArrayListTest() {
             doesNotSupportModification();
         }
@@ -105,22 +97,21 @@ public class ArrayListTest extends AbstractTest
         }
     }
 
-    /**
-     * Tests ArrayList with a wrapper that rejects null values to verify proper null handling.
-     *
-     * <p>This nested test class validates that List implementations correctly handle null rejection
-     * by throwing {@link NullPointerException} when null values are added. The wrapper is applied
-     * using {@link CollectionTestUtils#preventNulls(Collection)} which decorates the ArrayList
-     * to reject nulls.
-     *
-     * <p>The test implements {@link DoesNotPermitNulls} to inform the contract framework
-     * that null-related operations should throw exceptions rather than succeed.
-     */
+    /// Tests ArrayList with a wrapper that rejects null values to verify proper null handling.
+    ///
+    /// This nested test class validates that List implementations correctly handle null rejection
+    /// by throwing {@link NullPointerException} when null values are added. The wrapper is applied
+    /// using {@link CollectionTestUtils#preventNulls(Collection)} which decorates the ArrayList
+    /// to reject nulls.
+    ///
+    /// The test implements {@link DoesNotPermitNulls} to inform the contract framework
+    /// that null-related operations should throw exceptions rather than succeed.
     @Nested
     @DisplayName("Test the TestList interface using an ArrayList that does not accept nulls")
     public class NoNullsArrayListContract extends AbstractTest
             implements ListContract<Integer, List<Integer>>, WithIntegerElement, DoesNotPermitNulls {
 
+        /// {@inheritDoc}
         @Override
         public @NonNull CollectionProvider<Integer, List<Integer>> provider() {
             return CollectionProviders.wrap(CollectionProviders.provideArrayList(Providers.integerProvider()),
@@ -128,23 +119,22 @@ public class ArrayListTest extends AbstractTest
         }
     }
 
-    /**
-     * Tests ArrayList wrapped with {@link Collections#checkedList(List, Class)} to verify proper
-     * type checking at runtime.
-     *
-     * <p>This nested test class validates that type-checked List wrappers correctly throw
-     * {@link ClassCastException} when incompatible types are added. The wrapper ensures
-     * type safety by checking that all elements are instances of the specified class.
-     *
-     * <p>The test implements {@link DoesNotPermitIncompatibleTypes} to inform the contract
-     * framework that operations with incompatible types should throw {@link ClassCastException}
-     * rather than succeed.
-     */
+    /// Tests ArrayList wrapped with {@link Collections#checkedList(List, Class)} to verify proper
+    /// type checking at runtime.
+    ///
+    /// This nested test class validates that type-checked List wrappers correctly throw
+    /// {@link ClassCastException} when incompatible types are added. The wrapper ensures
+    /// type safety by checking that all elements are instances of the specified class.
+    ///
+    /// The test implements {@link DoesNotPermitIncompatibleTypes} to inform the contract
+    /// framework that operations with incompatible types should throw {@link ClassCastException}
+    /// rather than succeed.
     @Nested
     @DisplayName("Test the TestList interface using an ArrayList that does not permit incompatible types")
     public class CheckedArrayListContract extends AbstractTest
             implements ListContract<Integer, List<Integer>>, WithIntegerElement, DoesNotPermitIncompatibleTypes {
 
+        /// {@inheritDoc}
         @Override
         public @NonNull CollectionProvider<Integer, List<Integer>> provider() {
             return CollectionProviders.wrap(CollectionProviders.provideArrayList(Providers.integerProvider()),
@@ -152,16 +142,25 @@ public class ArrayListTest extends AbstractTest
         }
     }
 
+    /// Tests ArrayList wrapped with {@link Collections#synchronizedCollection(Collection)} to verify
+    /// thread-safety behavior.
+    ///
+    /// This nested test class validates that synchronized Collection wrappers correctly handle
+    /// concurrent access while noting that they do not support `hashCode` and `equals`
+    /// as per the synchronized collection contract.
     @Nested
     public class SynchronizedArrayListContract extends AbstractTest
             implements ThreadSafeCollectionContract<Integer, Collection<Integer>>, WithIntegerElement {
 
+        /// Constructs a new SynchronizedArrayListContract and configures it to ignore
+        /// `hashCode` and `equals` methods.
         public SynchronizedArrayListContract() {
             super();
             doesNotSupportMethod(ObjectMethods.HASH_CODE);
             doesNotSupportMethod(ObjectMethods.EQUALS);
         }
 
+        /// {@inheritDoc}
         @Override
         public @NonNull CollectionProvider<Integer, Collection<Integer>> provider() {
             return CollectionProviders.wrap(CollectionProviders.provideArrayList(Providers.integerProvider()),

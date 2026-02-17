@@ -32,6 +32,7 @@ class AssertNoDeadlocksTest extends AbstractTest {
     @Test
     @DisplayName("assertNoDeadlocks() passes when no deadlocks exist")
     void assertNoDeadlocks_whenNoDeadlocks_passes() {
+        enableDeadlockDetection();
         assertDoesNotThrow(() -> assertNoDeadlocks());
     }
 
@@ -42,6 +43,7 @@ class AssertNoDeadlocksTest extends AbstractTest {
     @Nondeterministic
     @Test
     void assertNoDeadlocks_whenDeadlockExists_fails() throws InterruptedException {
+        enableDeadlockDetection();
         runTestWithSimpleDeadlock(() -> {
             AssertionError error = assertThrows(AssertionError.class, Assertions::assertNoDeadlocks);
 
@@ -61,6 +63,7 @@ class AssertNoDeadlocksTest extends AbstractTest {
     @Nondeterministic
     @Test
     void assertNoDeadlocks_withCustomMessage_failsWithDeadlock() throws InterruptedException {
+        enableDeadlockDetection();
         runTestWithSimpleDeadlock(() -> {
             String customMessage = "Custom Error Message";
             AssertionError error = assertThrows(AssertionError.class, () -> assertNoDeadlocks(customMessage));
@@ -77,6 +80,7 @@ class AssertNoDeadlocksTest extends AbstractTest {
     @Nondeterministic
     @Test
     void assertNoDeadlocks_withSupplierMessage_failsWithDeadlock() throws InterruptedException {
+        enableDeadlockDetection();
         runTestWithSimpleDeadlock(() -> {
             String lazyMessage = "Lazy Custom Error Message";
             AssertionError error = assertThrows(AssertionError.class, () ->
@@ -85,8 +89,17 @@ class AssertNoDeadlocksTest extends AbstractTest {
         });
     }
 
+    @DisplayName("assertNoDeadlocks(Supplier) throws correct exception when deadlock detection is not enabled")
+    @Nondeterministic
+    @Test
+    void assertNoDeadlocks_whenDeadlockDetectionNotEnabled_throwsAssertionError() throws InterruptedException{
+        runTestWithSimpleDeadlock(() -> {
+            AssertionError error = assertThrows(AssertionError.class, Assertions::assertNoDeadlocks);
+        });
+    }
+
+
     private static void runTestWithSimpleDeadlock(final @NonNull Runnable runnable) throws InterruptedException {
-        enableDeadlockDetection();
         Lock lock1 = new ReentrantLock();
         Lock lock2 = new ReentrantLock();
         CountDownLatch deadlockStarted = new CountDownLatch(2);

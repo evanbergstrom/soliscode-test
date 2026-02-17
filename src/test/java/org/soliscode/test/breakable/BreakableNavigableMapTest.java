@@ -72,10 +72,10 @@ public class BreakableNavigableMapTest extends AbstractTest {
 
     // ========== Constructor Tests ==========
 
-    /// Tests the default constructor functionality and initial state validation.
+    /// Verifies the default constructor creates an empty navigable map with proper initial state.
     @Test
     @DisplayName("Test default constructor creates empty navigable map")
-    public void testDefaultConstructor() {
+    public void defaultConstructor_whenCalled_createsEmptyNavigableMap() {
         BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap<>();
 
         assertTrue(map.isEmpty());
@@ -85,14 +85,14 @@ public class BreakableNavigableMapTest extends AbstractTest {
         assertTrue(map.permitsNullValues());
     }
 
-    /// Tests the copy constructor behavior and configuration inheritance.
+    /// Verifies the copy constructor correctly copies elements and configuration.
     @Test
     @DisplayName("Test copy constructor")
-    public void testCopyConstructor() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(LOWER_ENTRY_THROWS_EXCEPTION);
-        builder.doesNotPermitNullKeys();
-        BreakableNavigableMap<String, Integer> original = builder.build();
+    public void copyConstructor_whenCalled_copiesElementsAndConfiguration() {
+        BreakableNavigableMap<String, Integer> original = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(LOWER_ENTRY_THROWS_EXCEPTION)
+                .doesNotPermitNullKeys()
+                .build();
 
         original.put("key1", 1);
         original.put("key2", 2);
@@ -112,10 +112,10 @@ public class BreakableNavigableMapTest extends AbstractTest {
         assertThrows(NoSuchElementException.class, () -> copy.lowerEntry("key2"));
     }
 
-    /// Tests constructor with TreeMap integration and natural ordering.
+    /// Verifies the constructor with TreeMap correctly initializes the map with data.
     @Test
     @DisplayName("Test constructor with TreeMap")
-    public void testConstructorWithTreeMap() {
+    public void constructorWithTreeMap_whenCalled_initializesWithData() {
         TreeMap<String, Integer> treeMap = new TreeMap<>();
         treeMap.put("banana", 2);
         treeMap.put("apple", 1);
@@ -130,15 +130,15 @@ public class BreakableNavigableMapTest extends AbstractTest {
 
     // ========== Builder Tests ==========
 
-    /// Tests basic Builder pattern functionality and configuration transfer.
+    /// Verifies the builder correctly configures and builds a navigable map.
     @Test
     @DisplayName("Test builder pattern")
-    public void testBuilder() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(HIGHER_KEY_ALWAYS_RETURNS_NULL);
-        builder.addBreak(DESCENDING_MAP_RETURNS_EMPTY_MAP);
-        builder.doesNotPermitNullKeys();
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void builder_whenCalled_configuresAndBuildsMap() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(HIGHER_KEY_ALWAYS_RETURNS_NULL)
+                .addBreak(DESCENDING_MAP_RETURNS_EMPTY_MAP)
+                .doesNotPermitNullKeys()
+                .build();
 
         map.put("key", 42);
 
@@ -151,18 +151,18 @@ public class BreakableNavigableMapTest extends AbstractTest {
         assertTrue(map.permitsNullValues());
     }
 
-    /// Tests Builder creation with pre-existing NavigableMap data.
+    /// Verifies the builder correctly initializes with data from an existing navigable map.
     @Test
     @DisplayName("Test builder with existing NavigableMap")
-    public void testBuilderWithExistingNavigableMap() {
+    public void builder_withExistingNavigableMap_initializesWithData() {
         TreeMap<String, Integer> existingMap = new TreeMap<>();
         existingMap.put("apple", 1);
         existingMap.put("banana", 2);
         existingMap.put("cherry", 3);
 
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>(existingMap);
-        builder.addBreak(LOWER_KEY_ALWAYS_RETURNS_NULL);
-        BreakableNavigableMap<String, Integer> map = builder.build();
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<>(existingMap)
+                .addBreak(LOWER_KEY_ALWAYS_RETURNS_NULL)
+                .build();
 
         // Original data should be present
         assertEquals(Integer.valueOf(1), map.get("apple"));
@@ -173,18 +173,16 @@ public class BreakableNavigableMapTest extends AbstractTest {
         assertNull(map.lowerKey("banana")); // Due to break
     }
 
-    /// Tests Builder copy functionality and configuration inheritance.
+    /// Verifies the builder copy method creates an independent builder with the same configuration.
     @Test
     @DisplayName("Test builder copy")
-    public void testBuilderCopy() {
-        BreakableNavigableMap.Builder<String, Integer> original = new BreakableNavigableMap.Builder<>();
-        original.addBreak(FIRST_ENTRY_THROWS_EXCEPTION);
-        original.doesNotPermitNullValues();
+    public void builderCopy_whenCalled_createsIndependentBuilderWithSameConfiguration() {
+        BreakableNavigableMap.Builder<String, Integer> original = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(FIRST_ENTRY_THROWS_EXCEPTION)
+                .doesNotPermitNullValues();
 
-        BreakableNavigableMap.Builder<String, Integer> copy = original.copy();
-
-        // Modify copy
-        copy.addBreak(LAST_ENTRY_THROWS_EXCEPTION);
+        BreakableNavigableMap.Builder<String, Integer> copy = original.copy()
+                .addBreak(LAST_ENTRY_THROWS_EXCEPTION);
 
         BreakableNavigableMap<String, Integer> originalMap = original.build();
         BreakableNavigableMap<String, Integer> copyMap = copy.build();
@@ -205,13 +203,13 @@ public class BreakableNavigableMapTest extends AbstractTest {
 
     // ========== Navigation Entry Break Tests ==========
 
-    /// Tests the LOWER_ENTRY_ALWAYS_RETURNS_NULL break functionality.
+    /// Verifies that `lowerEntry()` returns `null` when the {@link BreakableNavigableMap#LOWER_ENTRY_ALWAYS_RETURNS_NULL} break is added.
     @Test
     @DisplayName("Test LOWER_ENTRY_ALWAYS_RETURNS_NULL break")
-    public void testLowerEntryAlwaysReturnsNull() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(LOWER_ENTRY_ALWAYS_RETURNS_NULL);
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void lowerEntry_whenAlwaysReturnsNullBreakAdded_returnsNull() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(LOWER_ENTRY_ALWAYS_RETURNS_NULL)
+                .build();
 
         map.put("apple", 1);
         map.put("banana", 2);
@@ -221,13 +219,13 @@ public class BreakableNavigableMapTest extends AbstractTest {
         assertNull(map.lowerEntry("banana")); // Should normally return apple entry
     }
 
-    /// Tests the LOWER_ENTRY_THROWS_EXCEPTION break functionality.
+    /// Verifies that `lowerEntry()` throws `NoSuchElementException` when the {@link BreakableNavigableMap#LOWER_ENTRY_THROWS_EXCEPTION} break is added.
     @Test
     @DisplayName("Test LOWER_ENTRY_THROWS_EXCEPTION break")
-    public void testLowerEntryThrowsException() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(LOWER_ENTRY_THROWS_EXCEPTION);
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void lowerEntry_whenThrowsExceptionBreakAdded_throwsNoSuchElementException() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(LOWER_ENTRY_THROWS_EXCEPTION)
+                .build();
 
         map.put("apple", 1);
         map.put("banana", 2);
@@ -235,13 +233,13 @@ public class BreakableNavigableMapTest extends AbstractTest {
         assertThrows(NoSuchElementException.class, () -> map.lowerEntry("banana"));
     }
 
-    /// Tests the LOWER_ENTRY_RETURNS_RANDOM_ENTRY break functionality.
+    /// Verifies that `lowerEntry()` returns a random entry when the {@link BreakableNavigableMap#LOWER_ENTRY_RETURNS_RANDOM_ENTRY} break is added.
     @Test
     @DisplayName("Test LOWER_ENTRY_RETURNS_RANDOM_ENTRY break")
-    public void testLowerEntryReturnsRandomEntry() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(LOWER_ENTRY_RETURNS_RANDOM_ENTRY);
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void lowerEntry_whenReturnsRandomEntryBreakAdded_returnsRandomEntry() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(LOWER_ENTRY_RETURNS_RANDOM_ENTRY)
+                .build();
 
         map.put("apple", 1);
         map.put("banana", 2);
@@ -252,27 +250,27 @@ public class BreakableNavigableMapTest extends AbstractTest {
         assertTrue(map.containsKey(entry.getKey()));
     }
 
-    /// Tests that lowerEntry() throws UnsupportedOperationException when method is not supported.
+    /// Verifies that `lowerEntry()` throws `UnsupportedOperationException` when the method is not supported.
     @Test
     @DisplayName("Test lowerEntry() throws when not supported")
-    public void testLowerEntryWhenNotSupported() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(LOWER_ENTRY_ALWAYS_RETURNS_NULL);
-        builder.doesNotSupport(NavigableMapMethods.LOWER_ENTRY);
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void lowerEntry_whenNotSupported_throwsUnsupportedOperationException() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(LOWER_ENTRY_ALWAYS_RETURNS_NULL)
+                .doesNotSupport(NavigableMapMethods.LOWER_ENTRY)
+                .build();
 
         assertThrows(UnsupportedOperationException.class, () -> map.lowerEntry("banana"));
     }
 
     // ========== Navigation Key Break Tests ==========
 
-    /// Tests the LOWER_KEY_ALWAYS_RETURNS_NULL break functionality.
+    /// Verifies that `lowerKey()` returns `null` when the {@link BreakableNavigableMap#LOWER_KEY_ALWAYS_RETURNS_NULL} break is added.
     @Test
     @DisplayName("Test LOWER_KEY_ALWAYS_RETURNS_NULL break")
-    public void testLowerKeyAlwaysReturnsNull() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(LOWER_KEY_ALWAYS_RETURNS_NULL);
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void lowerKey_whenAlwaysReturnsNullBreakAdded_returnsNull() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(LOWER_KEY_ALWAYS_RETURNS_NULL)
+                .build();
 
         map.put("apple", 1);
         map.put("banana", 2);
@@ -280,13 +278,13 @@ public class BreakableNavigableMapTest extends AbstractTest {
         assertNull(map.lowerKey("banana")); // Should normally return "apple"
     }
 
-    /// Tests the LOWER_KEY_THROWS_EXCEPTION break functionality.
+    /// Verifies that `lowerKey()` throws `NoSuchElementException` when the {@link BreakableNavigableMap#LOWER_KEY_THROWS_EXCEPTION} break is added.
     @Test
     @DisplayName("Test LOWER_KEY_THROWS_EXCEPTION break")
-    public void testLowerKeyThrowsException() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(LOWER_KEY_THROWS_EXCEPTION);
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void lowerKey_whenThrowsExceptionBreakAdded_throwsNoSuchElementException() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(LOWER_KEY_THROWS_EXCEPTION)
+                .build();
 
         map.put("apple", 1);
         map.put("banana", 2);
@@ -294,13 +292,13 @@ public class BreakableNavigableMapTest extends AbstractTest {
         assertThrows(NoSuchElementException.class, () -> map.lowerKey("banana"));
     }
 
-    /// Tests the LOWER_KEY_RETURNS_RANDOM_KEY break functionality.
+    /// Verifies that `lowerKey()` returns a random key when the {@link BreakableNavigableMap#LOWER_KEY_RETURNS_RANDOM_KEY} break is added.
     @Test
     @DisplayName("Test LOWER_KEY_RETURNS_RANDOM_KEY break")
-    public void testLowerKeyReturnsRandomKey() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(LOWER_KEY_RETURNS_RANDOM_KEY);
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void lowerKey_whenReturnsRandomKeyBreakAdded_returnsRandomKey() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(LOWER_KEY_RETURNS_RANDOM_KEY)
+                .build();
 
         map.put("apple", 1);
         map.put("banana", 2);
@@ -313,13 +311,13 @@ public class BreakableNavigableMapTest extends AbstractTest {
 
     // ========== Floor Navigation Break Tests ==========
 
-    /// Tests the FLOOR_ENTRY_ALWAYS_RETURNS_NULL break functionality.
+    /// Verifies that `floorEntry()` returns `null` when the {@link BreakableNavigableMap#FLOOR_ENTRY_ALWAYS_RETURNS_NULL} break is added.
     @Test
     @DisplayName("Test FLOOR_ENTRY_ALWAYS_RETURNS_NULL break")
-    public void testFloorEntryAlwaysReturnsNull() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(FLOOR_ENTRY_ALWAYS_RETURNS_NULL);
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void floorEntry_whenAlwaysReturnsNullBreakAdded_returnsNull() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(FLOOR_ENTRY_ALWAYS_RETURNS_NULL)
+                .build();
 
         map.put("apple", 1);
         map.put("banana", 2);
@@ -327,13 +325,13 @@ public class BreakableNavigableMapTest extends AbstractTest {
         assertNull(map.floorEntry("banana")); // Should normally return banana entry
     }
 
-    /// Tests the FLOOR_KEY_THROWS_EXCEPTION break functionality.
+    /// Verifies that `floorKey()` throws `NoSuchElementException` when the {@link BreakableNavigableMap#FLOOR_KEY_THROWS_EXCEPTION} break is added.
     @Test
     @DisplayName("Test FLOOR_KEY_THROWS_EXCEPTION break")
-    public void testFloorKeyThrowsException() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(FLOOR_KEY_THROWS_EXCEPTION);
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void floorKey_whenThrowsExceptionBreakAdded_throwsNoSuchElementException() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(FLOOR_KEY_THROWS_EXCEPTION)
+                .build();
 
         map.put("apple", 1);
 
@@ -342,13 +340,13 @@ public class BreakableNavigableMapTest extends AbstractTest {
 
     // ========== Ceiling Navigation Break Tests ==========
 
-    /// Tests the CEILING_ENTRY_ALWAYS_RETURNS_NULL break functionality.
+    /// Verifies that `ceilingEntry()` returns `null` when the {@link BreakableNavigableMap#CEILING_ENTRY_ALWAYS_RETURNS_NULL} break is added.
     @Test
     @DisplayName("Test CEILING_ENTRY_ALWAYS_RETURNS_NULL break")
-    public void testCeilingEntryAlwaysReturnsNull() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(CEILING_ENTRY_ALWAYS_RETURNS_NULL);
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void ceilingEntry_whenAlwaysReturnsNullBreakAdded_returnsNull() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(CEILING_ENTRY_ALWAYS_RETURNS_NULL)
+                .build();
 
         map.put("apple", 1);
         map.put("banana", 2);
@@ -356,13 +354,13 @@ public class BreakableNavigableMapTest extends AbstractTest {
         assertNull(map.ceilingEntry("apple")); // Should normally return apple entry
     }
 
-    /// Tests the CEILING_KEY_THROWS_EXCEPTION break functionality.
+    /// Verifies that `ceilingKey()` throws `NoSuchElementException` when the {@link BreakableNavigableMap#CEILING_KEY_THROWS_EXCEPTION} break is added.
     @Test
     @DisplayName("Test CEILING_KEY_THROWS_EXCEPTION break")
-    public void testCeilingKeyThrowsException() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(CEILING_KEY_THROWS_EXCEPTION);
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void ceilingKey_whenThrowsExceptionBreakAdded_throwsNoSuchElementException() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(CEILING_KEY_THROWS_EXCEPTION)
+                .build();
 
         map.put("apple", 1);
 
@@ -371,13 +369,13 @@ public class BreakableNavigableMapTest extends AbstractTest {
 
     // ========== Higher Navigation Break Tests ==========
 
-    /// Tests the HIGHER_ENTRY_ALWAYS_RETURNS_NULL break functionality.
+    /// Verifies that `higherEntry()` returns `null` when the {@link BreakableNavigableMap#HIGHER_ENTRY_ALWAYS_RETURNS_NULL} break is added.
     @Test
     @DisplayName("Test HIGHER_ENTRY_ALWAYS_RETURNS_NULL break")
-    public void testHigherEntryAlwaysReturnsNull() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(HIGHER_ENTRY_ALWAYS_RETURNS_NULL);
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void higherEntry_whenAlwaysReturnsNullBreakAdded_returnsNull() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(HIGHER_ENTRY_ALWAYS_RETURNS_NULL)
+                .build();
 
         map.put("apple", 1);
         map.put("banana", 2);
@@ -385,13 +383,13 @@ public class BreakableNavigableMapTest extends AbstractTest {
         assertNull(map.higherEntry("apple")); // Should normally return banana entry
     }
 
-    /// Tests the HIGHER_KEY_THROWS_EXCEPTION break functionality.
+    /// Verifies that `higherKey()` throws `NoSuchElementException` when the {@link BreakableNavigableMap#HIGHER_KEY_THROWS_EXCEPTION} break is added.
     @Test
     @DisplayName("Test HIGHER_KEY_THROWS_EXCEPTION break")
-    public void testHigherKeyThrowsException() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(HIGHER_KEY_THROWS_EXCEPTION);
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void higherKey_whenThrowsExceptionBreakAdded_throwsNoSuchElementException() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(HIGHER_KEY_THROWS_EXCEPTION)
+                .build();
 
         map.put("apple", 1);
 
@@ -400,13 +398,13 @@ public class BreakableNavigableMapTest extends AbstractTest {
 
     // ========== Entry Access Break Tests ==========
 
-    /// Tests the FIRST_ENTRY_ALWAYS_RETURNS_NULL break functionality.
+    /// Verifies that `firstEntry()` returns `null` when the {@link BreakableNavigableMap#FIRST_ENTRY_ALWAYS_RETURNS_NULL} break is added.
     @Test
     @DisplayName("Test FIRST_ENTRY_ALWAYS_RETURNS_NULL break")
-    public void testFirstEntryAlwaysReturnsNull() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(FIRST_ENTRY_ALWAYS_RETURNS_NULL);
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void firstEntry_whenAlwaysReturnsNullBreakAdded_returnsNull() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(FIRST_ENTRY_ALWAYS_RETURNS_NULL)
+                .build();
 
         map.put("apple", 1);
         map.put("banana", 2);
@@ -415,26 +413,26 @@ public class BreakableNavigableMapTest extends AbstractTest {
         assertFalse(map.isEmpty()); // Map has elements but firstEntry returns null
     }
 
-    /// Tests the FIRST_ENTRY_THROWS_EXCEPTION break functionality.
+    /// Verifies that `firstEntry()` throws `NoSuchElementException` when the {@link BreakableNavigableMap#FIRST_ENTRY_THROWS_EXCEPTION} break is added.
     @Test
     @DisplayName("Test FIRST_ENTRY_THROWS_EXCEPTION break")
-    public void testFirstEntryThrowsException() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(FIRST_ENTRY_THROWS_EXCEPTION);
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void firstEntry_whenThrowsExceptionBreakAdded_throwsNoSuchElementException() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(FIRST_ENTRY_THROWS_EXCEPTION)
+                .build();
 
         map.put("apple", 1);
 
         assertThrows(NoSuchElementException.class, map::firstEntry);
     }
 
-    /// Tests the LAST_ENTRY_RETURNS_RANDOM_ENTRY break functionality.
+    /// Verifies that `lastEntry()` returns a random entry when the {@link BreakableNavigableMap#LAST_ENTRY_RETURNS_RANDOM_ENTRY} break is added.
     @Test
     @DisplayName("Test LAST_ENTRY_RETURNS_RANDOM_ENTRY break")
-    public void testLastEntryReturnsRandomEntry() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(LAST_ENTRY_RETURNS_RANDOM_ENTRY);
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void lastEntry_whenReturnsRandomEntryBreakAdded_returnsRandomEntry() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(LAST_ENTRY_RETURNS_RANDOM_ENTRY)
+                .build();
 
         map.put("apple", 1);
         map.put("banana", 2);
@@ -447,13 +445,13 @@ public class BreakableNavigableMapTest extends AbstractTest {
 
     // ========== Poll Entry Break Tests ==========
 
-    /// Tests the POLL_FIRST_ENTRY_ALWAYS_RETURNS_NULL break functionality.
+    /// Verifies that `pollFirstEntry()` returns `null` when the {@link BreakableNavigableMap#POLL_FIRST_ENTRY_ALWAYS_RETURNS_NULL} break is added.
     @Test
     @DisplayName("Test POLL_FIRST_ENTRY_ALWAYS_RETURNS_NULL break")
-    public void testPollFirstEntryAlwaysReturnsNull() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(POLL_FIRST_ENTRY_ALWAYS_RETURNS_NULL);
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void pollFirstEntry_whenAlwaysReturnsNullBreakAdded_returnsNull() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(POLL_FIRST_ENTRY_ALWAYS_RETURNS_NULL)
+                .build();
 
         map.put("apple", 1);
         map.put("banana", 2);
@@ -462,26 +460,26 @@ public class BreakableNavigableMapTest extends AbstractTest {
         assertEquals(2, map.size()); // Elements should still be there
     }
 
-    /// Tests the POLL_FIRST_ENTRY_THROWS_EXCEPTION break functionality.
+    /// Verifies that `pollFirstEntry()` throws `NoSuchElementException` when the {@link BreakableNavigableMap#POLL_FIRST_ENTRY_THROWS_EXCEPTION} break is added.
     @Test
     @DisplayName("Test POLL_FIRST_ENTRY_THROWS_EXCEPTION break")
-    public void testPollFirstEntryThrowsException() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(POLL_FIRST_ENTRY_THROWS_EXCEPTION);
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void pollFirstEntry_whenThrowsExceptionBreakAdded_throwsNoSuchElementException() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(POLL_FIRST_ENTRY_THROWS_EXCEPTION)
+                .build();
 
         map.put("apple", 1);
 
         assertThrows(NoSuchElementException.class, map::pollFirstEntry);
     }
 
-    /// Tests the POLL_FIRST_ENTRY_DOES_NOT_REMOVE break functionality.
+    /// Verifies that `pollFirstEntry()` does not remove the entry when the {@link BreakableNavigableMap#POLL_FIRST_ENTRY_DOES_NOT_REMOVE} break is added.
     @Test
     @DisplayName("Test POLL_FIRST_ENTRY_DOES_NOT_REMOVE break")
-    public void testPollFirstEntryDoesNotRemove() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(POLL_FIRST_ENTRY_DOES_NOT_REMOVE);
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void pollFirstEntry_whenDoesNotRemoveBreakAdded_doesNotRemoveEntry() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(POLL_FIRST_ENTRY_DOES_NOT_REMOVE)
+                .build();
 
         map.put("apple", 1);
         map.put("banana", 2);
@@ -493,13 +491,13 @@ public class BreakableNavigableMapTest extends AbstractTest {
         assertTrue(map.containsKey("apple")); // Should still be there
     }
 
-    /// Tests the POLL_LAST_ENTRY_ALWAYS_RETURNS_NULL break functionality.
+    /// Verifies that `pollLastEntry()` returns `null` when the {@link BreakableNavigableMap#POLL_LAST_ENTRY_ALWAYS_RETURNS_NULL} break is added.
     @Test
     @DisplayName("Test POLL_LAST_ENTRY_ALWAYS_RETURNS_NULL break")
-    public void testPollLastEntryAlwaysReturnsNull() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(POLL_LAST_ENTRY_ALWAYS_RETURNS_NULL);
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void pollLastEntry_whenAlwaysReturnsNullBreakAdded_returnsNull() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(POLL_LAST_ENTRY_ALWAYS_RETURNS_NULL)
+                .build();
 
         map.put("apple", 1);
 
@@ -509,13 +507,13 @@ public class BreakableNavigableMapTest extends AbstractTest {
 
     // ========== Map View Break Tests ==========
 
-    /// Tests the DESCENDING_MAP_RETURNS_EMPTY_MAP break functionality.
+    /// Verifies that `descendingMap()` returns an empty map when the {@link BreakableNavigableMap#DESCENDING_MAP_RETURNS_EMPTY_MAP} break is added.
     @Test
     @DisplayName("Test DESCENDING_MAP_RETURNS_EMPTY_MAP break")
-    public void testDescendingMapReturnsEmptyMap() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(DESCENDING_MAP_RETURNS_EMPTY_MAP);
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void descendingMap_whenReturnsEmptyMapBreakAdded_returnsEmptyMap() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(DESCENDING_MAP_RETURNS_EMPTY_MAP)
+                .build();
 
         map.put("apple", 1);
         map.put("banana", 2);
@@ -525,26 +523,26 @@ public class BreakableNavigableMapTest extends AbstractTest {
         assertEquals(2, map.size()); // Original map still has data
     }
 
-    /// Tests the DESCENDING_MAP_RETURNS_NULL break functionality.
+    /// Verifies that `descendingMap()` returns `null` when the {@link BreakableNavigableMap#DESCENDING_MAP_RETURNS_NULL} break is added.
     @Test
     @DisplayName("Test DESCENDING_MAP_RETURNS_NULL break")
-    public void testDescendingMapReturnsNull() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(DESCENDING_MAP_RETURNS_NULL);
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void descendingMap_whenReturnsNullBreakAdded_returnsNull() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(DESCENDING_MAP_RETURNS_NULL)
+                .build();
 
         map.put("apple", 1);
 
         assertNull(map.descendingMap());
     }
 
-    /// Tests the DESCENDING_MAP_THROWS_EXCEPTION break functionality.
+    /// Verifies that `descendingMap()` throws `UnsupportedOperationException` when the {@link BreakableNavigableMap#DESCENDING_MAP_THROWS_EXCEPTION} break is added.
     @Test
     @DisplayName("Test DESCENDING_MAP_THROWS_EXCEPTION break")
-    public void testDescendingMapThrowsException() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(DESCENDING_MAP_THROWS_EXCEPTION);
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void descendingMap_whenThrowsExceptionBreakAdded_throwsUnsupportedOperationException() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(DESCENDING_MAP_THROWS_EXCEPTION)
+                .build();
 
         map.put("apple", 1);
 
@@ -553,13 +551,13 @@ public class BreakableNavigableMapTest extends AbstractTest {
 
     // ========== Key Set Break Tests ==========
 
-    /// Tests the NAVIGABLE_KEY_SET_RETURNS_EMPTY_SET break functionality.
+    /// Verifies that `navigableKeySet()` returns an empty set when the {@link BreakableNavigableMap#NAVIGABLE_KEY_SET_RETURNS_EMPTY_SET} break is added.
     @Test
     @DisplayName("Test NAVIGABLE_KEY_SET_RETURNS_EMPTY_SET break")
-    public void testNavigableKeySetReturnsEmptySet() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(NAVIGABLE_KEY_SET_RETURNS_EMPTY_SET);
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void navigableKeySet_whenReturnsEmptySetBreakAdded_returnsEmptySet() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(NAVIGABLE_KEY_SET_RETURNS_EMPTY_SET)
+                .build();
 
         map.put("apple", 1);
         map.put("banana", 2);
@@ -569,26 +567,26 @@ public class BreakableNavigableMapTest extends AbstractTest {
         assertEquals(2, map.size()); // Original map still has data
     }
 
-    /// Tests the NAVIGABLE_KEY_SET_RETURNS_NULL break functionality.
+    /// Verifies that `navigableKeySet()` returns `null` when the {@link BreakableNavigableMap#NAVIGABLE_KEY_SET_RETURNS_NULL} break is added.
     @Test
     @DisplayName("Test NAVIGABLE_KEY_SET_RETURNS_NULL break")
-    public void testNavigableKeySetReturnsNull() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(NAVIGABLE_KEY_SET_RETURNS_NULL);
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void navigableKeySet_whenReturnsNullBreakAdded_returnsNull() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(NAVIGABLE_KEY_SET_RETURNS_NULL)
+                .build();
 
         map.put("apple", 1);
 
         assertNull(map.navigableKeySet());
     }
 
-    /// Tests the DESCENDING_KEY_SET_THROWS_EXCEPTION break functionality.
+    /// Verifies that `descendingKeySet()` throws `UnsupportedOperationException` when the {@link BreakableNavigableMap#DESCENDING_KEY_SET_THROWS_EXCEPTION} break is added.
     @Test
     @DisplayName("Test DESCENDING_KEY_SET_THROWS_EXCEPTION break")
-    public void testDescendingKeySetThrowsException() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(DESCENDING_KEY_SET_THROWS_EXCEPTION);
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void descendingKeySet_whenThrowsExceptionBreakAdded_throwsUnsupportedOperationException() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(DESCENDING_KEY_SET_THROWS_EXCEPTION)
+                .build();
 
         map.put("apple", 1);
 
@@ -597,13 +595,13 @@ public class BreakableNavigableMapTest extends AbstractTest {
 
     // ========== Enhanced Sub-Map Break Tests ==========
 
-    /// Tests the SUB_MAP_FOUR_ARG_RETURNS_EMPTY_MAP break functionality.
+    /// Verifies that `subMap()` returns an empty map when the {@link BreakableNavigableMap#SUB_MAP_FOUR_ARG_RETURNS_EMPTY_MAP} break is added.
     @Test
     @DisplayName("Test SUB_MAP_FOUR_ARG_RETURNS_EMPTY_MAP break")
-    public void testSubMapFourArgReturnsEmptyMap() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(SUB_MAP_FOUR_ARG_RETURNS_EMPTY_MAP);
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void subMap_whenReturnsEmptyMapBreakAdded_returnsEmptyMap() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(SUB_MAP_FOUR_ARG_RETURNS_EMPTY_MAP)
+                .build();
 
         map.put("apple", 1);
         map.put("banana", 2);
@@ -614,13 +612,13 @@ public class BreakableNavigableMapTest extends AbstractTest {
         assertEquals(3, map.size()); // Original map still has data
     }
 
-    /// Tests the SUB_MAP_FOUR_ARG_RETURNS_NULL break functionality.
+    /// Verifies that `subMap()` returns `null` when the {@link BreakableNavigableMap#SUB_MAP_FOUR_ARG_RETURNS_NULL} break is added.
     @Test
     @DisplayName("Test SUB_MAP_FOUR_ARG_RETURNS_NULL break")
-    public void testSubMapFourArgReturnsNull() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(SUB_MAP_FOUR_ARG_RETURNS_NULL);
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void subMap_whenReturnsNullBreakAdded_returnsNull() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(SUB_MAP_FOUR_ARG_RETURNS_NULL)
+                .build();
 
         map.put("apple", 1);
         map.put("banana", 2);
@@ -628,13 +626,13 @@ public class BreakableNavigableMapTest extends AbstractTest {
         assertNull(map.subMap("apple", true, "banana", true));
     }
 
-    /// Tests the HEAD_MAP_TWO_ARG_THROWS_EXCEPTION break functionality.
+    /// Verifies that `headMap()` throws an exception when the {@link BreakableNavigableMap#HEAD_MAP_TWO_ARG_THROWS_EXCEPTION} break is added.
     @Test
     @DisplayName("Test HEAD_MAP_TWO_ARG_THROWS_EXCEPTION break")
-    public void testHeadMapTwoArgThrowsException() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(HEAD_MAP_TWO_ARG_THROWS_EXCEPTION);
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void headMap_whenThrowsExceptionBreakAdded_throwsIllegalArgumentException() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(HEAD_MAP_TWO_ARG_THROWS_EXCEPTION)
+                .build();
 
         map.put("apple", 1);
         map.put("banana", 2);
@@ -642,13 +640,13 @@ public class BreakableNavigableMapTest extends AbstractTest {
         assertThrows(IllegalArgumentException.class, () -> map.headMap("banana", false));
     }
 
-    /// Tests the TAIL_MAP_TWO_ARG_RETURNS_EMPTY_MAP break functionality.
+    /// Verifies that `tailMap()` returns an empty map when the {@link BreakableNavigableMap#TAIL_MAP_TWO_ARG_RETURNS_EMPTY_MAP} break is added.
     @Test
     @DisplayName("Test TAIL_MAP_TWO_ARG_RETURNS_EMPTY_MAP break")
-    public void testTailMapTwoArgReturnsEmptyMap() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(TAIL_MAP_TWO_ARG_RETURNS_EMPTY_MAP);
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void tailMap_whenReturnsEmptyMapBreakAdded_returnsEmptyMap() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(TAIL_MAP_TWO_ARG_RETURNS_EMPTY_MAP)
+                .build();
 
         map.put("apple", 1);
         map.put("banana", 2);
@@ -660,10 +658,10 @@ public class BreakableNavigableMapTest extends AbstractTest {
 
     // ========== Static Factory Method Tests ==========
 
-    /// Tests the static wrap factory method functionality.
+    /// Verifies the static `wrap` factory method correctly wraps an existing `NavigableMap`.
     @Test
     @DisplayName("Test wrap factory method")
-    public void testWrapFactoryMethod() {
+    public void wrap_whenCalled_createsWrappedInstance() {
         NavigableMap<String, Integer> existingMap = new TreeMap<>();
         existingMap.put("apple", 1);
         existingMap.put("banana", 2);
@@ -687,13 +685,13 @@ public class BreakableNavigableMapTest extends AbstractTest {
 
     // ========== Navigation and NavigableMap Behavior Tests ==========
 
-    /// Tests that BreakableNavigableMap maintains proper navigation.
+    /// Verifies that `BreakableNavigableMap` maintains proper navigation order under normal conditions.
     @Test
     @DisplayName("Test navigation is maintained with breaks")
-    public void testNavigationMaintained() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(DESCENDING_MAP_RETURNS_EMPTY_MAP); // This shouldn't affect navigation
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void navigation_whenCalled_isMaintained() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(DESCENDING_MAP_RETURNS_EMPTY_MAP) // This shouldn't affect navigation
+                .build();
 
         // Add elements in non-alphabetical order
         map.put("zebra", 26);
@@ -710,10 +708,10 @@ public class BreakableNavigableMapTest extends AbstractTest {
         assertEquals("banana", map.floorKey("banana"));
     }
 
-    /// Tests BreakableNavigableMap with custom comparator.
+    /// Verifies that `BreakableNavigableMap` correctly uses a custom comparator for ordering.
     @Test
     @DisplayName("Test custom comparator behavior")
-    public void testCustomComparator() {
+    public void customComparator_whenProvided_affectsOrdering() {
         BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
         BreakableNavigableMap<String, Integer> map = builder
                 .addBreak(NAVIGABLE_KEY_SET_RETURNS_EMPTY_SET)
@@ -736,15 +734,15 @@ public class BreakableNavigableMapTest extends AbstractTest {
 
     // ========== Inheritance and Map Interface Tests ==========
 
-    /// Tests that BreakableNavigableMap properly inherits Map and SortedMap functionality.
+    /// Verifies that `BreakableNavigableMap` correctly inherits and respects breaks from parent classes.
     @Test
     @DisplayName("Test inheritance from BreakableSortedMap")
-    public void testSortedMapInheritance() {
-        BreakableNavigableMap.Builder<String, Integer> builder = new BreakableNavigableMap.Builder<>();
-        builder.addBreak(BreakableMap.GET_ALWAYS_RETURNS_NULL);     // Map-level break
-        builder.addBreak(BreakableSortedMap.FIRST_KEY_THROWS_EXCEPTION); // SortedMap-level break
-        builder.addBreak(HIGHER_KEY_ALWAYS_RETURNS_NULL);           // NavigableMap-level break
-        BreakableNavigableMap<String, Integer> map = builder.build();
+    public void inheritance_fromParentClasses_respectsBreaks() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .addBreak(BreakableMap.GET_ALWAYS_RETURNS_NULL)     // Map-level break
+                .addBreak(BreakableSortedMap.FIRST_KEY_THROWS_EXCEPTION) // SortedMap-level break
+                .addBreak(HIGHER_KEY_ALWAYS_RETURNS_NULL)           // NavigableMap-level break
+                .build();
 
         map.put("apple", 1);
         map.put("banana", 2);

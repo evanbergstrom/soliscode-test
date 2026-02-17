@@ -20,6 +20,7 @@ import org.jspecify.annotations.NonNull;
 import org.soliscode.test.util.RecordingSupplier;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -76,6 +77,28 @@ public interface ObjectProvider<T> {
     /// @complexity _constant time_.
     default @NonNull T createInstance() {
         return createInstance(0);
+    }
+
+    /// Creates a new instance of type `T` that is guaranteed not to be present
+    /// in the provided collection of excluded instances.
+    /// This method uses a supplier to generate unique instances of type `T`,
+    /// repeatedly generating a new instance until one is found that does not exist
+    /// in the provided collection.
+    ///
+    /// @param excluded The collection of instances of type `T` to exclude
+    ///                 from the result. The new instance is guaranteed to not be
+    ///                 contained within this collection. Must not be `null`.
+    /// @return A new, non-`null` instance of type `T` that is not present
+    ///         in the `excluded` collection.
+    /// @throws IllegalStateException If a unique instance cannot be generated
+    ///                               due to supplier constraints or other issues.
+    default @NonNull T createInstanceNotIn(final @NonNull Collection<T> excluded) {
+        Supplier<T> supplier = uniqueInstanceSupplier();
+        T notPresent = supplier.get();
+        while (excluded.contains(notPresent)) {
+            notPresent = supplier.get();
+        }
+        return notPresent;
     }
 
     /// Returns the number of unique instances of the class that can be created.
@@ -152,7 +175,7 @@ public interface ObjectProvider<T> {
         final ObjectProvider<T> provider = this;
         return new RecordingSupplier<>() {
             private final AtomicLong i = new AtomicLong(seed);
-            private final List<T> recorded = Collections.synchronizedList(new ArrayList<T>());
+            private final List<T> recorded = Collections.synchronizedList(new ArrayList<>());
 
             @Override
             public T get() {
@@ -191,7 +214,7 @@ public interface ObjectProvider<T> {
         final ObjectProvider<T> provider = this;
         return new RecordingSupplier<>() {
             private final Random r = new Random();
-            private final List<T> recorded = Collections.synchronizedList(new ArrayList<T>());
+            private final List<T> recorded = Collections.synchronizedList(new ArrayList<>());
 
             @Override
             public T get() {

@@ -37,8 +37,11 @@ public class BreakableCollectionTest extends AbstractTest
 
     //=========== Constructor Tests ============
 
+    /// Verifies the default constructor creates an empty collection with proper initial state.
+    ///
+    /// @see BreakableCollection#BreakableCollection()
     @Test
-    public void defaultConstructorwhen_Called_returnAnInstanceWithDefaultSettings() {
+    public void defaultConstructor_whenCalled_returnAnInstanceWithDefaultSettings() {
         BreakableCollection<Integer> collection = new BreakableCollection<>();
         assertIsEmpty(collection);
         assertTrue(collection.permitsDuplicates());
@@ -47,6 +50,9 @@ public class BreakableCollectionTest extends AbstractTest
         assertIsEmpty(collection.breaks());
     }
 
+    /// Verifies the copy constructor correctly copies elements and configuration.
+    ///
+    /// @see BreakableCollection#BreakableCollection(BreakableCollection)
     @Test
     public void copyConstructor_whenCalled_returnsACopy() {
         BreakableCollection<Integer> original = Breakables.buildCollection(1, 2, 3)
@@ -291,9 +297,9 @@ public class BreakableCollectionTest extends AbstractTest
 
     // ========== add_singleElement_returnsTrueAndUpdatesSize Tests ==========
 
-    /// Test that the `ADD_DOES_NOT_ADD_ELEMENT` break causes the `add_singleElement_returnsTrueAndUpdatesSize(Object)` method to not add_singleElement_returnsTrueAndUpdatesSize the element to the collection.
+    /// Test that the `ADD_DOES_NOT_ADD_ELEMENT` break causes the `add(Object)` method to not add the element to the collection.
     /// @see BreakableCollection#add(Object)
-    @DisplayName("add_singleElement_returnsTrueAndUpdatesSize(Object) does not add_singleElement_returnsTrueAndUpdatesSize element with ADD_DOES_NOT_ADD_ELEMENT break")
+    @DisplayName("add(Object) does not add element with ADD_DOES_NOT_ADD_ELEMENT break")
     @Test
     public void add_withAddDoesNotAddElementBreak_doesNotAddElement() {
         Collection<Integer> collection = Breakables.buildCollection(Integer.class)
@@ -303,9 +309,9 @@ public class BreakableCollectionTest extends AbstractTest
         assertDoesNotContain(1, collection);
     }
 
-    /// Test that the `ADD_ALWAYS_RETURNS_TRUE` break causes the `add_singleElement_returnsTrueAndUpdatesSize(Object)` method to always return `true`.
+    /// Test that the `ADD_ALWAYS_RETURNS_TRUE` break causes the `add(Object)` method to always return `true`.
     /// @see BreakableCollection#add(Object)
-    @DisplayName("add_singleElement_returnsTrueAndUpdatesSize(Object) always returns true with ADD_ALWAYS_RETURNS_TRUE break")
+    @DisplayName("add(Object) always returns true with ADD_ALWAYS_RETURNS_TRUE break")
     @Test
     public void add_withAddAlwaysReturnsTrueBreak_returnsTrue() {
         Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
@@ -315,9 +321,9 @@ public class BreakableCollectionTest extends AbstractTest
         assertTrue(collection.add(1));
     }
 
-    /// Test that the `ADD_ALWAYS_RETURNS_FALSE` break causes the `add_singleElement_returnsTrueAndUpdatesSize(Object)` method to always return `false`.
+    /// Test that the `ADD_ALWAYS_RETURNS_FALSE` break causes the `add(Object)` method to always return `false`.
     /// @see BreakableCollection#add(Object)
-    @DisplayName("add_singleElement_returnsTrueAndUpdatesSize(Object) always returns false with ADD_ALWAYS_RETURNS_FALSE break")
+    @DisplayName("add(Object) always returns false with ADD_ALWAYS_RETURNS_FALSE break")
     @Test
     public void add_withAddAlwaysReturnsFalseBreak_returnsFalse() {
         Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
@@ -326,9 +332,9 @@ public class BreakableCollectionTest extends AbstractTest
         assertFalse(collection.add(4));
     }
 
-    /// Test that the `ADD_ALWAYS_RETURNS_OPPOSITE_VALUE` break causes the `add_singleElement_returnsTrueAndUpdatesSize(Object)` method to always return the opposite value.
+    /// Test that the `ADD_ALWAYS_RETURNS_OPPOSITE_VALUE` break causes the `add(Object)` method to always return the opposite value.
     /// @see BreakableCollection#add(Object)
-    @DisplayName("add_singleElement_returnsTrueAndUpdatesSize(Object) always returns opposite value with ADD_ALWAYS_RETURNS_OPPOSITE_VALUE break")
+    @DisplayName("add(Object) always returns opposite value with ADD_ALWAYS_RETURNS_OPPOSITE_VALUE break")
     @Test
     public void add_withAddAlwaysReturnsOppositeValueBreak_returnsOppositeValue() {
         Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
@@ -339,11 +345,11 @@ public class BreakableCollectionTest extends AbstractTest
         assertFalse(collection.add(4));
     }
 
-    /// Test that the 'add_singleElement_returnsTrueAndUpdatesSize(Object)' method throws an exception when incompatible types are not permitted and an object
+    /// Test that the 'add(Object)' method throws an exception when incompatible types are not permitted and an object
     /// of an incompatible type is added through a raw interface.
     /// @see BreakableCollection#add(Object)
     /// @see BreakableCollection#permitsIncompatibleTypes
-    @DisplayName("add_singleElement_returnsTrueAndUpdatesSize(Object) throws an exception when incompatible types are not permitted")
+    @DisplayName("add(Object) throws an exception when incompatible types are not permitted")
     @Test
     @SuppressWarnings({"rawtypes", "unchecked"})
     public void add_whenIncompatibleTypesAreNotPermitted_throwsAnException() {
@@ -355,10 +361,26 @@ public class BreakableCollectionTest extends AbstractTest
                 () -> collection.add("Not An Integer"));
     }
 
-    ///  Test that the `add_singleElement_returnsTrueAndUpdatesSize(Object)` method throws `NullPointerException` when nulls are not permitted.
+    /// Test that the `ADD_THROWS_WRONG_INCOMPATIBLE_TYPE_EXCEPTION` break causes the `add(Object)` method to throw
+    /// the wrong exception for an incompatible value.
+    /// @see BreakableCollection#add(Object)
+    @DisplayName("add(Object) throws wrong exception with ADD_THROWS_WRONG_INCOMPATIBLE_TYPE_EXCEPTION")
+    @Test
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public void add_withThrowsWrongIncompatibleTypeBreak_throwsWrongException() {
+        Collection collection = Breakables.buildCollection(Integer.class)
+                .doesNotPermitIncompatibleTypes(Integer.class)
+                .addBreak(BreakableCollection.ADD_THROWS_WRONG_INCOMPATIBLE_TYPE_EXCEPTION)
+                .build();
+
+        Assertions.assertThrowsDifferent(List.of(ClassCastException.class, IllegalArgumentException.class),
+                () -> collection.add("Not An Integer"));
+    }
+
+    ///  Test that the `add(Object)` method throws `NullPointerException` when nulls are not permitted.
     /// @see BreakableCollection#add(Object)
     /// @see BreakableCollection#permitsNulls
-    @DisplayName("add_singleElement_returnsTrueAndUpdatesSize(Object) throws NullPointerException when nulls are not permitted")
+    @DisplayName("add(Object) throws NullPointerException when nulls are not permitted")
     @Test
     public void add_whenNullsAreNotPermitted_throwsNullPointerException() {
         final Collection<Integer> collection = Breakables.buildCollection(Integer.class)
@@ -367,10 +389,24 @@ public class BreakableCollectionTest extends AbstractTest
         assertThrows(NullPointerException.class, () -> collection.add(null));
     }
 
-    /// Test that the `ADD_THROWS_WRONG_UNSUPPORTED_EXCEPTION` break causes the `add_singleElement_returnsTrueAndUpdatesSize(Object)` method to throw the wrong
+    /// Test that the `ADD_THROWS_WRONG_NULL_EXCEPTION` break causes the `add(Object)` method to throw
+    /// the wrong exception for a 'null' value.
+    /// @see BreakableCollection#add(Object)
+    @DisplayName("add(Object) throws wrong exception with ADD_THROWS_WRONG_NULL_EXCEPTION")
+    @Test
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public void add_withThrowsWrongNullExceptionBreak_throwsWrongException() {
+        Collection collection = Breakables.buildCollection(Integer.class)
+                .doesNotPermitNulls()
+                .addBreak(BreakableCollection.ADD_THROWS_WRONG_NULL_EXCEPTION)
+                .build();
+        assertThrowsDifferent(NullPointerException.class, () -> collection.add(null));
+    }
+
+    /// Test that the `ADD_THROWS_WRONG_UNSUPPORTED_EXCEPTION` break causes the `add(Object)` method to throw the wrong
     /// exception when unsupported.
     /// @see BreakableCollection#add(Object)
-    @DisplayName("add_singleElement_returnsTrueAndUpdatesSize(Object) throws wrong exception with ADD_THROWS_WRONG_UNSUPPORTED_EXCEPTION break")
+    @DisplayName("add(Object) throws wrong exception with ADD_THROWS_WRONG_UNSUPPORTED_EXCEPTION break")
     @Test
     public void add_withAddThrowsWrongUnsupportedExceptionBreak_throwsWrongException() {
         final Collection<Integer> collection = Breakables.buildCollection(Integer.class)
@@ -1049,6 +1085,10 @@ public class BreakableCollectionTest extends AbstractTest
         assertTrue(collection.contains(element), "Returned element should be in the collection");
     }
 
+    /// Verifies serialization round-trip returns an equal collection.
+    ///
+    /// @throws java.io.IOException if an I/O error occurs
+    /// @throws ClassNotFoundException if the class of a serialized object cannot be found
     @Test
     @DisplayName("serialization round-trip returns an equal collection")
     public void serialize_whenCalled_returnsEqualCollection() throws java.io.IOException, ClassNotFoundException {
@@ -1057,23 +1097,18 @@ public class BreakableCollectionTest extends AbstractTest
                 .setSafe(true)
                 .build();
 
-        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        try (java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(baos)) {
-            oos.writeObject(original);
-        }
+        byte[] bytes = serialize(original);
+        BreakableCollection<Integer> deserialized = deserialize(bytes);
 
-        byte[] bytes = baos.toByteArray();
-        java.io.ByteArrayInputStream bais = new java.io.ByteArrayInputStream(bytes);
-        BreakableCollection<Integer> deserialized;
-        try (java.io.ObjectInputStream ois = new java.io.ObjectInputStream(bais)) {
-            //noinspection unchecked
-            deserialized = (BreakableCollection<Integer>) ois.readObject();
-        }
-
-        assertEquals(original, deserialized, "Deserialized collection should be equal to the original");
-        assertEquals(original.hashCode(), deserialized.hashCode(), "Deserialized collection should have the same hash code");
-        assertTrue(deserialized.hasBreak(BreakableCollection.ADD_DOES_NOT_ADD_ELEMENT), "Deserialized collection should retain breaks");
-        assertTrue(deserialized.isSafe(), "Deserialized collection should retain safety setting");
-        assertArrayEquals(original.toArray(), deserialized.toArray(), "Deserialized collection should retain elements");
+        assertEquals(original, deserialized,
+                "Deserialized collection should be equal to the original");
+        assertEquals(original.hashCode(), deserialized.hashCode(),
+                "Deserialized collection should have the same hash code");
+        assertTrue(deserialized.hasBreak(BreakableCollection.ADD_DOES_NOT_ADD_ELEMENT),
+                "Deserialized collection should retain breaks");
+        assertTrue(deserialized.isSafe(),
+                "Deserialized collection should retain safety setting");
+        assertArrayEquals(original.toArray(), deserialized.toArray(),
+                "Deserialized collection should retain elements");
     }
 }

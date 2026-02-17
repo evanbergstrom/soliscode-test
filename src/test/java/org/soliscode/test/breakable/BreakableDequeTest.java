@@ -141,8 +141,8 @@ public class BreakableDequeTest extends AbstractTest {
 
     /// Tests basic Builder pattern functionality and configuration transfer.
     @Test
-    @DisplayName("Test builder pattern")
-    public void testBuilder() {
+    @DisplayName("builder() creates a deque with specified breaks and normal behavior")
+    public void builder_whenUsed_configuresBreaks() {
         BreakableDeque.Builder<String> builder = new BreakableDeque.Builder<>();
         builder.addBreak(POLL_FIRST_ALWAYS_RETURNS_NULL);
         builder.addBreak(PEEK_LAST_ALWAYS_RETURNS_NULL);
@@ -159,8 +159,8 @@ public class BreakableDequeTest extends AbstractTest {
 
     /// Tests Builder creation with pre-existing Deque data.
     @Test
-    @DisplayName("Test builder with existing Deque")
-    public void testBuilderWithExistingDeque() {
+    @DisplayName("builder(Deque) creates a deque with existing elements and specified breaks")
+    public void builder_withExistingDeque_configuresBreaksAndElements() {
         LinkedList<String> existingDeque = new LinkedList<>();
         existingDeque.addLast("apple");
         existingDeque.addLast("banana");
@@ -180,8 +180,8 @@ public class BreakableDequeTest extends AbstractTest {
 
     /// Tests Builder copy functionality and configuration inheritance.
     @Test
-    @DisplayName("Test builder copy")
-    public void testBuilderCopy() {
+    @DisplayName("builder.copy() creates an independent builder with same configuration")
+    public void builder_copy_createsIndependentBuilder() {
         BreakableDeque.Builder<String> original = new BreakableDeque.Builder<>();
         original.addBreak(PUSH_DOES_NOT_ADD_ELEMENT);
 
@@ -210,7 +210,7 @@ public class BreakableDequeTest extends AbstractTest {
 
 
     /// Tests that the [BreakableDeque#OFFER_FIRST_ALWAYS_RETURNS_FALSE] break forces [BreakableDeque#offerFirst]
-    /// to return `false' even when the element is successfully added to the underlying deque.
+    /// to return `false` even when the element is successfully added to the underlying deque.
     @Test
     @DisplayName("offerFirst() always return false with OFFER_FIRST_ALWAYS_RETURNS_FALSE break applied")
     public void offerFirst_whenOfferFirstAlwaysReturnsFalseBreakIsApplied_returnsFalse() {
@@ -227,7 +227,10 @@ public class BreakableDequeTest extends AbstractTest {
         assertContains("item2", deque);
     }
 
-    /// Tests the OFFER_FIRST_DOES_NOT_ADD_ELEMENT break functionality.
+    /// Tests the [BreakableDeque#OFFER_FIRST_DOES_NOT_ADD_ELEMENT] break functionality.
+    ///
+    /// Verifies that [BreakableDeque#offerFirst] returns `true` but does not actually add the
+    /// element to the deque when this break is applied.
     @Test
     @DisplayName("offerFirst(Object) does not add_singleElement_returnsTrueAndUpdatesSize element when OFFER_FIRST_DOES_NOT_ADD_ELEMENT break is applied")
     public void offerFirst_whenOfferFirstDoesNotAddElementBreakIsApplied_doesNotAddElement() {
@@ -239,6 +242,8 @@ public class BreakableDequeTest extends AbstractTest {
         assertIsEmpty(deque); // But deque should still be empty
     }
 
+    /// Verifies that [BreakableDeque#offerFirst] throws [UnsupportedOperationException]
+    /// when the method is configured as not supported.
     @Test
     @DisplayName("offerFirst(Object) throws UnsupportedOperationException when it is not supported")
     public void offerFirst_whenItIsNotSuppoerted_throwsUnsupportedOperationException() {
@@ -249,10 +254,10 @@ public class BreakableDequeTest extends AbstractTest {
         assertThrows(UnsupportedOperationException.class, () -> deque.offerFirst("item1"));
     }
 
-    /// Tests the POLL_FIRST_ALWAYS_RETURNS_NULL break functionality.
+    /// Tests the [BreakableDeque#POLL_FIRST_ALWAYS_RETURNS_NULL] break functionality.
     @Test
-    @DisplayName("Test POLL_FIRST_ALWAYS_RETURNS_NULL break")
-    public void testPollFirstAlwaysReturnsNull() {
+    @DisplayName("pollFirst() always returns null when POLL_FIRST_ALWAYS_RETURNS_NULL break is applied")
+    public void pollFirst_whenPollFirstAlwaysReturnsNullBreakIsApplied_returnsNull() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(POLL_FIRST_ALWAYS_RETURNS_NULL)
                 .addElements("item1", "item2")
@@ -262,10 +267,10 @@ public class BreakableDequeTest extends AbstractTest {
         assertFalse(deque.isEmpty()); // Deque should not be empty
     }
 
-    /// Tests the POLL_FIRST_DOES_NOT_REMOVE_ELEMENT break functionality.
+    /// Tests the [BreakableDeque#POLL_FIRST_DOES_NOT_REMOVE_ELEMENT] break functionality.
     @Test
-    @DisplayName("Test POLL_FIRST_DOES_NOT_REMOVE_ELEMENT break")
-    public void testPollFirstDoesNotRemoveElement() {
+    @DisplayName("pollFirst() returns head but does not remove it when POLL_FIRST_DOES_NOT_REMOVE_ELEMENT break is applied")
+    public void pollFirst_whenPollFirstDoesNotRemoveElementBreakIsApplied_returnsHeadButDoesNotRemove() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(POLL_FIRST_DOES_NOT_REMOVE_ELEMENT)
                 .build();
@@ -281,6 +286,8 @@ public class BreakableDequeTest extends AbstractTest {
     }
 
 
+    /// Verifies that [BreakableDeque#pollFirst] throws [UnsupportedOperationException]
+    /// when the method is configured as not supported.
     @Test
     @DisplayName("pollFirst() throws UnsupportedOperationException when it is not supported")
     public void pollFirst_whenItIsNotSuppoerted_throwsUnsupportedOperationException() {
@@ -290,13 +297,13 @@ public class BreakableDequeTest extends AbstractTest {
 
         deque.offerFirst("1");
 
-        assertThrows(UnsupportedOperationException.class, () -> deque.pollFirst());
+        assertThrows(UnsupportedOperationException.class, deque::pollFirst);
     }
 
-    /// Tests the PEEK_FIRST_ALWAYS_RETURNS_NULL break functionality.
+    /// Tests the [BreakableDeque#PEEK_FIRST_ALWAYS_RETURNS_NULL] break functionality.
     @Test
-    @DisplayName("Test PEEK_FIRST_ALWAYS_RETURNS_NULL break")
-    public void testPeekFirstAlwaysReturnsNull() {
+    @DisplayName("peekFirst() always returns null when PEEK_FIRST_ALWAYS_RETURNS_NULL break is applied")
+    public void peekFirst_whenPeekFirstAlwaysReturnsNullBreakIsApplied_returnsNull() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(PEEK_FIRST_ALWAYS_RETURNS_NULL)
                 .build();
@@ -308,10 +315,10 @@ public class BreakableDequeTest extends AbstractTest {
         assertFalse(deque.isEmpty());
     }
 
-    /// Tests the PEEK_FIRST_RETURNS_RANDOM_ELEMENT break functionality.
+    /// Tests the [BreakableDeque#PEEK_FIRST_RETURNS_RANDOM_ELEMENT] break functionality.
     @Test
-    @DisplayName("Test PEEK_FIRST_RETURNS_RANDOM_ELEMENT break")
-    public void testPeekFirstReturnsRandomElement() {
+    @DisplayName("peekFirst() returns random element when PEEK_FIRST_RETURNS_RANDOM_ELEMENT break is applied")
+    public void peekFirst_whenPeekFirstReturnsRandomElementBreakIsApplied_returnsRandomElement() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(PEEK_FIRST_RETURNS_RANDOM_ELEMENT)
                 .addElements("item", "item2", "item3")
@@ -322,6 +329,8 @@ public class BreakableDequeTest extends AbstractTest {
         assertNotEquals("item3", peeked); // Should return different element due to break
     }
 
+    /// Verifies that [BreakableDeque#peekFirst] throws [UnsupportedOperationException]
+    /// when the method is configured as not supported.
     @Test
     @DisplayName("peekFirst() throws UnsupportedOperationException when it is not supported")
     public void peekFirst_whenItIsNotSuppoerted_throwsUnsupportedOperationException() {
@@ -333,10 +342,13 @@ public class BreakableDequeTest extends AbstractTest {
         assertThrows(UnsupportedOperationException.class, deque::peekFirst);
     }
 
-    /// Tests the OFFER_LAST_ALWAYS_RETURNS_FALSE break functionality.
+    /// Tests the [BreakableDeque#OFFER_LAST_ALWAYS_RETURNS_FALSE] break functionality.
+    ///
+    /// Verifies that [BreakableDeque#offerLast] returns `false` even when the element
+    /// is successfully added to the underlying deque.
     @Test
-    @DisplayName("Test OFFER_LAST_ALWAYS_RETURNS_FALSE break")
-    public void testOfferLastAlwaysReturnsFalse() {
+    @DisplayName("offerLast() always returns false when OFFER_LAST_ALWAYS_RETURNS_FALSE break is applied")
+    public void offerLast_whenOfferLastAlwaysReturnsFalseBreakIsApplied_returnsFalse() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(OFFER_LAST_ALWAYS_RETURNS_FALSE)
                 .build();
@@ -348,10 +360,13 @@ public class BreakableDequeTest extends AbstractTest {
         assertFalse(deque.isEmpty());
     }
 
-    /// Tests the OFFER_LAST_DOES_NOT_ADD_ELEMENT break functionality.
+    /// Tests the [BreakableDeque#OFFER_LAST_DOES_NOT_ADD_ELEMENT] break functionality.
+    ///
+    /// Verifies that [BreakableDeque#offerLast] returns `true` but does not actually add the
+    /// element to the deque when this break is applied.
     @Test
-    @DisplayName("Test OFFER_LAST_DOES_NOT_ADD_ELEMENT break")
-    public void testOfferLastDoesNotAddElement() {
+    @DisplayName("offerLast() returns true but does not add element when OFFER_LAST_DOES_NOT_ADD_ELEMENT break is applied")
+    public void offerLast_whenOfferLastDoesNotAddElementBreakIsApplied_doesNotAddElement() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(OFFER_LAST_DOES_NOT_ADD_ELEMENT)
                 .build();
@@ -364,10 +379,12 @@ public class BreakableDequeTest extends AbstractTest {
         assertTrue(deque.isEmpty());
     }
 
-    /// Tests the POLL_LAST_ALWAYS_RETURNS_NULL break functionality.
+    /// Tests the [BreakableDeque#POLL_LAST_ALWAYS_RETURNS_NULL] break functionality.
+    ///
+    /// Verifies that [BreakableDeque#pollLast] always returns `null` regardless of deque content.
     @Test
-    @DisplayName("Test POLL_LAST_ALWAYS_RETURNS_NULL break")
-    public void testPollLastAlwaysReturnsNull() {
+    @DisplayName("pollLast() always returns null when POLL_LAST_ALWAYS_RETURNS_NULL break is applied")
+    public void pollLast_whenPollLastAlwaysReturnsNullBreakIsApplied_returnsNull() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(POLL_LAST_ALWAYS_RETURNS_NULL)
                 .build();
@@ -379,10 +396,13 @@ public class BreakableDequeTest extends AbstractTest {
         assertFalse(deque.isEmpty()); // Deque should not be empty
     }
 
-    /// Tests the POLL_LAST_DOES_NOT_REMOVE_ELEMENT break functionality.
+    /// Tests the [BreakableDeque#POLL_LAST_DOES_NOT_REMOVE_ELEMENT] break functionality.
+    ///
+    /// Verifies that [BreakableDeque#pollLast] returns the tail element but does not
+    /// remove it from the deque.
     @Test
-    @DisplayName("Test POLL_LAST_DOES_NOT_REMOVE_ELEMENT break")
-    public void testPollLastDoesNotRemoveElement() {
+    @DisplayName("pollLast() returns tail but does not remove it when POLL_LAST_DOES_NOT_REMOVE_ELEMENT break is applied")
+    public void pollLast_whenPollLastDoesNotRemoveElementBreakIsApplied_returnsTailButDoesNotRemove() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(POLL_LAST_DOES_NOT_REMOVE_ELEMENT)
                 .build();
@@ -396,10 +416,12 @@ public class BreakableDequeTest extends AbstractTest {
         assertEquals("item2", deque.peekLast()); // Tail should still be there
     }
 
-    /// Tests the PEEK_LAST_ALWAYS_RETURNS_NULL break functionality.
+    /// Tests the [BreakableDeque#PEEK_LAST_ALWAYS_RETURNS_NULL] break functionality.
+    ///
+    /// Verifies that [BreakableDeque#peekLast] always returns `null` regardless of deque content.
     @Test
-    @DisplayName("Test PEEK_LAST_ALWAYS_RETURNS_NULL break")
-    public void testPeekLastAlwaysReturnsNull() {
+    @DisplayName("peekLast() always returns null when PEEK_LAST_ALWAYS_RETURNS_NULL break is applied")
+    public void peekLast_whenPeekLastAlwaysReturnsNullBreakIsApplied_returnsNull() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(PEEK_LAST_ALWAYS_RETURNS_NULL)
                 .build();
@@ -411,10 +433,13 @@ public class BreakableDequeTest extends AbstractTest {
         assertFalse(deque.isEmpty());
     }
 
-    /// Tests the PEEK_LAST_RETURNS_RANDOM_ELEMENT break functionality.
+    /// Tests the [BreakableDeque#PEEK_LAST_RETURNS_RANDOM_ELEMENT] break functionality.
+    ///
+    /// Verifies that [BreakableDeque#peekLast] returns an arbitrary element from the
+    /// deque instead of the actual tail element.
     @Test
-    @DisplayName("Test PEEK_LAST_RETURNS_RANDOM_ELEMENT break")
-    public void testPeekLastReturnsRandomElement() {
+    @DisplayName("peekLast() returns random element when PEEK_LAST_RETURNS_RANDOM_ELEMENT break is applied")
+    public void peekLast_whenPeekLastReturnsRandomElementBreakIsApplied_returnsRandomElement() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(PEEK_LAST_RETURNS_RANDOM_ELEMENT)
                 .build();
@@ -431,10 +456,12 @@ public class BreakableDequeTest extends AbstractTest {
 
     // ========== Stack Operation Tests ==========
 
-    /// Tests the PUSH_THROWS_EXCEPTION break functionality.
+    /// Tests the [BreakableDeque#PUSH_THROWS_EXCEPTION] break functionality.
+    ///
+    /// Verifies that [BreakableDeque#push] throws [IllegalStateException] when this break is applied.
     @Test
-    @DisplayName("Test PUSH_THROWS_EXCEPTION break")
-    public void testPushThrowsException() {
+    @DisplayName("push() throws IllegalStateException when PUSH_THROWS_EXCEPTION break is applied")
+    public void push_whenPushThrowsExceptionBreakIsApplied_throwsIllegalStateException() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(PUSH_THROWS_EXCEPTION)
                 .build();
@@ -442,10 +469,13 @@ public class BreakableDequeTest extends AbstractTest {
         assertThrows(IllegalStateException.class, () -> deque.push("item"));
     }
 
-    /// Tests the PUSH_DOES_NOT_ADD_ELEMENT break functionality.
+    /// Tests the [BreakableDeque#PUSH_DOES_NOT_ADD_ELEMENT] break functionality.
+    ///
+    /// Verifies that [BreakableDeque#push] does not actually add the element to the deque
+    /// when this break is applied.
     @Test
-    @DisplayName("Test PUSH_DOES_NOT_ADD_ELEMENT break")
-    public void testPushDoesNotAddElement() {
+    @DisplayName("push() does not add element when PUSH_DOES_NOT_ADD_ELEMENT break is applied")
+    public void push_whenPushDoesNotAddElementBreakIsApplied_doesNotAddElement() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(PUSH_DOES_NOT_ADD_ELEMENT)
                 .build();
@@ -458,10 +488,12 @@ public class BreakableDequeTest extends AbstractTest {
         assertTrue(deque.isEmpty());
     }
 
-    /// Tests the POP_THROWS_EXCEPTION break functionality.
+    /// Tests the [BreakableDeque#POP_THROWS_EXCEPTION] break functionality.
+    ///
+    /// Verifies that [BreakableDeque#pop] throws [IllegalStateException] when this break is applied.
     @Test
-    @DisplayName("Test POP_THROWS_EXCEPTION break")
-    public void testPopThrowsException() {
+    @DisplayName("pop() throws IllegalStateException when POP_THROWS_EXCEPTION break is applied")
+    public void pop_whenPopThrowsExceptionBreakIsApplied_throwsIllegalStateException() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(POP_THROWS_EXCEPTION)
                 .build();
@@ -470,10 +502,12 @@ public class BreakableDequeTest extends AbstractTest {
         assertThrows(IllegalStateException.class, deque::pop);
     }
 
-    /// Tests the POP_ALWAYS_RETURNS_NULL break functionality.
+    /// Tests the [BreakableDeque#POP_ALWAYS_RETURNS_NULL] break functionality.
+    ///
+    /// Verifies that [BreakableDeque#pop] always returns `null` regardless of deque content.
     @Test
-    @DisplayName("Test POP_ALWAYS_RETURNS_NULL break")
-    public void testPopAlwaysReturnsNull() {
+    @DisplayName("pop() always returns null when POP_ALWAYS_RETURNS_NULL break is applied")
+    public void pop_whenPopAlwaysReturnsNullBreakIsApplied_returnsNull() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(POP_ALWAYS_RETURNS_NULL)
                 .build();
@@ -487,10 +521,13 @@ public class BreakableDequeTest extends AbstractTest {
 
     // ========== Occurrence Removal Tests ==========
 
-    /// Tests the REMOVE_FIRST_OCCURRENCE_ALWAYS_RETURNS_FALSE break functionality.
+    /// Tests the [BreakableDeque#REMOVE_FIRST_OCCURRENCE_ALWAYS_RETURNS_FALSE] break functionality.
+    ///
+    /// Verifies that [BreakableDeque#removeFirstOccurrence] returns `false` even if the
+    /// element exists in the deque.
     @Test
-    @DisplayName("Test REMOVE_FIRST_OCCURRENCE_ALWAYS_RETURNS_FALSE break")
-    public void testRemoveFirstOccurrenceAlwaysReturnsFalse() {
+    @DisplayName("removeFirstOccurrence() always returns false when REMOVE_FIRST_OCCURRENCE_ALWAYS_RETURNS_FALSE break is applied")
+    public void removeFirstOccurrence_whenAlwaysReturnsFalseBreakIsApplied_returnsFalse() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(REMOVE_FIRST_OCCURRENCE_ALWAYS_RETURNS_FALSE)
                 .build();
@@ -503,10 +540,13 @@ public class BreakableDequeTest extends AbstractTest {
         assertEquals(3, deque.size()); // Elements should still be there
     }
 
-    /// Tests the REMOVE_FIRST_OCCURRENCE_DOES_NOT_REMOVE break functionality.
+    /// Tests the [BreakableDeque#REMOVE_FIRST_OCCURRENCE_DOES_NOT_REMOVE] break functionality.
+    ///
+    /// Verifies that [BreakableDeque#removeFirstOccurrence] returns `true` but does not
+    /// actually remove the element from the deque.
     @Test
-    @DisplayName("Test REMOVE_FIRST_OCCURRENCE_DOES_NOT_REMOVE break")
-    public void testRemoveFirstOccurrenceDoesNotRemove() {
+    @DisplayName("removeFirstOccurrence() returns true but does not remove element when REMOVE_FIRST_OCCURRENCE_DOES_NOT_REMOVE break is applied")
+    public void removeFirstOccurrence_whenDoesNotRemoveBreakIsApplied_doesNotRemoveElement() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(REMOVE_FIRST_OCCURRENCE_DOES_NOT_REMOVE)
                 .build();
@@ -520,10 +560,13 @@ public class BreakableDequeTest extends AbstractTest {
         assertTrue(deque.contains("item")); // Item should still be present
     }
 
-    /// Tests the REMOVE_LAST_OCCURRENCE_ALWAYS_RETURNS_FALSE break functionality.
+    /// Tests the [BreakableDeque#REMOVE_LAST_OCCURRENCE_ALWAYS_RETURNS_FALSE] break functionality.
+    ///
+    /// Verifies that [BreakableDeque#removeLastOccurrence] returns `false` even if the
+    /// element exists in the deque.
     @Test
-    @DisplayName("Test REMOVE_LAST_OCCURRENCE_ALWAYS_RETURNS_FALSE break")
-    public void testRemoveLastOccurrenceAlwaysReturnsFalse() {
+    @DisplayName("removeLastOccurrence() always returns false when REMOVE_LAST_OCCURRENCE_ALWAYS_RETURNS_FALSE break is applied")
+    public void removeLastOccurrence_whenAlwaysReturnsFalseBreakIsApplied_returnsFalse() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(REMOVE_LAST_OCCURRENCE_ALWAYS_RETURNS_FALSE)
                 .build();
@@ -536,10 +579,13 @@ public class BreakableDequeTest extends AbstractTest {
         assertEquals(3, deque.size()); // Elements should still be there
     }
 
-    /// Tests the REMOVE_LAST_OCCURRENCE_DOES_NOT_REMOVE break functionality.
+    /// Tests the [BreakableDeque#REMOVE_LAST_OCCURRENCE_DOES_NOT_REMOVE] break functionality.
+    ///
+    /// Verifies that [BreakableDeque#removeLastOccurrence] returns `true` but does not
+    /// actually remove the element from the deque.
     @Test
-    @DisplayName("Test REMOVE_LAST_OCCURRENCE_DOES_NOT_REMOVE break")
-    public void testRemoveLastOccurrenceDoesNotRemove() {
+    @DisplayName("removeLastOccurrence() returns true but does not remove element when REMOVE_LAST_OCCURRENCE_DOES_NOT_REMOVE break is applied")
+    public void removeLastOccurrence_whenDoesNotRemoveBreakIsApplied_doesNotRemoveElement() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(REMOVE_LAST_OCCURRENCE_DOES_NOT_REMOVE)
                 .build();
@@ -555,10 +601,12 @@ public class BreakableDequeTest extends AbstractTest {
 
     // ========== Iterator Operation Tests ==========
 
-    /// Tests the DESCENDING_ITERATOR_THROWS_EXCEPTION break functionality.
+    /// Tests the [BreakableDeque#DESCENDING_ITERATOR_THROWS_EXCEPTION] break functionality.
+    ///
+    /// Verifies that [BreakableDeque#descendingIterator] throws [IllegalStateException] when this break is applied.
     @Test
-    @DisplayName("Test DESCENDING_ITERATOR_THROWS_EXCEPTION break")
-    public void testDescendingIteratorThrowsException() {
+    @DisplayName("descendingIterator() throws IllegalStateException when DESCENDING_ITERATOR_THROWS_EXCEPTION break is applied")
+    public void descendingIterator_whenThrowsExceptionBreakIsApplied_throwsIllegalStateException() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(DESCENDING_ITERATOR_THROWS_EXCEPTION)
                 .build();
@@ -566,10 +614,10 @@ public class BreakableDequeTest extends AbstractTest {
         assertThrows(IllegalStateException.class, deque::descendingIterator);
     }
 
-    /// Tests the DESCENDING_ITERATOR_RETURNS_EMPTY break functionality.
+    /// Tests the [BreakableDeque#DESCENDING_ITERATOR_RETURNS_EMPTY] break functionality.
     @Test
-    @DisplayName("Test DESCENDING_ITERATOR_RETURNS_EMPTY break")
-    public void testDescendingIteratorReturnsEmpty() {
+    @DisplayName("descendingIterator() returns empty iterator when DESCENDING_ITERATOR_RETURNS_EMPTY break is applied")
+    public void descendingIterator_whenReturnsEmptyBreakIsApplied_returnsEmptyIterator() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(DESCENDING_ITERATOR_RETURNS_EMPTY)
                 .build();
@@ -586,8 +634,8 @@ public class BreakableDequeTest extends AbstractTest {
 
     /// Tests that methods throw UnsupportedOperationException when not supported.
     @Test
-    @DisplayName("Test unsupported method exceptions")
-    public void testUnsupportedMethodExceptions() {
+    @DisplayName("unsupported methods throw UnsupportedOperationException")
+    public void unsupportedMethods_whenCalled_throwUnsupportedOperationException() {
         BreakableDeque<String> deque = new BreakableDeque.Builder<String>()
                 .doesNotSupport(DequeMethods.PUSH)
                 .doesNotSupport(DequeMethods.POP)
@@ -601,10 +649,10 @@ public class BreakableDequeTest extends AbstractTest {
 
     // ========== Static Factory Method Tests ==========
 
-    /// Tests the static wrap factory method functionality.
+    /// Tests the static [BreakableDeque#wrap(Deque, Set)] factory method functionality.
     @Test
-    @DisplayName("Test wrap factory method")
-    public void testWrapFactoryMethod() {
+    @DisplayName("wrap(Deque, Set) creates a breakable deque wrapping an existing one")
+    public void wrap_withDequeAndBreaks_createsWrappedDeque() {
         LinkedList<String> existingDeque = new LinkedList<>();
         existingDeque.addLast("apple");
         existingDeque.addLast("banana");
@@ -622,10 +670,10 @@ public class BreakableDequeTest extends AbstractTest {
         assertTrue(wrappedDeque.contains("banana"));
     }
 
-    /// Tests the static wrap factory method with characteristics.
+    /// Tests the static [BreakableDeque#wrap(Deque, Set, int)] factory method with characteristics.
     @Test
-    @DisplayName("Test wrap factory method with characteristics")
-    public void testWrapFactoryMethodWithCharacteristics() {
+    @DisplayName("wrap(Deque, Set, int) creates a breakable deque with specified characteristics")
+    public void wrap_withDequeBreaksAndCharacteristics_createsWrappedDeque() {
         LinkedList<String> existingDeque = new LinkedList<>();
         existingDeque.addLast("test");
 
@@ -642,10 +690,10 @@ public class BreakableDequeTest extends AbstractTest {
 
     // ========== Deque Behavior and Integration Tests ==========
 
-    /// Tests normal deque operations without breaks.
+    /// Tests normal deque operations when no breaks are applied.
     @Test
-    @DisplayName("Test normal deque operations")
-    public void testNormalDequeOperations() {
+    @DisplayName("deque performs normal operations correctly when no breaks are applied")
+    public void deque_whenNoBreaks_performsNormalOperations() {
         BreakableDeque<Integer> deque = new BreakableDeque<>();
 
         // Test double-ended operations
@@ -671,10 +719,10 @@ public class BreakableDequeTest extends AbstractTest {
         assertEquals(Integer.valueOf(3), deque.peekLast());
     }
 
-    /// Tests deque operations with multiple breaks applied.
+    /// Tests deque operations when multiple breaks are applied.
     @Test
-    @DisplayName("Test multiple breaks interaction")
-    public void testMultipleBreaks() {
+    @DisplayName("multiple breaks correctly interact and apply to deque operations")
+    public void multipleBreaks_whenApplied_correctlyInteract() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(OFFER_FIRST_DOES_NOT_ADD_ELEMENT)
                 .addBreak(POLL_LAST_ALWAYS_RETURNS_NULL)
@@ -696,10 +744,10 @@ public class BreakableDequeTest extends AbstractTest {
         assertThrows(IllegalStateException.class, () -> deque.push("item3"));
     }
 
-    /// Tests BreakableDeque inheritance from BreakableQueue.
+    /// Tests inheritance from [BreakableQueue] and [BreakableCollection].
     @Test
-    @DisplayName("Test inheritance from BreakableQueue")
-    public void testQueueInheritance() {
+    @DisplayName("breakable deque correctly inherits and applies breaks from queue and collection")
+    public void inheritance_whenBreaksApplied_appliesBreaksFromAllLevels() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(BreakableCollection.SIZE_ALWAYS_RETURNS_ZERO) // Collection-level break
                 .addBreak(BreakableQueue.POLL_ALWAYS_RETURNS_NULL)       // Queue-level break
@@ -721,10 +769,10 @@ public class BreakableDequeTest extends AbstractTest {
         assertEquals(2, deque.toArray().length); // Only item1 and item3 should be present
     }
 
-    /// Tests add_singleElement_returnsTrueAndUpdatesSize() method inherited from Collection interface.
+    /// Tests the add(E) method inherited from [java.util.Collection].
     @Test
-    @DisplayName("Test add_singleElement_returnsTrueAndUpdatesSize() method from Collection")
-    public void testAddMethod() {
+    @DisplayName("add(E) correctly adds element to the end of the deque")
+    public void add_whenCalled_addsToEndOfDeque() {
         BreakableDeque<String> deque = new BreakableDeque<>();
 
         assertTrue(deque.add("item1"));
@@ -735,10 +783,10 @@ public class BreakableDequeTest extends AbstractTest {
         assertEquals("item2", deque.peekLast());
     }
 
-    /// Tests deque operations with various deque implementations.
+    /// Tests integration with [java.util.LinkedList].
     @Test
-    @DisplayName("Test LinkedList integration")
-    public void testLinkedListIntegration() {
+    @DisplayName("breakable deque correctly integrates with LinkedList and preserves its behavior")
+    public void linkedListIntegration_whenUsed_preservesBehavior() {
         LinkedList<String> linkedList = new LinkedList<>();
         linkedList.addFirst("beta");
         linkedList.addFirst("alpha");
@@ -758,10 +806,10 @@ public class BreakableDequeTest extends AbstractTest {
         assertEquals("alpha", deque.peekFirst()); // Head should still be alpha
     }
 
-    /// Tests occurrence removal functionality.
+    /// Tests basic occurrence removal operations.
     @Test
-    @DisplayName("Test occurrence removal operations")
-    public void testOccurrenceRemovalOperations() {
+    @DisplayName("occurrence removal methods correctly remove specified elements")
+    public void occurrenceRemoval_whenCalled_removesCorrectElements() {
         BreakableDeque<String> deque = new BreakableDeque<>();
 
         deque.addLast("item");
@@ -784,10 +832,10 @@ public class BreakableDequeTest extends AbstractTest {
         assertFalse(deque.removeLastOccurrence("nonexistent"));
     }
 
-    /// Tests descending iterator functionality.
+    /// Tests basic descending iterator behavior.
     @Test
-    @DisplayName("Test descending iterator operations")
-    public void testDescendingIteratorOperations() {
+    @DisplayName("descendingIterator() provides elements in reverse order")
+    public void descendingIterator_whenCalled_returnsElementsInReverse() {
         BreakableDeque<String> deque = new BreakableDeque<>();
 
         deque.addLast("first");
@@ -803,10 +851,10 @@ public class BreakableDequeTest extends AbstractTest {
         assertFalse(descendingIter.hasNext());
     }
 
-    /// Tests stack behavior using deque as stack.
+    /// Tests LIFO stack behavior when using Deque as a stack.
     @Test
-    @DisplayName("Test stack behavior")
-    public void testStackBehavior() {
+    @DisplayName("deque performs correct LIFO stack operations")
+    public void stackBehavior_whenUsedAsStack_performsLIFOOperations() {
         BreakableDeque<String> stack = new BreakableDeque<>();
 
         // Test push/pop LIFO behavior
@@ -822,10 +870,10 @@ public class BreakableDequeTest extends AbstractTest {
         assertTrue(stack.isEmpty());
     }
 
-    /// Tests break priority and interaction.
+    /// Tests the interaction and priority between different breaks.
     @Test
-    @DisplayName("Test break priority and interaction")
-    public void testBreakPriorityAndInteraction() {
+    @DisplayName("higher priority breaks correctly override or interact with lower priority ones")
+    public void breakPriority_whenMultipleBreaksConflict_respectsPriority() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(PUSH_THROWS_EXCEPTION) // Should throw before other breaks
                 .addBreak(PUSH_DOES_NOT_ADD_ELEMENT)
@@ -835,10 +883,10 @@ public class BreakableDequeTest extends AbstractTest {
         assertThrows(IllegalStateException.class, () -> deque.push("item"));
     }
 
-    /// Tests state consistency across different deque operations.
+    /// Tests that deque state remains consistent across various operations.
     @Test
-    @DisplayName("Test state consistency across deque operations")
-    public void testStateConsistencyAcrossDequeOperations() {
+    @DisplayName("deque maintains consistent internal state across mixed operations")
+    public void stateConsistency_acrossMultipleOperations_remainsConsistent() {
         BreakableDeque<String> deque = new BreakableDeque<>();
 
         deque.offerFirst("first");
@@ -858,7 +906,9 @@ public class BreakableDequeTest extends AbstractTest {
 
     // ========== GetFirst Method Break Tests ==========
 
-    /// Tests the GET_FIRST_RETURNS_NULL break functionality.
+    /// Tests the [BreakableDeque#GET_FIRST_RETURNS_NULL] break functionality.
+    ///
+    /// Verifies that [BreakableDeque#getFirst] always returns `null` regardless of deque content.
     @Test
     @DisplayName("getFirst() always returns null when GET_FIRST_RETURNS_NULL break is applied")
     public void getFirst_whenGetFirstReturnsNullBreakIsApplied_returnsNull() {
@@ -873,10 +923,10 @@ public class BreakableDequeTest extends AbstractTest {
         assertEquals(2, deque.size()); // Deque should still have elements
     }
 
-    /// Tests the GET_FIRST_ALWAYS_THROWS break functionality.
+    /// Tests the [BreakableDeque#GET_FIRST_ALWAYS_THROWS] break functionality.
     @Test
-    @DisplayName("Test GET_FIRST_ALWAYS_THROWS break")
-    public void testGetFirstAlwaysThrows() {
+    @DisplayName("getFirst() always throws NoSuchElementException when GET_FIRST_ALWAYS_THROWS break is applied")
+    public void getFirst_whenAlwaysThrowsBreakIsApplied_throwsNoSuchElementException() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(GET_FIRST_ALWAYS_THROWS)
                 .build();
@@ -886,10 +936,10 @@ public class BreakableDequeTest extends AbstractTest {
         assertThrows(NoSuchElementException.class, deque::getFirst);
     }
 
-    /// Tests the GET_FIRST_SKIPS_FIRST_ELEMENT break functionality.
+    /// Tests the [BreakableDeque#GET_FIRST_SKIPS_FIRST_ELEMENT] break functionality.
     @Test
-    @DisplayName("Test GET_FIRST_SKIPS_FIRST_ELEMENT break")
-    public void testGetFirstSkipsFirstElement() {
+    @DisplayName("getFirst() skips first element and returns second when GET_FIRST_SKIPS_FIRST_ELEMENT break is applied")
+    public void getFirst_whenSkipsFirstElementBreakIsApplied_returnsSecondElement() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(GET_FIRST_SKIPS_FIRST_ELEMENT)
                 .build();
@@ -902,10 +952,10 @@ public class BreakableDequeTest extends AbstractTest {
         assertEquals("item2", deque.getFirst());
     }
 
-    /// Tests GET_FIRST_SKIPS_FIRST_ELEMENT break with insufficient elements.
+    /// Tests the [BreakableDeque#GET_FIRST_SKIPS_FIRST_ELEMENT] break functionality with a single element.
     @Test
-    @DisplayName("Test GET_FIRST_SKIPS_FIRST_ELEMENT break with one element")
-    public void testGetFirstSkipsFirstElementWithOneElement() {
+    @DisplayName("getFirst() throws NoSuchElementException when GET_FIRST_SKIPS_FIRST_ELEMENT break is applied on deque with one element")
+    public void getFirst_whenSkipsFirstElementBreakIsAppliedOnOneElement_throwsNoSuchElementException() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(GET_FIRST_SKIPS_FIRST_ELEMENT)
                 .build();
@@ -918,10 +968,12 @@ public class BreakableDequeTest extends AbstractTest {
 
     // ========== GetLast Method Break Tests ==========
 
-    /// Tests the GET_LAST_RETURNS_NULL break functionality.
+    /// Tests the [BreakableDeque#GET_LAST_RETURNS_NULL] break functionality.
+    ///
+    /// Verifies that [BreakableDeque#getLast] always returns `null` regardless of deque content.
     @Test
-    @DisplayName("Test GET_LAST_RETURNS_NULL break")
-    public void testGetLastReturnsNull() {
+    @DisplayName("getLast() returns null when GET_LAST_RETURNS_NULL break is applied")
+    public void getLast_whenReturnsNullBreakIsApplied_returnsNull() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(GET_LAST_RETURNS_NULL)
                 .build();
@@ -933,10 +985,10 @@ public class BreakableDequeTest extends AbstractTest {
         assertEquals(2, deque.size()); // Deque should still have elements
     }
 
-    /// Tests the GET_LAST_ALWAYS_THROWS break functionality.
+    /// Tests the [BreakableDeque#GET_LAST_ALWAYS_THROWS] break functionality.
     @Test
-    @DisplayName("Test GET_LAST_ALWAYS_THROWS break")
-    public void testGetLastAlwaysThrows() {
+    @DisplayName("getLast() always throws NoSuchElementException when GET_LAST_ALWAYS_THROWS break is applied")
+    public void getLast_whenAlwaysThrowsBreakIsApplied_throwsNoSuchElementException() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(GET_LAST_ALWAYS_THROWS)
                 .build();
@@ -946,10 +998,10 @@ public class BreakableDequeTest extends AbstractTest {
         assertThrows(NoSuchElementException.class, deque::getLast);
     }
 
-    /// Tests the GET_LAST_SKIPS_LAST_ELEMENT break functionality.
+    /// Tests the [BreakableDeque#GET_LAST_SKIPS_LAST_ELEMENT] break functionality.
     @Test
-    @DisplayName("Test GET_LAST_SKIPS_LAST_ELEMENT break")
-    public void testGetLastSkipsLastElement() {
+    @DisplayName("getLast() skips last element and returns second-to-last when GET_LAST_SKIPS_LAST_ELEMENT break is applied")
+    public void getLast_whenSkipsLastElementBreakIsApplied_returnsSecondToLastElement() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(GET_LAST_SKIPS_LAST_ELEMENT)
                 .build();
@@ -962,10 +1014,10 @@ public class BreakableDequeTest extends AbstractTest {
         assertEquals("item2", deque.getLast());
     }
 
-    /// Tests GET_LAST_SKIPS_LAST_ELEMENT break with insufficient elements.
+    /// Tests the [BreakableDeque#GET_LAST_SKIPS_LAST_ELEMENT] break functionality with a single element.
     @Test
-    @DisplayName("Test GET_LAST_SKIPS_LAST_ELEMENT break with one element")
-    public void testGetLastSkipsLastElementWithOneElement() {
+    @DisplayName("getLast() throws NoSuchElementException when GET_LAST_SKIPS_LAST_ELEMENT break is applied on deque with one element")
+    public void getLast_whenSkipsLastElementBreakIsAppliedOnOneElement_throwsNoSuchElementException() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(GET_LAST_SKIPS_LAST_ELEMENT)
                 .build();
@@ -978,10 +1030,13 @@ public class BreakableDequeTest extends AbstractTest {
 
     // ========== AddFirst Method Break Tests ==========
 
-    /// Tests the ADD_FIRST_DOES_NOT_ADD_ELEMENT break functionality.
+    /// Tests the [BreakableDeque#ADD_FIRST_DOES_NOT_ADD_ELEMENT] break functionality.
+    ///
+    /// Verifies that [BreakableDeque#addFirst] does not actually add the element to the
+    /// deque when this break is applied.
     @Test
-    @DisplayName("Test ADD_FIRST_DOES_NOT_ADD_ELEMENT break")
-    public void testAddFirstDoesNotAddElement() {
+    @DisplayName("addFirst() does not add element when ADD_FIRST_DOES_NOT_ADD_ELEMENT break is applied")
+    public void addFirst_whenDoesNotAddElementBreakIsApplied_doesNotAddElement() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(ADD_FIRST_DOES_NOT_ADD_ELEMENT)
                 .build();
@@ -994,10 +1049,10 @@ public class BreakableDequeTest extends AbstractTest {
         assertTrue(deque.isEmpty());
     }
 
-    /// Tests the ADD_FIRST_ADDS_TO_END break functionality.
+    /// Tests the [BreakableDeque#ADD_FIRST_ADDS_TO_END] break functionality.
     @Test
-    @DisplayName("Test ADD_FIRST_ADDS_TO_END break")
-    public void testAddFirstAddsToEnd() {
+    @DisplayName("addFirst() adds to the end of the deque when ADD_FIRST_ADDS_TO_END break is applied")
+    public void addFirst_whenAddsToEndBreakIsApplied_addsToEnd() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(ADD_FIRST_ADDS_TO_END)
                 .build();
@@ -1014,10 +1069,13 @@ public class BreakableDequeTest extends AbstractTest {
 
     // ========== AddLast Method Break Tests ==========
 
-    /// Tests the ADD_LAST_DOES_NOT_ADD_ELEMENT break functionality.
+    /// Tests the [BreakableDeque#ADD_LAST_DOES_NOT_ADD_ELEMENT] break functionality.
+    ///
+    /// Verifies that [BreakableDeque#addLast] does not actually add the element to the
+    /// deque when this break is applied.
     @Test
-    @DisplayName("Test ADD_LAST_DOES_NOT_ADD_ELEMENT break")
-    public void testAddLastDoesNotAddElement() {
+    @DisplayName("addLast() does not add element when ADD_LAST_DOES_NOT_ADD_ELEMENT break is applied")
+    public void addLast_whenDoesNotAddElementBreakIsApplied_doesNotAddElement() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(ADD_LAST_DOES_NOT_ADD_ELEMENT)
                 .build();
@@ -1030,10 +1088,10 @@ public class BreakableDequeTest extends AbstractTest {
         assertTrue(deque.isEmpty());
     }
 
-    /// Tests the ADD_LAST_ADDS_TO_FRONT break functionality.
+    /// Tests the [BreakableDeque#ADD_LAST_ADDS_TO_FRONT] break functionality.
     @Test
-    @DisplayName("Test ADD_LAST_ADDS_TO_FRONT break")
-    public void testAddLastAddsToFront() {
+    @DisplayName("addLast() adds to the front of the deque when ADD_LAST_ADDS_TO_FRONT break is applied")
+    public void addLast_whenAddsToFrontBreakIsApplied_addsToFront() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(ADD_LAST_ADDS_TO_FRONT)
                 .build();
@@ -1050,10 +1108,13 @@ public class BreakableDequeTest extends AbstractTest {
 
     // ========== RemoveFirst Method Break Tests ==========
 
-    /// Tests the REMOVE_FIRST_DOES_NOT_REMOVE_ELEMENT break functionality.
+    /// Tests the [BreakableDeque#REMOVE_FIRST_DOES_NOT_REMOVE_ELEMENT] break functionality.
+    ///
+    /// Verifies that [BreakableDeque#removeFirst] returns the head element but does
+    /// not remove it from the deque.
     @Test
-    @DisplayName("Test REMOVE_FIRST_DOES_NOT_REMOVE_ELEMENT break")
-    public void testRemoveFirstDoesNotRemoveElement() {
+    @DisplayName("removeFirst() returns head but does not remove it when REMOVE_FIRST_DOES_NOT_REMOVE_ELEMENT break is applied")
+    public void removeFirst_whenDoesNotRemoveBreakIsApplied_returnsHeadButDoesNotRemove() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(REMOVE_FIRST_DOES_NOT_REMOVE_ELEMENT)
                 .build();
@@ -1076,10 +1137,12 @@ public class BreakableDequeTest extends AbstractTest {
         assertEquals(3, deque.size());
     }
 
-    /// Tests the REMOVE_FIRST_RETURNS_NULL break functionality.
+    /// Tests the [BreakableDeque#REMOVE_FIRST_RETURNS_NULL] break functionality.
+    ///
+    /// Verifies that [BreakableDeque#removeFirst] always returns `null` regardless of deque content.
     @Test
-    @DisplayName("Test REMOVE_FIRST_RETURNS_NULL break")
-    public void testRemoveFirstReturnsNull() {
+    @DisplayName("removeFirst() returns null when REMOVE_FIRST_RETURNS_NULL break is applied")
+    public void removeFirst_whenReturnsNullBreakIsApplied_returnsNull() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(REMOVE_FIRST_RETURNS_NULL)
                 .build();
@@ -1094,10 +1157,13 @@ public class BreakableDequeTest extends AbstractTest {
         assertEquals(2, deque.size());
     }
 
-    /// Tests the REMOVE_FIRST_ALWAYS_THROWS break functionality.
+    /// Tests the [BreakableDeque#REMOVE_FIRST_ALWAYS_THROWS] break functionality.
+    ///
+    /// Verifies that [BreakableDeque#removeFirst] throws [NoSuchElementException]
+    /// even when the deque is not empty.
     @Test
-    @DisplayName("Test REMOVE_FIRST_ALWAYS_THROWS break")
-    public void testRemoveFirstAlwaysThrows() {
+    @DisplayName("removeFirst() always throws NoSuchElementException when REMOVE_FIRST_ALWAYS_THROWS break is applied")
+    public void removeFirst_whenAlwaysThrowsBreakIsApplied_throwsNoSuchElementException() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(REMOVE_FIRST_ALWAYS_THROWS)
                 .build();
@@ -1114,10 +1180,13 @@ public class BreakableDequeTest extends AbstractTest {
 
     // ========== RemoveLast Method Break Tests ==========
 
-    /// Tests the REMOVE_LAST_DOES_NOT_REMOVE_ELEMENT break functionality.
+    /// Tests the [BreakableDeque#REMOVE_LAST_DOES_NOT_REMOVE_ELEMENT] break functionality.
+    ///
+    /// Verifies that [BreakableDeque#removeLast] returns the tail element but does
+    /// not remove it from the deque.
     @Test
-    @DisplayName("Test REMOVE_LAST_DOES_NOT_REMOVE_ELEMENT break")
-    public void testRemoveLastDoesNotRemoveElement() {
+    @DisplayName("removeLast() returns tail but does not remove it when REMOVE_LAST_DOES_NOT_REMOVE_ELEMENT break is applied")
+    public void removeLast_whenDoesNotRemoveBreakIsApplied_returnsTailButDoesNotRemove() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(REMOVE_LAST_DOES_NOT_REMOVE_ELEMENT)
                 .build();
@@ -1140,10 +1209,12 @@ public class BreakableDequeTest extends AbstractTest {
         assertEquals(3, deque.size());
     }
 
-    /// Tests the REMOVE_LAST_RETURNS_NULL break functionality.
+    /// Tests the [BreakableDeque#REMOVE_LAST_RETURNS_NULL] break functionality.
+    ///
+    /// Verifies that [BreakableDeque#removeLast] always returns `null` regardless of deque content.
     @Test
-    @DisplayName("Test REMOVE_LAST_RETURNS_NULL break")
-    public void testRemoveLastReturnsNull() {
+    @DisplayName("removeLast() returns null when REMOVE_LAST_RETURNS_NULL break is applied")
+    public void removeLast_whenReturnsNullBreakIsApplied_returnsNull() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(REMOVE_LAST_RETURNS_NULL)
                 .build();
@@ -1158,10 +1229,13 @@ public class BreakableDequeTest extends AbstractTest {
         assertEquals(2, deque.size());
     }
 
-    /// Tests the REMOVE_LAST_ALWAYS_THROWS break functionality.
+    /// Tests the [BreakableDeque#REMOVE_LAST_ALWAYS_THROWS] break functionality.
+    ///
+    /// Verifies that [BreakableDeque#removeLast] throws [NoSuchElementException]
+    /// even when the deque is not empty.
     @Test
-    @DisplayName("Test REMOVE_LAST_ALWAYS_THROWS break")
-    public void testRemoveLastAlwaysThrows() {
+    @DisplayName("removeLast() always throws NoSuchElementException when REMOVE_LAST_ALWAYS_THROWS break is applied")
+    public void removeLast_whenAlwaysThrowsBreakIsApplied_throwsNoSuchElementException() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(REMOVE_LAST_ALWAYS_THROWS)
                 .build();
@@ -1178,10 +1252,10 @@ public class BreakableDequeTest extends AbstractTest {
 
     // ========== Integration Tests for New Breaks ==========
 
-    /// Tests interaction between ADD_FIRST_ADDS_TO_END and GET_FIRST.
+    /// Tests the interaction between [BreakableDeque#ADD_FIRST_ADDS_TO_END] and [BreakableDeque#getFirst].
     @Test
-    @DisplayName("Test ADD_FIRST_ADDS_TO_END with getFirst")
-    public void testAddFirstAddsToEndWithGetFirst() {
+    @DisplayName("addFirst(E) adds to end and getFirst() returns current head when ADD_FIRST_ADDS_TO_END is applied")
+    public void addFirst_whenAddsToEndWithGetFirst_respectsBothBehaviors() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(ADD_FIRST_ADDS_TO_END)
                 .build();
@@ -1195,10 +1269,10 @@ public class BreakableDequeTest extends AbstractTest {
         assertEquals("second", deque.getLast());
     }
 
-    /// Tests interaction between REMOVE_FIRST_DOES_NOT_REMOVE_ELEMENT and normal poll.
+    /// Tests the interaction between [BreakableDeque#REMOVE_FIRST_DOES_NOT_REMOVE_ELEMENT] and [BreakableDeque#pollFirst].
     @Test
-    @DisplayName("Test REMOVE_FIRST_DOES_NOT_REMOVE_ELEMENT with pollFirst")
-    public void testRemoveFirstDoesNotRemoveElementWithPoll() {
+    @DisplayName("removeFirst() does not remove element but pollFirst() still works normally when break is applied")
+    public void removeFirst_whenDoesNotRemoveWithPollFirst_respectsBothBehaviors() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(REMOVE_FIRST_DOES_NOT_REMOVE_ELEMENT)
                 .build();
@@ -1218,10 +1292,10 @@ public class BreakableDequeTest extends AbstractTest {
         assertEquals("item2", deque.getFirst());
     }
 
-    /// Tests multiple breaks applied to deque methods.
+    /// Tests multiple concurrent breaks on various deque methods.
     @Test
-    @DisplayName("Test multiple new breaks together")
-    public void testMultipleNewBreaksTogether() {
+    @DisplayName("multiple breaks correctly apply to mixed deque operations")
+    public void multipleBreaks_whenAppliedTogether_correctlyApplyToOperations() {
         BreakableDeque<String> deque = BreakableDeque.<String>builder()
                 .addBreak(GET_FIRST_RETURNS_NULL)
                 .addBreak(GET_LAST_RETURNS_NULL)

@@ -10,19 +10,51 @@ import java.util.SortedMap;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-/// Contract for the [SortedMap#lastKey()] method.
+/// **Contract for the `lastKey` method of a `SortedMap`**
+///
+/// This interface defines tests for the [lastKey()][SortedMap#lastKey] method.
+/// It is designed to be used as a mix-in interface by test classes that verify [SortedMap]
+/// implementations.
+///
+/// ## Purpose
+/// The purpose of this contract is to ensure that a sorted map's `lastKey` implementation
+/// correctly returns the last (highest) key currently in this map.
+///
+/// ## Usage Examples
+/// To use this contract, implement it in your test class along with the required support interfaces:
+///
+/// ```java
+/// class MySortedMapLastKeyTest implements LastKeyContract<String, String, MySortedMap<String, String>> {
+///     @Override
+///     public MapProvider<String, String, MySortedMap<String, String>> provider() {
+///         return MySortedMap::new;
+///     }
+/// }
+/// ```
+///
+/// ## Thread Safety
+/// This contract interface does not provide any thread-safety guarantees. The thread safety of the
+/// tests depends on the [SortedMap] and [org.soliscode.test.provider.MapProvider] implementations being tested.
 ///
 /// @param <K> The key type being tested.
 /// @param <V> The value type being tested.
 /// @param <M> The map type being tested.
 /// @author evanbergstrom
-/// @since 1.0
+/// @see SortedMap#lastKey
+/// @since 1.0.0
 public interface LastKeyContract<K, V, M extends SortedMap<K, V>> extends MapContractSupport<K, V, M> {
 
-    /// Tests that `lastKey()` throws [NoSuchElementException] for an empty map.
+    /// Tests that the [lastKey][SortedMap#lastKey] method throws [NoSuchElementException]
+    /// for an empty map.
+    ///
+    /// @see SortedMap#lastKey
+    /// @throws NoSuchElementException if the map is empty
+    /// @throws UnsupportedOperationException if the method is not supported
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @Test
-    @DisplayName("Test lastKey throws NoSuchElementException for an empty map")
-    default void testLastKeyOnEmptyMap() {
+    @DisplayName("lastKey() throws NoSuchElementException for an empty map")
+    default void lastKey_whenEmpty_throwsException() {
         SortedMap<K, V> map = provider().emptyInstance();
         if (supportsMethod(SortedMapMethods.LAST_KEY)) {
             assertThrows(NoSuchElementException.class, map::lastKey);
@@ -31,10 +63,16 @@ public interface LastKeyContract<K, V, M extends SortedMap<K, V>> extends MapCon
         }
     }
 
-    /// Tests that `lastKey()` returns a key for a map with elements.
+    /// Tests that the [lastKey][SortedMap#lastKey] method returns the highest key for a
+    /// map with elements.
+    ///
+    /// @see SortedMap#lastKey
+    /// @throws UnsupportedOperationException if the method is not supported
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @Test
-    @DisplayName("Test lastKey returns a key for a map with elements")
-    default void testLastKeyOnMapWithElements() {
+    @DisplayName("lastKey() returns the highest key for a non-empty map")
+    default void lastKey_whenNotEmpty_returnsKey() {
         SortedMap<K, V> map = provider().createInstance(DEFAULT_SIZE);
         if (supportsMethod(SortedMapMethods.LAST_KEY)) {
             assertNotNull(map.lastKey());

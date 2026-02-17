@@ -5,13 +5,34 @@ import org.soliscode.test.contract.collection.CollectionContract;
 import java.util.SequencedCollection;
 
 
-/// Test suite for classes that implement the [SequencedCollection] interface.
+/// Contract for testing the [SequencedCollection] interface.
 ///
-/// @param <E> The element type being tested.s
+/// ### Purpose
+/// This is a comprehensive contract that combines all individual [SequencedCollection] contracts.
+/// It verifies the behavior of navigation methods, view methods, and modification methods
+/// as specified in the `SequencedCollection` interface.
+///
+/// ### Usage Example
+/// To use this contract, create a test class that implements it and provides the necessary providers:
+/// ```java
+/// class MySequencedCollectionTest implements SequencedCollectionContract<String, MySequencedCollection<String>>,
+///                                            WithStringElement {
+///     @Override
+///     public SequencedCollectionProvider<String, MySequencedCollection<String>> provider() {
+///         return MySequencedCollection::new;
+///     }
+/// }
+/// ```
+///
+/// ### Thread Safety
+/// The tests in this contract are not thread-safe and should be run in a single-threaded environment
+/// unless the underlying collection implementation specifically guarantees thread safety.
+///
+/// @param <E> The element type.
 /// @param <C> The collection type being tested.
 /// @author evanbergstrom
 /// @see SequencedCollection
-/// @since 1.0
+/// @since 1.0.0
 public interface SequencedCollectionContract<E, C extends SequencedCollection<E>>
         extends CollectionContract<E, C>,
         AddFirstContract<E, C>,
@@ -22,8 +43,12 @@ public interface SequencedCollectionContract<E, C extends SequencedCollection<E>
         RemoveLastContract<E, C>,
         ReversedContract<E, C> {
 
-
-    /// This method can be called when testing collection classes that do not permit modification.
+    /// Configures the contract to expect that modification methods are not supported.
+    ///
+    /// This is a convenience method that calls `doesNotSupportMethod` for all modification
+    /// methods in `Collection` and `SequencedCollection`.
+    ///
+    /// @since 1.0.0
     default void doesNotSupportModification() {
         CollectionContract.super.doesNotSupportModification();
         doesNotSupportMethod(SequencedCollectionMethods.ADD_FIRST);

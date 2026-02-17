@@ -2,16 +2,15 @@ package org.soliscode.test.contract.sequencedcollection;
 
 import org.jspecify.annotations.NonNull;
 import org.soliscode.test.InterfaceMethod;
-import org.soliscode.test.contract.collection.CollectionContract;
 
-/// Values used to identify collection class methods for use with the
-/// [CollectionContract#supportsMethod(InterfaceMethod)] method.
+/// Values used to identify [java.util.SequencedCollection] methods for use with the
+/// [org.soliscode.test.contract.support.ContractSupport#supportsMethod] method.
 ///
 /// @author evanbergstrom
-/// @since 1.0
+/// @since 1.0.0
 public enum SequencedCollectionMethods implements InterfaceMethod {
 
-    /// The option al method [java.util.SequencedCollection#addFirst(Object)].
+    /// The optional method [java.util.SequencedCollection#addFirst(Object)].
     ADD_FIRST(""),
 
     /// The optional method [java.util.SequencedCollection#addLast(Object)].
@@ -23,10 +22,10 @@ public enum SequencedCollectionMethods implements InterfaceMethod {
     /// The method [java.util.SequencedCollection#getLast()].
     GET_LAST(""),
 
-    /// The option al method [java.util.SequencedCollection#removeFirst()].
+    /// The optional method [java.util.SequencedCollection#removeFirst()].
     REMOVE_FIRST(""),
 
-    /// The option al method [java.util.SequencedCollection#removeLast()].
+    /// The optional method [java.util.SequencedCollection#removeLast()].
     REMOVE_LAST(""),
 
     /// The method [java.util.SequencedCollection#reversed()].

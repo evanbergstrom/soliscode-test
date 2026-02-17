@@ -72,6 +72,8 @@ import java.io.Serializable;
 /// @see BreakableCollection
 public record Break(@NonNull String description) implements Serializable {
 
+    /// Returns the simple name of the break class, which serves as its identifier.
+    /// @return The simple name of the break class, which serves as its identifier.
     public String name() {
         return this.getClass().getSimpleName();
     }

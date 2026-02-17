@@ -35,7 +35,7 @@ public enum BlockingDequeMethods implements InterfaceMethod {
     POLL_LAST_TIMEOUT("pollLast(long, TimeUnit)");
 
     private final String name;
-    
+
     BlockingDequeMethods(final @NonNull String name) {
         this.name = name;
     }

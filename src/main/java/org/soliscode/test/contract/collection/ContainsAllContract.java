@@ -2,7 +2,6 @@ package org.soliscode.test.contract.collection;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.opentest4j.AssertionFailedError;
 import org.soliscode.test.contract.support.CollectionContractSupport;
 import org.soliscode.test.util.CollectionTestUtils;
 import org.soliscode.test.util.MatchNothing;
@@ -51,7 +50,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// @param <C> The collection type being tested.
 /// @author evanbergstrom
 /// @see Collection#containsAll
-/// @since 1.0
+/// @since 1.0.0
 public interface ContainsAllContract<E, C extends Collection<E>> extends CollectionContractSupport<E, C> {
 
     /// Tests that the [containsAll][Collection#containsAll] method works for an empty collection.
@@ -61,7 +60,8 @@ public interface ContainsAllContract<E, C extends Collection<E>> extends Collect
     /// 2. An empty collection does not contain all elements of a non-empty collection.
     ///
     /// @see Collection#containsAll
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("containsAll(Collection) works for an empty collection")
     @Test
     default void containsAll_whenEmpty_returnsTrueForEmptyAndFalseForNotEmpty() {
@@ -84,7 +84,8 @@ public interface ContainsAllContract<E, C extends Collection<E>> extends Collect
     ///
     /// @see Collection#containsAll
     /// @throws UnsupportedOperationException if the method is not supported
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("containsAll(Collection) works for a collection with elements")
     @Test
     default void containsAll_whenNotEmpty_returnsExpectedResults() {
@@ -109,11 +110,11 @@ public interface ContainsAllContract<E, C extends Collection<E>> extends Collect
 
     /// Tests that the [containsAll][Collection#containsAll] method works for a collection with null elements.
     ///
-    /// This test verifies that:
-    /// 1. If nulls are permitted, the collection can contain a collection of null elements.
+    /// This test verifies that if nulls are permitted, the collection can contain a collection of null elements.
     ///
     /// @see Collection#containsAll
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("containsAll(Collection) works for a collection with null elements")
     @Test
     default void containsAll_withNullElements_returnsTrue() {
@@ -129,16 +130,36 @@ public interface ContainsAllContract<E, C extends Collection<E>> extends Collect
 
     /// Tests that the [containsAll][Collection#containsAll] method works with incompatible types.
     ///
-    /// This test verifies that:
-    /// 1. `containsAll` returns `false` when the argument collection contains an incompatible type.
+    /// This test verifies that `containsAll` returns `false` when the argument collection contains
+    /// an incompatible type.
     ///
     /// @see Collection#containsAll
-    /// @throws AssertionFailedError if any assertions failed
+    /// @throws org.opentest4j.AssertionFailedError if any assertions failed
+    /// @since 1.0.0
     @DisplayName("containsAll(Collection) returns false with incompatible types")
     @Test
     default void containsAll_withIncompatibleType_returnsFalse() {
         Collection<E> collection = provider().createInstanceWithUniqueElements(2);
         //noinspection RedundantCollectionOperation
         assertFalse(collection.containsAll(singletonList(new MatchNothing())));
+    }
+
+
+    /// Verifies that the `containsAll(Collection)` method throws the correct exception when it is not supported.
+    ///
+    /// This test ensures that an [UnsupportedOperationException] is thrown when the `containsAll`
+    /// method is invoked on a collection instance that does not support this operation. This behavior is consistent
+    /// with the contract of optional methods defined in the [Collection] interface.
+    ///
+    /// @see Collection#containsAll(Collection)
+    /// @throws org.opentest4j.AssertionFailedError if the exception is not thrown or is of an incorrect type
+    /// @since 1.0.0
+    @DisplayName("containsAll(Collection) throws UnsupportedOperationException when not supported")
+    @Test
+    default void containAll_whenNotSupported_throwsUnsupportedOperationException() {
+        if (!supportsMethod(CollectionMethods.CONTAINS_ALL)) {
+            assertThrows(UnsupportedOperationException.class,
+                    () -> provider().emptyInstance().containsAll(Collections.emptyList()));
+        }
     }
 }
