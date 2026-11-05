@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /// @author evanbergstrom
 /// @see SequencedCollection#getLast
 /// @since 1.0.0
-public interface GetLastContract<E, C extends SequencedCollection<E>> extends CollectionContractSupport<E, C> {
+public interface GetLastContract<C extends SequencedCollection<E>, E> extends CollectionContractSupport<C, E> {
 
     /// Verifies that [getLast][SequencedCollection#getLast] returns the last element when the collection is not empty.
     ///

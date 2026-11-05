@@ -33,7 +33,7 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
 /// ```java
 /// class MyCollectionAddAllTest implements AddAllContract<String, MyCollection<String>> {
 ///     @Override
-///     public CollectionProvider<String, MyCollection<String>> provider() {
+///     public CollectionProvider<String, MyCollection<String>> objectProvider() {
 ///         return MyCollection::new;
 ///     }
 ///
@@ -53,7 +53,7 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
 /// @author evanbergstrom
 /// @see Collection#addAll
 /// @since 1.0.0
-public interface AddAllContract<E, C extends Collection<E>> extends CollectionContractSupport<E, C> {
+public interface AddAllContract<C extends Collection<E>, E> extends CollectionContractSupport<C, E> {
 
 
     /// Tests that the [addAll][Collection#addAll] method successfully adds elements to an empty collection.
@@ -72,6 +72,35 @@ public interface AddAllContract<E, C extends Collection<E>> extends CollectionCo
             Collection<E> values = elementProvider().createUniqueInstances(DEFAULT_SIZE);
 
             assertTrue(collection.addAll(unmodifiableCollection(values)));
+            assertContainsSameByIdentity(values, collection);
+        }
+    }
+
+    /// Tests that the [Collection#addAll(Collection)] method successfully adds all elements
+    /// from a source collection to a target collection that already contains elements.
+    ///
+    /// This test verifies the following:
+    ///     - The target collection's size increases to include all elements from the source collection.
+    ///     - The method returns `true`, indicating that the collection has been modified.
+    ///     - The target collection contains all elements from both the initial state and the source collection,
+    ///     maintaining element identity.
+    ///
+    /// If the `addAll` method is not supported, the test is skipped by verifying the result
+    /// of [#supportsMethod(org.soliscode.test.InterfaceMethod)] with [CollectionMethods#ADD_ALL].
+    ///
+    /// Implementation assumptions:
+    ///     - The initial collection is created with unique elements provided by [#elementProvider()].
+    ///     - Verification ensures that the final collection contains the same instances as provided, ensuring
+    ///     correctness by identity comparison.
+    /// @since 1.0.0
+    @DisplayName("addAll(Collection) adds all argument elements to a collection with elements")
+    @Test
+    default void addAll_whenContainerHasElements_addsAllArgumentElements() {
+        if (supportsMethod(CollectionMethods.ADD_ALL)) {
+            List<E> values = elementProvider().createUniqueInstances(DEFAULT_SIZE);
+            Collection<E> collection = provider().createInstance(values.subList(0, DEFAULT_SIZE / 2 ));
+
+            assertTrue(collection.addAll(unmodifiableCollection(values.subList(DEFAULT_SIZE / 2, DEFAULT_SIZE))));
             assertContainsSameByIdentity(values, collection);
         }
     }
@@ -170,11 +199,20 @@ public interface AddAllContract<E, C extends Collection<E>> extends CollectionCo
     @DisplayName("addAll(Collection) handles incompatible types based on permission")
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    default void addAll_withIncompatibleType_throwsClassCastException() {
-        if (supportsMethod(CollectionMethods.ADD_ALL) && !permitIncompatibleTypes()) {
-            Collection<E> collection = provider().emptyInstance();
-            Collection incompatibleValues = Collections.singletonList(new MatchNothing());
-            assertThrows(ClassCastException.class, () -> collection.addAll(incompatibleValues));
+    default void addAll_withIncompatibleType_handlesCorrectly() {
+        if (supportsMethod(CollectionMethods.ADD_ALL)) {
+            if (permitIncompatibleTypes()) {
+                Collection<E> collection = provider().emptyInstance();
+                Object element = new Object();
+                Collection incompatibleValues = Collections.singletonList(element);
+                collection.addAll(incompatibleValues);
+                assertEquals(1, collection.size());
+                assertTrue(collection.contains(element));
+            } else {
+                Collection<E> collection = provider().emptyInstance();
+                Collection incompatibleValues = Collections.singletonList(new MatchNothing());
+                assertThrows(ClassCastException.class, () -> collection.addAll(incompatibleValues));
+            }
         }
     }
 

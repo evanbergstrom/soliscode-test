@@ -23,9 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /// To use this contract, implement it in your test class along with the required support interfaces:
 ///
 /// ```java
-/// class MyNavigableMapCeilingEntryTest implements CeilingEntryContract<String, String, MyNavigableMap<String, String>> {
+/// class MyNavigableMapCeilingEntryTest implements CeilingEntryContract<MyNavigableMap<String, String>, String, String> {
 ///     @Override
-///     public MapProvider<String, String, MyNavigableMap<String, String>> provider() {
+///     public MapProvider<MyNavigableMap<String, String>, String, String> objectProvider() {
 ///         return MyNavigableMap::new;
 ///     }
 /// }
@@ -35,13 +35,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /// This contract interface does not provide any thread-safety guarantees. The thread safety of the
 /// tests depends on the [NavigableMap] and [org.soliscode.test.provider.MapProvider] implementations being tested.
 ///
+/// @param <M> The map type being tested.
 /// @param <K> The key type being tested.
 /// @param <V> The value type being tested.
-/// @param <M> The map type being tested.
 /// @author evanbergstrom
 /// @see NavigableMap#ceilingEntry
 /// @since 1.0.0
-public interface CeilingEntryContract<K, V, M extends NavigableMap<K, V>> extends MapContractSupport<K, V, M> {
+public interface CeilingEntryContract<M extends NavigableMap<K, V>, K, V> extends MapContractSupport<M, K, V> {
 
     /// Tests that the [ceilingEntry][NavigableMap#ceilingEntry] method can be called and
     /// returns expected results when elements are present.

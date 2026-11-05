@@ -18,7 +18,7 @@ import java.util.SequencedCollection;
 /// class MySequencedCollectionTest implements SequencedCollectionContract<String, MySequencedCollection<String>>,
 ///                                            WithStringElement {
 ///     @Override
-///     public SequencedCollectionProvider<String, MySequencedCollection<String>> provider() {
+///     public SequencedCollectionProvider<String, MySequencedCollection<String>> objectProvider() {
 ///         return MySequencedCollection::new;
 ///     }
 /// }
@@ -33,15 +33,15 @@ import java.util.SequencedCollection;
 /// @author evanbergstrom
 /// @see SequencedCollection
 /// @since 1.0.0
-public interface SequencedCollectionContract<E, C extends SequencedCollection<E>>
-        extends CollectionContract<E, C>,
-        AddFirstContract<E, C>,
-        AddLastContract<E, C>,
-        GetFirstContract<E, C>,
-        GetLastContract<E, C>,
-        RemoveFirstContract<E, C>,
-        RemoveLastContract<E, C>,
-        ReversedContract<E, C> {
+public interface SequencedCollectionContract<C extends SequencedCollection<E>, E>
+        extends CollectionContract<C, E>,
+        AddFirstContract<C, E>,
+        AddLastContract<C, E>,
+        GetFirstContract<C, E>,
+        GetLastContract<C, E>,
+        RemoveFirstContract<C, E>,
+        RemoveLastContract<C, E>,
+        ReversedContract<C, E> {
 
     /// Configures the contract to expect that modification methods are not supported.
     ///

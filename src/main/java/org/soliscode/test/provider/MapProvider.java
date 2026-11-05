@@ -22,13 +22,13 @@ import java.util.Map;
 ///
 /// ### Basic Map Creation
 /// ```java
-/// MapProvider<String, Integer, HashMap<String, Integer>> provider =
+/// MapProvider<String, Integer, HashMap<String, Integer>> objectProvider =
 ///     MapProviders.hashMapProvider(new StringProvider(), new IntegerProvider());
 ///
 /// // Create maps with different characteristics
-/// Map<String, Integer> empty = provider.emptyInstance();                    // {}
-/// Map<String, Integer> single = provider.createSingleton("test", 1);         // {"test"=1}
-/// Map<String, Integer> multiple = provider.createInstance(3);                // 3 entry map
+/// Map<String, Integer> empty = objectProvider.emptyInstance();                    // {}
+/// Map<String, Integer> single = objectProvider.createSingleton("test", 1);         // {"test"=1}
+/// Map<String, Integer> multiple = objectProvider.createInstance(3);                // 3 entry map
 /// ```
 ///
 /// ### Provider Integration
@@ -60,18 +60,18 @@ import java.util.Map;
 /// @see MapProviders
 public interface MapProvider<K, V, M extends Map<K, V>> extends ObjectProvider<M> {
 
-    /// Returns the object provider used to create keys for map instances.
+    /// Returns the object objectProvider used to create keys for map instances.
     ///
-    /// This provider is responsible for generating the individual keys that populate
+    /// This objectProvider is responsible for generating the individual keys that populate
     /// the maps created by this MapProvider.
     ///
     /// @return the ObjectProvider used for generating map keys
     /// @complexity constant time
     @NonNull ObjectProvider<K> keyProvider();
 
-    /// Returns the object provider used to create values for map instances.
+    /// Returns the object objectProvider used to create values for map instances.
     ///
-    /// This provider is responsible for generating the individual values that populate
+    /// This objectProvider is responsible for generating the individual values that populate
     /// the maps created by this MapProvider.
     ///
     /// @return the ObjectProvider used for generating map values
@@ -136,7 +136,7 @@ public interface MapProvider<K, V, M extends Map<K, V>> extends ObjectProvider<M
     ///
     /// @param size the exact number of entries to include
     /// @return an instance of the map containing the specified number of entries
-    /// @throws IllegalArgumentException if size is negative or exceeds provider limits
+    /// @throws IllegalArgumentException if size is negative or exceeds objectProvider limits
     /// @complexity depends on the map implementation and requested size
     @NonNull M createInstance(int size);
 
@@ -148,7 +148,7 @@ public interface MapProvider<K, V, M extends Map<K, V>> extends ObjectProvider<M
     /// @param size the exact number of entries to include
     /// @param seed the starting seed value for entry generation
     /// @return an instance of the map containing entries starting from the seed
-    /// @throws IllegalArgumentException if size is negative or exceeds provider limits
+    /// @throws IllegalArgumentException if size is negative or exceeds objectProvider limits
     /// @complexity depends on the map implementation and requested size
     @NonNull M createInstance(int size, long seed);
 }

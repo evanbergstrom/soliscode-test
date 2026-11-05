@@ -9,7 +9,7 @@ import org.soliscode.test.AbstractTest;
 import org.soliscode.test.InterfaceMethod;
 import org.soliscode.test.breakable.Break;
 import org.soliscode.test.breakable.BreakableIterable;
-import org.soliscode.test.contract.ContractTest;
+import org.soliscode.test.contract.AbstractContractTest;
 import org.soliscode.test.contract.DynamicContract;
 import org.soliscode.test.contract.dynamic.DynamicBrokenIterableContract;
 import org.soliscode.test.contract.support.WithIntegerElement;
@@ -22,14 +22,25 @@ import java.util.Collection;
 /// @author evanbergstrom
 /// @since 1.0
 @DisplayName("Tests for IterableContract class")
-public class IterableContractTest extends ContractTest<BreakableIterable<Integer>> {
+public class IterableContractTest extends AbstractContractTest<BreakableIterable<Integer>> {
+
+    /// Default constructor.
+    public IterableContractTest() {
+        super();
+    }
 
     /// Verifies that the tests c all pass when testing a working Iterable implementation.
     /// In this case, instances of `BreakableIterable` are used that have no breaks specified.
     @Nested
     public class WorkingIterableTest extends AbstractTest
             implements IterableContract<Integer, BreakableIterable<Integer>>,
-                BreakableIterable.WithProvider<Integer>, WithIntegerElement {}
+                BreakableIterable.WithProvider<Integer>, WithIntegerElement {
+
+        /// Default constructor.
+        public WorkingIterableTest() {
+            super();
+        }
+    }
 
 
     @Override

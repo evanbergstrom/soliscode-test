@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /// ```java
 /// class MyListIndexOfTest implements IndexOfContract<String, MyList<String>> {
 ///     @Override
-///     public CollectionProvider<String, MyList<String>> provider() {
+///     public CollectionProvider<String, MyList<String>> objectProvider() {
 ///         return MyList::new;
 ///     }
 /// }
@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /// @author evanbergstrom
 /// @see List#indexOf
 /// @since 1.0.0
-public interface IndexOfContract<E, L extends List<E>> extends CollectionContractSupport<E, L> {
+public interface IndexOfContract<L extends List<E>, E> extends CollectionContractSupport<L, E> {
 
     /// Tests that the [indexOf][List#indexOf] method works for elements present in the list.
     ///

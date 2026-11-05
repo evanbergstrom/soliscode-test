@@ -22,9 +22,9 @@ import java.util.SortedMap;
 /// To use this contract, implement it in your test class along with the required support interfaces:
 ///
 /// ```java
-/// class MySortedMapContractTest implements SortedMapContract<String, String, MySortedMap<String, String>> {
+/// class MySortedMapContractTest implements SortedMapContract<MySortedMap<String, String>, String, String> {
 ///     @Override
-///     public MapProvider<String, String, MySortedMap<String, String>> provider() {
+///     public MapProvider<MySortedMap<String, String>, String, String> objectProvider() {
 ///         return MySortedMap::new;
 ///     }
 /// }
@@ -34,22 +34,22 @@ import java.util.SortedMap;
 /// This contract interface does not provide any thread-safety guarantees. The thread safety of the
 /// tests depends on the [SortedMap] and [org.soliscode.test.provider.MapProvider] implementations being tested.
 ///
+/// @param <M> The map type being tested.
 /// @param <K> The key type being tested.
 /// @param <V> The value type being tested.
-/// @param <M> The map type being tested.
 /// @author evanbergstrom
 /// @see SortedMap
 /// @since 1.0.0
-public interface SortedMapContract<K, V, M extends SortedMap<K, V>> extends SequencedMapContract<K, V, M>,
-        ComparatorContract<K, V, M>,
-        SubMapContract<K, V, M>,
-        HeadMapContract<K, V, M>,
-        TailMapContract<K, V, M>,
-        FirstKeyContract<K, V, M>,
-        LastKeyContract<K, V, M>,
-        SortedPutFirstContract<K, V, M>,
-        SortedPutLastContract<K, V, M>,
-        SortedReversedContract<K, V, M> {
+public interface SortedMapContract<M extends SortedMap<K, V>, K, V> extends SequencedMapContract<M, K, V>,
+        ComparatorContract<M, K, V>,
+        SubMapContract<M, K, V>,
+        HeadMapContract<M, K, V>,
+        TailMapContract<M, K, V>,
+        FirstKeyContract<M, K, V>,
+        LastKeyContract<M, K, V>,
+        SortedPutFirstContract<M, K, V>,
+        SortedPutLastContract<M, K, V>,
+        SortedReversedContract<M, K, V> {
 
     @Override
     boolean supportsMethod(InterfaceMethod method);

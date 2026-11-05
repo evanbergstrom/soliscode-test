@@ -13,7 +13,7 @@ import java.util.Collection;
 /// ## Purpose
 ///
 /// `CollectionProvider` enables systematic testing of collection implementations by providing:
-/// - Controlled element generation through an associated element provider
+/// - Controlled element generation through an associated element objectProvider
 /// - Various collection sizes and configurations
 /// - Deterministic content based on seed values
 /// - Support for unique element constraints
@@ -22,13 +22,13 @@ import java.util.Collection;
 ///
 /// ### Basic Collection Creation
 /// ```java
-/// CollectionProvider<String, List<String>> provider =
+/// CollectionProvider<String, List<String>> objectProvider =
 ///     CollectionProviders.arrayListProvider(new StringProvider());
 ///
 /// // Create collections with different characteristics
-/// List<String> empty = provider.emptyInstance();                    // []
-/// List<String> single = provider.createSingleton("test");           // ["test"]
-/// List<String> multiple = provider.createInstance(3);               // 3 string elements
+/// List<String> empty = objectProvider.emptyInstance();                    // []
+/// List<String> single = objectProvider.createSingleton("test");           // ["test"]
+/// List<String> multiple = objectProvider.createInstance(3);               // 3 string elements
 /// ```
 ///
 /// ### Element Provider Integration
@@ -37,19 +37,19 @@ import java.util.Collection;
 /// CollectionProvider<Integer, Set<Integer>> setProvider =
 ///     CollectionProviders.hashSetProvider(elementProvider);
 ///
-/// // Access the underlying element provider
+/// // Access the underlying element objectProvider
 /// ObjectProvider<Integer> elements = setProvider.elementProvider();
 /// Integer maxElement = elements.createInstance(Integer.MAX_VALUE);
 /// ```
 ///
 /// ### Unique Element Collections
 /// ```java
-/// CollectionProvider<String, List<String>> provider =
+/// CollectionProvider<String, List<String>> objectProvider =
 ///     CollectionProviders.arrayListProvider(new StringProvider());
 ///
 /// // Create collections with guaranteed unique elements
-/// List<String> unique5 = provider.createInstanceWithUniqueElements(5);
-/// List<String> uniqueSeeded = provider.createInstanceWithUniqueElements(10, 42);
+/// List<String> unique5 = objectProvider.createInstanceWithUniqueElements(5);
+/// List<String> uniqueSeeded = objectProvider.createInstanceWithUniqueElements(10, 42);
 /// ```
 ///
 /// ## Implementation Requirements
@@ -57,7 +57,7 @@ import java.util.Collection;
 /// Implementations must ensure:
 /// - Consistent behavior for the same seed values
 /// - Element uniqueness when using unique element methods
-/// - Proper delegation to the element provider for content generation
+/// - Proper delegation to the element objectProvider for content generation
 /// - Type safety and null safety throughout
 ///
 /// @param <E> the element type contained within the iterable
@@ -66,11 +66,11 @@ import java.util.Collection;
 /// @since 1.0.0
 /// @see ObjectProvider
 /// @see CollectionProviders
-public interface CollectionProvider<E, I extends Iterable<E>> extends ObjectProvider<I> {
+public interface CollectionProvider<I extends Iterable<E>, E> extends ObjectProvider<I> {
 
-    /// Returns the element provider used to create elements for collection instances.
+    /// Returns the element objectProvider used to create elements for collection instances.
     ///
-    /// This provider is responsible for generating the individual elements that populate
+    /// This objectProvider is responsible for generating the individual elements that populate
     /// the collections created by this CollectionProvider. It determines the characteristics
     /// of the elements such as their values, distribution, and uniqueness properties.
     ///
@@ -96,10 +96,10 @@ public interface CollectionProvider<E, I extends Iterable<E>> extends ObjectProv
     /// ## Examples
     ///
     /// ```java
-    /// CollectionProvider<String, List<String>> provider =
+    /// CollectionProvider<String, List<String>> objectProvider =
     ///     CollectionProviders.arrayListProvider(new StringProvider());
     ///
-    /// List<String> empty = provider.emptyInstance();
+    /// List<String> empty = objectProvider.emptyInstance();
     /// assertTrue(empty.isEmpty());
     /// assertEquals(0, empty.size());
     /// ```
@@ -140,16 +140,16 @@ public interface CollectionProvider<E, I extends Iterable<E>> extends ObjectProv
     ///
     /// - Same seed values produce identical collections
     /// - Different seeds produce different collections (content, size, or both)
-    /// - Elements are generated using the associated element provider
+    /// - Elements are generated using the associated element objectProvider
     ///
     /// ## Examples
     ///
     /// ```java
-    /// CollectionProvider<String, List<String>> provider =
+    /// CollectionProvider<String, List<String>> objectProvider =
     ///     CollectionProviders.arrayListProvider(new StringProvider());
     ///
-    /// List<String> list1 = provider.createInstance(42);
-    /// List<String> list2 = provider.createInstance(42);
+    /// List<String> list1 = objectProvider.createInstance(42);
+    /// List<String> list2 = objectProvider.createInstance(42);
     /// assertEquals(list1, list2);  // Same seed produces identical content
     /// ```
     ///
@@ -158,18 +158,18 @@ public interface CollectionProvider<E, I extends Iterable<E>> extends ObjectProv
     /// @complexity depends on the collection implementation and generated size
     @NonNull I createInstance(long seed);
 
-    /// Creates an iterable instance containing a single element from the element provider.
+    /// Creates an iterable instance containing a single element from the element objectProvider.
     ///
-    /// This method creates a singleton collection using the element provider's default
+    /// This method creates a singleton collection using the element objectProvider's default
     /// instance, which is useful for testing single-element scenarios and edge cases.
     ///
     /// ## Examples
     ///
     /// ```java
-    /// CollectionProvider<String, List<String>> provider =
+    /// CollectionProvider<String, List<String>> objectProvider =
     ///     CollectionProviders.arrayListProvider(new StringProvider());
     ///
-    /// List<String> singleton = provider.createSingleton();  // [""] (empty string default)
+    /// List<String> singleton = objectProvider.createSingleton();  // [""] (empty string default)
     /// assertEquals(1, singleton.size());
     /// ```
     ///
@@ -207,11 +207,11 @@ public interface CollectionProvider<E, I extends Iterable<E>> extends ObjectProv
     /// ## Examples
     ///
     /// ```java
-    /// CollectionProvider<String, List<String>> provider =
+    /// CollectionProvider<String, List<String>> objectProvider =
     ///     CollectionProviders.arrayListProvider(new StringProvider());
     ///
     /// String[] array = {"a", "b", "c"};
-    /// List<String> list = provider.createInstance(array);  // ["a", "b", "c"]
+    /// List<String> list = objectProvider.createInstance(array);  // ["a", "b", "c"]
     /// assertEquals(Arrays.asList(array), list);
     /// ```
     ///
@@ -231,7 +231,7 @@ public interface CollectionProvider<E, I extends Iterable<E>> extends ObjectProv
     ///
     /// For any two elements `e1` and `e2` in the result:
     /// - `e1.equals(e2)` returns `false` (unless they are the same object)
-    /// - No duplicate values based on element provider generation
+    /// - No duplicate values based on element objectProvider generation
     ///
     /// ## Examples
     ///
@@ -250,23 +250,23 @@ public interface CollectionProvider<E, I extends Iterable<E>> extends ObjectProv
     /// Creates an iterable instance with the specified number of unique elements.
     ///
     /// This method generates a collection with exactly the requested number of elements,
-    /// all guaranteed to be unique. Elements are generated using the element provider
+    /// all guaranteed to be unique. Elements are generated using the element objectProvider
     /// with sequential seed values to ensure uniqueness.
     ///
     /// ## Examples
     ///
     /// ```java
-    /// CollectionProvider<String, List<String>> provider =
+    /// CollectionProvider<String, List<String>> objectProvider =
     ///     CollectionProviders.arrayListProvider(new StringProvider());
     ///
-    /// List<String> unique5 = provider.createInstanceWithUniqueElements(5);
+    /// List<String> unique5 = objectProvider.createInstanceWithUniqueElements(5);
     /// assertEquals(5, unique5.size());
     /// assertEquals(5, new HashSet<>(unique5).size());  // All unique
     /// ```
     ///
     /// @param size the exact number of unique elements to include
     /// @return an instance of the iterable containing the specified number of unique elements
-    /// @throws IllegalArgumentException if size is negative or exceeds element provider limits
+    /// @throws IllegalArgumentException if size is negative or exceeds element objectProvider limits
     /// @complexity depends on the collection implementation and requested size
     @NonNull I createInstanceWithUniqueElements(int size);
 
@@ -285,18 +285,18 @@ public interface CollectionProvider<E, I extends Iterable<E>> extends ObjectProv
     /// ## Examples
     ///
     /// ```java
-    /// CollectionProvider<Integer, List<Integer>> provider =
+    /// CollectionProvider<Integer, List<Integer>> objectProvider =
     ///     CollectionProviders.arrayListProvider(new IntegerProvider());
     ///
-    /// List<Integer> unique1 = provider.createInstanceWithUniqueElements(3, 10);  // [10, 11, 12]
-    /// List<Integer> unique2 = provider.createInstanceWithUniqueElements(3, 10);  // [10, 11, 12]
+    /// List<Integer> unique1 = objectProvider.createInstanceWithUniqueElements(3, 10);  // [10, 11, 12]
+    /// List<Integer> unique2 = objectProvider.createInstanceWithUniqueElements(3, 10);  // [10, 11, 12]
     /// assertEquals(unique1, unique2);  // Same seed produces same result
     /// ```
     ///
     /// @param size the exact number of unique elements to include
     /// @param seed the starting seed value for element generation
     /// @return an instance of the iterable containing unique elements starting from the seed
-    /// @throws IllegalArgumentException if size is negative or exceeds element provider limits
+    /// @throws IllegalArgumentException if size is negative or exceeds element objectProvider limits
     /// @complexity depends on the collection implementation and requested size
     @NonNull I createInstanceWithUniqueElements(int size, int seed);
 }

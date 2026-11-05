@@ -16,8 +16,8 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
 /// @param <C> The collection type being tested.
 /// @author evanbergstrom
 /// @since 1.0.0
-public interface ThreadSafeCollectionContractSupport<E, C extends Collection<E>>
-        extends CollectionContractSupport<E, C> {
+public interface ThreadSafeCollectionContractSupport<C extends Collection<E>, E>
+        extends CollectionContractSupport<C, E> {
 
     /// Asserts that the collection is still functional after concurrent operations.
     ///

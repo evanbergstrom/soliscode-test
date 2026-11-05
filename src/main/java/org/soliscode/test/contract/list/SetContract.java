@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// ```java
 /// class MyListSetTest implements SetContract<String, MyList<String>> {
 ///     @Override
-///     public CollectionProvider<String, MyList<String>> provider() {
+///     public CollectionProvider<String, MyList<String>> objectProvider() {
 ///         return MyList::new;
 ///     }
 /// }
@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// @author evanbergstrom
 /// @see List#set
 /// @since 1.0.0
-public interface SetContract<E, L extends List<E>> extends CollectionContractSupport<E, L> {
+public interface SetContract<L extends List<E>, E> extends CollectionContractSupport<L, E> {
 
     /// Tests that the [set][List#set] method works for valid indices.
     ///

@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// @author evanbergstrom
 /// @see Deque#offerLast
 /// @since 1.0.0
-public interface OfferLastContract<E, D extends Deque<E>> extends CollectionContractSupport<E, D> {
+public interface OfferLastContract<D extends Deque<E>, E> extends CollectionContractSupport<D, E> {
 
     /// Tests that the [offerLast][Deque#offerLast] method correctly adds a single element to the end of the deque.
     @DisplayName("offerLast(E) adds a single element to the end and updates size")

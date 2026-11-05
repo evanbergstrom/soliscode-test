@@ -195,6 +195,9 @@ public final class CollectionTestUtils {
 
             @Override
             public boolean contains(final Object o) {
+                if (o == null) {
+                    throw new NullPointerException();
+                }
                 return list.contains(o);
             }
 

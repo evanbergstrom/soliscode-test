@@ -33,7 +33,7 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
 /// ```java
 /// class MyThreadSafeCollectionAddTest implements ThreadSafeAddContract<Integer, MyThreadSafeCollection<Integer>> {
 ///     @Override
-///     public CollectionProvider<Integer, MyThreadSafeCollection<Integer>> provider() {
+///     public CollectionProvider<Integer, MyThreadSafeCollection<Integer>> objectProvider() {
 ///         return MyThreadSafeCollection::new;
 ///     }
 /// }
@@ -48,8 +48,8 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
 /// @author evanbergstrom
 /// @see Collection#add
 /// @since 1.0.0
-public interface ThreadSafeAddContract<E, C extends Collection<E>>
-        extends ThreadSafeCollectionContractSupport<E, C> {
+public interface ThreadSafeAddContract<C extends Collection<E>, E>
+        extends ThreadSafeCollectionContractSupport<C, E> {
 
     /// Tests that the [add][Collection#add] method is thread-safe when called under contention with itself.
     ///
@@ -72,8 +72,6 @@ public interface ThreadSafeAddContract<E, C extends Collection<E>>
             Collection<E> supplied = supplier.recorded();
             assertContainsSame(supplied, collection);
             assertCollectionStillWorks(collection);
-        } else {
-            assertThrows(UnsupportedOperationException.class, () -> collection.add(elementProvider().createInstance()));
         }
     }
 

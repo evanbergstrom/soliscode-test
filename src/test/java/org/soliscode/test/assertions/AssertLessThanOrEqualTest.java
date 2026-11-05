@@ -32,6 +32,9 @@ import static org.soliscode.test.assertions.AssertLessThanOrEqual.assertLessThan
 @DisplayName("AssertLessThanOrEqual Tests")
 class AssertLessThanOrEqualTest {
 
+    /// Default constructor.
+    public AssertLessThanOrEqualTest() {}
+
     /**
      * ## Test: Basic Integer Comparison - Success Case (Less Than)
      *

@@ -103,7 +103,7 @@ class AssertGreaterThanTest {
      * **Test Scenarios:**
      * - "banana" > "apple" (alphabetical ordering)
      * - "b" > "a" (single character comparison)
-     * - "a" > "" (non-empty string vs empty)
+     * - "a" > "" (non-empty string vs. empty)
      */
     @Test
     @DisplayName("assertGreaterThan passes with strings in reverse alphabetical order")
@@ -142,7 +142,7 @@ class AssertGreaterThanTest {
      * **Test Scenarios:**
      * - 3.0 > 2.5 (success case)
      * - 3.14160 > 3.14159 (high precision comparison)
-     * - 5.0 vs 5.0 (equal doubles should fail)
+     * - 5.0 vs. 5.0 (equal doubles should fail)
      */
     @Test
     @DisplayName("assertGreaterThan works with double precision numbers")
@@ -212,7 +212,7 @@ class AssertGreaterThanTest {
      * the second method variant that accepts a static error message.
      *
      * **Test Scenario:**
-     * - Failing assertion with custom message: "Custom error message"
+     * - Failing assertion with a custom message: "Custom error message"
      * - Expected result: AssertionFailedError containing the custom message
      */
     @Test

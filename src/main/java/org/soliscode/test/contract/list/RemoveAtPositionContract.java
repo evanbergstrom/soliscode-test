@@ -11,7 +11,7 @@ import java.util.List;
 /// @author evanbergstrom
 /// @since 1.0
 /// @see List#sort(java.util.Comparator)
-public interface RemoveAtPositionContract<E, L extends List<E>> extends CollectionContractSupport<E, L> {
+public interface RemoveAtPositionContract<L extends List<E>, E> extends CollectionContractSupport<L, E> {
 
     // TODO: Implement tests for the List::remove(int) method.
 }

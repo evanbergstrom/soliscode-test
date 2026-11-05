@@ -833,7 +833,7 @@ public final class Assertions {
                                                       final @NonNull Supplier<String> supplier) {
         AssertStringContains.assertStringContainsIgnoreCase(List.of(expected), actual, supplier);
     }
-    /// Asserts that the actual string contains all of the expected substrings.
+    /// Asserts that the actual string contains all the expected substrings.
     ///
     /// This method verifies that every substring in the expected list appears somewhere within
     /// the actual string. The order of appearance is not checked - use `assertStringContainsInOrder`
@@ -872,7 +872,7 @@ public final class Assertions {
         AssertStringContains.assertStringContains(expected, actual);
     }
 
-    /// Asserts that the actual string contains all of the expected substrings, ignoring case differences.
+    /// Asserts that the actual string contains all the expected substrings, ignoring case differences.
     ///
     /// This method verifies that every substring in the expected list appears somewhere within
     /// the actual string, performing case-insensitive matching. The order of appearance is not
@@ -907,7 +907,7 @@ public final class Assertions {
         AssertStringContains.assertStringContainsIgnoreCase(expected, actual);
     }
 
-    /// Asserts that the actual string contains all of the expected substrings with a custom error message.
+    /// Asserts that the actual string contains all the expected substrings with a custom error message.
     ///
     /// @param expected the list of substrings that must all be present in the actual string
     /// @param actual the string to search within
@@ -920,7 +920,7 @@ public final class Assertions {
         AssertStringContains.assertStringContains(expected, actual, message);
     }
 
-    /// Asserts that the actual string contains all of the expected substrings with a custom error message, ignoring
+    /// Asserts that the actual string contains all the expected substrings with a custom error message, ignoring
     /// case differences.
     ///
     /// @param expected the list of substrings that must all be present in the actual string (case-insensitive)
@@ -935,7 +935,7 @@ public final class Assertions {
         AssertStringContains.assertStringContainsIgnoreCase(expected, actual, message);
     }
 
-    /// Asserts that the actual string contains all of the expected substrings with a lazily-evaluated error message.
+    /// Asserts that the actual string contains all the expected substrings with a lazily-evaluated error message.
     ///
     /// @param expected the list of substrings that must all be present in the actual string
     /// @param actual the string to search within
@@ -949,7 +949,7 @@ public final class Assertions {
         AssertStringContains.assertStringContains(expected, actual, supplier);
     }
 
-    /// Asserts that the actual string contains all of the expected substrings with a lazily-evaluated error message,
+    /// Asserts that the actual string contains all the expected substrings with a lazily-evaluated error message,
     /// ignoring case differences.
     ///
     /// @param expected the list of substrings that must all be present in the actual string (case-insensitive)

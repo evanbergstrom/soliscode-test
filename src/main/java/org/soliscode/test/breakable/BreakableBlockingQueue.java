@@ -483,26 +483,23 @@ public class BreakableBlockingQueue<E> extends BreakableQueue<E> implements Bloc
                 other.compatibleType());
     }
 
-    /// Creates a `BreakableBlockingQueue` with the specified configuration.
+    /// Constructs a `BreakableBlockingQueue` that wraps a specified [BlockingQueue]
+    /// to provide additional functionality, including the ability to introduce breaks in the
+    /// queue and manage method-level states.
     ///
-    /// This constructor allows full control over the `BreakableBlockingQueue` configuration,
-    /// including the underlying `BlockingQueue`, breaks, and spliterator characteristics.
-    ///
-    /// **Usage:**
-    /// ```java
-    /// LinkedBlockingQueue<String> linkedQueue = new LinkedBlockingQueue<>();
-    /// Set<Break> breaks = Set.of(PUT_ALWAYS_BLOCKS);
-    /// BreakableBlockingQueue<String> queue = new BreakableBlockingQueue<>(
-    ///     linkedQueue, breaks, new HashMap<>(), 0, DEFAULT_PERMITS);
-    /// ```
-    ///
-    /// @param blockingQueue the `BlockingQueue` to wrap; must not be null
-    /// @param breaks the breaks to apply; must not be null
-    /// @param methodStatuses the method status configuration; must not be null
-    /// @param characteristics the spliterator characteristics
-    /// @param permits the flags that indicate what types of values are supported by the collection
-    /// @throws NullPointerException if `blockingQueue`, `breaks`, or `methodStatuses` is null
-    /// @since 1.0
+    /// @param blockingQueue   The [BlockingQueue] instance to be wrapped. Must not be `null`.
+    /// @param breaks          A [Set] of `Break` configurations defining break conditions.
+    ///                        Must not be `null`.
+    /// @param methodStatuses  A [Map] associating [InterfaceMethod] to its [MethodStatus] instances,
+    ///                        specifying the status or state of each method. Must not be `null`.
+    /// @param characteristics An `int` representing the characteristics of the queue, such as thread safety
+    ///                        or ordering guarantees.
+    /// @param permits         The number of permits for the internal semaphore controlling access.
+    ///                        Must be a non-negative integer.
+    /// @param isSafe          A `boolean` indicating whether the queue operations are thread-safe.
+    ///                        `true` if thread-safe; otherwise, `false`.
+    /// @param compatibleType  The [Class] representing the type of objects that the queue can operate on.
+    ///                        Used for type compatibility checks. Must not be `null`.
     protected BreakableBlockingQueue(
             final @NonNull BlockingQueue<E> blockingQueue,
             final @NonNull Set<Break> breaks,
@@ -1086,9 +1083,14 @@ public class BreakableBlockingQueue<E> extends BreakableQueue<E> implements Bloc
             return new Builder<>(this);
         }
 
+        @Override
+        public @NonNull BreakableBlockingQueue<E> copy(final @NonNull BreakableBlockingQueue<E> other) {
+            return new BreakableBlockingQueue<>(other);
+        }
+
         /// {@inheritDoc}
         @Override
-        public Builder<E> self() {
+        public @NonNull Builder<E> self() {
             return this;
         }
 

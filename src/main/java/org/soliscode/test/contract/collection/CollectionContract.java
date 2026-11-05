@@ -30,7 +30,7 @@ import java.util.Collection;
 ///     }
 ///
 ///     @Override
-///     public CollectionProvider<Integer, MyCollection<Integer>> provider() {
+///     public CollectionProvider<Integer, MyCollection<Integer>> objectProvider() {
 ///         return MyCollection::new;
 ///     }
 /// }
@@ -45,21 +45,21 @@ import java.util.Collection;
 /// @author evanbergstrom
 /// @see Collection
 /// @since 1.0.0
-public interface CollectionContract<E, C extends Collection<E>> extends IterableContract<E, C>,
+public interface CollectionContract<C extends Collection<E>, E> extends IterableContract<C, E>,
         CollectionContractConfig,
-        AddContract<E, C>,
-        AddAllContract<E, C>,
-        ClearContract<E, C>,
-        ContainsContract<E, C>,
-        ContainsAllContract<E, C>,
-        IsEmptyContract<E, C>,
-        RemoveContract<E, C>,
-        RemoveAllContract<E, C>,
-        RemoveIfContract<E, C>,
-        RetainAllContract<E, C>,
-        SizeContract<E, C>,
-        StreamContract<E, C>,
-        ToArrayContract<E, C> {
+        AddContract<C, E>,
+        AddAllContract<C, E>,
+        ClearContract<C, E>,
+        ContainsContract<C, E>,
+        ContainsAllContract<C, E>,
+        IsEmptyContract<C, E>,
+        RemoveContract<C, E>,
+        RemoveAllContract<C, E>,
+        RemoveIfContract<C, E>,
+        RetainAllContract<C, E>,
+        SizeContract<C, E>,
+        StreamContract<C, E>,
+        ToArrayContract<C, E> {
 
     @Override
     boolean supportsMethod(InterfaceMethod method);

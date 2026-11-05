@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// @author evanbergstrom
 /// @see Deque#pollLast
 /// @since 1.0.0
-public interface PollLastContract<E, D extends Deque<E>> extends CollectionContractSupport<E, D> {
+public interface PollLastContract<D extends Deque<E>, E> extends CollectionContractSupport<D, E> {
 
     /// Tests that the [pollLast][Deque#pollLast] method correctly retrieves and removes the last element.
     @DisplayName("pollLast() retrieves and removes the last element")

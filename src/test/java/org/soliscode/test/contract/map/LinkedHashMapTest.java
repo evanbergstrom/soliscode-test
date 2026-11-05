@@ -35,7 +35,12 @@ import java.util.LinkedHashMap;
 public class LinkedHashMapTest extends AbstractTest
         implements SequencedMapContract<Integer, String, LinkedHashMap<Integer,String>> {
 
-    /// Returns the provider for creating and populating `LinkedHashMap` instances.
+    /// Default constructor.
+    public LinkedHashMapTest() {
+        super();
+    }
+
+    /// Returns the objectProvider for creating and populating `LinkedHashMap` instances.
     ///
     /// This implementation uses [MapProviders#provideLinkedHashMap] to provide a
     /// [MapProvider] that creates [LinkedHashMap] instances with [Integer] keys

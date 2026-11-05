@@ -33,12 +33,12 @@ public final class CollectionProviders {
 
     private CollectionProviders() { }
 
-    /// Create an instance of this collection provider that uses the methods and element provider specified in the
+    /// Create an instance of this collection objectProvider that uses the methods and element objectProvider specified in the
     /// arguments for its implementation.
     ///
-    /// For example, to create a collection provider for an `ArrayList` of Integer objects:
+    /// For example, to create a collection objectProvider for an `ArrayList` of Integer objects:
     /// ```java
-    ///     CollectionProvider<Integer> provider = CollectionProviders.from(ArrayList::new, ArrayList::new,
+    ///     CollectionProvider<Integer> objectProvider = CollectionProviders.from(ArrayList::new, ArrayList::new,
     ///         ArrayList::new, Providers.integerProvider());
     /// ```
     /// @param <E> the element type.
@@ -46,10 +46,10 @@ public final class CollectionProviders {
     /// @param defaultConstructor the supplier to use to create default instances of the collection.
     /// @param copyConstructor the function to use to create a copy of the collection.
     /// @param collectionConstructor the function to use to create an instance from another collection.
-    /// @param elementProvider the element provider.
-    /// @return the collection provider.
+    /// @param elementProvider the element objectProvider.
+    /// @return the collection objectProvider.
     /// @throws NullPointerException if any of the arguments are `null`
-    public static <E, C extends Iterable<E>> CollectionProvider<E, C> from(
+    public static <C extends Iterable<E>, E> CollectionProvider<C, E> from(
             final @NonNull Supplier<C> defaultConstructor,
             final @NonNull Function<C, C> copyConstructor,
             final @NonNull Function<Collection<E>, C> collectionConstructor,
@@ -58,63 +58,63 @@ public final class CollectionProviders {
                 elementProvider);
     }
 
-    /// Creates a collection provider for instances of [ArrayList] with elements creates using the specified
-    /// @param elementProvider the provider to use to create the elements.
+    /// Creates a collection objectProvider for instances of [ArrayList] with elements creates using the specified
+    /// @param elementProvider the objectProvider to use to create the elements.
     /// @param <E> The type of the elements
-    /// @return the collection provider.
-    public static <E> @NonNull CollectionProvider<E, ArrayList<E>> provideArrayList(
+    /// @return the collection objectProvider.
+    public static <E> @NonNull CollectionProvider<ArrayList<E>, E> provideArrayList(
             final @NonNull ObjectProvider<E> elementProvider) {
         return CollectionProviders.from(ArrayList::new, ArrayList::new, ArrayList::new, elementProvider);
     }
 
-    /// Creates a collection provider for instances of [LinkedList] with elements creates using the specified
-    /// @param elementProvider the provider to use to create the elements.
+    /// Creates a collection objectProvider for instances of [LinkedList] with elements creates using the specified
+    /// @param elementProvider the objectProvider to use to create the elements.
     /// @param <E> The type of the elements
-    /// @return the collection provider.
-    public static <E> CollectionProvider<E, LinkedList<E>> provideLinkedList(
+    /// @return the collection objectProvider.
+    public static <E> CollectionProvider<LinkedList<E>, E> provideLinkedList(
             final @NonNull ObjectProvider<E> elementProvider) {
         return CollectionProviders.from(LinkedList::new, LinkedList::new, LinkedList::new, elementProvider);
     }
 
-    /// Creates a collection provider for instances of [HashSet] with elements creates using the specified
-    /// @param elementProvider the provider to use to create the elements.
+    /// Creates a collection objectProvider for instances of [HashSet] with elements creates using the specified
+    /// @param elementProvider the objectProvider to use to create the elements.
     /// @param <E> The type of the elements
-    /// @return the collection provider.
-    public static <E> CollectionProvider<E, HashSet<E>> provideHashSet(
+    /// @return the collection objectProvider.
+    public static <E> CollectionProvider<HashSet<E>, E> provideHashSet(
             final @NonNull ObjectProvider<E> elementProvider) {
         return CollectionProviders.from(HashSet::new, HashSet::new, HashSet::new, elementProvider);
     }
 
-    /// Provides a collection provider that supplies synchronized collections using the provided element provider.
-    /// This method wraps an [ArrayList] collection provider into a synchronized collection
-    /// by utilizing [Collections#synchronizedCollection(Collection)].
+    /// Provides a collection objectProvider that supplies synchronized collections using the provided element objectProvider.
+    /// This method wraps an [ArrayList] collection objectProvider into a synchronized collection
+    /// by using [Collections#synchronizedCollection(Collection)].
     /// It ensures thread-safety during access to the returned collection instances.
     ///
     /// @param <E> the type of elements in the collection.
-    /// @param elementProvider the provider responsible for supplying elements to the collection.
+    /// @param elementProvider the objectProvider responsible for supplying elements to the collection.
     ///                        Must not be `null`.
     /// @return a [CollectionProvider] that provides thread-safe synchronized collections.
     /// @throws NullPointerException if `elementProvider` is `null`.
-    public static <E> CollectionProvider<E, Collection<E>> provideSynchronizedCollection(
+    public static <E> CollectionProvider<Collection<E>, E> provideSynchronizedCollection(
             final @NonNull ObjectProvider<E> elementProvider) {
         return CollectionProviders.wrap(provideArrayList(elementProvider), Collections::synchronizedCollection);
     }
 
-    /// Creates a provider that wraps the provided collection from an underlying provider.
+    /// Creates a objectProvider that wraps the provided collection from an underlying objectProvider.
     /// @param <E> the element type.
     /// @param <C> the collection type provided by the underlying collection.
     /// @param <W> the collection type of the wrapped collection.
-    /// @param provider the underlying provider.
+    /// @param provider the underlying objectProvider.
     /// @param wrapper the function used to wrap the provided collection.
     /// @return the wrapped collection.
     public static <E, C extends Collection<E>, W extends Collection<E>>
-        CollectionProvider<E, W> wrap(final CollectionProvider<E, C> provider, final Function<C, W> wrapper)  {
+        CollectionProvider<W, E> wrap(final CollectionProvider<C, E> provider, final Function<C, W> wrapper)  {
         return new WrappedCollectionProvider<>(provider, wrapper);
     }
 
     private record WrappedCollectionProvider<E, C extends Collection<E>, W extends Collection<E>>(
-            @NonNull CollectionProvider<E, C> provider, @NonNull Function<C, W> wrapper)
-                implements CollectionProvider<E, W> {
+            @NonNull CollectionProvider<C, E> provider, @NonNull Function<C, W> wrapper)
+                implements CollectionProvider<W, E> {
 
         @Override
             public @NonNull ObjectProvider<E> elementProvider() {

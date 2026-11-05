@@ -44,6 +44,11 @@ import static org.soliscode.test.breakable.BreakableConcurrentMap.*;
 /// @see AbstractTest
 public class BreakableConcurrentMapTest extends AbstractTest {
 
+    /// Default constructor
+    public BreakableConcurrentMapTest() {
+        super();
+    }
+
     // ========== Break Testing: putIfAbsent Operations ==========
 
     /// Verifies the `PUT_IF_ABSENT_IGNORES_EXISTING` break constant.

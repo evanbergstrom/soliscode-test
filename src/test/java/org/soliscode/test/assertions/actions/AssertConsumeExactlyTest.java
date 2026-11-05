@@ -44,6 +44,9 @@ import static org.soliscode.test.assertions.Assertions.assertStringContainsInOrd
 @DisplayName("Tests for AssertConsumeExactly")
 public class AssertConsumeExactlyTest implements UsesCollections {
 
+    /// Default constructor.
+    public AssertConsumeExactlyTest() {}
+
     /// Test message used for custom error message validation.
     private static final String TEST_MESSAGE = "Test message";
 

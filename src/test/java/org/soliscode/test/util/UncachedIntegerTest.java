@@ -32,9 +32,14 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 /// @since 1.0.0
 public class UncachedIntegerTest extends AbstractTest implements IntegerContract<UncachedInteger> {
 
-    /// Returns the provider for creating and managing `UncachedInteger` instances.
+    /// Default constructor.
+    public UncachedIntegerTest() {
+        super();
+    }
+
+    /// Returns the objectProvider for creating and managing `UncachedInteger` instances.
     ///
-    /// The provider uses an anonymous [IntegerNumberProvider] implementation to
+    /// The objectProvider uses an anonymous [IntegerNumberProvider] implementation to
     /// wrap [UncachedInteger] instantiation and state tracking.
     ///
     /// @return an [IntegerNumberProvider] for `UncachedInteger`

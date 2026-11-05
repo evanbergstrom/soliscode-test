@@ -45,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /// ```java
 /// class MyIterableForEachTest implements ForEachMethodContract<String, MyIterable<String>> {
 ///     @Override
-///     public CollectionProvider<String, MyIterable<String>> provider() {
+///     public CollectionProvider<String, MyIterable<String>> objectProvider() {
 ///         return MyIterable::new;
 ///     }
 /// }
@@ -60,7 +60,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /// @author evanbergstrom
 /// @see Iterable#forEach(Consumer)
 /// @since 1.0.0
-public interface ForEachMethodContract<E, I extends Iterable<E>> extends CollectionContractSupport<E, I> {
+public interface ForEachMethodContract<I extends Iterable<E>, E> extends CollectionContractSupport<I, E> {
 
     /// Tests that the [forEach][Iterable#forEach] method works for an empty collection.
     ///

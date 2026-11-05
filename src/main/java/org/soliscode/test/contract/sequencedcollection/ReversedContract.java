@@ -39,7 +39,7 @@ import java.util.SequencedCollection;
 /// @author evanbergstrom
 /// @see SequencedCollection#reversed
 /// @since 1.0.0
-public interface ReversedContract<E, C extends SequencedCollection<E>> extends CollectionContractSupport<E, C> {
+public interface ReversedContract<C extends SequencedCollection<E>, E> extends CollectionContractSupport<C, E> {
 
     /// Verifies that [reversed][SequencedCollection#reversed] returns a reversed view of the collection.
     ///

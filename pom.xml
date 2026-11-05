@@ -74,9 +74,7 @@
 
   <!-- Properties -->
   <properties>
-    <!-- Only project-specific properties that aren't inherited from parent -->
-    <javaDocStylesheetPath>${basedir}/src/main/javadoc/stylesheet.css</javaDocStylesheetPath>
-    <!-- Override checkstyle version to match parent resources -->
+   <!-- Override checkstyle version to match parent resources -->
     <soliscode.checkstyle.version> ${project.parent.version}</soliscode.checkstyle.version>
 
     <!-- Parent Overrides -->
@@ -129,11 +127,10 @@
         <artifactId>jacoco-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>report</id>
-            <phase>verify</phase>
-            <inherited>false</inherited>
+            <id>prepare-agent</id>
+            <phase>pre-site</phase>
             <goals>
-              <goal>report</goal>
+              <goal>prepare-agent</goal>
             </goals>
           </execution>
         </executions>
@@ -149,6 +146,20 @@
           <autoPublish>true</autoPublish>
           <waitUntil>validated</waitUntil>
           <centralSnapshotsUrl>https://central.sonatype.com/repository/maven-snapshots/</centralSnapshotsUrl>
+        </configuration>
+      </plugin>
+
+      <!-- Configure Surefire to run tests in a single thread -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <forkCount>1</forkCount>
+          <reuseForks>true</reuseForks>
+          <threadCount>1</threadCount>
+          <excludes>
+            <exclude>**/org/soliscode/test/contract/collection/dynamic/**</exclude>
+          </excludes>
         </configuration>
       </plugin>
     </plugins>

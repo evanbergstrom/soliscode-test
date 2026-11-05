@@ -22,7 +22,7 @@ import org.jspecify.annotations.NonNull;
 ///
 /// This utility class provides convenient factory methods for obtaining commonly used
 /// object providers without requiring direct instantiation. It follows the static factory
-/// pattern to provide a clean, centralized API for provider creation.
+/// pattern to provide a clean, centralized API for objectProvider creation.
 ///
 /// ## Design Pattern
 ///
@@ -30,7 +30,7 @@ import org.jspecify.annotations.NonNull;
 /// - **Descriptive Names**: Method names clearly indicate the type being provided
 /// - **Caching Potential**: Future versions could cache instances for performance
 /// - **Interface Stability**: Clients depend on stable factory methods, not constructors
-/// - **Extensibility**: New provider types can be added without breaking existing code
+/// - **Extensibility**: New objectProvider types can be added without breaking existing code
 ///
 /// ## Usage Examples
 ///
@@ -51,9 +51,9 @@ import org.jspecify.annotations.NonNull;
 /// ```java
 /// @ParameterizedTest
 /// @MethodSource("numericProviders")
-/// void testNumericProviders(NumberProvider<? extends Number> provider) {
-///     Number min = provider.minValue();
-///     Number max = provider.maxValue();
+/// void testNumericProviders(NumberProvider<? extends Number> objectProvider) {
+///     Number min = objectProvider.minValue();
+///     Number max = objectProvider.maxValue();
 ///     assertNotNull(min);
 ///     assertNotNull(max);
 /// }
@@ -82,12 +82,12 @@ import org.jspecify.annotations.NonNull;
 /// ## Thread Safety
 ///
 /// All factory methods in this class are thread-safe and can be called concurrently
-/// from multiple threads. The returned provider instances are also thread-safe for
+/// from multiple threads. The returned objectProvider instances are also thread-safe for
 /// their instance creation methods.
 ///
 /// ## Performance Notes
 ///
-/// Factory methods create new provider instances on each call. For high-frequency
+/// Factory methods create new objectProvider instances on each call. For high-frequency
 /// usage scenarios, consider caching the returned providers to avoid repeated
 /// object allocation.
 ///
@@ -101,20 +101,20 @@ public final class Providers {
     /// Private constructor to prevent instantiation of this utility class.
     private Providers() { }
 
-    /// Creates a new provider for `Integer` instances.
+    /// Creates a new objectProvider for `Integer` instances.
     ///
-    /// The returned provider supports the full range of 32-bit signed integers
+    /// The returned objectProvider supports the full range of 32-bit signed integers
     /// and implements `IntegerNumberProvider` for integer-specific functionality.
     ///
     /// ## Examples
     ///
     /// ```java
-    /// IntegerProvider provider = Providers.integerProvider();
+    /// IntegerProvider objectProvider = Providers.integerProvider();
     ///
-    /// Integer zero = provider.defaultInstance();        // 0
-    /// Integer custom = provider.createInstance(42);     // 42
-    /// Integer max = provider.maxValue();                // 2147483647
-    /// Integer min = provider.minValue();                // -2147483648
+    /// Integer zero = objectProvider.defaultInstance();        // 0
+    /// Integer custom = objectProvider.createInstance(42);     // 42
+    /// Integer max = objectProvider.maxValue();                // 2147483647
+    /// Integer min = objectProvider.minValue();                // -2147483648
     /// ```
     ///
     /// @return a new IntegerProvider instance
@@ -125,20 +125,20 @@ public final class Providers {
         return new IntegerProvider();
     }
 
-    /// Creates a new provider for `Long` instances.
+    /// Creates a new objectProvider for `Long` instances.
     ///
-    /// The returned provider supports the full range of 64-bit signed integers
+    /// The returned objectProvider supports the full range of 64-bit signed integers
     /// and implements `IntegerNumberProvider` for integer-specific functionality.
     ///
     /// ## Examples
     ///
     /// ```java
-    /// LongProvider provider = Providers.longProvider();
+    /// LongProvider objectProvider = Providers.longProvider();
     ///
-    /// Long zero = provider.defaultInstance();           // 0L
-    /// Long custom = provider.createInstance(42);        // 42L
-    /// Long max = provider.maxValue();                   // 9223372036854775807L
-    /// Long min = provider.minValue();                   // -9223372036854775808L
+    /// Long zero = objectProvider.defaultInstance();           // 0L
+    /// Long custom = objectProvider.createInstance(42);        // 42L
+    /// Long max = objectProvider.maxValue();                   // 9223372036854775807L
+    /// Long min = objectProvider.minValue();                   // -9223372036854775808L
     /// ```
     ///
     /// @return a new LongProvider instance
@@ -149,20 +149,20 @@ public final class Providers {
         return new LongProvider();
     }
 
-    /// Creates a new provider for `Short` instances.
+    /// Creates a new objectProvider for `Short` instances.
     ///
-    /// The returned provider supports the full range of 16-bit signed integers
+    /// The returned objectProvider supports the full range of 16-bit signed integers
     /// and implements `IntegerNumberProvider` for integer-specific functionality.
     ///
     /// ## Examples
     ///
     /// ```java
-    /// ShortProvider provider = Providers.shortProvider();
+    /// ShortProvider objectProvider = Providers.shortProvider();
     ///
-    /// Short zero = provider.defaultInstance();          // (short) 0
-    /// Short custom = provider.createInstance(42);       // (short) 42
-    /// Short max = provider.maxValue();                  // 32767
-    /// Short min = provider.minValue();                  // -32768
+    /// Short zero = objectProvider.defaultInstance();          // (short) 0
+    /// Short custom = objectProvider.createInstance(42);       // (short) 42
+    /// Short max = objectProvider.maxValue();                  // 32767
+    /// Short min = objectProvider.minValue();                  // -32768
     /// ```
     ///
     /// @return a new ShortProvider instance
@@ -173,22 +173,22 @@ public final class Providers {
         return new ShortProvider();
     }
 
-    /// Creates a new provider for `Double` instances.
+    /// Creates a new objectProvider for `Double` instances.
     ///
-    /// The returned provider supports the full range of double-precision floating-point
+    /// The returned objectProvider supports the full range of double-precision floating-point
     /// numbers including special IEEE 754 values, and implements `DoubleNumberProvider`
     /// for floating-point specific functionality.
     ///
     /// ## Examples
     ///
     /// ```java
-    /// DoubleProvider provider = Providers.doubleProvider();
+    /// DoubleProvider objectProvider = Providers.doubleProvider();
     ///
-    /// Double zero = provider.defaultInstance();         // 0.0
-    /// Double custom = provider.createInstance(42);      // 42.0
-    /// Double max = provider.maxValue();                 // 1.7976931348623157E308
-    /// Double min = provider.minValue();                 // 4.9E-324
-    /// Double pi = provider.createValue(Math.PI);        // 3.141592653589793
+    /// Double zero = objectProvider.defaultInstance();         // 0.0
+    /// Double custom = objectProvider.createInstance(42);      // 42.0
+    /// Double max = objectProvider.maxValue();                 // 1.7976931348623157E308
+    /// Double min = objectProvider.minValue();                 // 4.9E-324
+    /// Double pi = objectProvider.createValue(Math.PI);        // 3.141592653589793
     /// ```
     ///
     /// @return a new DoubleProvider instance
@@ -199,21 +199,21 @@ public final class Providers {
         return new DoubleProvider();
     }
 
-    /// Creates a new provider for `Float` instances.
+    /// Creates a new objectProvider for `Float` instances.
     ///
-    /// The returned provider supports the full range of single-precision floating-point
+    /// The returned objectProvider supports the full range of single-precision floating-point
     /// numbers including special IEEE 754 values, and implements `DoubleNumberProvider`
     /// for floating-point specific functionality.
     ///
     /// ## Examples
     ///
     /// ```java
-    /// FloatProvider provider = Providers.floatProvider();
+    /// FloatProvider objectProvider = Providers.floatProvider();
     ///
-    /// Float zero = provider.defaultInstance();          // 0.0f
-    /// Float custom = provider.createInstance(42);       // 42.0f
-    /// Float max = provider.maxValue();                  // 3.4028235E38f
-    /// Float min = provider.minValue();                  // 1.4E-45f
+    /// Float zero = objectProvider.defaultInstance();          // 0.0f
+    /// Float custom = objectProvider.createInstance(42);       // 42.0f
+    /// Float max = objectProvider.maxValue();                  // 3.4028235E38f
+    /// Float min = objectProvider.minValue();                  // 1.4E-45f
     /// ```
     ///
     /// @return a new FloatProvider instance
@@ -224,20 +224,20 @@ public final class Providers {
         return new FloatProvider();
     }
 
-    /// Creates a new provider for `String` instances.
+    /// Creates a new objectProvider for `String` instances.
     ///
-    /// The returned provider generates string representations of numeric seed values,
+    /// The returned objectProvider generates string representations of numeric seed values,
     /// providing predictable and deterministic string content for testing scenarios.
     ///
     /// ## Examples
     ///
     /// ```java
-    /// StringProvider provider = Providers.stringProvider();
+    /// StringProvider objectProvider = Providers.stringProvider();
     ///
-    /// String empty = provider.defaultInstance();        // ""
-    /// String number = provider.createInstance(42);      // "42"
-    /// String negative = provider.createInstance(-100);  // "-100"
-    /// String copy = provider.copyInstance("test");      // "test" (same instance)
+    /// String empty = objectProvider.defaultInstance();        // ""
+    /// String number = objectProvider.createInstance(42);      // "42"
+    /// String negative = objectProvider.createInstance(-100);  // "-100"
+    /// String copy = objectProvider.copyInstance("test");      // "test" (same instance)
     /// ```
     ///
     /// @return a new StringProvider instance

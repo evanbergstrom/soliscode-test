@@ -30,7 +30,7 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
 /// ```java
 /// class MyCollectionStreamTest implements StreamContract<String, MyCollection<String>> {
 ///     @Override
-///     public CollectionProvider<String, MyCollection<String>> provider() {
+///     public CollectionProvider<String, MyCollection<String>> objectProvider() {
 ///         return MyCollection::new;
 ///     }
 /// }
@@ -47,7 +47,7 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
 /// @see Collection#parallelStream
 /// @see Stream
 /// @since 1.0.0
-public interface StreamContract<E, C extends Collection<E>> extends CollectionContractSupport<E, C> {
+public interface StreamContract<C extends Collection<E>, E> extends CollectionContractSupport<C, E> {
 
     /// Tests that the [stream][Collection#stream] method works for an empty collection.
     ///

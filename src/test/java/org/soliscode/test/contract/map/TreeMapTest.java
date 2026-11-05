@@ -37,17 +37,14 @@ import java.util.TreeMap;
 public class TreeMapTest extends AbstractTest
         implements NavigableMapContract<Integer, String, TreeMap<Integer,String>> {
 
-    /// Constructs a new `TreeMapTest` instance and configures unsupported methods.
-    ///
-    /// Specifically, this constructor disables:
-    /// - [SequencedMapMethods#PUT_FIRST]
-    /// - [SequencedMapMethods#PUT_LAST]
+    /// Default constructor.
     public TreeMapTest() {
+        super();
         doesNotSupportMethod(SequencedMapMethods.PUT_FIRST);
         doesNotSupportMethod(SequencedMapMethods.PUT_LAST);
     }
 
-    /// Returns the provider for creating and populating `TreeMap` instances.
+    /// Returns the objectProvider for creating and populating `TreeMap` instances.
     ///
     /// This implementation uses [MapProviders#provideTreeMap] to provide a
     /// [MapProvider] that creates [TreeMap] instances with [Integer] keys

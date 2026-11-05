@@ -39,7 +39,12 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
 public class TestableIterableOnlyTestContract extends AbstractTest
         implements IterableContract<Integer, Iterable<Integer>>, WithIntegerElement {
 
-    /// Returns the provider for creating and populating `IterableOnly` instances.
+    /// Default constructor.
+    public TestableIterableOnlyTestContract() {
+        super();
+    }
+
+    /// Returns the objectProvider for creating and populating `IterableOnly` instances.
     ///
     /// This implementation uses [FunctionalCollectionProvider] to wrap [IterableOnly]
     /// constructors and factory methods for testing.

@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// ```java
 /// class MyMapReplaceThreeArgTest implements ReplaceThreeArgContract<String, String, MyMap<String, String>> {
 ///     @Override
-///     public MapProvider<String, String, MyMap<String, String>> provider() {
+///     public MapProvider<String, String, MyMap<String, String>> objectProvider() {
 ///         return MyMap::new;
 ///     }
 /// }
@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// @author evanbergstrom
 /// @see Map#replace(Object, Object, Object)
 /// @since 1.0.0
-public interface ReplaceThreeArgContract<K, V, M extends Map<K, V>> extends MapContractSupport<K, V, M> {
+public interface ReplaceThreeArgContract<M extends Map<K, V>, K, V> extends MapContractSupport<M, K, V> {
 
     /// Tests that the [replace][Map#replace(Object, Object, Object)] method returns `false` if the key is not present.
     ///

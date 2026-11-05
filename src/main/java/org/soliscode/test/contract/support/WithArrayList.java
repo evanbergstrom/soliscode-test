@@ -6,7 +6,7 @@ import org.soliscode.test.provider.CollectionProviders;
 
 import java.util.ArrayList;
 
-/// Mixing for a collection contract class that implements a collection provider for instances of ArrayList.
+/// Mixing for a collection contract class that implements a collection objectProvider for instances of ArrayList.
 /// ```java
 ///    public class ArrayListTest extends AbstractTest implements ListContract<Integer, ArrayList<Integer>>
 ///         WithArrayList<Integer>, WithIntegerElement {
@@ -16,12 +16,12 @@ import java.util.ArrayList;
 /// @since 1.0
 /// @see CollectionProvider
 /// @see ArrayList
-public interface WithArrayList<E> extends CollectionProviderSupport<E, ArrayList<E>> {
+public interface WithArrayList<E> extends CollectionProviderSupport<ArrayList<E>, E> {
 
-    // Returns a collection provider that can be used to create instances of [ArrayList].
-    /// @return an `ArrayList` collection provider.
+    // Returns a collection objectProvider that can be used to create instances of [ArrayList].
+    /// @return an `ArrayList` collection objectProvider.
     @Override
-    default @NonNull CollectionProvider<E, ArrayList<E>> provider() {
+    default @NonNull CollectionProvider<ArrayList<E>, E> provider() {
         return CollectionProviders.provideArrayList(elementProvider());
     }
 }

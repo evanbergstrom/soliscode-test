@@ -18,9 +18,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 ///
 /// #### Implementation
 /// ```java
-/// public class MySequencedMapTest implements PollLastEntryContract<String, String, MySequencedMap<String, String>> {
+/// class MySequencedMapTest implements PollLastEntryContract<MySequencedMap<String, String>, String, String> {
 ///     @Override
-///     public MapProvider<String, String, MySequencedMap<String, String>> provider() {
+///     public MapProvider<MySequencedMap<String, String>, String, String> objectProvider() {
 ///         return new MySequencedMapProvider();
 ///     }
 /// }
@@ -30,13 +30,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /// The tests in this contract are not guaranteed to be thread-safe. If the map implementation
 /// is intended for concurrent use, additional thread-safety tests should be performed.
 ///
+/// @param <M> The map type being tested.
 /// @param <K> The key type being tested.
 /// @param <V> The value type being tested.
-/// @param <M> The map type being tested.
 /// @see SequencedMap#pollLastEntry()
 /// @author evanbergstrom
 /// @since 1.0.0
-public interface PollLastEntryContract<K, V, M extends SequencedMap<K, V>> extends MapContractSupport<K, V, M> {
+public interface PollLastEntryContract<M extends SequencedMap<K, V>, K, V> extends MapContractSupport<M, K, V> {
 
     /// Verifies that `pollLastEntry()` can be called successfully or throws [UnsupportedOperationException]
     /// if the method is not supported by the implementation.

@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// @author evanbergstrom
 /// @see SequencedCollection#removeFirst
 /// @since 1.0.0
-public interface RemoveFirstContract<E, C extends SequencedCollection<E>> extends CollectionContractSupport<E, C> {
+public interface RemoveFirstContract<C extends SequencedCollection<E>, E> extends CollectionContractSupport<C, E> {
 
     /// Verifies that [removeFirst][SequencedCollection#removeFirst] removes and returns the first element when not empty.
     ///

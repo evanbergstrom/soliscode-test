@@ -56,7 +56,8 @@ import java.util.Set;
 /// @param <C> the type of the `Breakable` object being built
 /// @author evanbergstrom
 /// @since 1.0.0
-public abstract class AbstractBreakableBuilder<B extends AbstractBreakableBuilder<B, C>, C extends Breakable> {
+public abstract class AbstractBreakableBuilder<B extends AbstractBreakableBuilder<B, C>, C extends Breakable>
+        implements BreakableBuilder<C> {
 
     /// The set of breaks that will be applied to the breakable object.
     private final @NonNull Set<Break> breaks;
@@ -109,7 +110,6 @@ public abstract class AbstractBreakableBuilder<B extends AbstractBreakableBuilde
     /// @param methodStatuses the initial method statuses; must not be null
     /// @param isSafe whether the resulting object is safe for concurrent access
     /// @throws NullPointerException if `breaks` or `methodStatuses` is null
-    /// @since 1.0.0
     public AbstractBreakableBuilder(final @NonNull Set<Break> breaks,
                                     final @NonNull Map<InterfaceMethod, MethodStatus> methodStatuses,
                                     final boolean isSafe) {
@@ -118,101 +118,49 @@ public abstract class AbstractBreakableBuilder<B extends AbstractBreakableBuilde
         this.isSafe = isSafe;
     }
 
-    /// Returns this builder instance for method chaining.
-    ///
-    /// This method is used by the fluent API to return the correctly typed builder instance
-    /// from methods defined in this abstract class.
-    ///
-    /// @return this builder instance
-    /// @since 1.0.0
     public abstract B self();
 
-    /// Creates a copy of this builder.
-    ///
-    /// @return a new builder instance that is a copy of this one
-    /// @since 1.0.0
-    public abstract B copy();
-
-    /// Builds the breakable object with the current configuration.
-    ///
-    /// @return a new breakable instance
-    /// @since 1.0.0
-    public abstract C build();
-
-    /// Adds a break to this builder.
-    ///
-    /// @param aBreak the break to add; must not be null
-    /// @return this builder for method chaining
-    /// @throws NullPointerException if `aBreak` is null
-    /// @since 1.0.0
-    public final B addBreak(final @NonNull Break aBreak) {
+    @Override
+    public final @NonNull B addBreak(final @NonNull Break aBreak) {
         breaks.add(aBreak);
         return self();
     }
 
-    /// Adds a collection of breaks to this builder.
-    ///
-    /// @param moreBreaks the collection of breaks to add; must not be null
-    /// @return this builder for method chaining
-    /// @throws NullPointerException if `moreBreaks` is null
-    /// @since 1.0.0
-    public final B addBreaks(final @NonNull Collection<Break> moreBreaks) {
+    @Override
+    public final @NonNull B addBreaks(final @NonNull Collection<Break> moreBreaks) {
         breaks.addAll(moreBreaks);
         return self();
     }
 
-    /// Configures the builder so that the resulting object does not support the specified method.
-    ///
-    /// @param method the optional method that should not be supported; must not be null
-    /// @return this builder for method chaining
-    /// @throws NullPointerException if `method` is null
-    /// @since 1.0.0
+    @Override
     public final @NonNull B doesNotSupport(final @NonNull InterfaceMethod method) {
         methodStatuses.put(method, new MethodStatus(false));
         return self();
     }
 
-    /// Adds a map of method status configurations to this builder.
-    ///
-    /// @param moreStatuses the map of method statuses to add; must not be null
-    /// @return this builder for method chaining
-    /// @throws NullPointerException if `moreStatuses` is null
-    /// @since 1.0.0
+    @Override
     public final @NonNull B setMethodStatuses(final @NonNull Map<InterfaceMethod, MethodStatus> moreStatuses) {
         methodStatuses.putAll(moreStatuses);
         return self();
     }
 
-    /// Returns the breaks that have been added to the builder.
-    ///
-    /// @return the set of breaks for the breakable object
-    /// @since 1.0.0
+    @Override
     public @NonNull Set<Break> breaks() {
         return breaks;
     }
 
-    /// Returns the method status configurations that have been added to the builder.
-    ///
-    /// @return the map of method configurations
-    /// @since 1.0.0
-    protected @NonNull Map<InterfaceMethod, MethodStatus> methodStatuses() {
+    @Override
+    public @NonNull Map<InterfaceMethod, MethodStatus> methodStatuses() {
         return methodStatuses;
     }
 
-    /// Sets whether the resulting object is safe for concurrent access.
-    ///
-    /// @param newSafe whether the resulting object is safe for concurrent access
-    /// @return this builder for method chaining
-    /// @since 1.0.0
-    public final B setSafe(final boolean newSafe) {
+    @Override
+    public final @NonNull B setSafe(final boolean newSafe) {
         this.isSafe = newSafe;
         return self();
     }
 
-    /// Returns whether the resulting object is safe for concurrent access.
-    ///
-    /// @return whether the resulting object is safe for concurrent access
-    /// @since 1.0.0
+    @Override
     public final boolean isSafe() {
         return isSafe;
     }

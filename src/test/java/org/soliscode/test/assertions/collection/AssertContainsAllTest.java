@@ -26,6 +26,9 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
 /// @since 1.0.0
 public class AssertContainsAllTest {
 
+    /// Default constructor.
+    public AssertContainsAllTest() {}
+
     private static final String TEST_MESSAGE = "Test message";
 
     /// Tests assertion behavior with empty collections.

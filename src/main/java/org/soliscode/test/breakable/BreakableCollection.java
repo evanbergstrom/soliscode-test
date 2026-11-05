@@ -32,6 +32,7 @@ import java.io.Serial;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -257,8 +258,8 @@ import java.util.function.Predicate;
 /// - **Memory Usage**: Minimal overhead beyond the backing collection
 ///
 /// ### Provider Support
-/// The class includes provider support for integration with the testing framework's
-/// collection provider system, enabling automated test generation.
+/// The class includes objectProvider support for integration with the testing framework's
+/// collection objectProvider system, enabling automated test generation.
 ///
 /// @param <E> the type of elements maintained by this collection
 /// @author evanbergstrom
@@ -555,6 +556,15 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// @see BreakableCollection#isEmpty()
     public static final Break IS_EMPTY_RETURNS_OPPOSITE_VALUE =
             new Break("IS_EMPTY_RETURNS_OPPOSITE_VALUE");
+
+
+    /// #### IS_EMPTY_IS_NOT_THREAD_SAFE
+    /// **Purpose**: Forces `isEmpty()` to throw the wrong exception when not supported
+    /// **Effect**: Throws `RuntimeException` instead of `UnsupportedOperationException`.
+    /// **Affected Methods**: `isEmpty()`
+    /// @see BreakableCollection#isEmpty()
+    public static final Break IS_EMPTY_THROWS_WRONG_UNSUPPORTED_EXCEPTION =
+            new Break("IS_EMPTY_THROWS_WRONG_UNSUPPORTED_EXCEPTION");
 
     /// #### IS_EMPTY_IS_NOT_THREAD_SAFE
     /// **Purpose**: Forces `isEmpty()` method to be not thread safe.
@@ -1172,6 +1182,8 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// @see Collection#isEmpty()
     @Override
     public boolean isEmpty() {
+        checkOptionalMethodSupport(CollectionMethods.IS_EMPTY, IS_EMPTY_THROWS_WRONG_UNSUPPORTED_EXCEPTION);
+
         boolean result = getWithBreakableSafety(IS_EMPTY_IS_NOT_THREAD_SAFE, collection::isEmpty);
         if (hasBreak(IS_EMPTY_ALWAYS_RETURNS_TRUE)) {
             return true;
@@ -1967,9 +1979,9 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// @param <E> the element type
     /// @author evanbergstrom
     /// @since 1.0
-    public abstract static class AbstractBuilder<B extends AbstractBuilder<B, C, E>,
-            C extends BreakableCollection<E>, E>
-            extends BreakableIterable.AbstractBuilder<B, C, E> {
+    public abstract static class AbstractBuilder<B extends AbstractBuilder<B, C, E>, C extends BreakableCollection<E>, E>
+            extends BreakableIterable.AbstractBuilder<B, C, E>
+            implements BreakableCollectionBuilder<C, E> {
 
         ///  Field of bit flags that store what is permitted by the collection.
         private int permits;
@@ -2046,6 +2058,12 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
         public Class<?> compatibleType() {
             return compatibleType;
         }
+
+        /// Build a BreakableCollection objects using the values from the builder.
+        /// @return a new BreakableCollection object.
+        public final @NonNull C build() {
+            return build(Collections.emptyList());
+        }
     }
 
     /// The builder for BreakableCollection objects.
@@ -2066,20 +2084,26 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
         }
 
         @Override
-        public Builder<E> self() {
+        public @NonNull Builder<E> self() {
             return this;
         }
 
         @Override
-        public Builder<E> copy() {
+        public @NonNull Builder<E> copy() {
             return new Builder<>(this);
         }
 
-        /// Build a BreakableCollection objects using the values from the builder.
-        /// @return a new BreakableCollection object.
-        public BreakableCollection<E> build() {
-            return new BreakableCollection<>(new ArrayList<>(elements()), new HashSet<>(breaks()),
+        @Override
+        public @NonNull BreakableCollection<E> copy(final @NonNull BreakableCollection<E> other) {
+            return new BreakableCollection<>(other);
+        }
+
+        public @NonNull BreakableCollection<E> build(final @NonNull Iterable<E> elements) {
+            List<E>  list = new ArrayList<>(elements());
+            elements.forEach(list::add);
+            return new BreakableCollection<>(list, new HashSet<>(breaks()),
                     new HashMap<>(methodStatuses()), characteristics(), permits(), isSafe(), compatibleType());
+
         }
     }
 
@@ -2094,9 +2118,9 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// @param elementProvider An [ObjectProvider] responsible for supplying elements
     ///                        for the collection.
     /// @return A [CollectionProvider] that facilitates the creation and management of
-    ///         [BreakableCollection] instances. This provider ensures safe construction
-    ///         and behavior of the collections based on the provided builder and element provider.
-    public static <E> @NonNull CollectionProvider<E, BreakableCollection<E>> collectionProvider(
+    ///         [BreakableCollection] instances. This objectProvider ensures safe construction
+    ///         and behavior of the collections based on the provided builder and element objectProvider.
+    public static <E> @NonNull CollectionProvider<BreakableCollection<E>, E> collectionProvider(
             final @NonNull Builder<E> builder,
             final @NonNull ObjectProvider<E> elementProvider) {
         final Builder<E> local = builder.copy();
@@ -2110,22 +2134,22 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
         );
     }
 
-    /// Mixin interface that adds an implementation of the `provider()` method that provides instances of
+    /// Mixin interface that adds an implementation of the `objectProvider()` method that provides instances of
     /// `BreakableCollection` that do not have any breaks applied.
     /// @param <E> element type
-    public interface WithProvider<E> extends CollectionProviderSupport<E, BreakableCollection<E>> {
+    public interface WithProvider<E> extends CollectionProviderSupport<BreakableCollection<E>, E> {
         @Override
-        default @NonNull CollectionProvider<E, BreakableCollection<E>> provider() {
+        default @NonNull CollectionProvider<BreakableCollection<E>, E> provider() {
             return BreakableCollection.collectionProvider(new Builder<>(), elementProvider());
         }
     }
 
-    /// Mixin interface that adds an implementation of the `provider()` method that provides instances of
+    /// Mixin interface that adds an implementation of the `objectProvider()` method that provides instances of
     /// `BreakableCollection` that are thread safe.
     /// @param <E> element type
-    public interface WithThreadSafeProvider<E> extends CollectionProviderSupport<E, BreakableCollection<E>> {
+    public interface WithThreadSafeProvider<E> extends CollectionProviderSupport<BreakableCollection<E>, E> {
         @Override
-        default @NonNull CollectionProvider<E, BreakableCollection<E>> provider() {
+        default @NonNull CollectionProvider<BreakableCollection<E>, E> provider() {
             return BreakableCollection.collectionProvider(new Builder<E>().setSafe(true), elementProvider());
         }
     }

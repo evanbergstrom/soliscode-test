@@ -33,5 +33,8 @@ import java.util.ArrayList;
 public class SynchronizedListTest extends AbstractTest
         implements ListContract<Integer, ArrayList<Integer>>, WithArrayList<Integer>, WithIntegerElement {
 
-
+    /// Default constructor.
+    public SynchronizedListTest() {
+        super();
+    }
 }

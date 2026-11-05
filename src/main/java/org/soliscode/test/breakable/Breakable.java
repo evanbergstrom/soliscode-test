@@ -16,6 +16,7 @@
 package org.soliscode.test.breakable;
 
 import org.jspecify.annotations.NonNull;
+import org.soliscode.test.provider.ObjectProvider;
 
 import java.util.Collection;
 import java.util.Set;

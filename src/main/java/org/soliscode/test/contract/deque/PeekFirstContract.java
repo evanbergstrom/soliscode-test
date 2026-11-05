@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// @author evanbergstrom
 /// @see Deque#peekFirst
 /// @since 1.0.0
-public interface PeekFirstContract<E, D extends Deque<E>> extends CollectionContractSupport<E, D> {
+public interface PeekFirstContract<D extends Deque<E>, E> extends CollectionContractSupport<D, E> {
 
     /// Tests that the [peekFirst][Deque#peekFirst] method correctly retrieves the first element without removing it.
     @SuppressWarnings("SequencedCollectionMethodCanBeUsed")

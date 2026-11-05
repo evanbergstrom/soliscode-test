@@ -20,6 +20,11 @@ import static org.junit.jupiter.api.Assertions.*;
 public class BreakableSequencedSetTest extends AbstractTest
         implements CollectionContract<Integer, BreakableSequencedSet<Integer>>, WithIntegerElement, UsesCollections {
 
+    /// Default constructor.
+    public BreakableSequencedSetTest() {
+        super();
+    }
+
     @Override
     public @NonNull CollectionProvider<Integer, BreakableSequencedSet<Integer>> provider() {
         return CollectionProviders.from(

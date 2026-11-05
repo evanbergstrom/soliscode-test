@@ -26,7 +26,7 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
 /// ```java
 /// class MyCollectionClearTest implements ClearContract<String, MyCollection<String>> {
 ///     @Override
-///     public CollectionProvider<String, MyCollection<String>> provider() {
+///     public CollectionProvider<String, MyCollection<String>> objectProvider() {
 ///         return MyCollection::new;
 ///     }
 /// }
@@ -41,7 +41,7 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
 /// @author evanbergstrom
 /// @see Collection#clear
 /// @since 1.0.0
-public interface ClearContract<E, C extends Collection<E>> extends CollectionContractSupport<E, C> {
+public interface ClearContract<C extends Collection<E>, E> extends CollectionContractSupport<C, E> {
 
     /// Tests that the [clear][Collection#clear] method works for an empty collection.
     ///
@@ -85,6 +85,30 @@ public interface ClearContract<E, C extends Collection<E>> extends CollectionCon
             collection.clear();
             assertIsEmpty(collection);
         } else {
+            assertThrows(UnsupportedOperationException.class, collection::clear);
+        }
+    }
+
+    /// Tests that the [Collection#clear()] method throws [UnsupportedOperationException]
+    /// when the operation is not supported by a collection.
+    ///
+    /// This test verifies that:
+    ///     - Calling `clear()` on a collection that does not support the operation
+    ///     results in an [UnsupportedOperationException] being thrown.
+    ///
+    /// The test uses the `objectProvider().emptyInstance()` method to supply an empty
+    /// instance of the collection being tested. If the collection's implementation declares
+    /// `clear()` as unsupported, the operation must adhere to this contract by throwing
+    /// [UnsupportedOperationException].
+    ///
+    /// @see Collection#clear()
+    /// @throws UnsupportedOperationException if the `clear()` method is not supported
+    /// @throws org.opentest4j.AssertionFailedError if the expected exception is not thrown
+    @DisplayName("clear() throws UnsupportedOperationException if not supported")
+    @Test
+    default void clear_whenNotSupported_throwsUnsupportedOperationException() {
+        if (!supportsMethod(CollectionMethods.CLEAR)) {
+            Collection<E> collection = provider().emptyInstance();
             assertThrows(UnsupportedOperationException.class, collection::clear);
         }
     }

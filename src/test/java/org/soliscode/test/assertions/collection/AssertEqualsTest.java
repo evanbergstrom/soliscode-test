@@ -35,6 +35,9 @@ public class AssertEqualsTest {
 
     private static final String TEST_MESSAGE = "Test message";
 
+    /// Default constructor.
+    public AssertEqualsTest() {}
+
     /// Tests basic assertion functionality with identical collections.
     ///
     /// Verifies that the assertion passes when both collections contain the same elements

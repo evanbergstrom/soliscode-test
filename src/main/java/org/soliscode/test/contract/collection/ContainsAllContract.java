@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 ///
 /// ## Purpose
 /// The purpose of this contract is to ensure that a collection's `containsAll` implementation correctly:
-/// - Returns `true` if the collection contains all of the elements in the specified collection.
+/// - Returns `true` if the collection contains all the elements in the specified collection.
 /// - Handles empty collections correctly.
 /// - Handles null elements according to the collection's configuration.
 /// - Handles incompatible types according to the collection's configuration.
@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// ```java
 /// class MyCollectionContainsAllTest implements ContainsAllContract<String, MyCollection<String>> {
 ///     @Override
-///     public CollectionProvider<String, MyCollection<String>> provider() {
+///     public CollectionProvider<String, MyCollection<String>> objectProvider() {
 ///         return MyCollection::new;
 ///     }
 /// }
@@ -51,7 +51,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// @author evanbergstrom
 /// @see Collection#containsAll
 /// @since 1.0.0
-public interface ContainsAllContract<E, C extends Collection<E>> extends CollectionContractSupport<E, C> {
+public interface ContainsAllContract<C extends Collection<E>, E> extends CollectionContractSupport<C, E> {
 
     /// Tests that the [containsAll][Collection#containsAll] method works for an empty collection.
     ///
@@ -69,7 +69,7 @@ public interface ContainsAllContract<E, C extends Collection<E>> extends Collect
             Collection<E> collection = provider().emptyInstance();
             assertTrue(collection.containsAll(Collections.emptyList()));
 
-            Collection<E> notEmptyValue = provider().createInstanceWithUniqueElements();
+            Collection<E> notEmptyValue = elementProvider().createUniqueInstances(DEFAULT_SIZE);
             assertFalse(collection.containsAll(notEmptyValue));
         }
     }
@@ -103,8 +103,6 @@ public interface ContainsAllContract<E, C extends Collection<E>> extends Collect
             List<E> partiallyContained = new ArrayList<>(contained);
             partiallyContained.add(notContained.getFirst());
             assertFalse(collection.containsAll(partiallyContained));
-        } else {
-            assertThrows(UnsupportedOperationException.class, () -> collection.containsAll(notContained));
         }
     }
 

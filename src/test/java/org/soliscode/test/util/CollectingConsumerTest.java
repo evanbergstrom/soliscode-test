@@ -24,6 +24,11 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Tests for CollectingConsumer")
 public class CollectingConsumerTest extends AbstractTest {
 
+    /// Default constructor.
+    public CollectingConsumerTest() {
+        super();
+    }
+
     // Tests for basic functionality
 
     /// Test that default constructor creates an empty collector.

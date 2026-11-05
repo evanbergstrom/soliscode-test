@@ -20,9 +20,9 @@ import org.jspecify.annotations.NonNull;
 
 /// Provides instances of `Long` for testing purposes.
 ///
-/// This provider creates `Long` instances with values ranging from `Long.MIN_VALUE` to
+/// This objectProvider creates `Long` instances with values ranging from `Long.MIN_VALUE` to
 /// `Long.MAX_VALUE`. It implements `IntegerNumberProvider` to provide integer-specific
-/// functionality while maintaining all the general object provider capabilities for 64-bit
+/// functionality while maintaining all the general object objectProvider capabilities for 64-bit
 /// signed integer values.
 ///
 /// ## Features
@@ -45,23 +45,23 @@ import org.jspecify.annotations.NonNull;
 ///
 /// ### Basic Usage
 /// ```java
-/// LongProvider provider = new LongProvider();
+/// LongProvider objectProvider = new LongProvider();
 ///
 /// // Create instances with different approaches
-/// Long zero = provider.defaultInstance();        // 0L
-/// Long fromSeed = provider.createInstance(42);   // 42L
-/// Long large = provider.createInstance(1000000); // 1000000L
-/// Long max = provider.maxValue();                // 9223372036854775807L
-/// Long min = provider.minValue();                // -9223372036854775808L
+/// Long zero = objectProvider.defaultInstance();        // 0L
+/// Long fromSeed = objectProvider.createInstance(42);   // 42L
+/// Long large = objectProvider.createInstance(1000000); // 1000000L
+/// Long max = objectProvider.maxValue();                // 9223372036854775807L
+/// Long min = objectProvider.minValue();                // -9223372036854775808L
 /// ```
 ///
 /// ### Large Number Testing
 /// ```java
-/// LongProvider provider = new LongProvider();
+/// LongProvider objectProvider = new LongProvider();
 ///
 /// // Test with values beyond Integer range
-/// Long beyondInt = provider.createValue(3_000_000_000L);  // > Integer.MAX_VALUE
-/// Long negative = provider.createValue(-5_000_000_000L);  // < Integer.MIN_VALUE
+/// Long beyondInt = objectProvider.createValue(3_000_000_000L);  // > Integer.MAX_VALUE
+/// Long negative = objectProvider.createValue(-5_000_000_000L);  // < Integer.MIN_VALUE
 ///
 /// // Verify range capabilities
 /// assertTrue(beyondInt > Integer.MAX_VALUE);
@@ -70,15 +70,15 @@ import org.jspecify.annotations.NonNull;
 ///
 /// ### Boundary and Edge Case Testing
 /// ```java
-/// LongProvider provider = new LongProvider();
+/// LongProvider objectProvider = new LongProvider();
 ///
 /// // Test extreme values
-/// Long maxValue = provider.maxValue();
-/// Long minValue = provider.minValue();
+/// Long maxValue = objectProvider.maxValue();
+/// Long minValue = objectProvider.minValue();
 ///
 /// // Test near-boundary values
-/// Long nearMax = provider.createValue(Long.MAX_VALUE - 1);
-/// Long nearMin = provider.createValue(Long.MIN_VALUE + 1);
+/// Long nearMax = objectProvider.createValue(Long.MAX_VALUE - 1);
+/// Long nearMin = objectProvider.createValue(Long.MIN_VALUE + 1);
 ///
 /// // Verify arithmetic behavior near boundaries
 /// assertEquals(Long.MAX_VALUE, nearMax + 1);
@@ -87,25 +87,25 @@ import org.jspecify.annotations.NonNull;
 ///
 /// ### Collection Generation for Large Data Sets
 /// ```java
-/// LongProvider provider = new LongProvider();
+/// LongProvider objectProvider = new LongProvider();
 ///
 /// // Generate large sequences for performance testing
-/// List<Long> equalValues = provider.createEqualObjects(1000);      // [0L, 0L, ...]
-/// List<Long> uniqueValues = provider.createUniqueInstances(1000);  // [0L, 1L, 2L, ...]
-/// List<Long> randomValues = provider.createRandomInstances(1000);  // Random long values
+/// List<Long> equalValues = objectProvider.createEqualObjects(1000);      // [0L, 0L, ...]
+/// List<Long> uniqueValues = objectProvider.createUniqueInstances(1000);  // [0L, 1L, 2L, ...]
+/// List<Long> randomValues = objectProvider.createRandomInstances(1000);  // Random long values
 ///
 /// // Test with timestamp-like values
-/// List<Long> timestamps = provider.createUniqueInstances(100, System.currentTimeMillis());
+/// List<Long> timestamps = objectProvider.createUniqueInstances(100, System.currentTimeMillis());
 /// ```
 ///
 /// ### Integration with Time-Based Testing
 /// ```java
-/// LongProvider provider = new LongProvider();
+/// LongProvider objectProvider = new LongProvider();
 ///
 /// // Generate timestamp-like values for temporal testing
 /// long baseTime = System.currentTimeMillis();
 /// List<Long> timeSequence = IntStream.range(0, 10)
-///     .mapToObj(i -> provider.createValue(baseTime + i * 1000))  // 1 second intervals
+///     .mapToObj(i -> objectProvider.createValue(baseTime + i * 1000))  // 1 second intervals
 ///     .collect(Collectors.toList());
 ///
 /// // Test chronological ordering
@@ -116,9 +116,9 @@ import org.jspecify.annotations.NonNull;
 ///
 /// ## Implementation Details
 ///
-/// This provider directly uses the seed parameter as the long value through primitive
+/// This objectProvider directly uses the seed parameter as the long value through primitive
 /// boxing. Since the seed parameter is already a `long`, no conversion or range checking
-/// is necessary, making this provider highly efficient for large-scale data generation.
+/// is necessary, making this objectProvider highly efficient for large-scale data generation.
 ///
 /// ## Use Cases
 ///
@@ -138,7 +138,7 @@ public class LongProvider implements IntegerNumberProvider<Long> {
 
     /// Creates a new LongProvider instance.
     ///
-    /// This constructor initializes the provider with default settings for creating
+    /// This constructor initializes the objectProvider with default settings for creating
     /// Long instances within the full range of valid 64-bit signed integer values.
     public LongProvider() { }
 
@@ -159,24 +159,24 @@ public class LongProvider implements IntegerNumberProvider<Long> {
     /// ## Examples
     ///
     /// ```java
-    /// LongProvider provider = new LongProvider();
+    /// LongProvider objectProvider = new LongProvider();
     ///
     /// // Basic values
-    /// Long zero = provider.createValue(0L);                    // 0L
-    /// Long positive = provider.createValue(42L);               // 42L
-    /// Long negative = provider.createValue(-100L);             // -100L
+    /// Long zero = objectProvider.createValue(0L);                    // 0L
+    /// Long positive = objectProvider.createValue(42L);               // 42L
+    /// Long negative = objectProvider.createValue(-100L);             // -100L
     ///
     /// // Large values beyond Integer range
-    /// Long huge = provider.createValue(10_000_000_000L);       // 10000000000L
-    /// Long bigNegative = provider.createValue(-10_000_000_000L); // -10000000000L
+    /// Long huge = objectProvider.createValue(10_000_000_000L);       // 10000000000L
+    /// Long bigNegative = objectProvider.createValue(-10_000_000_000L); // -10000000000L
     ///
     /// // Boundary values
-    /// Long max = provider.createValue(Long.MAX_VALUE);         // 9223372036854775807L
-    /// Long min = provider.createValue(Long.MIN_VALUE);         // -9223372036854775808L
+    /// Long max = objectProvider.createValue(Long.MAX_VALUE);         // 9223372036854775807L
+    /// Long min = objectProvider.createValue(Long.MIN_VALUE);         // -9223372036854775808L
     ///
     /// // Time-based values
-    /// Long timestamp = provider.createValue(System.currentTimeMillis());
-    /// Long nanos = provider.createValue(System.nanoTime());
+    /// Long timestamp = objectProvider.createValue(System.currentTimeMillis());
+    /// Long nanos = objectProvider.createValue(System.nanoTime());
     /// ```
     ///
     /// ## Performance Characteristics

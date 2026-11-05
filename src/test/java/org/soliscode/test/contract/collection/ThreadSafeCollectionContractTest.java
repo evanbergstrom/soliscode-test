@@ -11,7 +11,7 @@ import org.soliscode.test.annotations.Nondeterministic;
 import org.soliscode.test.annotations.VerySlow;
 import org.soliscode.test.breakable.Break;
 import org.soliscode.test.breakable.BreakableCollection;
-import org.soliscode.test.contract.ContractTest;
+import org.soliscode.test.contract.AbstractContractTest;
 import org.soliscode.test.contract.DynamicContract;
 import org.soliscode.test.contract.support.WithIntegerElement;
 import org.soliscode.test.provider.CollectionProvider;
@@ -41,7 +41,12 @@ import java.util.Collection;
 /// @see BreakableCollection
 /// @since 1.0.0
 @DisplayName("Tests for ThreadSafeCollectionContract class")
-public class ThreadSafeCollectionContractTest extends ContractTest<BreakableCollection<Integer>> {
+public class ThreadSafeCollectionContractTest extends AbstractContractTest<BreakableCollection<Integer>> {
+
+    /// Default constructor
+    public ThreadSafeCollectionContractTest() {
+        super();
+    }
 
     /// Tests for working thread-safe collection implementations.
     ///
@@ -113,16 +118,28 @@ public class ThreadSafeCollectionContractTest extends ContractTest<BreakableColl
     @TestFactory
     public Collection<DynamicTest> dynamicTestsFor_add_whenIsNotThreadSafe_testsFail() {
         return Arrays.asList(
-                failsWithBreak(BreakableCollection.ADD_IS_NOT_THREAD_SAFE, DynamicBrokenCollectionContract::add_whenCalledUnderContentionWithItself_isThreadSafe, "add_singleElement_returnsTrueAndUpdatesSize() with ADD_IS_NOT_THREAD_SAFE break fails under contention with itself"
+                failsWithBreak(BreakableCollection.ADD_IS_NOT_THREAD_SAFE,
+                        DynamicBrokenCollectionContract::add_whenCalledUnderContentionWithItself_isThreadSafe,
+                        "add_singleElement_returnsTrueAndUpdatesSize() with ADD_IS_NOT_THREAD_SAFE break fails under " +
+                                "contention with itself"
                 ),
 
-                failsWithBreak(BreakableCollection.ADD_IS_NOT_THREAD_SAFE, DynamicBrokenCollectionContract::add_whenCalledUnderContentionWithRemove_isThreadSafe, "add_singleElement_returnsTrueAndUpdatesSize() with ADD_IS_NOT_THREAD_SAFE break fails under contention with remove(Object)"
+                failsWithBreak(BreakableCollection.ADD_IS_NOT_THREAD_SAFE,
+                        DynamicBrokenCollectionContract::add_whenCalledUnderContentionWithRemove_isThreadSafe,
+                        "add_singleElement_returnsTrueAndUpdatesSize() with ADD_IS_NOT_THREAD_SAFE break fails under " +
+                                "contention with remove(Object)"
                 ),
 
-                failsWithBreak(BreakableCollection.ADD_IS_NOT_THREAD_SAFE, DynamicBrokenCollectionContract::add_whenCalledUnderContentionWithRemoveAll_isThreadSafe, "add_singleElement_returnsTrueAndUpdatesSize() with ADD_IS_NOT_THREAD_SAFE break fails under contention with removeAll(Collection<?> c)"
+                failsWithBreak(BreakableCollection.ADD_IS_NOT_THREAD_SAFE,
+                        DynamicBrokenCollectionContract::add_whenCalledUnderContentionWithRemoveAll_isThreadSafe,
+                        "add_singleElement_returnsTrueAndUpdatesSize() with ADD_IS_NOT_THREAD_SAFE break fails under " +
+                                "contention with removeAll(Collection<?> c)"
                 ),
 
-                failsWithBreak(BreakableCollection.ADD_IS_NOT_THREAD_SAFE, DynamicBrokenCollectionContract::add_whenCalledUnderContentionWithRemoveIf_isThreadSafe, "add_singleElement_returnsTrueAndUpdatesSize() with ADD_IS_NOT_THREAD_SAFE break fails under contention with removeIf(Predicate<? super E> filter)"
+                failsWithBreak(BreakableCollection.ADD_IS_NOT_THREAD_SAFE,
+                        DynamicBrokenCollectionContract::add_whenCalledUnderContentionWithRemoveIf_isThreadSafe,
+                        "add_singleElement_returnsTrueAndUpdatesSize() with ADD_IS_NOT_THREAD_SAFE break fails under " +
+                                "contention with removeIf(Predicate<? super E> filter)"
                 )
         );
     }

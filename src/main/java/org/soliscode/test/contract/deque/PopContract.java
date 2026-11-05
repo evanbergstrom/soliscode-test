@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// @author evanbergstrom
 /// @see Deque#pop
 /// @since 1.0.0
-public interface PopContract<E, D extends Deque<E>> extends CollectionContractSupport<E, D> {
+public interface PopContract<D extends Deque<E>, E> extends CollectionContractSupport<D, E> {
 
     /// Tests that the [pop][Deque#pop] method correctly retrieves and removes the first element.
     @DisplayName("pop() retrieves and removes the first element")

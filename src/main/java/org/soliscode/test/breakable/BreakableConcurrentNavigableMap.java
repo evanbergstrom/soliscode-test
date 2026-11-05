@@ -222,6 +222,7 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
     /// This tests handling of concurrent access patterns and potential race conditions.
     public static final Break NAVIGATION_RACE_CONDITION = new Break("NAVIGATION_RACE_CONDITION");
 
+    /// Underlying map storage
     private final ConcurrentNavigableMap<K, V> concurrentNavigableMap;
 
     /// Creates a new BreakableConcurrentNavigableMap with no breaks, wrapping a new ConcurrentSkipListMap.
@@ -240,8 +241,9 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
         this.concurrentNavigableMap = concurrentNavigableMap;
     }
 
-    /// Creates a new BreakableConcurrentNavigableMap with the specified breaks, wrapping the specified ConcurrentNavigableMap.
-    /// This protected constructor is used internally by the builder to create instances with specific break configurations.
+    /// Creates a new BreakableConcurrentNavigableMap with the specified breaks, wrapping the specified
+    /// ConcurrentNavigableMap. The builder uses this protected constructor internally to create instances with
+    /// specific break configurations.
     ///
     /// @param concurrentNavigableMap the ConcurrentNavigableMap to wrap and delegate operations to
     /// @param breaks the collection of breaks to apply to this instance

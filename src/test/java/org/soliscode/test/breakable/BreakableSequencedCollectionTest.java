@@ -27,6 +27,11 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
 public class BreakableSequencedCollectionTest extends AbstractTest
         implements SequencedCollectionContract<Integer, BreakableSequencedCollection<Integer>>, WithIntegerElement {
 
+    /// Default constructor.
+    public BreakableSequencedCollectionTest() {
+        super();
+    }
+
     @Override
     public @NonNull CollectionProvider<Integer, BreakableSequencedCollection<Integer>> provider() {
         return FunctionalCollectionProvider.from(

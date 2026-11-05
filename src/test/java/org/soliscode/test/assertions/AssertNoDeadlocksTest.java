@@ -26,6 +26,8 @@ import static org.soliscode.test.assertions.Assertions.enableDeadlockDetection;
 @DisplayName("AssertNoDeadlocks Tests")
 class AssertNoDeadlocksTest extends AbstractTest {
 
+    /// Default constructor.
+
     /// ## Test: No Deadlock - Success Case
     /// Verifies that `assertNoDeadlocks()` completes normally when there are
     /// no deadlocked threads in the JVM.

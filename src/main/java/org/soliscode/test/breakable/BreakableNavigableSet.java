@@ -505,6 +505,8 @@ public class BreakableNavigableSet<E> extends BreakableSortedSet<E> implements N
     /// @param methodStatuses the method status configuration.
     /// @param characteristics the spliterator characteristics
     /// @param permits         the flags that indicate what types of values are supported by the collection.
+    /// @param isSafe         whether the collection is safe for concurrent access by multiple threads.
+    /// @param compatibleType the type that this collection is compatible with.
     /// @throws NullPointerException if navigableSet or breaks is null
     protected BreakableNavigableSet(final @NonNull NavigableSet<E> navigableSet,
                                     final @NonNull Set<Break> breaks,
@@ -765,6 +767,10 @@ public class BreakableNavigableSet<E> extends BreakableSortedSet<E> implements N
             return new BreakableNavigableSet.Builder<>(this);
         }
 
+        @Override
+        public @NonNull BreakableNavigableSet<E> copy(final @NonNull BreakableNavigableSet<E> other) {
+            return new BreakableNavigableSet<>(other);
+        }
 
         /// Constructs a new BreakableNavigableSet instance with the current builder configuration.
         ///
@@ -780,10 +786,9 @@ public class BreakableNavigableSet<E> extends BreakableSortedSet<E> implements N
         ///
         /// @return a new BreakableNavigableSet instance configured according to this builder's settings
         @Override
-        public BreakableNavigableSet<E> build() {
+        public BreakableNavigableSet<E> build(final Iterable<E> iterable) {
             final NavigableSet<E> storage = new TreeSet<>(comparator());
-            storage.addAll(elements());
-
+            iterable.forEach(storage::add);
             return new BreakableNavigableSet<>(storage, new HashSet<>(breaks()), new HashMap<>(methodStatuses()),
                     characteristics(), permits(), isSafe(), compatibleType());
         }

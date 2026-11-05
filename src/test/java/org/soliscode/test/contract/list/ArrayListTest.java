@@ -68,6 +68,7 @@ public class ArrayListTest extends AbstractTest
     /// - Duplicate values (standard List behavior)
     /// - All modification operations
     public ArrayListTest() {
+        super();
     }
 
     /// Tests ArrayList wrapped with {@link Collections#unmodifiableList(List)} to verify proper
@@ -111,6 +112,11 @@ public class ArrayListTest extends AbstractTest
     public class NoNullsArrayListContract extends AbstractTest
             implements ListContract<Integer, List<Integer>>, WithIntegerElement, DoesNotPermitNulls {
 
+        /// Default constructor.
+        public NoNullsArrayListContract() {
+            super();
+        }
+
         /// {@inheritDoc}
         @Override
         public @NonNull CollectionProvider<Integer, List<Integer>> provider() {
@@ -133,6 +139,11 @@ public class ArrayListTest extends AbstractTest
     @DisplayName("Test the TestList interface using an ArrayList that does not permit incompatible types")
     public class CheckedArrayListContract extends AbstractTest
             implements ListContract<Integer, List<Integer>>, WithIntegerElement, DoesNotPermitIncompatibleTypes {
+
+        /// Default constructor.
+        public CheckedArrayListContract() {
+            super();
+        }
 
         /// {@inheritDoc}
         @Override

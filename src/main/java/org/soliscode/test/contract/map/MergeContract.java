@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /// ```java
 /// class MyMapMergeTest implements MergeContract<String, String, MyMap<String, String>> {
 ///     @Override
-///     public MapProvider<String, String, MyMap<String, String>> provider() {
+///     public MapProvider<String, String, MyMap<String, String>> objectProvider() {
 ///         return MyMap::new;
 ///     }
 /// }
@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /// @author evanbergstrom
 /// @see Map#merge
 /// @since 1.0.0
-public interface MergeContract<K, V, M extends Map<K, V>> extends MapContractSupport<K, V, M> {
+public interface MergeContract<M extends Map<K, V>, K, V> extends MapContractSupport<M, K, V> {
 
     /// Tests that the [merge][Map#merge] method adds the value if the key is not present.
     ///

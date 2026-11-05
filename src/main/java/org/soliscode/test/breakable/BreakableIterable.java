@@ -270,19 +270,19 @@ import java.util.function.Consumer;
 /// ```
 ///
 /// ### Provider Integration Testing
-/// Test that BreakableIterable works with the provider system:
+/// Test that BreakableIterable works with the objectProvider system:
 ///
 /// ```java
 /// @Test
 /// void testProviderIntegration() {
 ///     ObjectProvider<String> stringProvider = () -> Stream.of("test1", "test2", "test3");
-///     CollectionProvider<String, BreakableIterable<String>> provider =
+///     CollectionProvider<String, BreakableIterable<String>> objectProvider =
 ///         BreakableIterable.iterableProvider(stringProvider);
 ///
-///     Stream<BreakableIterable<String>> iterables = provider.collections();
+///     Stream<BreakableIterable<String>> iterables = objectProvider.collections();
 ///     List<BreakableIterable<String>> iterableList = iterables.collect(Collectors.toList());
 ///
-///     // Test that provider creates working iterables
+///     // Test that objectProvider creates working iterables
 ///     assertFalse(iterableList.isEmpty());
 ///     iterableList.forEach(iterable -> {
 ///         assertNotNull(iterable);
@@ -595,30 +595,35 @@ public class BreakableIterable<E> extends BreakableObject<Iterable<E>> implement
 
         /// {@inheritDoc}
         @Override
-        public Builder<E> self() {
+        public @NonNull Builder<E> self() {
             return this;
         }
 
         /// {@inheritDoc}
         @Override
-        public Builder<E> copy() {
+        public @NonNull Builder<E> copy() {
             return new Builder<>(this);
+        }
+
+        @Override
+        public @NonNull BreakableIterable<E> copy(final @NonNull BreakableIterable<E> other) {
+            return new BreakableIterable<>(other);
         }
 
         /// Builds a new BreakableIterable instance with the current configuration.
         /// @return a new BreakableIterable instance
         @Override
-        public BreakableIterable<E> build() {
+        public @NonNull BreakableIterable<E> build() {
             return new BreakableIterable<>(elements(), breaks(), methodStatuses(), characteristics(), isSafe());
         }
     }
 
-    /// Creates a collection provider for instances of BreakableIterable, given an element provider.
+    /// Creates a collection objectProvider for instances of BreakableIterable, given an element objectProvider.
     /// @param <E> the element type
-    /// @param elementProvider the element provider to use
-    /// @return a collection provider for breakable iterables
+    /// @param elementProvider the element objectProvider to use
+    /// @return a collection objectProvider for breakable iterables
     /// @throws NullPointerException if elementProvider is null
-    public static <E> @NonNull CollectionProvider<E, BreakableIterable<E>> iterableProvider(
+    public static <E> @NonNull CollectionProvider<BreakableIterable<E>, E> iterableProvider(
             final @NonNull ObjectProvider<E> elementProvider) {
         return CollectionProviders.from(
                 BreakableIterable::new,
@@ -628,26 +633,26 @@ public class BreakableIterable<E> extends BreakableObject<Iterable<E>> implement
         );
     }
 
-    /// Creates a collection provider for instances of BreakableIterable with specific breaks applied.
+    /// Creates a collection objectProvider for instances of BreakableIterable with specific breaks applied.
     /// @param <E> the element type
-    /// @param elementProvider the element provider to use
+    /// @param elementProvider the element objectProvider to use
     /// @param breaks the breaks to apply to each instance of BreakableIterable
-    /// @return a collection provider for breakable iterables
+    /// @return a collection objectProvider for breakable iterables
     /// @throws NullPointerException if elementProvider or breaks is null
-    public static <E> @NonNull CollectionProvider<E, BreakableIterable<E>> iterableProvider(
+    public static <E> @NonNull CollectionProvider<BreakableIterable<E>, E> iterableProvider(
             final @NonNull ObjectProvider<E> elementProvider,
             final @NonNull Set<Break> breaks) {
         return iterableProvider(elementProvider, breaks, Collections.emptyMap());
     }
 
-    /// Creates a collection provider for instances of BreakableIterable with specific breaks applied.
+    /// Creates a collection objectProvider for instances of BreakableIterable with specific breaks applied.
     /// @param <E> the element type
-    /// @param elementProvider the element provider to use
+    /// @param elementProvider the element objectProvider to use
     /// @param breaks the breaks to apply to each instance of BreakableIterable
     /// @param methodStatuses the method statuses to apply to each instance of BreakableIterable.
-    /// @return a collection provider for breakable iterables
+    /// @return a collection objectProvider for breakable iterables
     /// @throws NullPointerException if elementProvider, breaks, or methodStatuses is null
-    public static <E> @NonNull CollectionProvider<E, BreakableIterable<E>> iterableProvider(
+    public static <E> @NonNull CollectionProvider<BreakableIterable<E>, E> iterableProvider(
             final @NonNull ObjectProvider<E> elementProvider,
             final @NonNull Set<Break> breaks,
             final @NonNull Map<InterfaceMethod, MethodStatus> methodStatuses) {
@@ -661,14 +666,14 @@ public class BreakableIterable<E> extends BreakableObject<Iterable<E>> implement
         );
     }
 
-    /// Mixin interface that adds an implementation of the `provider()` method that provides instances of
+    /// Mixin interface that adds an implementation of the `objectProvider()` method that provides instances of
     /// `BreakableIterable` that do not have any breaks applied.
     /// @param <E> element type
-    public interface WithProvider<E> extends CollectionProviderSupport<E, BreakableIterable<E>>  {
-        /// Provides a collection provider for BreakableIterable instances.
-        /// @return a collection provider for breakable iterables
+    public interface WithProvider<E> extends CollectionProviderSupport<BreakableIterable<E>, E>  {
+        /// Provides a collection objectProvider for BreakableIterable instances.
+        /// @return a collection objectProvider for breakable iterables
         @Override
-        default @NonNull CollectionProvider<E, BreakableIterable<E>> provider() {
+        default @NonNull CollectionProvider<BreakableIterable<E>, E> provider() {
             return BreakableIterable.iterableProvider(elementProvider());
         }
     }

@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// ```java
 /// class MyMapValuesTest implements ValuesContract<String, String, MyMap<String, String>> {
 ///     @Override
-///     public MapProvider<String, String, MyMap<String, String>> provider() {
+///     public MapProvider<String, String, MyMap<String, String>> objectProvider() {
 ///         return MyMap::new;
 ///     }
 /// }
@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// @author evanbergstrom
 /// @see Map#values
 /// @since 1.0.0
-public interface ValuesContract<K, V, M extends Map<K, V>> extends MapContractSupport<K, V, M> {
+public interface ValuesContract<M extends Map<K, V>, K, V> extends MapContractSupport<M, K, V> {
 
     /// Tests that the [values][Map#values] method returns a collection containing all values in the map.
     ///

@@ -32,6 +32,9 @@ public class AssertDoesNotContainTest {
 
     private static final String TEST_MESSAGE = "Test message";
 
+    /// Default constructor.
+    public AssertDoesNotContainTest() {}
+
     /**
      * Tests basic assertion functionality with elements that are not present.
      *

@@ -149,28 +149,33 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
 public class BreakableSetTest extends AbstractTest
     implements CollectionContract<Integer, BreakableSet<Integer>>, WithIntegerElement, UsesCollections {
 
+    /// Default constructor.
+    public BreakableSetTest() {
+        super();
+    }
+
     /// Provides the CollectionProvider for automated contract testing.
     ///
     /// This method creates a FunctionalCollectionProvider that supplies BreakableSet instances
-    /// for the automated contract testing framework. The provider defines how to create
+    /// for the automated contract testing framework. The objectProvider defines how to create
     /// empty sets, copy sets, and build sets from existing collections.
     ///
     /// ### Provider Configuration
     /// - **Empty Constructor**: `BreakableSet::new` - Creates empty sets
     /// - **Copy Constructor**: `BreakableSet::new` - Creates sets from other BreakableSet instances
     /// - **Collection Constructor**: Custom lambda that wraps collections in ArrayList backing
-    /// - **Element Provider**: Uses the integer element provider from WithIntegerElement
+    /// - **Element Provider**: Uses the integer element objectProvider from WithIntegerElement
     ///
     /// ### Framework Integration
-    /// The CollectionContract interface uses this provider to automatically generate
+    /// The CollectionContract interface uses this objectProvider to automatically generate
     /// test scenarios with various set configurations, ensuring comprehensive coverage
     /// of the Collection interface methods.
     ///
     /// ```java
-    /// // The framework uses this provider like:
-    /// CollectionProvider<Integer, BreakableSet<Integer>> provider = provider();
-    /// BreakableSet<Integer> emptySet = provider.getEmpty();
-    /// BreakableSet<Integer> populatedSet = provider.getWithElements(Arrays.asList(1, 2, 3));
+    /// // The framework uses this objectProvider like:
+    /// CollectionProvider<Integer, BreakableSet<Integer>> objectProvider = objectProvider();
+    /// BreakableSet<Integer> emptySet = objectProvider.getEmpty();
+    /// BreakableSet<Integer> populatedSet = objectProvider.getWithElements(Arrays.asList(1, 2, 3));
     /// ```
     ///
     /// @return a CollectionProvider configured for BreakableSet testing

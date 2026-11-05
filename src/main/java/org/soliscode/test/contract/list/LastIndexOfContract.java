@@ -11,7 +11,7 @@ import java.util.List;
 /// @author evanbergstrom
 /// @since 1.0
 /// @see List#indexOf(Object)
-public interface LastIndexOfContract<E, L extends List<E>> extends CollectionContractSupport<E, L> {
+public interface LastIndexOfContract<L extends List<E>, E> extends CollectionContractSupport<L, E> {
 
     // TODO: Implement tests for the List::indexOf methods.
 }

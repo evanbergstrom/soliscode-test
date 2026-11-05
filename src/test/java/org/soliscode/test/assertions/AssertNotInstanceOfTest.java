@@ -54,6 +54,9 @@ import static org.soliscode.test.assertions.Assertions.assertNotInstanceOf;
 @SuppressWarnings("DataFlowIssue")
 class AssertNotInstanceOfTest {
 
+    /// Default constructor.
+    public AssertNotInstanceOfTest() {}
+
     @Test
     @DisplayName("assertNotInstanceOf passes when object is not instance of specified type")
     void testAssertNotInstanceOfPasses() {

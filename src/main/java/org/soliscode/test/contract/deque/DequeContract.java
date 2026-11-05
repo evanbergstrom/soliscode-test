@@ -12,18 +12,18 @@ import java.util.Deque;
 /// @param <D> The deque type being tested.
 /// @author evanbergstrom
 /// @since 1.0
-public interface DequeContract<E, D extends Deque<E>> extends QueueContract<E, D>, SequencedCollectionContract<E, D>,
-        OfferFirstContract<E, D>,
-        OfferLastContract<E, D>,
-        PollFirstContract<E, D>,
-        PollLastContract<E, D>,
-        PeekFirstContract<E, D>,
-        PeekLastContract<E, D>,
-        RemoveFirstOccurrenceContract<E, D>,
-        RemoveLastOccurrenceContract<E, D>,
-        PushContract<E, D>,
-        PopContract<E, D>,
-        DescendingIteratorContract<E, D> {
+public interface DequeContract<D extends Deque<E>, E> extends QueueContract<D, E>, SequencedCollectionContract<D, E>,
+        OfferFirstContract<D, E>,
+        OfferLastContract<D, E>,
+        PollFirstContract<D, E>,
+        PollLastContract<D, E>,
+        PeekFirstContract<D, E>,
+        PeekLastContract<D, E>,
+        RemoveFirstOccurrenceContract<D, E>,
+        RemoveLastOccurrenceContract<D, E>,
+        PushContract<D, E>,
+        PopContract<D, E>,
+        DescendingIteratorContract<D, E> {
 
     @Override
     default void doesNotSupportModification() {

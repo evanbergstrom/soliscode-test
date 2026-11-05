@@ -684,12 +684,19 @@ public class BreakableTransferQueue<E> extends BreakableBlockingQueue<E> impleme
             return new Builder<>(this);
         }
 
+        @Override
+        public BreakableTransferQueue<E> copy(final @NonNull BreakableTransferQueue<E> other) {
+            return new BreakableTransferQueue<>(other);
+        }
+
         /// Builds a new BreakableTransferQueue instance with the configured settings.
         ///
         /// @return a new BreakableTransferQueue
         @Override
-        public @NonNull BreakableTransferQueue<E> build() {
-            return new BreakableTransferQueue<>(new LinkedTransferQueue<>(elements()), breaks(), methodStatuses(),
+        public @NonNull BreakableTransferQueue<E> build(final Iterable<E> elements) {
+            LinkedTransferQueue<E> storage = new LinkedTransferQueue<>(elements());
+            elements.forEach(storage::add);
+            return new BreakableTransferQueue<>(storage, breaks(), methodStatuses(),
                     characteristics(), permits(), isSafe(), compatibleType());
         }
     }

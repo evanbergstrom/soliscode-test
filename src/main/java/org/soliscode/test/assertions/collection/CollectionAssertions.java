@@ -19,6 +19,7 @@ package org.soliscode.test.assertions.collection;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Collections;
 import java.util.function.Supplier;
 
 /// A collection of utility methods that support asserting conditions on collections in tests.
@@ -124,6 +125,42 @@ public final class CollectionAssertions {
     public static void assertContains(final Object expected, final Iterable<?> actual,
                                       final Supplier<String> messageSupplier) {
         AssertContains.assertContains(expected, actual, messageSupplier);
+    }
+
+    /// Test if an iterable contains a specific element and only that element. The elements are considered the same if
+    /// the `equals` method returns true.
+    ///
+    /// @param expected  The only element it should contain
+    /// @param actual    The iterable that should contain the elements.
+    /// @param message   The message to supply if the assertion fails.
+    /// @throws org.opentest4j.AssertionFailedError if the iterable does not contain the element or it contains multiple
+    ///                              elements or either of the iterable arguments is null.
+    public static void assertContainsOnly(final Object expected, final Iterable<?> actual, final String message) {
+        assertContainsSame(Collections.singleton(expected), actual, message);
+    }
+
+    /// Test if an iterable contains a specific element and only that element. The elements are considered the same if
+    /// the `equals` method returns true.
+    ///
+    /// @param expected  The only element it should contain
+    /// @param actual    The iterable that should contain the elements.
+    /// @param messageSupplier   The supplier to call top generate  message to supply if the assertion fails.
+    /// @throws org.opentest4j.AssertionFailedError if the iterable does not contain the element or it contains multiple
+    ///                              elements or either of the iterable arguments is null.
+    public static void assertContainsOnly(final Object expected, final Iterable<?> actual,
+                                          final Supplier<String> messageSupplier) {
+        assertContainsSame(Collections.singleton(expected), actual, messageSupplier);
+    }
+
+    /// Test if an iterable contains a specific element and only that element. The elements are considered the same if
+    /// the `equals` method returns true.
+    ///
+    /// @param expected  The only element it should contain
+    /// @param actual    The iterable that should contain the elements.
+    /// @throws org.opentest4j.AssertionFailedError if the iterable does not contain the element or it contains multiple
+    ///                              elements or either of the iterable arguments is null.
+    public static void assertContainsOnly(final Object expected, final Iterable<?> actual) {
+        assertContainsSame(Collections.singleton(expected), actual);
     }
 
     /// Tests if an [Iterable] contains all elements from another [Iterable].

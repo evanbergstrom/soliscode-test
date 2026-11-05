@@ -8,11 +8,19 @@ import org.junit.jupiter.api.TestFactory;
 import org.soliscode.test.AbstractTest;
 import org.soliscode.test.InterfaceMethod;
 import org.soliscode.test.breakable.Break;
+import org.soliscode.test.breakable.BreakableCollection;
+import org.soliscode.test.breakable.BreakableCollectionBuilder;
 import org.soliscode.test.breakable.BreakableDeque;
-import org.soliscode.test.contract.ContractTest;
+import org.soliscode.test.contract.AbstractCollectionContractTest;
+import org.soliscode.test.contract.AbstractContractTest;
+import org.soliscode.test.contract.CollectionContractConfig;
+import org.soliscode.test.contract.DynamicCollectionContract;
 import org.soliscode.test.contract.DynamicContract;
+import org.soliscode.test.contract.collection.CollectionContract;
+import org.soliscode.test.contract.collection.RemoveIfContract;
 import org.soliscode.test.contract.dynamic.DynamicBrokenDequeContract;
 import org.soliscode.test.contract.support.WithIntegerElement;
+import org.soliscode.test.provider.IntegerProvider;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -22,68 +30,36 @@ import static org.soliscode.test.breakable.BreakableDeque.OFFER_FIRST_DOES_NOT_A
 
 /// Tests for the [DequeContract] interface.
 @DisplayName("Tests for DequeContract class")
-public class DequeContractTest extends ContractTest<BreakableDeque<Integer>> {
+public class DequeContractTest extends AbstractCollectionContractTest<BreakableDeque<Integer>, Integer> {
 
-    /// Verifies that the tests all pass when testing a working Deque implementation.
+    /// Default constructor.
+    public DequeContractTest() {
+        super();
+    }
+
     @Nested
-    class WorkingDequeTest extends AbstractTest
-            implements DequeContract<Integer, BreakableDeque<Integer>>,
-            BreakableDeque.WithProvider<Integer>, WithIntegerElement {
+    class WorkingCollectionTest extends AbstractTest
+            implements DequeContract<BreakableDeque<Integer>, Integer>,
+                BreakableDeque.WithProvider<Integer>,
+                WithIntegerElement {
+    }
+
+    protected static final class DynamicDequeContract
+            extends DynamicCollectionContract<BreakableDeque<Integer>, Integer>
+            implements DequeContract<BreakableDeque<Integer>, Integer> {
+
+        public DynamicDequeContract(
+                final @NonNull BreakableCollectionBuilder<BreakableDeque<Integer>, Integer> builder,
+                final @NonNull CollectionContractConfig config) {
+            super(builder, new IntegerProvider(), config);
+        }
     }
 
     @Override
-    protected @NonNull DynamicContract<?, ?> createTest(final @NonNull Break b, final @NonNull InterfaceMethod m) {
-        return new DynamicBrokenDequeContract(b, m);
-    }
+    protected @NonNull DynamicCollectionContract<BreakableDeque<Integer>, Integer>
+        createTest(final BreakableCollectionBuilder<BreakableDeque<Integer>, Integer> builder,
+               final @NonNull CollectionContractConfig config) {
 
-    /// Test factory for tests of the offerFirst method that should fail for various breaks.
-    ///
-    /// @return a collection of dynamic tests of the `offerFirst_singleElement_returnsTrueAndUpdatesSize` method.
-    /// @see OfferFirstContract#offerFirst_singleElement_returnsTrueAndUpdatesSize
-    @TestFactory
-    public Collection<DynamicTest> dynamicTestsForOfferFirst() {
-        return Arrays.asList(
-                failsWithBreak(OFFER_FIRST_DOES_NOT_ADD_ELEMENT, DynamicBrokenDequeContract::offerFirst_singleElement_returnsTrueAndUpdatesSize, "offerFirst(E) adds a single element and updates size fails with OFFER_FIRST_DOES_NOT_ADD_ELEMENT break"
-                ),
-
-                failsWithBreak(OFFER_FIRST_ALWAYS_RETURNS_FALSE, DynamicBrokenDequeContract::offerFirst_singleElement_returnsTrueAndUpdatesSize, "offerFirst(E) adds a single element and updates size fails with OFFER_FIRST_ALWAYS_RETURNS_FALSE break"
-                ),
-
-                passesWhenUnsupported(DequeMethods.OFFER_FIRST, DynamicBrokenDequeContract::offerFirst_singleElement_returnsTrueAndUpdatesSize, "offerFirst(E) adds a single element and updates size fails when not supported"
-                )
-        );
-    }
-
-    /// Test factory for tests of the offerFirstWithNullValue() method that should fail for various breaks.
-    ///
-    /// @return a collection of dynamic tests of the `offerFirst_withNullValue_handlesCorrectly` method.
-    /// @see OfferFirstContract#offerFirst_withNullValue_handlesCorrectly
-    @TestFactory
-    public Collection<DynamicTest> dynamicTestsForOfferFirstWithNullValues() {
-        return Arrays.asList(
-                failsWithBreak(OFFER_FIRST_DOES_NOT_ADD_ELEMENT, DynamicBrokenDequeContract::offerFirst_withNullValue_handlesCorrectly, "offerFirst(E) handles null values based on permission fails with OFFER_FIRST_DOES_NOT_ADD_ELEMENT break"
-                ),
-
-                passesWhenUnsupported(DequeMethods.OFFER_FIRST, DynamicBrokenDequeContract::offerFirst_withNullValue_handlesCorrectly, "offerFirst(E) handles null values based on permission fails when not supported"
-                )
-        );
-    }
-
-    /// Test factory for tests of the offerFirstWithDuplicateValue() method that should fail for various breaks.
-    ///
-    /// @return a collection of dynamic tests of the `offerFirst_withDuplicateValue_handlesCorrectly` method.
-    /// @see OfferFirstContract#offerFirst_withDuplicateValue_handlesCorrectly
-    @TestFactory
-    public Collection<DynamicTest> dynamicTestsForOfferFirstWithDuplicateValues() {
-        return Arrays.asList(
-                failsWithBreak(OFFER_FIRST_DOES_NOT_ADD_ELEMENT, DynamicBrokenDequeContract::offerFirst_withDuplicateValue_handlesCorrectly, "offerFirst(E) handles duplicate values based on permission fails with OFFER_FIRST_DOES_NOT_ADD_ELEMENT break"
-                ),
-
-                failsWithBreak(OFFER_FIRST_ALWAYS_RETURNS_FALSE, DynamicBrokenDequeContract::offerFirst_withDuplicateValue_handlesCorrectly, "offerFirst(E) handles duplicate values based on permission fails with OFFER_FIRST_ALWAYS_RETURNS_FALSE break"
-                ),
-
-                passesWhenUnsupported(DequeMethods.OFFER_FIRST, DynamicBrokenDequeContract::offerFirst_withDuplicateValue_handlesCorrectly, "offerFirst(E) handles duplicate values based on permission fails when not supported"
-                )
-        );
+        return new DynamicDequeContract(builder, config);
     }
 }

@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /// ```java
 /// class MyMapForEachTest implements ForEachContract<String, String, MyMap<String, String>> {
 ///     @Override
-///     public MapProvider<String, String, MyMap<String, String>> provider() {
+///     public MapProvider<String, String, MyMap<String, String>> objectProvider() {
 ///         return MyMap::new;
 ///     }
 /// }
@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /// @author evanbergstrom
 /// @see Map#forEach
 /// @since 1.0.0
-public interface ForEachContract<K, V, M extends Map<K, V>> extends MapContractSupport<K, V, M> {
+public interface ForEachContract<M extends Map<K, V>, K, V> extends MapContractSupport<M, K, V> {
 
     /// Tests that the [forEach][Map#forEach] method iterates over all entries in the map.
     ///

@@ -11,25 +11,25 @@ import org.soliscode.test.InterfaceMethod;
 public enum SequencedCollectionMethods implements InterfaceMethod {
 
     /// The optional method [java.util.SequencedCollection#addFirst(Object)].
-    ADD_FIRST(""),
+    ADD_FIRST("addFirst(Object)"),
 
     /// The optional method [java.util.SequencedCollection#addLast(Object)].
-    ADD_LAST(""),
+    ADD_LAST("addLast(Object)"),
 
     /// The method [java.util.SequencedCollection#getFirst()].
-    GET_FIRST(""),
+    GET_FIRST("getFirst)"),
 
     /// The method [java.util.SequencedCollection#getLast()].
-    GET_LAST(""),
+    GET_LAST("getlast()"),
 
     /// The optional method [java.util.SequencedCollection#removeFirst()].
-    REMOVE_FIRST(""),
+    REMOVE_FIRST("removeFirst()"),
 
     /// The optional method [java.util.SequencedCollection#removeLast()].
-    REMOVE_LAST(""),
+    REMOVE_LAST("removeLast()"),
 
     /// The method [java.util.SequencedCollection#reversed()].
-    REVERSED("");
+    REVERSED("reversed()");
 
     private final String name;
 

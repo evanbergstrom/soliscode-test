@@ -19,9 +19,9 @@ import static org.junit.jupiter.api.Assertions.*;
 ///
 /// #### Implementation
 /// ```java
-/// public class MySequencedMapTest implements PutFirstContract<String, String, MySequencedMap<String, String>> {
+/// class MySequencedMapTest implements PutFirstContract<MySequencedMap<String, String>, String, String> {
 ///     @Override
-///     public MapProvider<String, String, MySequencedMap<String, String>> provider() {
+///     public MapProvider<MySequencedMap<String, String>, String, String> objectProvider() {
 ///         return new MySequencedMapProvider();
 ///     }
 /// }
@@ -31,13 +31,13 @@ import static org.junit.jupiter.api.Assertions.*;
 /// The tests in this contract are not guaranteed to be thread-safe. If the map implementation
 /// is intended for concurrent use, additional thread-safety tests should be performed.
 ///
+/// @param <M> The map type being tested.
 /// @param <K> The key type being tested.
 /// @param <V> The value type being tested.
-/// @param <M> The map type being tested.
 /// @see SequencedMap#putFirst(Object, Object)
 /// @author evanbergstrom
 /// @since 1.0.0
-public interface PutFirstContract<K, V, M extends SequencedMap<K, V>> extends MapContractSupport<K, V, M> {
+public interface PutFirstContract<M extends SequencedMap<K, V>, K, V> extends MapContractSupport<M, K, V> {
 
     /// Verifies that `putFirst(K, V)` adds a new entry to the front of the map or
     /// throws [UnsupportedOperationException] if not supported.

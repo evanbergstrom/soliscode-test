@@ -7,7 +7,7 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-/// A map provider that uses a set of functions to construct instances of the map.
+/// A map objectProvider that uses a set of functions to construct instances of the map.
 ///
 /// @param <K> the type of keys maintained by the map
 /// @param <V> the type of mapped values
@@ -24,12 +24,12 @@ public class FunctionalMapProvider<K, V, M extends Map<K, V>> extends Functional
     private final @NonNull ObjectProvider<K> keyProvider;
     private final @NonNull ObjectProvider<V> valueProvider;
 
-    /// Create an instance of this map provider.
+    /// Create an instance of this map objectProvider.
     /// @param defaultConstructor the supplier to use to create default instances of the map.
     /// @param copyConstructor the function to use to create a copy of the map.
     /// @param mapConstructor the function to use to create an instance from another map.
-    /// @param keyProvider the key provider.
-    /// @param valueProvider the value provider.
+    /// @param keyProvider the key objectProvider.
+    /// @param valueProvider the value objectProvider.
     /// @throws NullPointerException if any of the arguments are `null`
     public FunctionalMapProvider(final @NonNull Supplier<M> defaultConstructor,
                                  final @NonNull Function<M, M> copyConstructor,

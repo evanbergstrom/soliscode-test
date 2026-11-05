@@ -321,6 +321,7 @@ import java.util.function.UnaryOperator;
 /// @see java.util.List
 public class BreakableList<E> extends BreakableSequencedCollection<E> implements List<E> {
 
+    /// The underlying list.
     private final @NonNull List<E> list;
 
     /// Creates an empty list that has no breaks.
@@ -932,8 +933,7 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
 
     /// Builder for creating BreakableList instances.
     /// @param <E> the element type for the list
-    public static class Builder<E>
-            extends AbstractBuilder<BreakableList.Builder<E>, BreakableList<E>, E> {
+    public static class Builder<E> extends AbstractBuilder<BreakableList.Builder<E>, BreakableList<E>, E> {
 
         /// Create a builder initialized with the default values.
         public Builder() {
@@ -953,7 +953,7 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
         }
 
         @Override
-        public Builder<E> self() {
+        public @NonNull Builder<E> self() {
             return this;
         }
 
@@ -962,10 +962,17 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
             return new BreakableList.Builder<>(this);
         }
 
+        @Override
+        public @NonNull BreakableList<E> copy(final @NonNull BreakableList<E> other) {
+            return new BreakableList<>(other);
+        }
+
         /// Build a BreakableList object using the values from the builder.
         /// @return a new BreakableList object.
-        public BreakableList<E> build() {
-            return new BreakableList<>(new ArrayList<>(elements()), new HashSet<>(breaks()),
+        public @NonNull BreakableList<E> build(final Iterable<E> elements) {
+            ArrayList<E> storage = new ArrayList<>(elements());
+            elements.forEach(storage::add);
+            return new BreakableList<>(storage, new HashSet<>(breaks()),
                     new HashMap<>(methodStatuses()), characteristics(), permits(), isSafe(), compatibleType());
         }
     }

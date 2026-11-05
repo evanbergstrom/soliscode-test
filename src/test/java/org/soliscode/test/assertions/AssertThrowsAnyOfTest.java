@@ -47,6 +47,9 @@ import static org.soliscode.test.assertions.Assertions.assertThrowsAnyOf;
 /// @since 1.0.0
 class AssertThrowsAnyOfTest {
 
+    /// Default constructor.
+    public AssertThrowsAnyOfTest() {}
+
     @Test
     @DisplayName("assertThrowsAnyOf passes when executable throws one of expected exception types")
     void testAssertThrowsAnyPassesWithExpectedTypes() {

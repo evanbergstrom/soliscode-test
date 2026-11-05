@@ -10,8 +10,8 @@ import java.util.Map;
 /// @param <M> The map type being tested.
 /// @author evanbergstrom
 /// @since 1.0
-public interface MapContractSupport<K, V, M extends Map<K, V>>
-        extends ContractSupport<M>, MapProviderSupport<K, V, M> {
+public interface MapContractSupport<M extends Map<K, V>, K, V>
+        extends ContractSupport<M>, MapProviderSupport<M, K, V> {
 
     /// The default number of entries ({@value}) to use for a test.
     int DEFAULT_SIZE = 10;

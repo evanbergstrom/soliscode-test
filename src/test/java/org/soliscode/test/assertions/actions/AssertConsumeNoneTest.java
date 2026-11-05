@@ -41,6 +41,9 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Tests for AssertConsumeNone")
 public class AssertConsumeNoneTest implements UsesCollections {
 
+    /// Default constructor.
+    public AssertConsumeNoneTest() {}
+
     /// Test message used for custom error message validation.
     private static final String TEST_MESSAGE = "Test message";
 

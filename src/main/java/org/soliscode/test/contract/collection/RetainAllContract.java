@@ -31,7 +31,7 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
 /// ```java
 /// class MyCollectionRetainAllTest implements RetainAllContract<String, MyCollection<String>> {
 ///     @Override
-///     public CollectionProvider<String, MyCollection<String>> provider() {
+///     public CollectionProvider<String, MyCollection<String>> objectProvider() {
 ///         return MyCollection::new;
 ///     }
 /// }
@@ -46,7 +46,7 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
 /// @author evanbergstrom
 /// @see Collection#retainAll
 /// @since 1.0.0
-public interface RetainAllContract<E, C extends Collection<E>> extends CollectionContractSupport<E, C> {
+public interface RetainAllContract<C extends Collection<E>, E> extends CollectionContractSupport<C, E> {
 
     /// Tests that the [retainAll][Collection#retainAll] method works when called on an empty collection.
     ///

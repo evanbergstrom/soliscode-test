@@ -23,6 +23,9 @@ public class AssertContainsSameTest {
 
     private static final String TEST_MESSAGE = "Test message";
 
+    /// Default constructor.
+    public AssertContainsSameTest() {}
+
     /**
      * Verifies that {@code assertContainsSame} correctly handles empty collections.
      *

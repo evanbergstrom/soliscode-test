@@ -40,6 +40,9 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Tests for AssertConsumeOnly")
 public class AssertConsumeOnlyTest implements UsesCollections {
 
+    /// Default constructor.
+    public AssertConsumeOnlyTest() {}
+
     /// Test message used for custom error message validation.
     private static final String TEST_MESSAGE = "Test message";
 

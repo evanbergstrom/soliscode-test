@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// @author evanbergstrom
 /// @see Deque#removeFirstOccurrence
 /// @since 1.0.0
-public interface RemoveFirstOccurrenceContract<E, D extends Deque<E>> extends CollectionContractSupport<E, D> {
+public interface RemoveFirstOccurrenceContract<D extends Deque<E>, E> extends CollectionContractSupport<D, E> {
 
     /// Tests that the [removeFirstOccurrence][Deque#removeFirstOccurrence] method correctly removes the first occurrence.
     @DisplayName("removeFirstOccurrence(Object) removes the first occurrence of the specified element")

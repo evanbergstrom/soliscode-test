@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /// @author evanbergstrom
 /// @see SequencedCollection#getFirst
 /// @since 1.0.0
-public interface GetFirstContract<E, C extends SequencedCollection<E>> extends CollectionContractSupport<E, C> {
+public interface GetFirstContract<C extends SequencedCollection<E>, E> extends CollectionContractSupport<C, E> {
 
     /// Verifies that [getFirst][SequencedCollection#getFirst] returns the first element when the collection is not empty.
     ///

@@ -10,15 +10,15 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
 
 /**
  * Test suite for validating the behavior of {@link CollectionAssertions#assertContainsNone} assertion methods.
- * 
+ *
  * <p>This test class verifies that the {@code assertContainsNone} methods correctly validate
  * that an iterable contains none of the elements from another iterable using equality comparison
  * ({@link Object#equals(Object)} method comparison).
- * 
+ *
  * <p>The {@code assertContainsNone} assertion is the logical opposite of {@code assertContains} - it
  * passes when the two iterables are completely disjoint (share no common elements) and fails when
  * any element from the excluded set is found in the actual iterable.
- * 
+ *
  * ### Key Testing Scenarios
  * <ul>
  * <li>Empty collections - verifies behavior when one or both collections are empty</li>
@@ -43,16 +43,16 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
  * <li>Verifying set operations like difference or complement</li>
  * <li>Testing access control where certain items should be forbidden</li>
  * </ul>
- * 
+ *
  * <p>Usage example:
  * <pre>{@code
  * List<String> allowedItems = Arrays.asList("apple", "banana", "cherry");
  * List<String> forbiddenItems = Arrays.asList("poison", "toxin");
- * 
+ *
  * // Verify that allowedItems contains none of the forbidden elements
  * assertContainsNone(forbiddenItems, allowedItems);
  * }</pre>
- * 
+ *
  * @author evanbergstrom
  * @see CollectionAssertions#assertContainsNone(Iterable, Iterable)
  * @see AssertContainsNone
@@ -63,16 +63,19 @@ public class AssertContainsNoneTest {
 
     private static final String TEST_MESSAGE = "Test message";
 
+    /// Default constructor.
+    public AssertContainsNoneTest() {}
+
     /**
      * Tests the {@code assertContainsNone} assertion with empty collections.
-     * 
+     *
      * <p>Verifies that:
      * <ul>
      * <li>Empty collections trivially satisfy the "contains none" requirement when tested against other empty collections</li>
      * <li>Empty collections contain none of the elements from non-empty collections (trivial success)</li>
      * <li>All three method variants (no message, string message, message supplier) behave consistently</li>
      * </ul>
-     * 
+     *
      * <p>This test validates edge case behavior where the excluded set is empty, which should
      * always pass since there are no elements to exclude, or where the actual collection is empty,
      * which should always pass since an empty collection cannot contain any excluded elements.
@@ -92,14 +95,14 @@ public class AssertContainsNoneTest {
 
     /**
      * Tests the {@code assertContainsNone} assertion's null parameter handling.
-     * 
+     *
      * <p>Verifies that {@link NullPointerException} is thrown for all combinations of null parameters:
      * <ul>
      * <li>When the excluded collection (first parameter) is null</li>
      * <li>When the actual collection (second parameter) is null</li>
      * <li>When both parameters are null</li>
      * </ul>
-     * 
+     *
      * <p>This test ensures robust null safety and prevents undefined behavior when null
      * iterables are passed to the assertion methods.
      */
@@ -119,14 +122,14 @@ public class AssertContainsNoneTest {
 
     /**
      * Tests the {@code assertContainsNone} assertion with collections containing elements.
-     * 
+     *
      * <p>This test verifies the core disjoint collection behavior:
      * <ul>
      * <li>When collections are completely disjoint (share no common elements), the assertion passes</li>
      * <li>When collections have any overlapping elements, the assertion fails</li>
      * <li>All method variants (no message, string message, message supplier) fail consistently when appropriate</li>
      * </ul>
-     * 
+     *
      * <p>Tests both positive cases (disjoint sets like {1,2,3,4} and {0,5}) and negative cases
      * (overlapping sets like {1,2,3,4} and {2,3}) to ensure the assertion correctly identifies
      * both the presence and absence of common elements.
@@ -150,11 +153,11 @@ public class AssertContainsNoneTest {
 
     /**
      * Tests the {@code assertContainsNone} assertion with a custom error message.
-     * 
+     *
      * <p>Verifies that when the assertion fails due to overlapping elements, the custom message
      * is included in the thrown {@link AssertionFailedError}. This ensures that developers can
      * provide contextual error messages to aid in debugging test failures.
-     * 
+     *
      * <p>Uses a scenario guaranteed to fail (collections with overlapping elements) to trigger
      * the assertion error and validate message handling.
      */
@@ -166,12 +169,12 @@ public class AssertContainsNoneTest {
 
     /**
      * Tests the {@code assertContainsNone} assertion with a message supplier.
-     * 
+     *
      * <p>Verifies that when the assertion fails due to overlapping elements, the message from
      * the supplier function is included in the thrown {@link AssertionFailedError}. The supplier
      * pattern allows for lazy evaluation of error messages, which can be more efficient when
      * the message construction is expensive.
-     * 
+     *
      * <p>Uses a scenario guaranteed to fail (collections with overlapping elements) to trigger
      * the assertion error and validate message supplier handling.
      */

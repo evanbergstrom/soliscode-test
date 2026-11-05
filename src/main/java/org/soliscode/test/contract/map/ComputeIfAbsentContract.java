@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /// ```java
 /// class MyMapComputeIfAbsentTest implements ComputeIfAbsentContract<String, String, MyMap<String, String>> {
 ///     @Override
-///     public MapProvider<String, String, MyMap<String, String>> provider() {
+///     public MapProvider<String, String, MyMap<String, String>> objectProvider() {
 ///         return MyMap::new;
 ///     }
 /// }
@@ -35,13 +35,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /// This contract interface does not provide any thread-safety guarantees. The thread safety of the
 /// tests depends on the [Map] and [org.soliscode.test.provider.MapProvider] implementations being tested.
 ///
+/// @param <M> The map type being tested.
 /// @param <K> The key type being tested.
 /// @param <V> The value type being tested.
-/// @param <M> The map type being tested.
 /// @author evanbergstrom
 /// @see Map#computeIfAbsent
 /// @since 1.0.0
-public interface ComputeIfAbsentContract<K, V, M extends Map<K, V>> extends MapContractSupport<K, V, M> {
+public interface ComputeIfAbsentContract<M extends Map<K, V>, K, V> extends MapContractSupport<M, K, V> {
 
     /// Tests that the [computeIfAbsent][Map#computeIfAbsent] method computes and adds a value if the key is not present.
     ///

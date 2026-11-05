@@ -26,6 +26,9 @@ public class AssertSameSizeTest {
 
     private static final String TEST_MESSAGE = "Test message";
 
+    /// Default constructor.
+    public AssertSameSizeTest() {}
+
     /**
      * Verifies that {@code assertSameSize} correctly handles empty collections.
      *

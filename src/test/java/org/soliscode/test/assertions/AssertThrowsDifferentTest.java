@@ -47,6 +47,9 @@ import static org.soliscode.test.assertions.Assertions.assertThrowsDifferent;
 /// @since 1.0.0
 class AssertThrowsDifferentTest {
 
+    /// Default constructor.
+    public AssertThrowsDifferentTest() {}
+
     @Test
     @DisplayName("assertThrowsDifferent with collection passes when executable throws non-prohibited exception")
     void testAssertThrowsDifferentCollectionPassesWithAllowedException() {

@@ -122,6 +122,11 @@ import static org.soliscode.test.breakable.BreakableMap.*;
 /// @see AbstractTest
 public class BreakableMapTest extends AbstractTest {
 
+    /// Default constructor
+    public BreakableMapTest() {
+       super();
+    }
+
     // ========== Constructor Tests ==========
 
     /// Tests the default constructor functionality and initial state validation.

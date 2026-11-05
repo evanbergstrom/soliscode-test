@@ -22,6 +22,12 @@ import java.util.ArrayList;
 public class IterableOnlyTest extends AbstractTest implements IterableContract<Integer, IterableOnly<Integer>>,
         WithIntegerElement {
 
+    /// Default constructor.
+    public IterableOnlyTest() {
+        super();
+    }
+
+
     @Override
     public @NonNull CollectionProvider<Integer, IterableOnly<Integer>> provider() {
         return new FunctionalCollectionProvider<>(IterableOnly::new, IterableOnly::new,

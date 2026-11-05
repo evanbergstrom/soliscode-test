@@ -14,7 +14,7 @@ import java.util.SequencedSet;
 /// manipulation of elements, while maintaining set uniqueness constraints.
 ///
 /// When implementing this contract, the only method that needs to be implemented is
-/// [provider()][org.soliscode.test.contract.support.CollectionContractSupport#provider()].
+/// [objectProvider()][org.soliscode.test.contract.support.CollectionContractSupport#provider()].
 ///
 /// ## Usage Example
 ///
@@ -33,7 +33,7 @@ import java.util.SequencedSet;
 ///     }
 ///
 ///     @Override
-///     public CollectionProvider<Integer, LinkedHashSet<Integer>> provider() {
+///     public CollectionProvider<Integer, LinkedHashSet<Integer>> objectProvider() {
 ///         return CollectionProviders.provideLinkedHashSet(elementProvider());
 ///     }
 /// }
@@ -49,8 +49,8 @@ import java.util.SequencedSet;
 /// @author evanbergstrom
 /// @see SequencedSet
 /// @since 1.0
-public interface SequencedSetContract<E, S extends SequencedSet<E>>
-        extends SetContract<E, S>, SequencedCollectionContract<E, S> {
+public interface SequencedSetContract<S extends SequencedSet<E>, E>
+        extends SetContract<S, E>, SequencedCollectionContract<S, E> {
 
     @Override
     boolean supportsMethod(InterfaceMethod method);

@@ -22,7 +22,7 @@ import java.util.Queue;
 /// ```java
 /// class MyQueueContractTest implements QueueContract<String, MyQueue<String>> {
 ///     @Override
-///     public CollectionProvider<String, MyQueue<String>> provider() {
+///     public CollectionProvider<String, MyQueue<String>> objectProvider() {
 ///         return MyQueue::new;
 ///     }
 /// }
@@ -32,17 +32,17 @@ import java.util.Queue;
 /// This contract interface does not provide any thread-safety guarantees. The thread safety of the
 /// tests depends on the [Queue] and [org.soliscode.test.provider.CollectionProvider] implementations being tested.
 ///
-/// @param <E> The element type being tested.
 /// @param <Q> The queue type being tested.
+/// @param <E> The element type being tested.
 /// @author evanbergstrom
 /// @see Queue
 /// @since 1.0.0
-public interface QueueContract<E, Q extends Queue<E>> extends CollectionContract<E, Q>,
-        ElementContract<E, Q>,
-        OfferContract<E, Q>,
-        PeekContract<E, Q>,
-        PollContract<E, Q>,
-        RemoveContract<E, Q> {
+public interface QueueContract<Q extends Queue<E>, E> extends CollectionContract<Q, E>,
+        ElementContract<Q, E>,
+        OfferContract<Q, E>,
+        PeekContract<Q, E>,
+        PollContract<Q, E>,
+        RemoveContract<Q, E> {
 
     @Override
     default void doesNotSupportModification() {

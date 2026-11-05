@@ -11,7 +11,7 @@ import java.util.List;
 /// @author evanbergstrom
 /// @since 1.0
 /// @see List#sort(java.util.Comparator)
-public interface SortContract<E, L extends List<E>> extends CollectionContractSupport<E, L> {
+public interface SortContract<L extends List<E>, E> extends CollectionContractSupport<L, E> {
 
     // TODO: Implement tests for the List::sort method.
 }

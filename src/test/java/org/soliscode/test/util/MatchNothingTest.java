@@ -30,6 +30,11 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Tests for MatchNothing")
 public class MatchNothingTest extends AbstractTest {
 
+    /// Default constructor.
+    public MatchNothingTest() {
+        super();
+    }
+
     // Tests for constructor
 
     /// Test that default constructor creates a valid instance.

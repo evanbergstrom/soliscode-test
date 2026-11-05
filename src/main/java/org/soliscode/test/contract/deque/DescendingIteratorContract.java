@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// @author evanbergstrom
 /// @see Deque#descendingIterator
 /// @since 1.0.0
-public interface DescendingIteratorContract<E, D extends Deque<E>> extends CollectionContractSupport<E, D> {
+public interface DescendingIteratorContract<D extends Deque<E>, E> extends CollectionContractSupport<D, E> {
 
     /// Tests that the [descendingIterator][Deque#descendingIterator] method returns an iterator that traverses the elements in reverse order.
     @DisplayName("descendingIterator() returns an iterator that traverses the elements in reverse order")

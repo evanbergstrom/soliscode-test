@@ -162,6 +162,11 @@ import static org.soliscode.test.breakable.BreakableSortedMap.*;
 /// @see AbstractTest
 public class BreakableSortedMapTest extends AbstractTest {
 
+    /// Default constructor.
+    public BreakableSortedMapTest() {
+        super();
+    }
+
     // ========== Constructor Tests ==========
 
     /// Tests the default constructor functionality and initial state validation.

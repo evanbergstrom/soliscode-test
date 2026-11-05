@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// ```java
 /// class MyMapPutAllTest implements PutAllContract<String, String, MyMap<String, String>> {
 ///     @Override
-///     public MapProvider<String, String, MyMap<String, String>> provider() {
+///     public MapProvider<String, String, MyMap<String, String>> objectProvider() {
 ///         return MyMap::new;
 ///     }
 /// }
@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// @author evanbergstrom
 /// @see Map#putAll
 /// @since 1.0.0
-public interface PutAllContract<K, V, M extends Map<K, V>> extends MapContractSupport<K, V, M> {
+public interface PutAllContract<M extends Map<K, V>, K, V> extends MapContractSupport<M, K, V> {
 
     /// Tests that the [putAll][Map#putAll] method adds all entries from another map.
     ///

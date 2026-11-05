@@ -287,6 +287,7 @@ import java.util.Set;
 /// @see java.util.SequencedCollection
 public class BreakableSequencedCollection<E> extends BreakableCollection<E> implements SequencedCollection<E> {
 
+    /// The underlying sequence storage.
     private final @NonNull List<E> sequenced;
 
     /// #### ADD_FIRST_DOES_NOT_ADD_ELEMENT
@@ -514,10 +515,11 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
     /// [BreakableCollection.Builder].
     /// @param c               the initial elements for the breakable collection.
     /// @param breaks          the breaks for the collection.
-    /// @param methodStatuses the method status configuration.
+    /// @param methodStatuses  the method status configuration.
     /// @param characteristics the characteristics for the collection.
     /// @param permits         the flags that indicate what types of values are supported by the collection.
     /// @param isSafe          whether the collection is safe for concurrent access.
+    /// @param compatibleType  the type that this collection is compatible with.
     /// @throws NullPointerException if either the `c` or the `breaks` parameters are null.
     protected BreakableSequencedCollection(final @NonNull List<E> c, final @NonNull Set<Break> breaks,
                                            final @NonNull Map<InterfaceMethod, MethodStatus> methodStatuses,
@@ -758,39 +760,45 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
     public static class Builder<E> extends AbstractBuilder<BreakableSequencedCollection.Builder<E>,
                 BreakableSequencedCollection<E>, E> {
 
-    /// Create a builder initialized with the default values.
-    public Builder() {
-        super(new ArrayList<>());
-    }
+        /// Create a builder initialized with the default values.
+        public Builder() {
+            super(new ArrayList<>());
+        }
 
-    /// Create a builder initialized with an element store.
-    /// @param elements the element store to use
-    public Builder(final @NonNull Collection<E> elements) {
-        super(new ArrayList<>(Objects.requireNonNull(elements)));
-    }
+        /// Create a builder initialized with an element store.
+        /// @param elements the element store to use
+        public Builder(final @NonNull Collection<E> elements) {
+            super(new ArrayList<>(Objects.requireNonNull(elements)));
+        }
 
-    /// Create a builder initialized with the values copied from another builder.
-    /// @param other the builder to copy the values from
-    public Builder(final BreakableSequencedCollection.Builder<E> other) {
-        super(other);
-    }
+        /// Create a builder initialized with the values copied from another builder.
+        /// @param other the builder to copy the values from
+        public Builder(final BreakableSequencedCollection.Builder<E> other) {
+            super(other);
+        }
 
-    @Override
-    public Builder<E> self() {
-        return this;
-    }
+        @Override
+        public @NonNull Builder<E> self() {
+            return this;
+        }
 
-    @Override
-    public BreakableSequencedCollection.Builder<E> copy() {
-        return new BreakableSequencedCollection.Builder<>(this);
-    }
+        @Override
+        public BreakableSequencedCollection.Builder<E> copy() {
+            return new BreakableSequencedCollection.Builder<>(this);
+        }
 
-    /// Build a `BreakableSequencedCollection` object using the values from the builder.
-    /// @return a new `BreakableSequencedCollection` object.
-    public BreakableSequencedCollection<E> build() {
-        return new BreakableSequencedCollection<>(new ArrayList<>(elements()), new HashSet<>(breaks()),
-                new HashMap<>(methodStatuses()), characteristics(), permits(), isSafe(), compatibleType());
-    }
-}
+        @Override
+        public @NonNull BreakableSequencedCollection<E> copy(final @NonNull BreakableSequencedCollection<E> other) {
+            return new BreakableSequencedCollection<>(other);
+        }
 
+            /// Build a `BreakableSequencedCollection` object using the values from the builder.
+        /// @return a new `BreakableSequencedCollection` object.
+        public @NonNull BreakableSequencedCollection<E> build(final Iterable<E> elements) {
+            ArrayList<E> storage = new ArrayList<>(elements());
+            elements.forEach(storage::add);
+            return new BreakableSequencedCollection<>(storage, new HashSet<>(breaks()),
+                    new HashMap<>(methodStatuses()), characteristics(), permits(), isSafe(), compatibleType());
+        }
+    }
 }

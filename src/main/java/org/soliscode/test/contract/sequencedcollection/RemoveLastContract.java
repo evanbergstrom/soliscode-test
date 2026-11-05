@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// @author evanbergstrom
 /// @see SequencedCollection#removeLast
 /// @since 1.0.0
-public interface RemoveLastContract<E, C extends SequencedCollection<E>> extends CollectionContractSupport<E, C> {
+public interface RemoveLastContract<C extends SequencedCollection<E>, E> extends CollectionContractSupport<C, E> {
 
     /// Verifies that [removeLast][SequencedCollection#removeLast] removes and returns the last element when not empty.
     ///

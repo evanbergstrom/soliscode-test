@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/// Tests for the `FloatProvider` class. These tests verify that the provider correctly implements
+/// Tests for the `FloatProvider` class. These tests verify that the objectProvider correctly implements
 /// all inherited interface contracts and provides proper Float instances for testing purposes.
 ///
 /// @author evanbergstrom
@@ -20,7 +20,13 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Tests for FloatProvider")
 public class FloatProviderTest extends AbstractTest {
 
-    private final FloatProvider provider = Providers.floatProvider();
+    private final FloatProvider provider;
+
+    /// Default constructor.
+    public FloatProviderTest() {
+        super();
+        provider = Providers.floatProvider();
+    }
 
     // Tests for FloatNumberProvider interface methods
 
@@ -325,7 +331,7 @@ public class FloatProviderTest extends AbstractTest {
     @Test
     @DisplayName("Test createUniqueInstances method with size exceeding limit")
     public void testCreateUniqueInstancesExceedsLimit() {
-        // Create a mock provider with a smaller unique size limit for testing
+        // Create a mock objectProvider with a smaller unique size limit for testing
         FloatProvider limitedProvider = new FloatProvider() {
             @Override
             public long uniqueSizeLimit() {
@@ -426,12 +432,12 @@ public class FloatProviderTest extends AbstractTest {
         assertEquals(Float.MIN_NORMAL, minNormal, 0.0);
     }
 
-    /// Test that the provider follows all interface contracts properly.
+    /// Test that the objectProvider follows all interface contracts properly.
     @SuppressWarnings("UnnecessaryLocalVariable")
     @Test
-    @DisplayName("Test provider interface contracts")
+    @DisplayName("Test objectProvider interface contracts")
     public void testProviderContracts() {
-        // Test that the provider implements all expected interfaces
+        // Test that the objectProvider implements all expected interfaces
         assertInstanceOf(DoubleNumberProvider.class, provider);
         assertInstanceOf(NumberProvider.class, provider);
         assertInstanceOf(ObjectProvider.class, provider);

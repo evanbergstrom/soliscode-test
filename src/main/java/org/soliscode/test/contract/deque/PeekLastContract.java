@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// @author evanbergstrom
 /// @see Deque#peekLast
 /// @since 1.0.0
-public interface PeekLastContract<E, D extends Deque<E>> extends CollectionContractSupport<E, D> {
+public interface PeekLastContract<D extends Deque<E>, E> extends CollectionContractSupport<D, E> {
 
     /// Tests that the [peekLast][Deque#peekLast] method correctly retrieves the last element without removing it.
     @DisplayName("peekLast() retrieves the last element without removing it")

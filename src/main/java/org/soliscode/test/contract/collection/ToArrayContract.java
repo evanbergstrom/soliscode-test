@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /// ```java
 /// class MyCollectionToArrayTest implements ToArrayContract<String, MyCollection<String>> {
 ///     @Override
-///     public CollectionProvider<String, MyCollection<String>> provider() {
+///     public CollectionProvider<String, MyCollection<String>> objectProvider() {
 ///         return MyCollection::new;
 ///     }
 /// }
@@ -49,7 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /// @see Collection#toArray
 /// @see Collection#toArray(Object[])
 /// @since 1.0.0
-public interface ToArrayContract<E, C extends Collection<E>> extends CollectionContractSupport<E, C> {
+public interface ToArrayContract<C extends Collection<E>, E> extends CollectionContractSupport<C, E> {
 
     /// Tests that the [toArray()][Collection#toArray] method works for an empty collection.
     ///

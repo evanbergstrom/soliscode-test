@@ -70,6 +70,9 @@ public class AssertImplementsOnlyTest {
     /// Test message used for custom error message validation.
     private static final String TEST_MESSAGE = "Test message for interface compliance";
 
+    /// Default constructor.
+    public AssertImplementsOnlyTest() {}
+
     // Test classes and interfaces used throughout the tests
 
     /// Simple test class that implements no interfaces (except implicit Object inheritance)

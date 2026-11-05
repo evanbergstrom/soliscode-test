@@ -6,8 +6,7 @@ import org.soliscode.test.contract.support.CollectionContractSupport;
 
 import java.util.Collection;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /// **Contract for the `isEmpty` method of a `Collection`**
 ///
@@ -25,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /// ```java
 /// class MyCollectionIsEmptyTest implements IsEmptyContract<String, MyCollection<String>> {
 ///     @Override
-///     public CollectionProvider<String, MyCollection<String>> provider() {
+///     public CollectionProvider<String, MyCollection<String>> objectProvider() {
 ///         return MyCollection::new;
 ///     }
 /// }
@@ -40,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /// @author evanbergstrom
 /// @see Collection#isEmpty
 /// @since 1.0.0
-public interface IsEmptyContract<E, C extends Collection<E>> extends CollectionContractSupport<E, C> {
+public interface IsEmptyContract<C extends Collection<E>, E> extends CollectionContractSupport<C, E> {
 
     /// Tests that the [isEmpty][Collection#isEmpty] method returns `true` for an empty collection.
     ///
@@ -52,8 +51,10 @@ public interface IsEmptyContract<E, C extends Collection<E>> extends CollectionC
     @DisplayName("isEmpty() returns true for an empty collection")
     @Test
     default void isEmpty_whenEmpty_returnsTrue() {
-        Collection<E> collection = provider().emptyInstance();
-        assertTrue(collection.isEmpty());
+        if (supportsMethod(CollectionMethods.IS_EMPTY)) {
+            Collection<E> collection = provider().emptyInstance();
+            assertTrue(collection.isEmpty());
+        }
     }
 
     /// Tests that the [isEmpty][Collection#isEmpty] method returns `false` for a collection with
@@ -67,7 +68,29 @@ public interface IsEmptyContract<E, C extends Collection<E>> extends CollectionC
     @DisplayName("isEmpty() returns false for a collection with elements")
     @Test
     default void isEmpty_whenNotEmpty_returnsFalse() {
-        Collection<E> collection = provider().createSingleton();
-        assertFalse(collection.isEmpty());
+        if (supportsMethod(CollectionMethods.IS_EMPTY)) {
+            Collection<E> collection = provider().createSingleton();
+            assertFalse(collection.isEmpty());
+        }
+    }
+
+    /// Tests that the [Collection#isEmpty()] method throws an [UnsupportedOperationException]
+    /// when the method is not supported by the collection under test.
+    ///
+    /// This test verifies that invoking `isEmpty()` on a collection that does not
+    /// support this operation results in the expected exception being thrown. The check is gated
+    /// by the [#supportsMethod(org.soliscode.test.InterfaceMethod)] method, ensuring that the test is only
+    /// executed for collections where this behavior is applicable.
+    ///
+    /// @throws org.opentest4j.AssertionFailedError if the assertion fails
+    ///
+    /// @see Collection#isEmpty()
+    @DisplayName("isEmpty() throws UnsupportedOperationException when method is not supported")
+    @Test
+    default void isEmpty_whenNotSupported_throwsUnsupportedOperationException() {
+        if (!supportsMethod(CollectionMethods.IS_EMPTY)) {
+            Collection<E> collection = provider().emptyInstance();
+            assertThrows(UnsupportedOperationException.class, collection::isEmpty);
+        }
     }
 }

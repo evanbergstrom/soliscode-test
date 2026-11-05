@@ -17,7 +17,7 @@
 /// **Provider Framework for Test Instance Generation**
 ///
 /// This package contains a comprehensive framework for generating instances of objects used in testing.
-/// The provider pattern enables systematic creation of test data with predictable and controllable
+/// The objectProvider pattern enables systematic creation of test data with predictable and controllable
 /// characteristics, making tests more reliable and easier to understand.
 ///
 /// ## Core Concepts
@@ -28,7 +28,7 @@
 /// behavior across different types.
 ///
 /// ### Specialized Providers
-/// The framework includes specialized provider interfaces for specific categories:
+/// The framework includes specialized objectProvider interfaces for specific categories:
 ///
 /// - **`NumberProvider<T>`**: For numeric types with min/max value support
 /// - **`IntegerNumberProvider<T>`**: For integer-based numeric types
@@ -65,9 +65,9 @@
 /// ```java
 /// @ParameterizedTest
 /// @MethodSource("numberProviders")
-/// void testNumericBoundaries(NumberProvider<? extends Number> provider) {
-///     Number min = provider.minValue();
-///     Number max = provider.maxValue();
+/// void testNumericBoundaries(NumberProvider<? extends Number> objectProvider) {
+///     Number min = objectProvider.minValue();
+///     Number max = objectProvider.maxValue();
 ///
 ///     assertTrue(min.doubleValue() <= max.doubleValue());
 /// }
@@ -83,12 +83,12 @@
 ///
 /// ### Controlled Test Data Generation
 /// ```java
-/// ObjectProvider<String> provider = new StringProvider();
+/// ObjectProvider<String> objectProvider = new StringProvider();
 ///
 /// // Generate predictable sequences for reproducible tests
-/// List<String> equalInstances = provider.createEqualObjects(10);
-/// List<String> uniqueInstances = provider.createUniqueInstances(10);
-/// List<String> randomInstances = provider.createRandomInstances(10);
+/// List<String> equalInstances = objectProvider.createEqualObjects(10);
+/// List<String> uniqueInstances = objectProvider.createUniqueInstances(10);
+/// List<String> randomInstances = objectProvider.createRandomInstances(10);
 /// ```
 ///
 /// ## Provider Types
@@ -117,7 +117,7 @@
 ///
 /// ### Extensibility
 /// The framework is designed for easy extension. Custom providers can be created by
-/// implementing the appropriate provider interface.
+/// implementing the appropriate objectProvider interface.
 ///
 /// ### Performance
 /// Providers are designed for efficient instance creation with minimal overhead,

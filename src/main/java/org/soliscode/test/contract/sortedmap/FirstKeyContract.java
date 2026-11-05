@@ -24,9 +24,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /// To use this contract, implement it in your test class along with the required support interfaces:
 ///
 /// ```java
-/// class MySortedMapFirstKeyTest implements FirstKeyContract<String, String, MySortedMap<String, String>> {
+/// class MySortedMapFirstKeyTest implements FirstKeyContract<MySortedMap<String, String>, String, String> {
 ///     @Override
-///     public MapProvider<String, String, MySortedMap<String, String>> provider() {
+///     public MapProvider<MySortedMap<String, String>, String, String> objectProvider() {
 ///         return MySortedMap::new;
 ///     }
 /// }
@@ -36,13 +36,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /// This contract interface does not provide any thread-safety guarantees. The thread safety of the
 /// tests depends on the [SortedMap] and [org.soliscode.test.provider.MapProvider] implementations being tested.
 ///
+/// @param <M> The map type being tested.
 /// @param <K> The key type being tested.
 /// @param <V> The value type being tested.
-/// @param <M> The map type being tested.
 /// @author evanbergstrom
 /// @see SortedMap#firstKey
 /// @since 1.0.0
-public interface FirstKeyContract<K, V, M extends SortedMap<K, V>> extends MapContractSupport<K, V, M> {
+public interface FirstKeyContract<M extends SortedMap<K, V>, K, V> extends MapContractSupport<M, K, V> {
 
     /// Tests that the [firstKey][SortedMap#firstKey] method throws [NoSuchElementException]
     /// for an empty map.

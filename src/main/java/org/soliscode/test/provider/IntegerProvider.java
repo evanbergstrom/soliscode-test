@@ -20,9 +20,9 @@ import org.jspecify.annotations.NonNull;
 
 /// Provides instances of `Integer` for testing purposes.
 ///
-/// This provider creates `Integer` instances with values ranging from `Integer.MIN_VALUE`
+/// This objectProvider creates `Integer` instances with values ranging from `Integer.MIN_VALUE`
 /// to `Integer.MAX_VALUE`. It implements `IntegerNumberProvider` to provide integer-specific
-/// functionality while maintaining all the general object provider capabilities.
+/// functionality while maintaining all the general object objectProvider capabilities.
 ///
 /// ## Features
 ///
@@ -35,22 +35,22 @@ import org.jspecify.annotations.NonNull;
 ///
 /// ### Basic Usage
 /// ```java
-/// IntegerProvider provider = new IntegerProvider();
+/// IntegerProvider objectProvider = new IntegerProvider();
 ///
 /// // Create instances with different approaches
-/// Integer zero = provider.defaultInstance();        // 0
-/// Integer fromSeed = provider.createInstance(42);   // 42
-/// Integer max = provider.maxValue();                // 2147483647
-/// Integer min = provider.minValue();                // -2147483648
+/// Integer zero = objectProvider.defaultInstance();        // 0
+/// Integer fromSeed = objectProvider.createInstance(42);   // 42
+/// Integer max = objectProvider.maxValue();                // 2147483647
+/// Integer min = objectProvider.minValue();                // -2147483648
 /// ```
 ///
 /// ### Boundary Testing
 /// ```java
-/// IntegerProvider provider = new IntegerProvider();
+/// IntegerProvider objectProvider = new IntegerProvider();
 ///
 /// // Test edge cases
-/// Integer maxValue = provider.maxValue();
-/// Integer minValue = provider.minValue();
+/// Integer maxValue = objectProvider.maxValue();
+/// Integer minValue = objectProvider.minValue();
 ///
 /// // Verify boundaries
 /// assertEquals(Integer.MAX_VALUE, maxValue.intValue());
@@ -59,17 +59,17 @@ import org.jspecify.annotations.NonNull;
 ///
 /// ### Collection Generation
 /// ```java
-/// IntegerProvider provider = new IntegerProvider();
+/// IntegerProvider objectProvider = new IntegerProvider();
 ///
 /// // Generate test data sets
-/// List<Integer> equalValues = provider.createEqualObjects(5);     // [0, 0, 0, 0, 0]
-/// List<Integer> uniqueValues = provider.createUniqueInstances(5); // [0, 1, 2, 3, 4]
-/// List<Integer> randomValues = provider.createRandomInstances(5); // Random integers
+/// List<Integer> equalValues = objectProvider.createEqualObjects(5);     // [0, 0, 0, 0, 0]
+/// List<Integer> uniqueValues = objectProvider.createUniqueInstances(5); // [0, 1, 2, 3, 4]
+/// List<Integer> randomValues = objectProvider.createRandomInstances(5); // Random integers
 /// ```
 ///
 /// ## Implementation Details
 ///
-/// This provider uses the integer value directly from the seed parameter, with validation
+/// This objectProvider uses the integer value directly from the seed parameter, with validation
 /// to ensure the value fits within the Integer range. Values outside the valid range will
 /// cause an `IllegalArgumentException` to be thrown.
 ///
@@ -82,7 +82,7 @@ public class IntegerProvider implements IntegerNumberProvider<Integer> {
 
     /// Creates a new IntegerProvider instance.
     ///
-    /// This constructor initializes the provider with default settings for creating
+    /// This constructor initializes the objectProvider with default settings for creating
     /// Integer instances within the full range of valid integer values.
     public IntegerProvider() { }
 
@@ -101,15 +101,15 @@ public class IntegerProvider implements IntegerNumberProvider<Integer> {
     /// ## Examples
     ///
     /// ```java
-    /// IntegerProvider provider = new IntegerProvider();
+    /// IntegerProvider objectProvider = new IntegerProvider();
     ///
-    /// Integer zero = provider.createValue(0);                    // 0
-    /// Integer positive = provider.createValue(42);               // 42
-    /// Integer negative = provider.createValue(-100);             // -100
-    /// Integer max = provider.createValue(Integer.MAX_VALUE);     // 2147483647
+    /// Integer zero = objectProvider.createValue(0);                    // 0
+    /// Integer positive = objectProvider.createValue(42);               // 42
+    /// Integer negative = objectProvider.createValue(-100);             // -100
+    /// Integer max = objectProvider.createValue(Integer.MAX_VALUE);     // 2147483647
     ///
     /// // This would throw an exception:
-    /// // provider.createValue(Long.MAX_VALUE);  // IllegalArgumentException
+    /// // objectProvider.createValue(Long.MAX_VALUE);  // IllegalArgumentException
     /// ```
     ///
     /// @param value the primitive long value to convert to an Integer
@@ -124,7 +124,7 @@ public class IntegerProvider implements IntegerNumberProvider<Integer> {
         return (int) value;
     }
 
-    /// Returns the maximum integer value that can be represented by this provider.
+    /// Returns the maximum integer value that can be represented by this objectProvider.
     ///
     /// This method returns `Integer.MAX_VALUE` which represents the largest value
     /// that can be stored in a 32-bit signed integer.
@@ -136,7 +136,7 @@ public class IntegerProvider implements IntegerNumberProvider<Integer> {
         return Integer.MAX_VALUE;
     }
 
-    /// Returns the minimum integer value that can be represented by this provider.
+    /// Returns the minimum integer value that can be represented by this objectProvider.
     ///
     /// This method returns `Integer.MIN_VALUE` which represents the smallest value
     /// that can be stored in a 32-bit signed integer.

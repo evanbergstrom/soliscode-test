@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /// ```java
 /// class MySortedMapSubMapTest implements SubMapContract<String, String, MySortedMap<String, String>> {
 ///     @Override
-///     public MapProvider<String, String, MySortedMap<String, String>> provider() {
+///     public MapProvider<String, String, MySortedMap<String, String>> objectProvider() {
 ///         return MySortedMap::new;
 ///     }
 /// }
@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /// @author evanbergstrom
 /// @see SortedMap#subMap(Object, Object)
 /// @since 1.0.0
-public interface SubMapContract<K, V, M extends SortedMap<K, V>> extends MapContractSupport<K, V, M> {
+public interface SubMapContract<M extends SortedMap<K, V>, K, V> extends MapContractSupport<M, K, V> {
 
     /// Tests that the [subMap][SortedMap#subMap] method can be called and returns
     /// a non-null map.

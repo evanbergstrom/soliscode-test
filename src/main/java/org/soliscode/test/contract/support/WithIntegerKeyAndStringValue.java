@@ -35,25 +35,25 @@ import java.util.Map;
 /// @author evanbergstrom
 /// @since 1.0.0
 public interface WithIntegerKeyAndStringValue<M extends Map<Integer, String>>
-        extends MapContractSupport<Integer, String, M> {
+        extends MapContractSupport<M, Integer, String> {
 
-    /// A provider that generates [Integer] keys.
+    /// A objectProvider that generates [Integer] keys.
     ObjectProvider<Integer> KEY_PROVIDER = Providers.integerProvider();
 
-    /// A provider that generates [String] values.
+    /// A objectProvider that generates [String] values.
     ObjectProvider<String> VALUE_PROVIDER = Providers.stringProvider();
 
-    /// Returns a provider for [Integer] keys.
+    /// Returns a objectProvider for [Integer] keys.
     ///
-    /// @return a non-null integer provider
+    /// @return a non-null integer objectProvider
     @Override
     default @NonNull ObjectProvider<Integer> keyProvider() {
         return Providers.integerProvider();
     }
 
-    /// Returns a provider for [String] values.
+    /// Returns a objectProvider for [String] values.
     ///
-    /// @return a non-null string provider
+    /// @return a non-null string objectProvider
     @Override
     default @NonNull ObjectProvider<String> valueProvider() {
         return Providers.stringProvider();

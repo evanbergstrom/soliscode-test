@@ -462,24 +462,24 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
         this.navigableMap = Objects.requireNonNull(other.navigableMap, "NavigableMap cannot be null");
     }
 
-    /// Creates a BreakableNavigableMap with the specified configuration.
+    /// Constructs a `BreakableNavigableMap` instance for managing a navigable map with
+    /// additional controls such as breaks, method statuses, and permits for controlled operations.
+    /// This class extends functionality to allow introducing "break points" and method behavior
+    /// control to the wrapped navigable map. These features support use cases such as controlled
+    /// testing, debugging, and safe manipulation of data within strict operational constraints.
     ///
-    /// This constructor allows full control over the BreakableNavigableMap configuration,
-    /// including the underlying NavigableMap, breaks, and null policies.
-    ///
-    /// **Usage:**
-    /// ```java
-    /// TreeMap<String, Integer> treeMap = new TreeMap<>();
-    /// Set<Break> breaks = Set.of(HIGHER_KEY_ALWAYS_RETURNS_NULL);
-    /// BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap<>(
-    ///     treeMap, breaks, true, false);
-    /// ```
-    ///
-    /// @param navigableMap the NavigableMap to wrap
-    /// @param breaks the breaks to apply
-    /// @throws NullPointerException if navigableMap or breaks is null
-    /// @throws IllegalArgumentException if the map contains null keys/values that
-    ///                                  violate the specified null policies
+    /// @param navigableMap The underlying [NavigableMap] that will be wrapped and managed by
+    ///                     this `BreakableNavigableMap`. Must not be `null`.
+    /// @param breaks       The set of [Break] instances defining interruption or control points
+    ///                     for the navigable map's methods. Must not be `null`.
+    /// @param methodStatuses A mapping of [InterfaceMethod] to [MethodStatus] to specify
+    ///                       the behavioral state of each supported method in the wrapped map (e.g.,
+    ///                       enabled, disabled, or overridden). Must not be `null`.
+    /// @param permits      The maximum number of operations allowed simultaneously before
+    ///                     restrictions apply. This tightly controls concurrent access and object
+    ///                     state modifications.
+    /// @param isSafe       A flag indicating whether the map's operations should run in a safe
+    ///                     mode, ensuring all safety checks are applied to avoid unintended failures.
     protected BreakableNavigableMap(
             final @NonNull NavigableMap<K, V> navigableMap,
             final @NonNull Set<Break> breaks,
@@ -1173,6 +1173,11 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
         @Override
         public @NonNull Builder<K, V> copy() {
             return new Builder<>(this);
+        }
+
+        @Override
+        public @NonNull BreakableNavigableMap<K, V> copy(final @NonNull BreakableNavigableMap<K, V> other) {
+            return new BreakableNavigableMap<>(other);
         }
 
         /// Builds a new [BreakableNavigableMap] instance with the configured settings.

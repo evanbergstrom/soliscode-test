@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// @author evanbergstrom
 /// @see Deque#removeLastOccurrence
 /// @since 1.0.0
-public interface RemoveLastOccurrenceContract<E, D extends Deque<E>> extends CollectionContractSupport<E, D> {
+public interface RemoveLastOccurrenceContract<D extends Deque<E>, E> extends CollectionContractSupport<D, E> {
 
     /// Tests that the [removeLastOccurrence][Deque#removeLastOccurrence] method correctly removes the last occurrence.
     @DisplayName("removeLastOccurrence(Object) removes the last occurrence of the specified element")

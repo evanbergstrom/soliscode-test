@@ -962,6 +962,11 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
             return new Builder<>(this);
         }
 
+        @Override
+        public BreakableSortedMap<K, V> copy(final @NonNull BreakableSortedMap<K, V> other) {
+            return new BreakableSortedMap<>(other);
+        }
+
         /// Creates a new Builder by copying the configuration from another builder.
         ///
         /// This constructor is primarily used by the {@link #copy()} method to create

@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// @author evanbergstrom
 /// @see Deque#pollFirst
 /// @since 1.0.0
-public interface PollFirstContract<E, D extends Deque<E>> extends CollectionContractSupport<E, D> {
+public interface PollFirstContract<D extends Deque<E>, E> extends CollectionContractSupport<D, E> {
 
     /// Tests that the [pollFirst][Deque#pollFirst] method correctly retrieves and removes the first element.
     @DisplayName("pollFirst() retrieves and removes the first element")

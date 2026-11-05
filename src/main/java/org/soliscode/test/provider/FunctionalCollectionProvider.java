@@ -9,15 +9,15 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-/// A collection provider that uses a set of functions to construct instances of the collection. There are four
-/// elements required to create a collection provider using this class:
+/// A collection objectProvider that uses a set of functions to construct instances of the collection. There are four
+/// elements required to create a collection objectProvider using this class:
 /// - Default constructor function
 /// - Copy constructor function
 /// - Collection constructor function
-/// - Element provider.
-/// For example, to create a collection provider for an `ArrayList` of Integer objects:
+/// - Element objectProvider.
+/// For example, to create a collection objectProvider for an `ArrayList` of Integer objects:
 /// ```java
-///     CollectionProvider<Integer> provider = FunctionalCollectionProvider<Integer, ArrayList>(
+///     CollectionProvider<Integer> objectProvider = FunctionalCollectionProvider<Integer, ArrayList>(
 ///         ArrayList;:new, ArrayList::new, ArrayList::new, Providers.integerProvider());
 /// ```
 ///
@@ -25,8 +25,8 @@ import java.util.function.Supplier;
 /// @param <I> the iterable type.
 /// @author evanbergstrom
 /// @since 1.0.0
-public class FunctionalCollectionProvider<E, I extends Iterable<E>> extends FunctionalProvider<I>
-        implements CollectionProvider<E, I> {
+public class FunctionalCollectionProvider<I extends Iterable<E>, E> extends FunctionalProvider<I>
+        implements CollectionProvider<I, E> {
 
     /// Default number of elements to use for a test.
     private static final int DEFAULT_SIZE = 10;
@@ -34,12 +34,12 @@ public class FunctionalCollectionProvider<E, I extends Iterable<E>> extends Func
     private final @NonNull Function<Collection<E>, I> collectionConstructor;
     private final @NonNull ObjectProvider<E> elementProvider;
 
-    /// Create an instance of this collection provider that uses the methods and element provider specified in the
+    /// Create an instance of this collection objectProvider that uses the methods and element objectProvider specified in the
     /// arguments for its implementation.
     /// @param defaultConstructor the supplier to use to create default instances of the collection.
     /// @param copyConstructor the function to use to create a copy of the collection.
     /// @param collectionConstructor the function to use to create an instance from another collection.
-    /// @param elementProvider the element provider.
+    /// @param elementProvider the element objectProvider.
     /// @throws NullPointerException if any of the arguments are `null`
     public FunctionalCollectionProvider(final @NonNull Supplier<I> defaultConstructor,
                                         final @NonNull Function<I, I> copyConstructor,
@@ -109,17 +109,17 @@ public class FunctionalCollectionProvider<E, I extends Iterable<E>> extends Func
         return createInstance(elementProvider.createUniqueInstances(size, seed));
     }
 
-    /// Create an instance of this collection provider that uses the methods and element provider specified in the
+    /// Create an instance of this collection objectProvider that uses the methods and element objectProvider specified in the
     /// arguments for its implementation.
     /// @param <E> the type of the elements.
     /// @param <I> the type of the iterable.
     /// @param defaultConstructor the supplier to use to create default instances of the collection.
     /// @param copyConstructor the function to use to create a copy of the collection.
     /// @param collectionConstructor the function to use to create an instance from another collection.
-    /// @param elementProvider the element provider.
-    /// @return the collection provider.
+    /// @param elementProvider the element objectProvider.
+    /// @return the collection objectProvider.
     /// @throws NullPointerException if any of the arguments are `null`
-    public static <E, I extends Iterable<E>> FunctionalCollectionProvider<E, I> from(
+    public static <I extends Iterable<E>, E> FunctionalCollectionProvider<I, E> from(
             final @NonNull Supplier<I> defaultConstructor,
             final @NonNull Function<I, I> copyConstructor,
             final @NonNull Function<Collection<E>, I> collectionConstructor,

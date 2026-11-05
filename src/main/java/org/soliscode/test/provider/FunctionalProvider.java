@@ -6,14 +6,14 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-/// An provider that uses a set of functions to construct instances of the class. There are two
-/// elements required to create a collection provider using this class:
+/// An objectProvider that uses a set of functions to construct instances of the class. There are two
+/// elements required to create a collection objectProvider using this class:
 /// - Default constructor function
 /// - Copy constructor function
 ///
-/// For example, to create a provider for Integer objects:
+/// For example, to create a objectProvider for Integer objects:
 /// ```java
-///     Provider<Integer> provider = FunctionalProvider<Integer>(Integer;:new, Integer::new);
+///     Provider<Integer> objectProvider = FunctionalProvider<Integer>(Integer;:new, Integer::new);
 /// ```
 ///
 /// @param <T> the provided type.
@@ -25,7 +25,7 @@ public class FunctionalProvider<T> implements ObjectProvider<T> {
     private final @NonNull Function<T, T> copyConstructor;
     private final Function<Long, T> seedConstructor;
 
-    /// Create an instance of this collection provider that uses the methods and element provider specified in the
+    /// Create an instance of this collection objectProvider that uses the methods and element objectProvider specified in the
     /// arguments for its implementation.
     /// @param defaultConstructor the supplier to use to create default instances of the collection.
     /// @param copyConstructor the function to use to create a copy of the collection.
@@ -39,7 +39,7 @@ public class FunctionalProvider<T> implements ObjectProvider<T> {
         this.seedConstructor = Objects.requireNonNull(seedConstructor);
     }
 
-    /// Create an instance of this collection provider that uses the methods and element provider specified in the
+    /// Create an instance of this collection objectProvider that uses the methods and element objectProvider specified in the
     /// arguments for its implementation.
     /// @param defaultConstructor the supplier to use to create default instances of the collection.
     /// @param copyConstructor the function to use to create a copy of the collection.

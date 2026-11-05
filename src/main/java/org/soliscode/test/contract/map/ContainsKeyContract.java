@@ -25,7 +25,7 @@ import static org.soliscode.test.contract.map.MapMethods.CONTAINS_KEY;
 /// ```java
 /// class MyMapContainsKeyTest implements ContainsKeyContract<String, String, MyMap<String, String>> {
 ///     @Override
-///     public MapProvider<String, String, MyMap<String, String>> provider() {
+///     public MapProvider<String, String, MyMap<String, String>> objectProvider() {
 ///         return MyMap::new;
 ///     }
 /// }
@@ -41,7 +41,7 @@ import static org.soliscode.test.contract.map.MapMethods.CONTAINS_KEY;
 /// @author evanbergstrom
 /// @see Map#containsKey
 /// @since 1.0.0
-public interface ContainsKeyContract<K, V, M extends Map<K, V>> extends MapContractSupport<K, V, M> {
+public interface ContainsKeyContract<M extends Map<K, V>, K, V> extends MapContractSupport<M, K, V> {
 
     /// Tests that the [containsKey][Map#containsKey] method returns `false` for an empty map.
     ///

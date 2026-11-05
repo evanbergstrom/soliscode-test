@@ -27,6 +27,9 @@ public class AssertIsEmptyTest {
 
     private static final String TEST_MESSAGE = "Test message";
 
+    /// Default constructor.
+    public AssertIsEmptyTest() {}
+
     /**
      * Verifies that {@code assertIsEmpty} correctly identifies empty iterables.
      *

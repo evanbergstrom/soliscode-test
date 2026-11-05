@@ -12,101 +12,92 @@ import java.util.SortedSet;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.soliscode.test.breakable.BreakableSortedSet.*;
 
-/**
- * Comprehensive test suite for validating the behavior of {@link BreakableSortedSet} and its various breakable behaviors.
- *
- * <p>This test class verifies that the {@code BreakableSortedSet} class correctly implements programmatically
- * broken {@link SortedSet} behavior for testing purposes. The {@code BreakableSortedSet} is designed to
- * simulate faulty or edge-case implementations of the SortedSet interface, enabling thorough testing of
- * code that depends on proper SortedSet behavior.
- *
- * ### Purpose and Use Cases
- * <p>The {@code BreakableSortedSet} is particularly valuable for:
- * <ul>
- * <li>Testing error handling in code that uses sorted collections</li>
- * <li>Validating robustness of algorithms against malformed sorted set behavior</li>
- * <li>Ensuring collection-dependent code handles navigation method failures gracefully</li>
- * <li>Testing edge cases in range-based operations and subset functionality</li>
- * <li>Verifying defensive programming practices in sorted collection-dependent code</li>
- * </ul>
- *
- * ### Breakable Behaviors Tested
- * <p>This test suite validates the following types of breakable behaviors:
- *
- * #### Comparator Breaks
- * <ul>
- * <li>{@code COMPARATOR_ALWAYS_RETURNS_NULL} - Comparator method always returns null</li>
- * </ul>
- *
- * #### Navigation Breaks
- * <ul>
- * <li>{@code FIRST_ALWAYS_THROWS_EXCEPTION} - first() method always throws NoSuchElementException</li>
- * <li>{@code FIRST_RETURNS_LAST_ELEMENT} - first() method returns the last element</li>
- * <li>{@code FIRST_SKIPS_FIRST_ELEMENT} - first() method returns the second element</li>
- * <li>{@code FIRST_ALWAYS_RETURNS_NULL} - first() method always returns null</li>
- * <li>{@code FIRST_RETURNS_NULL_WHEN_EMPTY} - first() method returns null when empty</li>
- * <li>{@code LAST_ALWAYS_THROWS_EXCEPTION} - last() method always throws NoSuchElementException</li>
- * <li>{@code LAST_RETURNS_FIRST_ELEMENT} - last() method returns the first element</li>
- * <li>{@code LAST_SKIPS_LAST_ELEMENT} - last() method returns the second-to-last element</li>
- * <li>{@code LAST_ALWAYS_RETURNS_NULL} - last() method always returns null</li>
- * <li>{@code LAST_RETURNS_NULL_WHEN_EMPTY} - last() method returns null when empty</li>
- * </ul>
- *
- * #### Subset Operation Breaks
- * <ul>
- * <li>{@code SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY} - All subset operations return empty sets</li>
- * <li>{@code SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION} - All subset operations throw exceptions</li>
- * </ul>
- *
- * ### Testing Strategy
- * <p>Each test method focuses on a specific break behavior and verifies that:
- * <ul>
- * <li>The break is correctly applied to the sorted set instance</li>
- * <li>The broken behavior persists across method calls</li>
- * <li>The break doesn't affect unrelated sorted set functionality</li>
- * <li>Edge cases and boundary conditions are handled appropriately</li>
- * </ul>
- *
- * <p>The tests use the {@link BreakableSortedSet.Builder} pattern to construct sorted sets with specific
- * breaks, then verify the expected broken behavior through direct method calls and assertions.
- *
- * ### Integration with Testing Framework
- * <p>These breakable sorted sets are designed to be used in conjunction with collection contract
- * tests to ensure that sorted collection implementations properly handle malformed behavior.
- * This is particularly important for algorithms that depend on sorted set characteristics for
- * correctness and performance.
- *
- * <p>Usage example:
- * <pre>{@code
- * // Create a sorted set with broken navigation
- * BreakableSortedSet<String> sortedSet = new BreakableSortedSet.Builder<String>()
- *     .addBreak(FIRST_ALWAYS_THROWS_EXCEPTION)
- *     .build();
- *
- * sortedSet.addAll(Arrays.asList("a", "b", "c"));
- * assertThrows(NoSuchElementException.class, () -> sortedSet.first()); // Should throw despite having elements
- * }</pre>
- *
- * @author evanbergstrom
- * @see BreakableSortedSet
- * @see BreakableSortedSet.Builder
- * @see SortedSet
- * @since 1.0
- */
+/// Comprehensive test suite for validating the behavior of [BreakableSortedSet] and its various breakable behaviors.
+///
+/// This test class verifies that the `BreakableSortedSet` class correctly implements programmatically
+/// broken [SortedSet] behavior for testing purposes. The `BreakableSortedSet` is designed to
+/// simulate faulty or edge-case implementations of the SortedSet interface, enabling thorough testing of
+/// code that depends on proper SortedSet behavior.
+/// ### Purpose and Use Cases
+///
+/// The `BreakableSortedSet` is particularly valuable for:
+///
+///   - Testing error handling in code that uses sorted collections
+///   - Validating robustness of algorithms against malformed sorted set behavior
+///   - Ensuring collection-dependent code handles navigation method failures gracefully
+///   - Testing edge cases in range-based operations and subset functionality
+///   - Verifying defensive programming practices in sorted collection-dependent code
+///
+/// ### Breakable Behaviors Tested
+///
+/// This test suite validates the following types of breakable behaviors:
+/// #### Comparator Breaks
+///
+///   - `COMPARATOR_ALWAYS_RETURNS_NULL` - Comparator method always returns null
+///
+/// #### Navigation Breaks
+///
+///   - `FIRST_ALWAYS_THROWS_EXCEPTION` - first() method always throws NoSuchElementException
+///   - `FIRST_RETURNS_LAST_ELEMENT` - first() method returns the last element
+///   - `FIRST_SKIPS_FIRST_ELEMENT` - first() method returns the second element
+///   - `FIRST_ALWAYS_RETURNS_NULL` - first() method always returns null
+///   - `FIRST_RETURNS_NULL_WHEN_EMPTY` - first() method returns null when empty
+///   - `LAST_ALWAYS_THROWS_EXCEPTION` - last() method always throws NoSuchElementException
+///   - `LAST_RETURNS_FIRST_ELEMENT` - last() method returns the first element
+///   - `LAST_SKIPS_LAST_ELEMENT` - last() method returns the second-to-last element
+///   - `LAST_ALWAYS_RETURNS_NULL` - last() method always returns null
+///   - `LAST_RETURNS_NULL_WHEN_EMPTY` - last() method returns null when empty
+///
+/// #### Subset Operation Breaks
+///
+///   - `SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY` - All subset operations return empty sets
+///   - `SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION` - All subset operations throw exceptions
+///
+/// ### Testing Strategy
+///
+/// Each test method focuses on a specific break behavior and verifies that:
+///
+///   - The break is correctly applied to the sorted set instance
+///   - The broken behavior persists across method calls
+///   - The break doesn't affect unrelated sorted set functionality
+///   - Edge cases and boundary conditions are handled appropriately
+///
+///
+/// The tests use the [BreakableSortedSet.Builder] pattern to construct sorted sets with specific
+/// breaks, then verify the expected broken behavior through direct method calls and assertions.
+/// ### Integration with Testing Framework
+///
+/// These breakable sorted sets are designed to be used in conjunction with collection contract
+/// tests to ensure that sorted collection implementations properly handle malformed behavior.
+/// This is particularly important for algorithms that depend on sorted set characteristics for
+/// correctness and performance.
+///
+/// Usage example:
+/// <pre>
+/// `// Create a sorted set with broken navigationBreakableSortedSet<String> sortedSet = new BreakableSortedSet.Builder<String>().addBreak(FIRST_ALWAYS_THROWS_EXCEPTION).build();sortedSet.addAll(Arrays.asList("a", "b", "c"));assertThrows(NoSuchElementException.class, () -> sortedSet.first()); // Should throw despite having elements`</pre>
+///
+/// @author evanbergstrom
+/// @see BreakableSortedSet
+/// @see BreakableSortedSet.Builder
+/// @see SortedSet
+/// @since 1.0
 @DisplayName("Tests for BreakableSortedSet")
 public class BreakableSortedSetTest {
 
-    /**
-     * Tests the {@code COMPARATOR_ALWAYS_RETURNS_NULL} break behavior.
-     *
-     * <p>Verifies that when this break is applied, the {@code comparator()} method
-     * always returns {@code null}, even when a custom comparator was provided during
-     * construction. This simulates a sorted set that loses track of its ordering comparator.
-     *
-     * <p>The test confirms that despite having a comparator configured, the broken
-     * behavior overrides the normal comparator access, which is useful for testing
-     * code that must handle unknown ordering scenarios.
-     */
+    /// Default constructor.
+    public BreakableSortedSetTest() {
+        super();
+    }
+
+    /// Tests the `COMPARATOR_ALWAYS_RETURNS_NULL` break behavior.
+    ///
+    /// Verifies that when this break is applied, the `comparator()` method
+    /// always returns `null`, even when a custom comparator was provided during
+    /// construction. This simulates a sorted set that loses track of its ordering comparator.
+    ///
+    /// The test confirms that despite having a comparator configured, the broken
+    /// behavior overrides the normal comparator access, which is useful for testing
+    /// code that must handle unknown ordering scenarios.
     @Test
     public void testComparatorAlwaysReturnsNull() {
         // Test with natural ordering - should return null normally
@@ -129,16 +120,14 @@ public class BreakableSortedSetTest {
         assertEquals(String.CASE_INSENSITIVE_ORDER, normalSet.comparator());
     }
 
-    /**
-     * Tests the {@code FIRST_ALWAYS_THROWS_EXCEPTION} break behavior.
-     *
-     * <p>Verifies that when this break is applied, the {@code first()} method always
-     * throws {@link NoSuchElementException}, even when elements exist in the set.
-     * This simulates a navigation failure in accessing the first element.
-     *
-     * <p>The test confirms that the broken behavior persists regardless of set contents,
-     * which is useful for testing error handling in code that accesses the first element.
-     */
+    /// Tests the `FIRST_ALWAYS_THROWS_EXCEPTION` break behavior.
+    ///
+    /// Verifies that when this break is applied, the `first()` method always
+    /// throws [NoSuchElementException], even when elements exist in the set.
+    /// This simulates a navigation failure in accessing the first element.
+    ///
+    /// The test confirms that the broken behavior persists regardless of set contents,
+    /// which is useful for testing error handling in code that accesses the first element.
     @Test
     public void testFirstAlwaysThrowsException() {
         BreakableSortedSet<Integer> brokenSet = new BreakableSortedSet.Builder<Integer>()
@@ -160,13 +149,11 @@ public class BreakableSortedSetTest {
         assertThrows(NoSuchElementException.class, emptySet::first);
     }
 
-    /**
-     * Tests the {@code FIRST_RETURNS_LAST_ELEMENT} break behavior.
-     *
-     * <p>Verifies that when this break is applied, the {@code first()} method returns
-     * the last element instead of the first element. This simulates a navigation confusion
-     * where first and last are swapped.
-     */
+    /// Tests the `FIRST_RETURNS_LAST_ELEMENT` break behavior.
+    ///
+    /// Verifies that when this break is applied, the `first()` method returns
+    /// the last element instead of the first element. This simulates a navigation confusion
+    /// where first and last are swapped.
     @Test
     public void testFirstReturnsLastElement() {
         BreakableSortedSet<Integer> brokenSet = new BreakableSortedSet.Builder<Integer>()
@@ -182,13 +169,11 @@ public class BreakableSortedSetTest {
         assertEquals(Integer.valueOf(5), brokenSet.last());
     }
 
-    /**
-     * Tests the {@code FIRST_SKIPS_FIRST_ELEMENT} break behavior.
-     *
-     * <p>Verifies that when this break is applied, the {@code first()} method returns
-     * the second element instead of the actual first element. This simulates a navigation
-     * error where the iterator skips the first position.
-     */
+    /// Tests the `FIRST_SKIPS_FIRST_ELEMENT` break behavior.
+    ///
+    /// Verifies that when this break is applied, the `first()` method returns
+    /// the second element instead of the actual first element. This simulates a navigation
+    /// error where the iterator skips the first position.
     @Test
     public void testFirstSkipsFirstElement() {
         BreakableSortedSet<Integer> brokenSet = new BreakableSortedSet.Builder<Integer>()
@@ -213,13 +198,11 @@ public class BreakableSortedSetTest {
         assertThrows(NoSuchElementException.class, emptySet::first);
     }
 
-    /**
-     * Tests the {@code FIRST_ALWAYS_RETURNS_NULL} break behavior.
-     *
-     * <p>Verifies that when this break is applied, the {@code first()} method always
-     * returns {@code null}, even when elements exist. This simulates a navigation
-     * failure where the first element cannot be accessed.
-     */
+    /// Tests the `FIRST_ALWAYS_RETURNS_NULL` break behavior.
+    ///
+    /// Verifies that when this break is applied, the `first()` method always
+    /// returns `null`, even when elements exist. This simulates a navigation
+    /// failure where the first element cannot be accessed.
     @Test
     public void testFirstAlwaysReturnsNull() {
         BreakableSortedSet<Integer> brokenSet = new BreakableSortedSet.Builder<Integer>()
@@ -236,13 +219,11 @@ public class BreakableSortedSetTest {
         assertNull(emptySet.first());
     }
 
-    /**
-     * Tests the {@code FIRST_RETURNS_NULL_WHEN_EMPTY} break behavior.
-     *
-     * <p>Verifies that when this break is applied, the {@code first()} method returns
-     * {@code null} when the set is empty, instead of throwing {@link NoSuchElementException}.
-     * This simulates graceful degradation for empty set access.
-     */
+    /// Tests the `FIRST_RETURNS_NULL_WHEN_EMPTY` break behavior.
+    ///
+    /// Verifies that when this break is applied, the `first()` method returns
+    /// `null` when the set is empty, instead of throwing [NoSuchElementException].
+    /// This simulates graceful degradation for empty set access.
     @Test
     public void testFirstReturnsNullWhenEmpty() {
         BreakableSortedSet<Integer> brokenSet = new BreakableSortedSet.Builder<Integer>()
@@ -257,16 +238,14 @@ public class BreakableSortedSetTest {
         assertEquals(Integer.valueOf(1), brokenSet.first());
     }
 
-    /**
-     * Tests the {@code LAST_ALWAYS_THROWS_EXCEPTION} break behavior.
-     *
-     * <p>Verifies that when this break is applied, the {@code last()} method always
-     * throws {@link NoSuchElementException}, even when elements exist in the set.
-     * This simulates a navigation failure in accessing the last element.
-     *
-     * <p>The test confirms that the broken behavior persists regardless of set contents,
-     * which is useful for testing error handling in code that accesses the last element.
-     */
+    /// Tests the `LAST_ALWAYS_THROWS_EXCEPTION` break behavior.
+    ///
+    /// Verifies that when this break is applied, the `last()` method always
+    /// throws [NoSuchElementException], even when elements exist in the set.
+    /// This simulates a navigation failure in accessing the last element.
+    ///
+    /// The test confirms that the broken behavior persists regardless of set contents,
+    /// which is useful for testing error handling in code that accesses the last element.
     @Test
     public void testLastAlwaysThrowsException() {
         BreakableSortedSet<Integer> brokenSet = new BreakableSortedSet.Builder<Integer>()
@@ -288,13 +267,11 @@ public class BreakableSortedSetTest {
         assertThrows(NoSuchElementException.class, emptySet::last);
     }
 
-    /**
-     * Tests the {@code LAST_RETURNS_FIRST_ELEMENT} break behavior.
-     *
-     * <p>Verifies that when this break is applied, the {@code last()} method returns
-     * the first element instead of the last element. This simulates a navigation confusion
-     * where first and last are swapped for the last() method.
-     */
+    /// Tests the `LAST_RETURNS_FIRST_ELEMENT` break behavior.
+    ///
+    /// Verifies that when this break is applied, the `last()` method returns
+    /// the first element instead of the last element. This simulates a navigation confusion
+    /// where first and last are swapped for the last() method.
     @Test
     public void testLastReturnsFirstElement() {
         BreakableSortedSet<Integer> brokenSet = new BreakableSortedSet.Builder<Integer>()
@@ -310,13 +287,11 @@ public class BreakableSortedSetTest {
         assertEquals(Integer.valueOf(1), brokenSet.first());
     }
 
-    /**
-     * Tests the {@code LAST_SKIPS_LAST_ELEMENT} break behavior.
-     *
-     * <p>Verifies that when this break is applied, the {@code last()} method returns
-     * the second-to-last element instead of the actual last element. This simulates a navigation
-     * error where the iterator misses the last position.
-     */
+    /// Tests the `LAST_SKIPS_LAST_ELEMENT` break behavior.
+    ///
+    /// Verifies that when this break is applied, the `last()` method returns
+    /// the second-to-last element instead of the actual last element. This simulates a navigation
+    /// error where the iterator misses the last position.
     @Test
     public void testLastSkipsLastElement() {
         BreakableSortedSet<Integer> brokenSet = new BreakableSortedSet.Builder<Integer>()
@@ -341,13 +316,11 @@ public class BreakableSortedSetTest {
         assertThrows(NoSuchElementException.class, emptySet::last);
     }
 
-    /**
-     * Tests the {@code LAST_ALWAYS_RETURNS_NULL} break behavior.
-     *
-     * <p>Verifies that when this break is applied, the {@code last()} method always
-     * returns {@code null}, even when elements exist. This simulates a navigation
-     * failure where the last element cannot be accessed.
-     */
+    /// Tests the `LAST_ALWAYS_RETURNS_NULL` break behavior.
+    ///
+    /// Verifies that when this break is applied, the `last()` method always
+    /// returns `null`, even when elements exist. This simulates a navigation
+    /// failure where the last element cannot be accessed.
     @Test
     public void testLastAlwaysReturnsNull() {
         BreakableSortedSet<Integer> brokenSet = new BreakableSortedSet.Builder<Integer>()
@@ -364,13 +337,11 @@ public class BreakableSortedSetTest {
         assertNull(emptySet.last());
     }
 
-    /**
-     * Tests the {@code LAST_RETURNS_NULL_WHEN_EMPTY} break behavior.
-     *
-     * <p>Verifies that when this break is applied, the {@code last()} method returns
-     * {@code null} when the set is empty, instead of throwing {@link NoSuchElementException}.
-     * This simulates graceful degradation for empty set access.
-     */
+    /// Tests the `LAST_RETURNS_NULL_WHEN_EMPTY` break behavior.
+    ///
+    /// Verifies that when this break is applied, the `last()` method returns
+    /// `null` when the set is empty, instead of throwing [NoSuchElementException].
+    /// This simulates graceful degradation for empty set access.
     @Test
     public void testLastReturnsNullWhenEmpty() {
         BreakableSortedSet<Integer> brokenSet = new BreakableSortedSet.Builder<Integer>()
@@ -385,17 +356,15 @@ public class BreakableSortedSetTest {
         assertEquals(Integer.valueOf(1), brokenSet.last());
     }
 
-    /**
-     * Tests the {@code SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY} break behavior.
-     *
-     * <p>Verifies that when this break is applied, all subset operations ({@code subSet},
-     * {@code headSet}, {@code tailSet}) always return empty sets regardless of the
-     * parameters provided or the actual contents of the set.
-     *
-     * <p>This simulates subset operations that fail to identify ranges properly,
-     * which is useful for testing code that depends on subset functionality and
-     * must handle empty results gracefully.
-     */
+    /// Tests the `SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY` break behavior.
+    ///
+    /// Verifies that when this break is applied, all subset operations (`subSet`,
+    /// `headSet`, `tailSet`) always return empty sets regardless of the
+    /// parameters provided or the actual contents of the set.
+    ///
+    /// This simulates subset operations that fail to identify ranges properly,
+    /// which is useful for testing code that depends on subset functionality and
+    /// must handle empty results gracefully.
     @Test
     public void testSubsetOperationsAlwaysReturnEmpty() {
         BreakableSortedSet<Integer> brokenSet = new BreakableSortedSet.Builder<Integer>()
@@ -418,16 +387,14 @@ public class BreakableSortedSetTest {
         assertEquals(3, normalSet.tailSet(3).size());   // Should contain {3, 4, 5}
     }
 
-    /**
-     * Tests the {@code SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION} break behavior.
-     *
-     * <p>Verifies that when this break is applied, all subset operations ({@code subSet},
-     * {@code headSet}, {@code tailSet}) always throw {@link IllegalArgumentException}
-     * regardless of the parameters provided.
-     *
-     * <p>This simulates subset operations that reject all range specifications as invalid,
-     * which is useful for testing error handling in range-based operations.
-     */
+    /// Tests the `SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION` break behavior.
+    ///
+    /// Verifies that when this break is applied, all subset operations (`subSet`,
+    /// `headSet`, `tailSet`) always throw [IllegalArgumentException]
+    /// regardless of the parameters provided.
+    ///
+    /// This simulates subset operations that reject all range specifications as invalid,
+    /// which is useful for testing error handling in range-based operations.
     @Test
     public void testSubsetOperationsAlwaysThrowException() {
         BreakableSortedSet<Integer> brokenSet = new BreakableSortedSet.Builder<Integer>()
@@ -442,13 +409,11 @@ public class BreakableSortedSetTest {
         assertThrows(IllegalArgumentException.class, () -> brokenSet.tailSet(3));
     }
 
-    /**
-     * Tests the normal behavior of subset operations without breaks.
-     *
-     * <p>This test validates the baseline behavior by verifying that subset operations
-     * work correctly when no breaks are applied. It serves as a control test to ensure
-     * that the break behaviors deviate from the expected normal operation.
-     */
+    /// Tests the normal behavior of subset operations without breaks.
+    ///
+    /// This test validates the baseline behavior by verifying that subset operations
+    /// work correctly when no breaks are applied. It serves as a control test to ensure
+    /// that the break behaviors deviate from the expected normal operation.
     @Test
     public void testNormalSubsetOperations() {
         BreakableSortedSet<String> set = new BreakableSortedSet<>();
@@ -475,13 +440,11 @@ public class BreakableSortedSetTest {
         assertTrue(tailSet.contains("elderberry"));
     }
 
-    /**
-     * Tests the builder functionality with comparator configuration.
-     *
-     * <p>Verifies that the builder correctly handles comparator configuration and
-     * that the resulting sorted set uses the specified comparator for ordering.
-     * This test also ensures that comparator changes preserve existing elements.
-     */
+    /// Tests the builder functionality with comparator configuration.
+    ///
+    /// Verifies that the builder correctly handles comparator configuration and
+    /// that the resulting sorted set uses the specified comparator for ordering.
+    /// This test also ensures that comparator changes preserve existing elements.
     @Test
     public void testBuilderWithComparator() {
         // Test with case-insensitive comparator
@@ -505,13 +468,11 @@ public class BreakableSortedSetTest {
         assertEquals("a", reverseSet.last());
     }
 
-    /**
-     * Tests the builder copy constructor functionality.
-     *
-     * <p>Verifies that the builder copy constructor creates independent builders
-     * that can be configured separately while preserving the original configuration
-     * as a starting point.
-     */
+    /// Tests the builder copy constructor functionality.
+    ///
+    /// Verifies that the builder copy constructor creates independent builders
+    /// that can be configured separately while preserving the original configuration
+    /// as a starting point.
     @Test
     public void testBuilderCopyConstructor() {
         // Create a base builder configuration
@@ -542,13 +503,11 @@ public class BreakableSortedSetTest {
         assertThrows(NoSuchElementException.class, copySet::first);
     }
 
-    /**
-     * Tests the integration of multiple breaks working together.
-     *
-     * <p>Verifies that multiple breaks can be applied simultaneously and that
-     * each break affects only its intended functionality while leaving other
-     * operations working normally.
-     */
+    /// Tests the integration of multiple breaks working together.
+    ///
+    /// Verifies that multiple breaks can be applied simultaneously and that
+    /// each break affects only its intended functionality while leaving other
+    /// operations working normally.
     @Test
     public void testMultipleBreaksIntegration() {
         BreakableSortedSet<String> multiBreakSet = new BreakableSortedSet.Builder<String>()
@@ -576,14 +535,12 @@ public class BreakableSortedSetTest {
         assertEquals(3, multiBreakSet.size());
     }
 
-    /**
-     * Tests the normal sorted set behavior without any breaks applied.
-     *
-     * <p>This test serves as a comprehensive control test, verifying that
-     * BreakableSortedSet behaves like a standard SortedSet when no breaks
-     * are active. This ensures the implementation correctly delegates to
-     * the underlying sorted set for normal operations.
-     */
+    /// Tests the normal sorted set behavior without any breaks applied.
+    ///
+    /// This test serves as a comprehensive control test, verifying that
+    /// BreakableSortedSet behaves like a standard SortedSet when no breaks
+    /// are active. This ensures the implementation correctly delegates to
+    /// the underlying sorted set for normal operations.
     @Test
     public void testNormalSortedSetBehavior() {
         BreakableSortedSet<Integer> set = new BreakableSortedSet<>();
@@ -616,13 +573,11 @@ public class BreakableSortedSetTest {
         assertNull(set.comparator()); // Natural ordering returns null
     }
 
-    /**
-     * Tests error handling in normal operations for edge cases.
-     *
-     * <p>Verifies that BreakableSortedSet properly handles edge cases and
-     * error conditions according to the SortedSet contract, such as accessing
-     * elements from empty sets or invalid range parameters.
-     */
+    /// Tests error handling in normal operations for edge cases.
+    ///
+    /// Verifies that BreakableSortedSet properly handles edge cases and
+    /// error conditions according to the SortedSet contract, such as accessing
+    /// elements from empty sets or invalid range parameters.
     @Test
     public void testEdgeCasesAndErrorHandling() {
         BreakableSortedSet<String> emptySet = new BreakableSortedSet<>();

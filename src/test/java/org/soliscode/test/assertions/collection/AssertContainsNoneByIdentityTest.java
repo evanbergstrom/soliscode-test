@@ -36,6 +36,10 @@ public class AssertContainsNoneByIdentityTest {
 
     private static final String TEST_MESSAGE = "Test message";
 
+    /// Default constructor.
+    public AssertContainsNoneByIdentityTest() {
+    }
+
     /**
      * Tests basic assertion functionality with non-overlapping collections.
      *

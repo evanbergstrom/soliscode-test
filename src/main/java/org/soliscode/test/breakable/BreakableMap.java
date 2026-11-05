@@ -173,6 +173,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     protected static final int DEFAULT_PERMITS = PERMITS_NULL_KEYS | PERMITS_NULL_VALUES
             | PERMITS_INCOMPATIBLE_KEYS | PERMITS_INCOMPATIBLE_VALUES;
 
+    /// The underlying map.
     private Map<K, V> map; // Must be non-final to support clone()
 
     /// Flag indicating whether this map permits null keys.
@@ -1235,7 +1236,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
         }
     }
 
-    /// Copies all of the mappings from the specified map to this map.
+    /// Copies all the mappings from the specified map to this map.
     ///
     /// This method can be broken to simulate various bulk put operation issues
     /// that might occur in faulty `Map` implementations.
@@ -1267,7 +1268,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
         }
     }
 
-    /// Removes all of the mappings from this map.
+    /// Removes all the mappings from this map.
     ///
     /// This method can be broken to simulate various clear operation issues
     /// that might occur in faulty `Map` implementations.
@@ -1986,10 +1987,34 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
             this.elements = new HashMap<>();
         }
 
+        /// Constructs a new `AbstractBuilder` instance and initializes the internal state
+        /// with the provided map.
+        /// This constructor allows custom initialization of the builder's internal map structure
+        /// with the elements provided in the specified `map`. The map is used internally
+        /// to manage key-value pairs that are eventually built into the final object.
+        ///
+        /// @param map the map containing the initial key-value pairs to populate the builder.
+        ///            Must not be `null`.
+        ///            - **Key:** Represents the keys managed by the builder.
+        ///            - **Value:** Represents the values associated with those keys.
+        /// @throws NullPointerException if the `map` is `null`.
+        /// @since 1.0
         protected AbstractBuilder(final @NonNull Map<K, V> map) {
             this.elements = map;
         }
 
+        /// Constructs a new `AbstractBuilder` instance by copying the state from another
+        /// `AbstractBuilder` instance.
+        /// This constructor performs a defensive copy of the internal state, ensuring that the
+        /// newly created builder maintains a separate copy of the elements map while preserving
+        /// the characteristics defined in the source builder instance.
+        ///
+        /// @param other the builder to copy from; must not be `null`.
+        ///              - **elements**: The map of key-value pairs maintained by the source builder.
+        ///              - **permits**: Specifies the builder's permission rules (e.g., whether null keys or values are allowed).
+        ///
+        /// @throws NullPointerException if `other` is `null`.
+        /// @since 1.0
         protected AbstractBuilder(final @NonNull AbstractBuilder<B, M, K, V>  other) {
             super(other);
             this.elements = new HashMap<>(other.elements);
@@ -2044,6 +2069,11 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
             return self();
         }
 
+
+        /// Retrieves the permission rules associated with this builder.
+        /// @return the integer value representing the permission rules for this builder.
+        ///         A positive, zero, or negative integer may be returned based on the
+        ///         specific implementation to indicate different permission states.
         protected int permits() {
             return permits;
         }
@@ -2093,6 +2123,11 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
             return new BreakableMap.Builder<>(this);
         }
 
+        @Override
+        public BreakableMap<K, V> copy(final @NonNull BreakableMap<K, V> other) {
+            return new BreakableMap<>(other);
+        }
+
         /// Builds and returns a new `BreakableMap` instance.
         ///
         /// @return a new `BreakableMap`
@@ -2104,12 +2139,12 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
         }
     }
 
-    /// Creates a map provider for instances of `BreakableMap`, given key and value providers.
+    /// Creates a map objectProvider for instances of `BreakableMap`, given key and value providers.
     /// @param <K> the key type.
     /// @param <V> the value type.
-    /// @param keyProvider the key provider to use.
-    /// @param valueProvider the value provider to use.
-    /// @return a map provider for breakable maps.
+    /// @param keyProvider the key objectProvider to use.
+    /// @param valueProvider the value objectProvider to use.
+    /// @return a map objectProvider for breakable maps.
     public static <K, V> @NonNull MapProvider<K, V, BreakableMap<K, V>> mapProvider(
             final @NonNull ObjectProvider<K> keyProvider,
             final @NonNull ObjectProvider<V> valueProvider) {
@@ -2122,15 +2157,15 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
         );
     }
 
-    /// Creates a map provider for instances of `BreakableMap`, given key and value providers and a set of
+    /// Creates a map objectProvider for instances of `BreakableMap`, given key and value providers and a set of
     /// breaks.
     /// @param <K> the key type.
     /// @param <V> the type of mapped values.
-    /// @param keyProvider the key provider to use.
-    /// @param valueProvider the value provider to use.
+    /// @param keyProvider the key objectProvider to use.
+    /// @param valueProvider the value objectProvider to use.
     /// @param breaks the breaks to apply to each instance of `BreakableMap`.
     /// @param statuses the method statuses to apply to each instance of `BreakableMap`.
-    /// @return a map provider for breakable maps.
+    /// @return a map objectProvider for breakable maps.
     public static <K, V> @NonNull MapProvider<K, V, BreakableMap<K, V>> mapProvider(
             final @NonNull ObjectProvider<K> keyProvider,
             final @NonNull ObjectProvider<V> valueProvider,
@@ -2146,16 +2181,16 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
         );
     }
 
-    /// Mixin interface that adds an implementation of the `provider()` method that provides instances of
+    /// Mixin interface that adds an implementation of the `objectProvider()` method that provides instances of
     /// `BreakableMap` that do not have any breaks applied.
     ///
     /// @param <K> key type
     /// @param <V> value type
     /// @since 1.0
-    public interface WithProvider<K, V> extends MapProviderSupport<K, V, BreakableMap<K, V>> {
+    public interface WithProvider<K, V> extends MapProviderSupport<BreakableMap<K, V>, K, V> {
         /// Returns a `MapProvider` for `BreakableMap` instances.
         ///
-        /// @return a map provider for breakable maps
+        /// @return a map objectProvider for breakable maps
         @Override
         default @NonNull MapProvider<K, V, BreakableMap<K, V>> provider() {
             return BreakableMap.mapProvider(keyProvider(), valueProvider());

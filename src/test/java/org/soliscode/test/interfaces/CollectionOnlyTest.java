@@ -26,6 +26,11 @@ import static org.soliscode.test.interfaces.Interfaces.narrowToCollection;
 public class CollectionOnlyTest extends AbstractTest implements CollectionContract<Integer, CollectionOnly<Integer>>,
         WithIntegerElement {
 
+    /// Default constructor.
+    public CollectionOnlyTest() {
+        super();
+    }
+
     @Override
     public @NonNull CollectionProvider<Integer, CollectionOnly<Integer>> provider() {
         return new FunctionalCollectionProvider<>(CollectionOnly::new, CollectionOnly::new,

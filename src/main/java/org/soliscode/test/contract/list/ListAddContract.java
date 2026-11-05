@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /// ```java
 /// class MyListAddTest implements ListAddContract<String, MyList<String>> {
 ///     @Override
-///     public CollectionProvider<String, MyList<String>> provider() {
+///     public CollectionProvider<String, MyList<String>> objectProvider() {
 ///         return MyList::new;
 ///     }
 /// }
@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /// @author evanbergstrom
 /// @see List#add(Object)
 /// @since 1.0.0
-public interface ListAddContract<E, L extends List<E>> extends AddContract<E, L> {
+public interface ListAddContract<L extends List<E>, E> extends AddContract<L, E> {
 
     /// Tests that the [add][List#add] method successfully appends elements to the end of the list.
     ///

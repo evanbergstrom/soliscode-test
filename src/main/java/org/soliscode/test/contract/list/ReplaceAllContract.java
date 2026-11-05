@@ -13,7 +13,7 @@ import java.util.List;
 /// @author evanbergstrom
 /// @since 1.0
 /// @see List#replaceAll(java.util.function.UnaryOperator)
-public interface ReplaceAllContract<E, L extends List<E>> extends CollectionContractSupport<E, L> {
+public interface ReplaceAllContract<L extends List<E>, E> extends CollectionContractSupport<L, E> {
 
     // TODO: Implement tests for the List::replaceAll method.
 }

@@ -12,7 +12,7 @@ import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/// Tests for the `LongProvider` class. These tests verify that the provider correctly implements
+/// Tests for the `LongProvider` class. These tests verify that the objectProvider correctly implements
 /// all inherited interface contracts and provides proper Integer instances for testing purposes.
 ///
 /// @author evanbergstrom
@@ -21,7 +21,13 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Tests for IntegerProvider")
 public class LongProviderTest extends AbstractTest {
 
-    private final LongProvider provider = Providers.longProvider();
+    private final LongProvider provider;
+
+    /// Default constructor.
+    public LongProviderTest() {
+        super();
+        provider = Providers.longProvider();
+    }
 
     // Tests for IntegerNumberProvider interface methods
 
@@ -300,7 +306,7 @@ public class LongProviderTest extends AbstractTest {
     @Test
     @DisplayName("Test createUniqueInstances method with size exceeding limit")
     public void testCreateUniqueInstancesExceedsLimit() {
-        // Create a mock provider with a smaller unique size limit for testing
+        // Create a mock objectProvider with a smaller unique size limit for testing
         LongProvider limitedProvider = new LongProvider() {
             @Override
             public long uniqueSizeLimit() {
@@ -428,12 +434,12 @@ public class LongProviderTest extends AbstractTest {
         assertEquals(minValue.longValue(), copiedMin.longValue());
     }
 
-    /// Test that the provider follows all interface contracts properly.
+    /// Test that the objectProvider follows all interface contracts properly.
     @SuppressWarnings("UnnecessaryLocalVariable")
     @Test
-    @DisplayName("Test provider interface contracts")
+    @DisplayName("Test objectProvider interface contracts")
     public void testProviderContracts() {
-        // Test that the provider implements all expected interfaces
+        // Test that the objectProvider implements all expected interfaces
         assertInstanceOf(IntegerNumberProvider.class, provider);
         assertInstanceOf(NumberProvider.class, provider);
         assertInstanceOf(ObjectProvider.class, provider);

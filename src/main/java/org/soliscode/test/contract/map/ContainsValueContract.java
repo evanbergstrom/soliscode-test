@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// ```java
 /// class MyMapContainsValueTest implements ContainsValueContract<String, String, MyMap<String, String>> {
 ///     @Override
-///     public MapProvider<String, String, MyMap<String, String>> provider() {
+///     public MapProvider<String, String, MyMap<String, String>> objectProvider() {
 ///         return MyMap::new;
 ///     }
 /// }
@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// @author evanbergstrom
 /// @see Map#containsValue
 /// @since 1.0.0
-public interface ContainsValueContract<K, V, M extends Map<K, V>> extends MapContractSupport<K, V, M> {
+public interface ContainsValueContract<M extends Map<K, V>, K, V> extends MapContractSupport<M, K, V> {
 
     /// Tests that the [containsValue][Map#containsValue] method returns `false` for an empty map.
     ///

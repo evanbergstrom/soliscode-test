@@ -22,6 +22,9 @@ import static org.junit.jupiter.api.Assertions.*;
 /// @since 1.0.0
 class AssertThrowsAnyTest {
 
+    /// Default constructor.
+    public AssertThrowsAnyTest() {}
+
     @Test
     @DisplayName("assertThrowsAny passes when executable throws any exception")
     void testAssertThrowsAnyPassesWithException() {
@@ -45,11 +48,11 @@ class AssertThrowsAnyTest {
     @Test
     @DisplayName("assertThrowsAny fails when executable does not throw any exception")
     void testAssertThrowsAnyFailsWhenNoExceptionThrown() {
-        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> 
+        AssertionFailedError error = assertThrows(AssertionFailedError.class, () ->
                 Assertions.assertThrowsAny(() -> {
                     // Do nothing
                 }));
-        
+
         assertTrue(error.getMessage().contains("Expected java.lang.Throwable to be thrown"));
     }
 
@@ -65,11 +68,11 @@ class AssertThrowsAnyTest {
     @DisplayName("assertThrowsAny(String) fails with custom message when no exception is thrown")
     void testAssertThrowsAnyWithMessageFailsWhenNoExceptionThrown() {
         String customMessage = "Assertion failed with custom message";
-        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> 
+        AssertionFailedError error = assertThrows(AssertionFailedError.class, () ->
                 Assertions.assertThrowsAny(() -> {
                     // Do nothing
                 }, customMessage));
-        
+
         assertTrue(error.getMessage().contains(customMessage));
     }
 
@@ -86,15 +89,15 @@ class AssertThrowsAnyTest {
     void testAssertThrowsAnyWithMessageSupplierFailsWhenNoExceptionThrown() {
         String customMessage = "Assertion failed with lazy message";
         AtomicInteger supplierCallCount = new AtomicInteger(0);
-        
-        AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> 
+
+        AssertionFailedError error = assertThrows(AssertionFailedError.class, () ->
                 Assertions.assertThrowsAny(() -> {
                     // Do nothing
                 }, () -> {
                     supplierCallCount.incrementAndGet();
                     return customMessage;
                 }));
-        
+
         assertTrue(error.getMessage().contains(customMessage));
         assertEquals(1, supplierCallCount.get(), "Message supplier should be called exactly once");
     }

@@ -38,7 +38,7 @@ SolisCode Test is a Java library for testing classes that implement standard JDK
 - They should be organized by the types of values that they test (*e.g.* collections, strings, etc.)
 - They should use the Assertion implementation pattern from JUnit 5, with one class per assertion, possibly with closely
   related variations.
-- They should be available through a utility class that aggregates all of the related assertions.
+- They should be available through a utility class that aggregates all the related assertions.
 
 ### Breakable classes (org.soliscode.test.breakable)
 
@@ -46,7 +46,7 @@ SolisCode Test is a Java library for testing classes that implement standard JDK
 - These classes should all be in the org.soliscode.test.breakable package.
 - Each Breakable class should have constants that define each break that is supported.
     - They should appear in the breakable class in which they are first supported.
-- All of the breakable classes should provide a builder class.
+- All the breakable classes should provide a builder class.
 
 ### Break Mechanism Design
 - **Purpose**: Enable testing of code that must handle non-compliant or corrupted implementations
@@ -64,12 +64,12 @@ SolisCode Test is a Java library for testing classes that implement standard JDK
   interface that the contract is for. These packages will all be at a single level under the contract package
 - Contract classes will be provided for two different cases:
     1. **Methods**: A contract class will be provided for each method in an interface containing the tests needed
-       to insure that the specifications for that method are satisfied.
+       to ensure that the specifications for that method are satisfied.
     2. **Interfaces**: A contract class will be provided for the interface that will extend the method interfaces
        So that an implementing test class can simply extend the interface contract that is necessary.
 
 ## Method Contract Classes
-- Method contracts will be provided for each method in an interface containing the tests needed to insure that the
+- Method contracts will be provided for each method in an interface containing the tests needed to ensure that the
   specifications for that method are satisfied.
 - These contracts will be named after the method they test, with the suffix "test"
 - These contracts will be in the same package as the contract class for the interface they test
@@ -87,7 +87,7 @@ For collection classes, these contracts should support classes that do not accep
     - If the method takes an element as a parameter and nulls aren't supported, it should test that a NullPointerException is thrown.
 
 ### Interface Narrowing Classes (org.soliscode.test.interfaces)
-- Interface narrowing classes are used to narrow the type of an object so that any code that optimizes for different
+- Interface narrowing classes are used to narrow the type of object so that any code that optimizes for different
   interfaces will be forced to use the code path for the specified interface.
 - Interface narrowing classes will have the same name as the interface with the suffix "Only"
 - These classes will all be in the org.soliscode.test.interfaces package.

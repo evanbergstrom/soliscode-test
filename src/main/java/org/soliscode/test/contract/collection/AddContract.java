@@ -3,12 +3,12 @@ package org.soliscode.test.contract.collection;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.soliscode.test.contract.support.CollectionContractSupport;
-import org.soliscode.test.util.MatchNothing;
 
 import java.util.Collection;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.soliscode.test.assertions.collection.CollectionAssertions.assertContainsOnly;
 
 /// This interface defines tests for the [add][Collection#add] method. It is designed
 /// to be used as a mix-in interface by test classes that verify [Collection] implementations.
@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// ```java
 /// class MyCollectionAddTest implements AddContract<String, MyCollection<String>> {
 ///     @Override
-///     public CollectionProvider<String, MyCollection<String>> provider() {
+///     public CollectionProvider<String, MyCollection<String>> objectProvider() {
 ///         return MyCollection::new;
 ///     }
 ///
@@ -49,7 +49,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// @author evanbergstrom
 /// @see Collection#add
 /// @since 1.0.0
-public interface AddContract<E, C extends Collection<E>> extends CollectionContractSupport<E, C> {
+public interface AddContract<C extends Collection<E>, E> extends CollectionContractSupport<C, E> {
 
     /// Tests that the [add][Collection#add] method successfully adds an element to the collection.
     ///
@@ -95,8 +95,9 @@ public interface AddContract<E, C extends Collection<E>> extends CollectionContr
             Collection<E> collection = provider().emptyInstance();
             if (permitNulls()) {
                 assertTrue(collection.add(null));
-                assertTrue(collection.contains(null));
-                assertEquals(1, collection.size());
+                assertContainsOnly(null, collection);
+            } else {
+                assertThrows(NullPointerException.class, () -> collection.add(null));
             }
         }
     }
@@ -148,10 +149,17 @@ public interface AddContract<E, C extends Collection<E>> extends CollectionContr
     @DisplayName("add(E) handles incompatible types based on permission")
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    default void add_withIncompatibleType_throwsClassCastException() {
-        if (supportsMethod(CollectionMethods.ADD) && !permitIncompatibleTypes()) {
-            Collection<E> collection = provider().emptyInstance();
-            assertThrows(ClassCastException.class, () -> ((Collection) collection).add(new MatchNothing()));
+    default void add_withIncompatibleType_handlesCorrectly() {
+        if (supportsMethod(CollectionMethods.ADD)) {
+            if (permitIncompatibleTypes()) {
+                Collection<E> collection = provider().emptyInstance();
+                Object element = new Object();
+                assertTrue(collection.add((E) element));
+                assertContainsOnly(element, collection);
+            } else {
+                Collection<E> collection = provider().emptyInstance();
+                assertThrows(ClassCastException.class, () -> ((Collection) collection).add(new Object()));
+            }
         }
     }
 

@@ -8,9 +8,11 @@ import org.soliscode.test.contract.blockingdeque.BlockingDequeMethods;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingDeque;
@@ -542,8 +544,8 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
                 compatibleType);
     }
 
-    // BreakableBlockingDeque cant extend both BreakableDeque and BreakableBlockingQueue, so we need to
-    // re-resolve that annotation differences that were handled in BreakablBlockingQueue.
+    // BreakableBlockingDeque cannot extend both BreakableDeque and BreakableBlockingQueue, so we need to
+    // re-resolve that annotation differences that were handled in BreakableBlockingQueue.
 
     /// {@inheritDoc}
     @Override
@@ -1047,11 +1049,19 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
             return new Builder<>(this);
         }
 
+        @Override
+        public @NonNull BreakableBlockingDeque<E> copy(final @NonNull BreakableBlockingDeque<E> other) {
+            return new BreakableBlockingDeque<>(other);
+        }
+
         /// Builds a new [BreakableBlockingDeque] instance with the configured settings.
         ///
         /// @return a new BreakableBlockingDeque instance
         @Override
-        public @NonNull BreakableBlockingDeque<E> build() {
+        public @NonNull BreakableBlockingDeque<E> build(final @NonNull Iterable<E> elements) {
+            List<E> list = new ArrayList<>(elements());
+            elements.forEach(list::add);
+
             BlockingDeque<E> queue;
             if (capacity() < 0) {
                 queue = new LinkedBlockingDeque<>(elements());

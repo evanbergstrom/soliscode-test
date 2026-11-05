@@ -19,9 +19,9 @@ import static org.junit.jupiter.api.Assertions.*;
 ///
 /// #### Implementation
 /// ```java
-/// public class MySequencedMapTest implements SequencedValuesContract<String, String, MySequencedMap<String, String>> {
+/// class MySequencedMapTest implements SequencedValuesContract<MySequencedMap<String, String>, String, String> {
 ///     @Override
-///     public MapProvider<String, String, MySequencedMap<String, String>> provider() {
+///     public MapProvider<MySequencedMap<String, String>, String, String> objectProvider() {
 ///         return new MySequencedMapProvider();
 ///     }
 /// }
@@ -31,13 +31,13 @@ import static org.junit.jupiter.api.Assertions.*;
 /// The tests in this contract are not guaranteed to be thread-safe. If the map implementation
 /// is intended for concurrent use, additional thread-safety tests should be performed.
 ///
+/// @param <M> The map type being tested.
 /// @param <K> The key type being tested.
 /// @param <V> The value type being tested.
-/// @param <M> The map type being tested.
 /// @see SequencedMap#sequencedValues()
 /// @author evanbergstrom
 /// @since 1.0.0
-public interface SequencedValuesContract<K, V, M extends SequencedMap<K, V>> extends MapContractSupport<K, V, M> {
+public interface SequencedValuesContract<M extends SequencedMap<K, V>, K, V> extends MapContractSupport<M, K, V> {
 
     /// Verifies that `sequencedValues()` returns a sequenced collection of values or
     /// throws [UnsupportedOperationException] if not supported.

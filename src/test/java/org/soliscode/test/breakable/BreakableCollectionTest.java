@@ -33,7 +33,10 @@ public class BreakableCollectionTest extends AbstractTest
            WithIntegerElement,
            SerializableContract<BreakableCollection<Integer>> {
 
-
+    /// Default constructor.
+    public BreakableCollectionTest() {
+        super();
+    }
 
     //=========== Constructor Tests ============
 
@@ -131,7 +134,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertFalse(collection.isEmpty());
     }
 
-    /// Test that the `IS_EMPTY_RETURNS_OPPOSITE_VALUE` break causes the `isEmpty` method to always return the opposite value.
+    /// Test that the `IS_EMPTY_RETURNS_OPPOSITE_VALUE` break causes the `isEmpty` method to always return the
+    /// opposite value.
     /// @see BreakableCollection#isEmpty()
     @DisplayName("isEmpty() always returns opposite value with IS_EMPTY_RETURNS_OPPOSITE_VALUE break")
     @Test
@@ -171,7 +175,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertFalse(collection.contains(4));
     }
 
-    /// Test that the `CONTAINS_RETURNS_OPPOSITE_VALUE` break causes the `contains` method to always return the opposite value.
+    /// Test that the `CONTAINS_RETURNS_OPPOSITE_VALUE` break causes the `contains` method to always return the
+    /// opposite value.
     /// @see BreakableCollection#contains(Object)
     @DisplayName("contains(Object) always returns opposite value with CONTAINS_RETURNS_OPPOSITE_VALUE break")
     @Test
@@ -197,7 +202,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertNull(collection.toArray());
     }
 
-    /// Test that the `TO_ARRAY_RETURNS_EMPTY_ARRAY` break causes the `toArray()` method to always returns an empty array.
+    /// Test that the `TO_ARRAY_RETURNS_EMPTY_ARRAY` break causes the `toArray()` method to always returns an empty
+    /// array.
     /// @see BreakableCollection#toArray()
     @DisplayName("toArray() always returns empty array with TO_ARRAY_RETURNS_EMPTY_ARRAY break")
     @Test
@@ -209,7 +215,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertLengthEquals(0, array);
     }
 
-    /// Test that the `TO_ARRAY_MISSING_FIRST_ELEMENT` break causes the `toArray()` method to return an array that is missing the first element.
+    /// Test that the `TO_ARRAY_MISSING_FIRST_ELEMENT` break causes the `toArray()` method to return an array that is
+    /// missing the first element.
     /// @see BreakableCollection#toArray()
     @DisplayName("toArray() returns array missing first element with TO_ARRAY_MISSING_FIRST_ELEMENT break")
     @Test
@@ -221,7 +228,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertArrayEquals(new Object[]{2, 3}, array);
     }
 
-    /// Test that the `TO_ARRAY_MISSING_LAST_ELEMENT` break causes the `toArray()` method to return an array that is missing the last element.
+    /// Test that the `TO_ARRAY_MISSING_LAST_ELEMENT` break causes the `toArray()` method to return an array that is
+    /// missing the last element.
     /// @see BreakableCollection#toArray()
     @DisplayName("toArray() returns array missing last element with TO_ARRAY_MISSING_LAST_ELEMENT break")
     @Test
@@ -245,7 +253,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertNull(collection.toArray(new Object[]{0, 0, 0}));
     }
 
-    /// Test that the `TO_ARRAY_STORE_RETURNS_EMPTY_ARRAY` break causes the `toArray(Object[])` method to always returns an empty array.
+    /// Test that the `TO_ARRAY_STORE_RETURNS_EMPTY_ARRAY` break causes the `toArray(Object[])` method to always
+    /// returns an empty array.
     /// @see BreakableCollection#toArray(Object[])
     @DisplayName("toArray(Object[]) always returns empty array with TO_ARRAY_STORE_RETURNS_EMPTY_ARRAY break")
     @Test
@@ -256,7 +265,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertArrayEquals(new Object[]{null, null, null}, collection.toArray(new Object[]{1, 2, 3}));
     }
 
-    /// Test that the `TO_ARRAY_STORE_MISSING_FIRST_ELEMENT` break causes the `toArray(Object[])` method to return an array that is missing the first element.
+    /// Test that the `TO_ARRAY_STORE_MISSING_FIRST_ELEMENT` break causes the `toArray(Object[])` method to return an
+    /// array that is missing the first element.
     /// @see BreakableCollection#toArray(Object[])
     @DisplayName("toArray(Object[]) returns array missing first element with TO_ARRAY_STORE_MISSING_FIRST_ELEMENT break")
     @Test
@@ -269,7 +279,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertArrayEquals(new Object[]{2, 3, null}, array);
     }
 
-    /// Test that the `TO_ARRAY_STORE_MISSING_LAST_ELEMENT` break causes the `toArray(Object[])` method to return an array that is missing the last element.
+    /// Test that the `TO_ARRAY_STORE_MISSING_LAST_ELEMENT` break causes the `toArray(Object[])` method to return an
+    /// array that is missing the last element.
     /// @see BreakableCollection#toArray(Object[])
     @DisplayName("toArray(Object[]) returns array missing last element with TO_ARRAY_STORE_MISSING_LAST_ELEMENT break")
     @Test
@@ -282,7 +293,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertArrayEquals(new Object[]{1, 2, null}, array);
     }
 
-    /// Test that the `TO_ARRAY_STORE_DOES_NOT_COPY_ELEMENTS` break causes the `toArray(Object[])` method to not copy any elements into the store array.
+    /// Test that the `TO_ARRAY_STORE_DOES_NOT_COPY_ELEMENTS` break causes the `toArray(Object[])` method to not copy
+    /// any elements into the store array.
     /// @see BreakableCollection#toArray(Object[])
     @DisplayName("toArray(Object[]) does not copy elements with TO_ARRAY_STORE_DOES_NOT_COPY_ELEMENTS break")
     @Test
@@ -297,7 +309,8 @@ public class BreakableCollectionTest extends AbstractTest
 
     // ========== add_singleElement_returnsTrueAndUpdatesSize Tests ==========
 
-    /// Test that the `ADD_DOES_NOT_ADD_ELEMENT` break causes the `add(Object)` method to not add the element to the collection.
+    /// Test that the `ADD_DOES_NOT_ADD_ELEMENT` break causes the `add(Object)` method to not add the element to
+    /// the collection.
     /// @see BreakableCollection#add(Object)
     @DisplayName("add(Object) does not add element with ADD_DOES_NOT_ADD_ELEMENT break")
     @Test
@@ -332,7 +345,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertFalse(collection.add(4));
     }
 
-    /// Test that the `ADD_ALWAYS_RETURNS_OPPOSITE_VALUE` break causes the `add(Object)` method to always return the opposite value.
+    /// Test that the `ADD_ALWAYS_RETURNS_OPPOSITE_VALUE` break causes the `add(Object)` method to always return the
+    /// opposite value.
     /// @see BreakableCollection#add(Object)
     @DisplayName("add(Object) always returns opposite value with ADD_ALWAYS_RETURNS_OPPOSITE_VALUE break")
     @Test
@@ -419,7 +433,8 @@ public class BreakableCollectionTest extends AbstractTest
 
     // ========== remove Tests ==========
 
-    /// Test that the `REMOVE_DOES_NOT_REMOVE_ELEMENT` break causes the `remove(Object)` method to not remove the element from the collection.
+    /// Test that the `REMOVE_DOES_NOT_REMOVE_ELEMENT` break causes the `remove(Object)` method to not remove the
+    /// element from the collection.
     /// @see BreakableCollection#remove(Object)
     @DisplayName("remove(Object) does not remove element with REMOVE_DOES_NOT_REMOVE_ELEMENT break")
     @Test
@@ -455,7 +470,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertFalse(collection.remove(4));
     }
 
-    /// Test that the `REMOVE_ALWAYS_RETURNS_OPPOSITE_VALUE` break causes the `remove(Object)` method to always return the opposite value.
+    /// Test that the `REMOVE_ALWAYS_RETURNS_OPPOSITE_VALUE` break causes the `remove(Object)` method to always return
+    /// the opposite value.
     /// @see BreakableCollection#remove(Object)
     @DisplayName("remove(Object) always returns opposite value with REMOVE_ALWAYS_RETURNS_OPPOSITE_VALUE break")
     @Test
@@ -467,7 +483,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertTrue(collection.remove(4));
     }
 
-    /// Test that the `REMOVE_THROWS_WRONG_UNSUPPORTED_EXCEPTION` break causes the `remove(Object)` method to throw the wrong exception when unsupported.
+    /// Test that the `REMOVE_THROWS_WRONG_UNSUPPORTED_EXCEPTION` break causes the `remove(Object)` method to throw the
+    /// wrong exception when unsupported.
     /// @see BreakableCollection#remove(Object)
     @DisplayName("remove(Object) throws wrong exception with REMOVE_THROWS_WRONG_UNSUPPORTED_EXCEPTION break")
     @Test
@@ -479,7 +496,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertThrowsDifferent(UnsupportedOperationException.class, () -> collection.remove(1));
     }
 
-    /// Test that the 'remove(Object)' method throws an exception when incompatible types are not permitted and an object
+    /// Test that the 'remove(Object)' method throws an exception when incompatible types are not permitted and an
+    /// object
     /// of an incompatible type is removed through a raw interface.
     /// @see BreakableCollection#remove(Object)
     /// @see BreakableCollection#permitsIncompatibleTypes
@@ -498,9 +516,10 @@ public class BreakableCollectionTest extends AbstractTest
 
     // ========== addAll Tests ==========
 
-    /// Test that the `ADD_ALL_DOES_NOT_ADD_ANY_ELEMENTS` break causes the `addAll(Collection)` method to not add_singleElement_returnsTrueAndUpdatesSize any elements.
+    /// Test that the `ADD_ALL_DOES_NOT_ADD_ANY_ELEMENTS` break causes the `addAll(Collection)` method to not
+    /// add any elements.
     /// @see BreakableCollection#addAll(Collection)
-    @DisplayName("addAll(Collection) does not add_singleElement_returnsTrueAndUpdatesSize any elements with ADD_ALL_DOES_NOT_ADD_ANY_ELEMENTS break")
+    @DisplayName("addAll(Collection) does not add any elements with ADD_ALL_DOES_NOT_ADD_ANY_ELEMENTS break")
     @Test
     public void addAll_withAddAllDoesNotAddAnyElementsBreak_doesNotAddElements() {
         Collection<Integer> collection = Breakables.buildCollection(Integer.class)
@@ -533,7 +552,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertFalse(collection.addAll(Arrays.asList(4, 5)));
     }
 
-    /// Test that the `ADD_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE` break causes the `addAll(Collection)` method to always return the opposite value.
+    /// Test that the `ADD_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE` break causes the `addAll(Collection)` method to always
+    /// return the opposite value.
     /// @see BreakableCollection#addAll(Collection)
     @DisplayName("addAll(Collection) always returns opposite value with ADD_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE break")
     @Test
@@ -546,7 +566,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertFalse(collection.addAll(Arrays.asList(4, 5)));
     }
 
-    /// Test that the `ADD_ALL_SKIPS_FIRST_ELEMENT` break causes the `addAll(Collection)` method to skip the first element.
+    /// Test that the `ADD_ALL_SKIPS_FIRST_ELEMENT` break causes the `addAll(Collection)` method to skip the first
+    /// element.
     /// @see BreakableCollection#addAll(Collection)
     @DisplayName("addAll(Collection) skips first element with ADD_ALL_SKIPS_FIRST_ELEMENT break")
     @Test
@@ -574,7 +595,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertDoesNotContain(3, collection);
     }
 
-    /// Test that the `ADD_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION` break causes the `addAll(Collection)` method to throw the wrong exception when unsupported.
+    /// Test that the `ADD_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION` break causes the `addAll(Collection)` method to
+    /// throw the wrong exception when unsupported.
     /// @see BreakableCollection#addAll(Collection)
     @DisplayName("addAll(Collection) throws wrong exception with ADD_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION break")
     @Test
@@ -605,7 +627,8 @@ public class BreakableCollectionTest extends AbstractTest
 
     // ========== removeAll Tests ==========
 
-    /// Test that the `REMOVE_ALL_DOES_NOT_REMOVE_ANY_ELEMENTS` break causes the `removeAll(Collection)` method to not remove any elements.
+    /// Test that the `REMOVE_ALL_DOES_NOT_REMOVE_ANY_ELEMENTS` break causes the `removeAll(Collection)` method to not
+    /// remove any elements.
     /// @see BreakableCollection#removeAll(Collection)
     @DisplayName("removeAll(Collection) does not remove any elements with REMOVE_ALL_DOES_NOT_REMOVE_ANY_ELEMENTS break")
     @Test
@@ -618,7 +641,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertContains(2, collection);
     }
 
-    /// Test that the `REMOVE_ALL_ALWAYS_RETURNS_TRUE` break causes the `removeAll(Collection)` method to always return `true`.
+    /// Test that the `REMOVE_ALL_ALWAYS_RETURNS_TRUE` break causes the `removeAll(Collection)` method to always
+    /// return `true`.
     /// @see BreakableCollection#removeAll(Collection)
     @DisplayName("removeAll(Collection) always returns true with REMOVE_ALL_ALWAYS_RETURNS_TRUE break")
     @Test
@@ -630,7 +654,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertTrue(collection.removeAll(Arrays.asList(4, 5)));
     }
 
-    /// Test that the `REMOVE_ALL_ALWAYS_RETURNS_FALSE` break causes the `removeAll(Collection)` method to always return `false`.
+    /// Test that the `REMOVE_ALL_ALWAYS_RETURNS_FALSE` break causes the `removeAll(Collection)` method to always
+    /// return `false`.
     /// @see BreakableCollection#removeAll(Collection)
     @DisplayName("removeAll(Collection) always returns false with REMOVE_ALL_ALWAYS_RETURNS_FALSE break")
     @Test
@@ -642,7 +667,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertFalse(collection.removeAll(Arrays.asList(4, 5)));
     }
 
-    /// Test that the `REMOVE_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE` break causes the `removeAll(Collection)` method to always return the opposite value.
+    /// Test that the `REMOVE_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE` break causes the `removeAll(Collection)` method to
+    /// always return the opposite value.
     /// @see BreakableCollection#removeAll(Collection)
     @DisplayName("removeAll(Collection) always returns opposite value with REMOVE_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE break")
     @Test
@@ -654,7 +680,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertTrue(collection.removeAll(Arrays.asList(4, 5)));
     }
 
-    /// Test that the `REMOVE_ALL_SKIPS_FIRST_ELEMENT` break causes the `removeAll(Collection)` method to skip the first element.
+    /// Test that the `REMOVE_ALL_SKIPS_FIRST_ELEMENT` break causes the `removeAll(Collection)` method to skip the
+    /// first element.
     /// @see BreakableCollection#removeAll(Collection)
     @DisplayName("removeAll(Collection) skips first element with REMOVE_ALL_SKIPS_FIRST_ELEMENT break")
     @Test
@@ -668,7 +695,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertDoesNotContain(3, collection);
     }
 
-    /// Test that the `REMOVE_ALL_SKIPS_LAST_ELEMENT` break causes the `removeAll(Collection)` method to skip the last element.
+    /// Test that the `REMOVE_ALL_SKIPS_LAST_ELEMENT` break causes the `removeAll(Collection)` method to skip the
+    /// last element.
     /// @see BreakableCollection#removeAll(Collection)
     @DisplayName("removeAll(Collection) skips last element with REMOVE_ALL_SKIPS_LAST_ELEMENT break")
     @Test
@@ -682,7 +710,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertContains(3, collection);
     }
 
-    /// Test that the `REMOVE_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION` break causes the `removeAll(Collection)` method to throw the wrong exception when unsupported.
+    /// Test that the `REMOVE_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION` break causes the `removeAll(Collection)`
+    /// method to throw the wrong exception when unsupported.
     /// @see BreakableCollection#removeAll(Collection)
     @DisplayName("removeAll(Collection) throws wrong exception with REMOVE_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION break")
     @Test
@@ -696,7 +725,8 @@ public class BreakableCollectionTest extends AbstractTest
 
     // ========== removeIf Tests ==========
 
-    /// Test that the `REMOVE_IF_DOES_NOT_REMOVE_ANY_ELEMENTS` break causes the `removeIf(Predicate)` method to not remove any elements.
+    /// Test that the `REMOVE_IF_DOES_NOT_REMOVE_ANY_ELEMENTS` break causes the `removeIf(Predicate)` method to not
+    /// remove any elements.
     /// @see BreakableCollection#removeIf(Predicate)
     @DisplayName("removeIf(Predicate) does not remove any elements with REMOVE_IF_DOES_NOT_REMOVE_ANY_ELEMENTS break")
     @Test
@@ -709,7 +739,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertContains(2, collection);
     }
 
-    /// Test that the `REMOVE_IF_ALWAYS_RETURNS_TRUE` break causes the `removeIf(Predicate)` method to always return `true`.
+    /// Test that the `REMOVE_IF_ALWAYS_RETURNS_TRUE` break causes the `removeIf(Predicate)` method to always return
+    /// `true`.
     /// @see BreakableCollection#removeIf(Predicate)
     @DisplayName("removeIf(Predicate) always returns true with REMOVE_IF_ALWAYS_RETURNS_TRUE break")
     @Test
@@ -733,7 +764,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertFalse(collection.removeIf(i -> i > 5));
     }
 
-    /// Test that the `REMOVE_IF_ALWAYS_RETURNS_OPPOSITE_VALUE` break causes the `removeIf(Predicate)` method to always return the opposite value.
+    /// Test that the `REMOVE_IF_ALWAYS_RETURNS_OPPOSITE_VALUE` break causes the `removeIf(Predicate)` method to always
+    /// return the opposite value.
     /// @see BreakableCollection#removeIf(Predicate)
     @DisplayName("removeIf(Predicate) always returns opposite value with REMOVE_IF_ALWAYS_RETURNS_OPPOSITE_VALUE break")
     @Test
@@ -745,7 +777,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertTrue(collection.removeIf(i -> i > 5));
     }
 
-    /// Test that the `REMOVE_IF_SKIPS_FIRST_ELEMENT` break causes the `removeIf(Predicate)` method to skip the first element.
+    /// Test that the `REMOVE_IF_SKIPS_FIRST_ELEMENT` break causes the `removeIf(Predicate)` method to skip the first
+    /// element.
     /// @see BreakableCollection#removeIf(Predicate)
     @DisplayName("removeIf(Predicate) skips first element with REMOVE_IF_SKIPS_FIRST_ELEMENT break")
     @Test
@@ -759,7 +792,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertDoesNotContain(3, collection);
     }
 
-    /// Test that the `REMOVE_IF_SKIPS_LAST_ELEMENT` break causes the `removeIf(Predicate)` method to skip the last element.
+    /// Test that the `REMOVE_IF_SKIPS_LAST_ELEMENT` break causes the `removeIf(Predicate)` method to skip the last
+    /// element.
     /// @see BreakableCollection#removeIf(Predicate)
     @DisplayName("removeIf(Predicate) skips last element with REMOVE_IF_SKIPS_LAST_ELEMENT break")
     @Test
@@ -773,7 +807,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertDoesNotContain(3, collection);
     }
 
-    /// Test that the `REMOVE_IF_THROWS_WRONG_UNSUPPORTED_EXCEPTION` break causes the `removeIf(Predicate)` method to throw the wrong exception when unsupported.
+    /// Test that the `REMOVE_IF_THROWS_WRONG_UNSUPPORTED_EXCEPTION` break causes the `removeIf(Predicate)` method t
+    /// throw the wrong exception when unsupported.
     /// @see BreakableCollection#removeIf(Predicate)
     @DisplayName("removeIf(Predicate) throws wrong exception with REMOVE_IF_THROWS_WRONG_UNSUPPORTED_EXCEPTION break")
     @Test
@@ -787,7 +822,8 @@ public class BreakableCollectionTest extends AbstractTest
 
     // ========== retainAll Tests ==========
 
-    /// Test that the `RETAIN_ALL_DOES_NOT_RETAIN_ANY_ELEMENTS` break causes the `retainAll(Collection)` method to not retain any elements.
+    /// Test that the `RETAIN_ALL_DOES_NOT_RETAIN_ANY_ELEMENTS` break causes the `retainAll(Collection)` method to
+    /// not retain any elements.
     /// @see BreakableCollection#retainAll(Collection)
     @DisplayName("retainAll(Collection) does not retain any elements with RETAIN_ALL_DOES_NOT_RETAIN_ANY_ELEMENTS break")
     @Test
@@ -801,7 +837,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertContains(3, collection);
     }
 
-    /// Test that the `RETAIN_ALL_ALWAYS_RETURNS_TRUE` break causes the `retainAll(Collection)` method to always return `true`.
+    /// Test that the `RETAIN_ALL_ALWAYS_RETURNS_TRUE` break causes the `retainAll(Collection)` method to always return
+    /// `true`.
     /// @see BreakableCollection#retainAll(Collection)
     @DisplayName("retainAll(Collection) always returns true with RETAIN_ALL_ALWAYS_RETURNS_TRUE break")
     @Test
@@ -813,7 +850,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertTrue(collection.retainAll(Arrays.asList(1, 2)));
     }
 
-    /// Test that the `RETAIN_ALL_ALWAYS_RETURNS_FALSE` break causes the `retainAll(Collection)` method to always return `false`.
+    /// Test that the `RETAIN_ALL_ALWAYS_RETURNS_FALSE` break causes the `retainAll(Collection)` method to always
+    /// return `false`.
     /// @see BreakableCollection#retainAll(Collection)
     @DisplayName("retainAll(Collection) always returns false with RETAIN_ALL_ALWAYS_RETURNS_FALSE break")
     @Test
@@ -825,7 +863,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertFalse(collection.retainAll(Arrays.asList(1, 2)));
     }
 
-    /// Test that the `RETAIN_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE` break causes the `retainAll(Collection)` method to always return the opposite value.
+    /// Test that the `RETAIN_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE` break causes the `retainAll(Collection)` method to
+    /// always return the opposite value.
     /// @see BreakableCollection#retainAll(Collection)
     @DisplayName("retainAll(Collection) always returns opposite value with RETAIN_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE break")
     @Test
@@ -837,7 +876,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertTrue(collection.retainAll(Arrays.asList(1, 2, 3)));
     }
 
-    /// Test that the `RETAIN_ALL_SKIPS_FIRST_ELEMENT` break causes the `retainAll(Collection)` method to skip the first element.
+    /// Test that the `RETAIN_ALL_SKIPS_FIRST_ELEMENT` break causes the `retainAll(Collection)` method to skip the first
+    /// element.
     /// @see BreakableCollection#retainAll(Collection)
     @DisplayName("retainAll(Collection) skips first element with RETAIN_ALL_SKIPS_FIRST_ELEMENT break")
     @Test
@@ -851,7 +891,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertContains(3, collection);
     }
 
-    /// Test that the `RETAIN_ALL_SKIPS_LAST_ELEMENT` break causes the `retainAll(Collection)` method to skip the last element.
+    /// Test that the `RETAIN_ALL_SKIPS_LAST_ELEMENT` break causes the `retainAll(Collection)` method to skip the last
+    /// element.
     /// @see BreakableCollection#retainAll(Collection)
     @DisplayName("retainAll(Collection) skips last element with RETAIN_ALL_SKIPS_LAST_ELEMENT break")
     @Test
@@ -920,7 +961,8 @@ public class BreakableCollectionTest extends AbstractTest
         assertEquals(1, collection.unbroken().size());
     }
 
-    /// Test that the `CLEAR_THROWS_WRONG_UNSUPPORTED_EXCEPTION` break causes the `clear()` method to throw the wrong exception when unsupported.
+    /// Test that the `CLEAR_THROWS_WRONG_UNSUPPORTED_EXCEPTION` break causes the `clear()` method to throw the wrong
+    /// exception when unsupported.
     /// @see BreakableCollection#clear()
     @DisplayName("clear() throws wrong exception with CLEAR_THROWS_WRONG_UNSUPPORTED_EXCEPTION break")
     @Test

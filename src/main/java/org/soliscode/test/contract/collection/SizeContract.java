@@ -22,12 +22,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 ///
 /// ## Usage Examples
 /// To use this contract, implement it in your test class along with the necessary
-/// provider methods:
+/// objectProvider methods:
 ///
 /// ```java
 /// public class MyCollectionSizeTest implements SizeContract<String, MyCollection<String>> {
 ///     @Override
-///     public CollectionProvider<String, MyCollection<String>> provider() {
+///     public CollectionProvider<String, MyCollection<String>> objectProvider() {
 ///         return MyCollection::new;
 ///     }
 ///
@@ -47,7 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /// @author evanbergstrom
 /// @see Collection#size()
 /// @since 1.0.0
-public interface SizeContract<E, C extends Collection<E>> extends CollectionContractSupport<E, C> {
+public interface SizeContract<C extends Collection<E>, E> extends CollectionContractSupport<C, E> {
 
     /// Tests that the [size()][Collection#size] method works for an empty collection.
     ///

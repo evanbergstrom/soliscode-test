@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// ```java
 /// class MySequencedCollectionTest implements AddFirstContract<Integer, MySequencedCollection<Integer>> {
 ///     @Override
-///     public CollectionProvider<Integer, MySequencedCollection<Integer>> provider() {
+///     public CollectionProvider<Integer, MySequencedCollection<Integer>> objectProvider() {
 ///         return MySequencedCollection::new;
 ///     }
 ///
@@ -61,7 +61,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// @author evanbergstrom
 /// @see SequencedCollection#addFirst
 /// @since 1.0.0
-public interface AddFirstContract<E, C extends SequencedCollection<E>> extends CollectionContractSupport<E, C> {
+public interface AddFirstContract<C extends SequencedCollection<E>, E> extends CollectionContractSupport<C, E> {
 
     /// Tests that the [addFirst][SequencedCollection#addFirst] method successfully adds an element to the front.
     ///

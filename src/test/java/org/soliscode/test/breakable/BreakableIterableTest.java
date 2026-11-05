@@ -43,6 +43,11 @@ import static org.soliscode.test.breakable.BreakableSpliterator.SPLITERATOR_IS_A
 public class BreakableIterableTest extends AbstractTest
         implements IterableContract<Integer, BreakableIterable<Integer>>, WithIntegerElement {
 
+    /// Default constructor.
+    public BreakableIterableTest() {
+        super();
+    }
+
     @Override
     public @NonNull CollectionProvider<Integer, BreakableIterable<Integer>> provider() {
         return CollectionProviders.from(

@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// ```java
 /// class MyQueueRemoveTest implements RemoveContract<String, MyQueue<String>> {
 ///     @Override
-///     public CollectionProvider<String, MyQueue<String>> provider() {
+///     public CollectionProvider<String, MyQueue<String>> objectProvider() {
 ///         return MyQueue::new;
 ///     }
 /// }
@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// @author evanbergstrom
 /// @see Queue#remove
 /// @since 1.0.0
-public interface RemoveContract<E, Q extends Queue<E>> extends CollectionContractSupport<E, Q> {
+public interface RemoveContract<Q extends Queue<E>, E> extends CollectionContractSupport<Q, E> {
 
     /// Tests that the [remove][Queue#remove] method correctly retrieves and removes the head of the queue.
     ///

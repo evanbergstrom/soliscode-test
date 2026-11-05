@@ -70,6 +70,11 @@ import static org.soliscode.test.breakable.BreakableNavigableMap.*;
 /// @see AbstractTest
 public class BreakableNavigableMapTest extends AbstractTest {
 
+    /// Default constructor.
+    public BreakableNavigableMapTest() {
+        super();
+    }
+
     // ========== Constructor Tests ==========
 
     /// Verifies the default constructor creates an empty navigable map with proper initial state.

@@ -23,7 +23,11 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
  */
 @DisplayName("Tests for assertContains")
 public class AssertContainsTest {
+
     private static final String TEST_MESSAGE = "Test message";
+
+    /// Default constructor.
+    public AssertContainsTest() {}
 
     /**
      * Verifies that {@code assertContains} correctly identifies elements within an {@link Iterable}.

@@ -41,6 +41,9 @@ public class AssertEqualsByIdentityTest {
 
     private static final String TEST_MESSAGE = "Test message";
 
+    /// Default constructor.
+    public AssertEqualsByIdentityTest() {}
+
     /**
      * Tests basic assertion functionality with identical object references.
      *

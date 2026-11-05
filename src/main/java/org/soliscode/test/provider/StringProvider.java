@@ -22,7 +22,7 @@ import java.util.Objects;
 
 /// Provides instances of `String` for testing purposes.
 ///
-/// This provider creates `String` instances by converting numeric seed values to their
+/// This objectProvider creates `String` instances by converting numeric seed values to their
 /// string representations. It's designed to generate predictable string values for
 /// testing scenarios where string content needs to be deterministic and repeatable.
 ///
@@ -37,43 +37,43 @@ import java.util.Objects;
 ///
 /// ### Basic String Creation
 /// ```java
-/// StringProvider provider = new StringProvider();
+/// StringProvider objectProvider = new StringProvider();
 ///
 /// // Create strings with different approaches
-/// String empty = provider.defaultInstance();         // ""
-/// String zero = provider.createInstance(0);          // "0"
-/// String positive = provider.createInstance(42);     // "42"
-/// String negative = provider.createInstance(-100);   // "-100"
+/// String empty = objectProvider.defaultInstance();         // ""
+/// String zero = objectProvider.createInstance(0);          // "0"
+/// String positive = objectProvider.createInstance(42);     // "42"
+/// String negative = objectProvider.createInstance(-100);   // "-100"
 /// ```
 ///
 /// ### Test Data Generation
 /// ```java
-/// StringProvider provider = new StringProvider();
+/// StringProvider objectProvider = new StringProvider();
 ///
 /// // Generate predictable test data
-/// List<String> equalStrings = provider.createEqualObjects(3);     // ["", "", ""]
-/// List<String> uniqueStrings = provider.createUniqueInstances(5); // ["0", "1", "2", "3", "4"]
-/// List<String> randomStrings = provider.createRandomInstances(3); // Random string values
+/// List<String> equalStrings = objectProvider.createEqualObjects(3);     // ["", "", ""]
+/// List<String> uniqueStrings = objectProvider.createUniqueInstances(5); // ["0", "1", "2", "3", "4"]
+/// List<String> randomStrings = objectProvider.createRandomInstances(3); // Random string values
 /// ```
 ///
 /// ### Copying and Validation
 /// ```java
-/// StringProvider provider = new StringProvider();
+/// StringProvider objectProvider = new StringProvider();
 /// String original = "test";
 ///
 /// // Copy operation (returns same instance due to immutability)
-/// String copy = provider.copyInstance(original);
+/// String copy = objectProvider.copyInstance(original);
 /// assertSame(original, copy);  // Same reference due to immutability
 ///
 /// // Null safety validation
 /// assertThrows(NullPointerException.class, () -> {
-///     provider.copyInstance(null);
+///     objectProvider.copyInstance(null);
 /// });
 /// ```
 ///
 /// ## String Generation Strategy
 ///
-/// The provider uses `String.valueOf(seed)` to convert numeric seeds into string
+/// The objectProvider uses `String.valueOf(seed)` to convert numeric seeds into string
 /// representations. This approach ensures:
 /// - Deterministic output for the same seed
 /// - Human-readable string values for debugging
@@ -87,7 +87,7 @@ public class StringProvider implements ObjectProvider<String> {
 
     /// Creates a new StringProvider instance.
     ///
-    /// This constructor initializes the provider for creating String instances
+    /// This constructor initializes the objectProvider for creating String instances
     /// from numeric seeds and handling string operations safely.
     public StringProvider() { }
 
@@ -99,8 +99,8 @@ public class StringProvider implements ObjectProvider<String> {
     /// ## Examples
     ///
     /// ```java
-    /// StringProvider provider = new StringProvider();
-    /// String defaultStr = provider.defaultInstance();  // ""
+    /// StringProvider objectProvider = new StringProvider();
+    /// String defaultStr = objectProvider.defaultInstance();  // ""
     /// assertTrue(defaultStr.isEmpty());
     /// ```
     ///
@@ -129,12 +129,12 @@ public class StringProvider implements ObjectProvider<String> {
     /// ## Usage Examples
     ///
     /// ```java
-    /// StringProvider provider = new StringProvider();
+    /// StringProvider objectProvider = new StringProvider();
     ///
-    /// String zero = provider.createInstance(0);      // "0"
-    /// String pos = provider.createInstance(123);     // "123"
-    /// String neg = provider.createInstance(-456);    // "-456"
-    /// String large = provider.createInstance(Long.MAX_VALUE);  // "9223372036854775807"
+    /// String zero = objectProvider.createInstance(0);      // "0"
+    /// String pos = objectProvider.createInstance(123);     // "123"
+    /// String neg = objectProvider.createInstance(-456);    // "-456"
+    /// String large = objectProvider.createInstance(Long.MAX_VALUE);  // "9223372036854775807"
     /// ```
     ///
     /// @param seed the numeric seed value to convert to a string
@@ -162,9 +162,9 @@ public class StringProvider implements ObjectProvider<String> {
     /// ## Examples
     ///
     /// ```java
-    /// StringProvider provider = new StringProvider();
+    /// StringProvider objectProvider = new StringProvider();
     /// String original = "test";
-    /// String copy = provider.copyInstance(original);
+    /// String copy = objectProvider.copyInstance(original);
     ///
     /// // Same reference due to immutability
     /// assertSame(original, copy);

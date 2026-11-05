@@ -320,7 +320,7 @@
 /// ```
 ///
 /// ### Provider Integration
-/// Breakable collections work with the provider system for automated test generation:
+/// Breakable collections work with the objectProvider system for automated test generation:
 /// ```java
 /// public class BreakableCollectionProvider implements CollectionProvider<String> {
 ///     @Override

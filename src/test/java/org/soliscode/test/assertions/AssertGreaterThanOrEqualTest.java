@@ -32,6 +32,9 @@ import static org.soliscode.test.assertions.AssertGreaterThanOrEqual.assertGreat
 @DisplayName("AssertGreaterThanOrEqual Tests")
 class AssertGreaterThanOrEqualTest {
 
+    /// Default constructor.
+    public AssertGreaterThanOrEqualTest() {}
+
     /**
      * ## Test: Basic Integer Comparison - Success Case (Greater Than)
      *

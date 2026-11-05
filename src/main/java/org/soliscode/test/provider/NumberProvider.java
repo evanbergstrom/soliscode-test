@@ -36,7 +36,7 @@ import org.jspecify.annotations.NonNull;
 ///
 /// ## Usage Examples
 ///
-/// **Creating and using a custom provider:**
+/// **Creating and using a custom objectProvider:**
 /// ```java
 /// NumberProvider<Integer> intProvider = new IntegerProvider();
 ///
@@ -76,11 +76,11 @@ import org.jspecify.annotations.NonNull;
 /// }
 ///
 /// static Stream<Number> numberProvider() {
-///     NumberProvider<Integer> provider = new IntegerProvider();
+///     NumberProvider<Integer> objectProvider = new IntegerProvider();
 ///     return Stream.of(
-///         provider.minValue(),
-///         provider.defaultInstance(),
-///         provider.maxValue()
+///         objectProvider.minValue(),
+///         objectProvider.defaultInstance(),
+///         objectProvider.maxValue()
 ///     );
 /// }
 /// ```

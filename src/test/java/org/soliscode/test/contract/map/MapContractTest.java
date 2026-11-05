@@ -9,7 +9,7 @@ import org.soliscode.test.AbstractTest;
 import org.soliscode.test.InterfaceMethod;
 import org.soliscode.test.breakable.Break;
 import org.soliscode.test.breakable.BreakableMap;
-import org.soliscode.test.contract.ContractTest;
+import org.soliscode.test.contract.AbstractContractTest;
 import org.soliscode.test.contract.DynamicContract;
 import org.soliscode.test.contract.dynamic.DynamicBrokenMapContract;
 import org.soliscode.test.contract.support.WithIntegerKeyAndStringValue;
@@ -43,7 +43,12 @@ import java.util.Collections;
 /// @see BreakableMap
 /// @since 1.0.0
 @DisplayName("Tests for MapContract class")
-public class MapContractTest extends ContractTest<BreakableMap<Integer, String>> {
+public class MapContractTest extends AbstractContractTest<BreakableMap<Integer, String>> {
+
+    /// Default constructor.
+    public MapContractTest() {
+        super();
+    }
 
     /// Tests for working map implementations.
     ///

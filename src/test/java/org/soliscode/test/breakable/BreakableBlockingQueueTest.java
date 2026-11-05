@@ -71,6 +71,11 @@ import static org.soliscode.test.breakable.BreakableBlockingQueue.*;
 /// @see AbstractTest
 public class BreakableBlockingQueueTest extends AbstractTest {
 
+    /// Default constructor.
+    public BreakableBlockingQueueTest() {
+        super();
+    }
+
     // ========== Constructor Tests ==========
 
     /// Tests the default constructor functionality and initial state validation.

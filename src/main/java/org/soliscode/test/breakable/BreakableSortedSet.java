@@ -480,6 +480,8 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
     /// @param methodStatuses the method status configuration.
     /// @param characteristics the spliterator characteristics
     /// @param permits         the flags that indicate what types of values are supported by the collection.
+    /// @param isSafe          whether the collection is safe for concurrent access by multiple threads.
+    /// @param compatibleType  the type that this collection is compatible with.
     /// @throws NullPointerException if sortedSet or breaks is null
     protected BreakableSortedSet(final @NonNull SortedSet<E> sortedSet,
                                  final @NonNull Set<Break> breaks,
@@ -1154,17 +1156,16 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
             return new Builder<>(this);
         }
 
-        /// Constructs a new BreakableSortedSet instance with the current builder configuration.
-        ///
-        /// This method creates a new BreakableSortedSet using all the settings configured
-        /// in the builder, including breaks, method restrictions, and the backing sorted set.
-        ///
-        /// @return a new BreakableSortedSet instance configured according to this builder's settings
         @Override
-        public BreakableSortedSet<E> build() {
+        public @NonNull BreakableSortedSet<E> copy(final @NonNull BreakableSortedSet<E> other) {
+            return new BreakableSortedSet<>(other);
+        }
+
+        @Override
+        public BreakableSortedSet<E> build(final @NonNull Iterable<E> elements) {
             final TreeSet<E> storage = new TreeSet<>(comparator());
             storage.addAll(elements());
-
+            elements.forEach(storage::add);
             return new BreakableSortedSet<>(storage, new HashSet<>(breaks()), new HashMap<>(methodStatuses()),
                     characteristics(), permits(), isSafe(), compatibleType());
         }

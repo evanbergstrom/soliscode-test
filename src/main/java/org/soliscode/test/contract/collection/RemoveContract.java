@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// ```java
 /// class MyCollectionRemoveTest implements RemoveContract<String, MyCollection<String>> {
 ///     @Override
-///     public CollectionProvider<String, MyCollection<String>> provider() {
+///     public CollectionProvider<String, MyCollection<String>> objectProvider() {
 ///         return MyCollection::new;
 ///     }
 /// }
@@ -45,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// @author evanbergstrom
 /// @see Collection#remove
 /// @since 1.0.0
-public interface RemoveContract<E, C extends Collection<E>> extends CollectionContractSupport<E, C> {
+public interface RemoveContract<C extends Collection<E>, E> extends CollectionContractSupport<C, E> {
 
     /// Tests that the [remove][Collection#remove] method returns `false` when called on an empty collection.
     ///

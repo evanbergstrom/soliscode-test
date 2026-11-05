@@ -32,12 +32,12 @@ public final class MapProviders {
 
     private MapProviders() { }
 
-    /// Create an instance of this map provider that uses the methods and element providers specified in the
+    /// Create an instance of this map objectProvider that uses the methods and element providers specified in the
     /// arguments for its implementation.
     ///
-    /// For example, to create a map provider for a `HashMap` of String keys and Integer values:
+    /// For example, to create a map objectProvider for a `HashMap` of String keys and Integer values:
     /// ```java
-    ///     MapProvider<String, Integer, HashMap<String, Integer>> provider = MapProviders.from(
+    ///     MapProvider<String, Integer, HashMap<String, Integer>> objectProvider = MapProviders.from(
     ///         HashMap::new, HashMap::new, HashMap::new,
     ///         Providers.stringProvider(), Providers.integerProvider());
     /// ```
@@ -47,9 +47,9 @@ public final class MapProviders {
     /// @param defaultConstructor the supplier to use to create default instances of the map.
     /// @param copyConstructor the function to use to create a copy of the map.
     /// @param mapConstructor the function to use to create an instance from another map.
-    /// @param keyProvider the key provider.
-    /// @param valueProvider the value provider.
-    /// @return the map provider.
+    /// @param keyProvider the key objectProvider.
+    /// @param valueProvider the value objectProvider.
+    /// @return the map objectProvider.
     /// @throws NullPointerException if any of the arguments are `null`
     public static <K, V, M extends Map<K, V>> MapProvider<K, V, M> from(
             final @NonNull Supplier<M> defaultConstructor,
@@ -61,36 +61,36 @@ public final class MapProviders {
                 keyProvider, valueProvider);
     }
 
-    /// Creates a map provider for instances of [HashMap] with keys and values created using the specified providers.
+    /// Creates a map objectProvider for instances of [HashMap] with keys and values created using the specified providers.
     /// @param <K> the type of keys.
     /// @param <V> the type of values.
-    /// @param keyProvider the provider to use to create the keys.
-    /// @param valueProvider the provider to use to create the values.
-    /// @return the map provider.
+    /// @param keyProvider the objectProvider to use to create the keys.
+    /// @param valueProvider the objectProvider to use to create the values.
+    /// @return the map objectProvider.
     public static <K, V> @NonNull MapProvider<K, V, HashMap<K, V>> provideHashMap(
             final @NonNull ObjectProvider<K> keyProvider,
             final @NonNull ObjectProvider<V> valueProvider) {
         return MapProviders.from(HashMap::new, HashMap::new, HashMap::new, keyProvider, valueProvider);
     }
 
-    /// Creates a map provider for instances of [TreeMap] with keys and values created using the specified providers.
+    /// Creates a map objectProvider for instances of [TreeMap] with keys and values created using the specified providers.
     /// @param <K> the type of keys.
     /// @param <V> the type of values.
-    /// @param keyProvider the provider to use to create the keys.
-    /// @param valueProvider the provider to use to create the values.
-    /// @return the map provider.
+    /// @param keyProvider the objectProvider to use to create the keys.
+    /// @param valueProvider the objectProvider to use to create the values.
+    /// @return the map objectProvider.
     public static <K, V> @NonNull MapProvider<K, V, TreeMap<K, V>> provideTreeMap(
             final @NonNull ObjectProvider<K> keyProvider,
             final @NonNull ObjectProvider<V> valueProvider) {
         return MapProviders.from(TreeMap::new, TreeMap::new, TreeMap::new, keyProvider, valueProvider);
     }
 
-    /// Creates a map provider for instances of [LinkedHashMap] with keys and values created using the specified providers.
+    /// Creates a map objectProvider for instances of [LinkedHashMap] with keys and values created using the specified providers.
     /// @param <K> the type of keys.
     /// @param <V> the type of values.
-    /// @param keyProvider the provider to use to create the keys.
-    /// @param valueProvider the provider to use to create the values.
-    /// @return the map provider.
+    /// @param keyProvider the objectProvider to use to create the keys.
+    /// @param valueProvider the objectProvider to use to create the values.
+    /// @return the map objectProvider.
     public static <K, V> @NonNull MapProvider<K, V, LinkedHashMap<K, V>> provideLinkedHashMap(
             final @NonNull ObjectProvider<K> keyProvider,
             final @NonNull ObjectProvider<V> valueProvider) {
@@ -98,14 +98,14 @@ public final class MapProviders {
                 valueProvider);
     }
 
-    /// Creates a provider that wraps the provided map from an underlying provider.
+    /// Creates a objectProvider that wraps the provided map from an underlying objectProvider.
     /// @param <K> the key type.
     /// @param <V> the value type.
     /// @param <M> the map type provided by the underlying map.
     /// @param <W> the map type of the wrapped map.
-    /// @param provider the underlying provider.
+    /// @param provider the underlying objectProvider.
     /// @param wrapper the function used to wrap the provided map.
-    /// @return the wrapped map provider.
+    /// @return the wrapped map objectProvider.
     public static <K, V, M extends Map<K, V>, W extends Map<K, V>>
         MapProvider<K, V, W> wrap(final MapProvider<K, V, M> provider, final Function<M, W> wrapper)  {
         return new WrappedMapProvider<>(provider, wrapper);
@@ -137,8 +137,8 @@ public final class MapProviders {
 
         @Override
         public @NonNull W copyInstance(final @NonNull W ws) {
-            // This is a bit tricky since we need to unwrap or use the provider's copy.
-            // But we don't have an unwrap. CollectionProviders just calls provider.createInstance(ws)
+            // This is a bit tricky since we need to unwrap or use the objectProvider's copy.
+            // But we don't have an unwrap. CollectionProviders just calls objectProvider.createInstance(ws)
             // which in CollectionProvider takes a Collection.
             // For MapProvider, createInstance(Map) exists.
             return wrapper.apply(provider.createInstance(ws));

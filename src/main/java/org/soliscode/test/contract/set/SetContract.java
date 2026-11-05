@@ -13,7 +13,7 @@ import java.util.Set;
 /// and the behavior of the `add_singleElement_returnsTrueAndUpdatesSize`, `equals`, and `hashCode` methods.
 ///
 /// When implementing this contract, the only method that needs to be implemented is
-/// [provider()][org.soliscode.test.contract.support.CollectionContractSupport#provider()].
+/// [objectProvider()][org.soliscode.test.contract.support.CollectionContractSupport#provider()].
 ///
 /// ## Usage Example
 ///
@@ -33,7 +33,7 @@ import java.util.Set;
 ///     }
 ///
 ///     @Override
-///     public CollectionProvider<Integer, HashSet<Integer>> provider() {
+///     public CollectionProvider<Integer, HashSet<Integer>> objectProvider() {
 ///         return CollectionProviders.provideHashSet(elementProvider());
 ///     }
 /// }
@@ -49,7 +49,7 @@ import java.util.Set;
 /// @author evanbergstrom
 /// @see Set
 /// @since 1.0
-public interface SetContract<E, S extends Set<E>> extends CollectionContract<E, S> {
+public interface SetContract<S extends Set<E>, E> extends CollectionContract<S, E> {
 
     @Override
     boolean supportsMethod(InterfaceMethod method);

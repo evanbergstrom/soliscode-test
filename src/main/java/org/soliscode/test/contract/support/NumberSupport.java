@@ -9,7 +9,7 @@ import org.soliscode.test.provider.NumberProvider;
 /// @since 1.0
 public interface NumberSupport<T extends Number> extends ContractSupport<T> {
 
-    /// Returns a number provider that can be used to create instances of the class being tested.
-    /// @return a number provider.
+    /// Returns a number objectProvider that can be used to create instances of the class being tested.
+    /// @return a number objectProvider.
     @NonNull NumberProvider<T> provider();
 }

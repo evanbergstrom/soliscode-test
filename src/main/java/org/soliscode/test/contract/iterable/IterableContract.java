@@ -37,7 +37,7 @@ import org.soliscode.test.contract.object.ObjectContract;
 /// ```java
 /// class MyIterableContractTest implements IterableContract<String, MyIterable<String>> {
 ///     @Override
-///     public CollectionProvider<String, MyIterable<String>> provider() {
+///     public CollectionProvider<String, MyIterable<String>> objectProvider() {
 ///         return MyIterable::new;
 ///     }
 /// }
@@ -54,11 +54,11 @@ import org.soliscode.test.contract.object.ObjectContract;
 /// @see ForEachMethodContract
 /// @see SpliteratorMethodContract
 /// @since 1.0.0
-public interface IterableContract<E, I extends Iterable<E>>
+public interface IterableContract<I extends Iterable<E>, E>
     extends ObjectContract<I>,
-        IteratorMethodContract<E, I>,
-        ForEachMethodContract<E, I>,
-        SpliteratorMethodContract<E, I> {
+        IteratorMethodContract<I, E>,
+        ForEachMethodContract<I, E>,
+        SpliteratorMethodContract<I, E> {
 
     /// Indicates that the class being tested does not support an optional method.
     ///

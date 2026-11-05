@@ -22,6 +22,11 @@ import static org.junit.jupiter.api.Assertions.*;
 @Nondeterministic
 class ContentionCoordinatorTest extends AbstractTest {
 
+    /// Default constructor.
+    public ContentionCoordinatorTest() {
+        super();
+    }
+
     @Test
     @DisplayName("execute() with single operation runs successfully")
     void execute_withSingleOperation_runsSuccessfully() {

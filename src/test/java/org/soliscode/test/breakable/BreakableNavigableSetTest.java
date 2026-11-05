@@ -77,6 +77,11 @@ import static org.soliscode.test.breakable.BreakableNavigableSet.*;
 @DisplayName("Tests for BreakableNavigableSet")
 public class BreakableNavigableSetTest {
 
+    /// Default constructor.
+    public BreakableNavigableSetTest() {
+        super();
+    }
+
     // ========== Navigation Method Tests ==========
 
     /**

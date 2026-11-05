@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// @author evanbergstrom
 /// @see Deque#offerFirst
 /// @since 1.0
-public interface OfferFirstContract<E, D extends Deque<E>> extends CollectionContractSupport<E, D> {
+public interface OfferFirstContract<D extends Deque<E>, E> extends CollectionContractSupport<D, E> {
 
     /// Tests that the [offerFirst][Deque#offerFirst] method works.
     @DisplayName("offerFirst(E) adds a single element and updates size")

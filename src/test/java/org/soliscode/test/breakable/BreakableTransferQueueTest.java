@@ -65,6 +65,11 @@ import static org.soliscode.test.breakable.BreakableTransferQueue.*;
 /// @see AbstractTest
 public class BreakableTransferQueueTest extends AbstractTest {
 
+    /// Default constructor
+    public BreakableTransferQueueTest() {
+        super();
+    }
+
     // ========== Constructor Tests ==========
 
     /// Verifies the default constructor creates an empty transfer queue with proper initial state.
@@ -123,8 +128,6 @@ public class BreakableTransferQueueTest extends AbstractTest {
     }
 
     /// Verifies the builder copy method creates an independent builder with same configuration.
-    /// @throws InterruptedException If the configured break (TRANSFER_THROWS_INTERRUPTED_EXCEPTION)
-    ///         is triggered in the queue during the test.
     @Test
     @DisplayName("Test builder copy")
     public void builderCopy_whenCalled_createsIndependentBuilderWithSameConfiguration() {
@@ -177,8 +180,6 @@ public class BreakableTransferQueueTest extends AbstractTest {
     }
 
     /// Verifies the `TRANSFER_THROWS_EXCEPTION` break constant.
-    /// @throws InterruptedException If the configured break (TRANSFER_THROWS_INTERRUPTED_EXCEPTION)
-    ///         is triggered in the queue during the test.
     @Test
     @DisplayName("Test TRANSFER_THROWS_EXCEPTION break")
     public void transfer_whenExceptionBreakAdded_throwsIllegalStateException() {
@@ -190,8 +191,6 @@ public class BreakableTransferQueueTest extends AbstractTest {
     }
 
     /// Verifies that `transfer()` throws `UnsupportedOperationException` when not supported.
-    /// @throws InterruptedException If the configured break (TRANSFER_THROWS_INTERRUPTED_EXCEPTION)
-    ///         is triggered in the queue during the test.
     @Test
     @DisplayName("Test transfer() throws when not supported")
     public void transfer_whenNotSupported_throwsUnsupportedOperationException() {
@@ -205,8 +204,6 @@ public class BreakableTransferQueueTest extends AbstractTest {
     // ========== Try Transfer Method Break Tests ==========
 
     /// Verifies the `TRY_TRANSFER_ALWAYS_RETURNS_FALSE` break constant.
-    /// @throws InterruptedException If the configured break (TRANSFER_THROWS_INTERRUPTED_EXCEPTION)
-    ///         is triggered in the queue during the test.
     @Test
     @DisplayName("Test TRY_TRANSFER_ALWAYS_RETURNS_FALSE break")
     public void tryTransfer_whenAlwaysReturnsFalseBreakAdded_returnsFalse() {

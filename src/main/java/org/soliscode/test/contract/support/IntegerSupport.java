@@ -10,7 +10,7 @@ import org.soliscode.test.provider.IntegerNumberProvider;
 /// @since 1.0
 public interface IntegerSupport<T extends Number> extends NumberSupport<T> {
 
-    /// Returns a number provider that can be used to create instances of the class being tested.
-    /// @return a number provider.
+    /// Returns a number objectProvider that can be used to create instances of the class being tested.
+    /// @return a number objectProvider.
     @NonNull IntegerNumberProvider<T> provider();
 }

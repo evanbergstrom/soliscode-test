@@ -85,6 +85,7 @@ import java.util.Set;
 /// @see java.util.LinkedHashSet
 public class BreakableSequencedSet<E> extends BreakableSet<E> implements SequencedSet<E> {
 
+    /// Underlying set storage.
     private final SequencedSet<E> sequencedSet;
 
     /// Creates a new empty `BreakableSequencedSet` with default configuration.
@@ -121,6 +122,8 @@ public class BreakableSequencedSet<E> extends BreakableSet<E> implements Sequenc
     /// @param methodStatuses the method status configuration
     /// @param characteristics the spliterator characteristics
     /// @param permits the flags that indicate what types of values are supported by the collection
+    /// @param isSafe whether the collection is safe for concurrent access
+    /// @param compatibleType the type that this collection is compatible with.
     /// @throws NullPointerException if `sequencedSet`, `breaks`, or `methodStatuses` is null
     protected BreakableSequencedSet(final @NonNull SequencedSet<E> sequencedSet, final @NonNull Set<Break> breaks,
                                     final @NonNull Map<InterfaceMethod, MethodStatus> methodStatuses,
@@ -341,7 +344,7 @@ public class BreakableSequencedSet<E> extends BreakableSet<E> implements Sequenc
 
         /// {@inheritDoc}
         @Override
-        public Builder<E> self() {
+        public @NonNull Builder<E> self() {
             return this;
         }
 
@@ -351,10 +354,17 @@ public class BreakableSequencedSet<E> extends BreakableSet<E> implements Sequenc
             return new Builder<>(this);
         }
 
+        @Override
+        public BreakableSequencedSet<E> copy(final @NonNull BreakableSequencedSet<E> other) {
+            return new BreakableSequencedSet<>(other);
+        }
+
         /// {@inheritDoc}
         @Override
-        public BreakableSequencedSet<E> build() {
-            return new BreakableSequencedSet<>(new LinkedHashSet<>(backingSet), breaks(), methodStatuses(),
+        public BreakableSequencedSet<E> build(final Iterable<E> iterable) {
+            LinkedHashSet<E> storage = new LinkedHashSet<>(elements());
+            iterable.forEach(storage::add);
+            return new BreakableSequencedSet<>(storage, breaks(), methodStatuses(),
                     characteristics(), permits(), isSafe(), compatibleType());
         }
     }

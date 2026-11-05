@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// ```java
 /// class MyMapGetTest implements GetContract<String, String, MyMap<String, String>> {
 ///     @Override
-///     public MapProvider<String, String, MyMap<String, String>> provider() {
+///     public MapProvider<String, String, MyMap<String, String>> objectProvider() {
 ///         return MyMap::new;
 ///     }
 /// }
@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// @author evanbergstrom
 /// @see Map#get
 /// @since 1.0.0
-public interface GetContract<K, V, M extends Map<K, V>> extends MapContractSupport<K, V, M> {
+public interface GetContract<M extends Map<K, V>, K, V> extends MapContractSupport<M, K, V> {
 
     /// Tests that the [get][Map#get] method returns `null` for a non-existent key.
     ///

@@ -41,6 +41,9 @@ import static org.soliscode.test.assertions.string.AssertStringContainsInOrder.a
 @DisplayName("Tests for AssertConsumeCount")
 public class AssertConsumeCountTest implements UsesCollections {
 
+    /// Default constructor.
+    public AssertConsumeCountTest() {}
+
     /// Test message used for custom error message validation.
     private static final String TEST_MESSAGE = "Test message";
 

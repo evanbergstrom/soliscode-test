@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /// public class MyIntegerTest implements IntegerContract<MyInteger> {
 ///
 ///     @Override
-///     public IntegerNumberProvider<MyInteger> provider() {
+///     public IntegerNumberProvider<MyInteger> objectProvider() {
 ///         return new MyIntegerProvider();
 ///     }
 /// }

@@ -11,18 +11,18 @@ import java.util.List;
 /// @param <L> The type of the list.
 /// @author evanbergstrom
 /// @since 1.0
-public interface ListContract<E, L extends List<E>> extends SequencedCollectionContract<E, L>,
-        ListAddContract<E, L>,
-        ListToArrayContract<E, L>,
-        GetContract<E, L>,
-        SetContract<E, L>,
-        IndexOfContract<E, L>,
-        LastIndexOfContract<E, L>,
-        AddAtPositionContract<E, L>,
-        RemoveAtPositionContract<E, L>,
-        ReplaceAllContract<E, L>,
-        SortContract<E, L>,
-        SubListContract<E, L> {
+public interface ListContract<L extends List<E>, E> extends SequencedCollectionContract<L, E>,
+        ListAddContract<L, E>,
+        ListToArrayContract<L, E>,
+        GetContract<L, E>,
+        SetContract<L, E>,
+        IndexOfContract<L, E>,
+        LastIndexOfContract<L, E>,
+        AddAtPositionContract<L, E>,
+        RemoveAtPositionContract<L, E>,
+        ReplaceAllContract<L, E>,
+        SortContract<L, E>,
+        SubListContract<L, E> {
 
     default void doesNotSupportModification() {
         SequencedCollectionContract.super.doesNotSupportModification();

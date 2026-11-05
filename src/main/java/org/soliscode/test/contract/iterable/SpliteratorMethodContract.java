@@ -50,7 +50,7 @@ import static org.soliscode.test.util.IterableTestUtils.size;
 /// ```java
 /// class MyIterableSpliteratorTest implements SpliteratorMethodContract<String, MyIterable<String>> {
 ///     @Override
-///     public CollectionProvider<String, MyIterable<String>> provider() {
+///     public CollectionProvider<String, MyIterable<String>> objectProvider() {
 ///         return MyIterable::new;
 ///     }
 /// }
@@ -67,7 +67,7 @@ import static org.soliscode.test.util.IterableTestUtils.size;
 /// @see Spliterator
 /// @since 1.0.0
 @SuppressWarnings("MagicConstant")
-public interface SpliteratorMethodContract<E, I extends Iterable<E>> extends IteratorMethodContract<E, I> {
+public interface SpliteratorMethodContract<I extends Iterable<E>, E> extends IteratorMethodContract<I, E> {
 
     /// The full list of supported Spliterator characteristics.
     int[] CHARACTERISTIC_VALUES = {SIZED, SUBSIZED, SORTED, CONCURRENT,  DISTINCT, IMMUTABLE, NONNULL};

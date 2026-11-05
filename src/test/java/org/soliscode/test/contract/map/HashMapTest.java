@@ -33,7 +33,12 @@ import java.util.HashMap;
 /// @since 1.0.0
 public class HashMapTest extends AbstractTest implements MapContract<Integer, String, HashMap<Integer,String>>  {
 
-    /// Returns the provider for creating and populating `HashMap` instances.
+    /// Default constructor.
+    public HashMapTest() {
+        super();
+    }
+
+    /// Returns the objectProvider for creating and populating `HashMap` instances.
     ///
     /// This implementation uses [MapProviders#provideHashMap] to provide a
     /// [MapProvider] that creates [HashMap] instances with [Integer] keys

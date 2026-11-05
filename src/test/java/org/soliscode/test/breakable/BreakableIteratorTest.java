@@ -31,6 +31,10 @@ import static org.soliscode.test.breakable.BreakableIterator.*;
 @DisplayName("Tests for BreakableIterator")
 public class BreakableIteratorTest {
 
+    /// Default constructor.
+    public BreakableIteratorTest() {
+        super();
+    }
 
     /// Test that the `ITERATOR_SKIPS_FIRST_ELEMENT` break causes the iterator to skip over the first element.
     ///

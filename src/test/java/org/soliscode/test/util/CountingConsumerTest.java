@@ -23,6 +23,11 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Tests for CountingConsumer")
 public class CountingConsumerTest extends AbstractTest {
 
+    /// Default constructor.
+    public CountingConsumerTest() {
+        super();
+    }
+
     // Tests for basic functionality
 
     /// Test that default constructor creates a consumer with zero count.

@@ -12,7 +12,7 @@ import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/// Tests for the `ShortProvider` class. These tests verify that the provider correctly implements
+/// Tests for the `ShortProvider` class. These tests verify that the objectProvider correctly implements
 /// all inherited interface contracts and provides proper Short instances for testing purposes.
 ///
 /// @author evanbergstrom
@@ -21,7 +21,13 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Tests for ShortProvider")
 public class ShortProviderTest extends AbstractTest {
 
-    private final ShortProvider provider = Providers.shortProvider();
+    private final ShortProvider provider;
+
+    /// Default constructor.
+    public ShortProviderTest() {
+        super();
+        provider = Providers.shortProvider();
+    }
 
     // Tests for IntegerNumberProvider interface methods
 
@@ -300,7 +306,7 @@ public class ShortProviderTest extends AbstractTest {
     @Test
     @DisplayName("Test createUniqueInstances method with size exceeding limit")
     public void testCreateUniqueInstancesExceedsLimit() {
-        // Create a mock provider with a smaller unique size limit for testing
+        // Create a mock objectProvider with a smaller unique size limit for testing
         IntegerProvider limitedProvider = new IntegerProvider() {
             @Override
             public long uniqueSizeLimit() {
@@ -489,12 +495,12 @@ public class ShortProviderTest extends AbstractTest {
         assertEquals(minValue.shortValue(), copiedMin.shortValue());
     }
 
-    /// Test that the provider follows all interface contracts properly.
+    /// Test that the objectProvider follows all interface contracts properly.
     @SuppressWarnings("UnnecessaryLocalVariable")
     @Test
-    @DisplayName("Test provider interface contracts")
+    @DisplayName("Test objectProvider interface contracts")
     public void testProviderContracts() {
-        // Test that the provider implements all expected interfaces
+        // Test that the objectProvider implements all expected interfaces
         assertInstanceOf(IntegerNumberProvider.class, provider);
         assertInstanceOf(NumberProvider.class, provider);
         assertInstanceOf(ObjectProvider.class, provider);

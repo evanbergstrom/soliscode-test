@@ -34,7 +34,12 @@ import java.util.HashSet;
 public class HashSetTest extends AbstractTest
         implements SetContract<Integer, HashSet<Integer>>, WithIntegerElement, DoesNotPermitDuplicates {
 
-    /// Returns the provider for creating and populating `HashSet` instances.
+    /// Default constructor.
+    public HashSetTest() {
+        super();
+    }
+
+    /// Returns the objectProvider for creating and populating `HashSet` instances.
     ///
     /// This implementation uses [CollectionProviders#from] to provide a
     /// [CollectionProvider] that creates [HashSet] instances with [Integer] elements.

@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// ```java
 /// class MyMapRemoveTwoArgTest implements RemoveTwoArgContract<String, String, MyMap<String, String>> {
 ///     @Override
-///     public MapProvider<String, String, MyMap<String, String>> provider() {
+///     public MapProvider<String, String, MyMap<String, String>> objectProvider() {
 ///         return MyMap::new;
 ///     }
 /// }
@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// @author evanbergstrom
 /// @see Map#remove(Object, Object)
 /// @since 1.0.0
-public interface RemoveTwoArgContract<K, V, M extends Map<K, V>> extends MapContractSupport<K, V, M> {
+public interface RemoveTwoArgContract<M extends Map<K, V>, K, V> extends MapContractSupport<M, K, V> {
 
     /// Tests that the [remove][Map#remove(Object, Object)] method returns `false` if the key is not present.
     ///

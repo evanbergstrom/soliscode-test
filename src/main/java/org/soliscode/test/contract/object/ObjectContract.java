@@ -45,7 +45,7 @@ package org.soliscode.test.contract.object;
 /// ```java
 /// public class MyClassTest extends ObjectContract<MyClass> {
 ///     @Override
-///     public ObjectProvider<MyClass> provider() {
+///     public ObjectProvider<MyClass> objectProvider() {
 ///         return MyClass::new;
 ///     }
 /// }

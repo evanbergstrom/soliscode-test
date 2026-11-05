@@ -22,9 +22,9 @@ import static org.junit.jupiter.api.Assertions.*;
 /// To use this contract, implement it in your test class along with the required support interfaces:
 ///
 /// ```java
-/// class MySortedMapReversedTest implements SortedReversedContract<String, String, MySortedMap<String, String>> {
+/// class MySortedMapReversedTest implements SortedReversedContract<MySortedMap<String, String>, String, String> {
 ///     @Override
-///     public MapProvider<String, String, MySortedMap<String, String>> provider() {
+///     public MapProvider<MySortedMap<String, String>, String, String> objectProvider() {
 ///         return MySortedMap::new;
 ///     }
 /// }
@@ -34,13 +34,13 @@ import static org.junit.jupiter.api.Assertions.*;
 /// This contract interface does not provide any thread-safety guarantees. The thread safety of the
 /// tests depends on the [SortedMap] and [org.soliscode.test.provider.MapProvider] implementations being tested.
 ///
+/// @param <M> The map type being tested.
 /// @param <K> The key type being tested.
 /// @param <V> The value type being tested.
-/// @param <M> The map type being tested.
 /// @author evanbergstrom
 /// @see java.util.SequencedMap#reversed
 /// @since 1.0.0
-public interface SortedReversedContract<K, V, M extends SortedMap<K, V>> extends ReversedContract<K, V, M> {
+public interface SortedReversedContract<M extends SortedMap<K, V>, K, V> extends ReversedContract<M, K, V> {
 
     /// Tests that the [reversed][java.util.SequencedMap#reversed] method returns a reversed view.
     ///

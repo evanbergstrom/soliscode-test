@@ -495,6 +495,7 @@ public class BreakableQueue<E> extends BreakableCollection<E> implements Queue<E
     /// @param characteristics the spliterator characteristics
     /// @param permits the flags that indicate what types of values are supported by the collection
     /// @param isSafe  whether the collection is safe for concurrent access.
+    /// @param compatibleType the type of the elements in the collection.
     /// @throws NullPointerException if `queue`, `breaks`, or `methodStatuses` is null
     /// @since 1.0
     protected BreakableQueue(
@@ -859,6 +860,11 @@ public class BreakableQueue<E> extends BreakableCollection<E> implements Queue<E
             return new Builder<>(this);
         }
 
+        @Override
+        public BreakableQueue<E> copy(final @NonNull BreakableQueue<E> other) {
+            return new BreakableQueue<>(other);
+        }
+
         /// Builds a new `BreakableQueue` instance with the configured settings.
         ///
         /// This method creates and returns a new `BreakableQueue` instance configured with
@@ -891,8 +897,10 @@ public class BreakableQueue<E> extends BreakableCollection<E> implements Queue<E
         /// @see #copy()
         /// @since 1.0
         @Override
-        public @NonNull BreakableQueue<E> build() {
-            return new BreakableQueue<>(new ArrayDeque<>(elements()), breaks(), methodStatuses(), characteristics(),
+        public @NonNull BreakableQueue<E> build(final Iterable<E> iterable) {
+            ArrayDeque<E> storage = new ArrayDeque<>(elements());
+            iterable.forEach(storage::add);
+            return new BreakableQueue<>(storage, breaks(), methodStatuses(), characteristics(),
                     permits(), isSafe(), compatibleType());
         }
     }
@@ -1017,11 +1025,11 @@ public class BreakableQueue<E> extends BreakableCollection<E> implements Queue<E
                 Object.class);
     }
 
-    /// Creates a collection provider for instances of BreakableQueue, given an element provider.
+    /// Creates a collection objectProvider for instances of BreakableQueue, given an element objectProvider.
     /// @param <E> the element type.
-    /// @param elementProvider the element provider to use.
-    /// @return a collection provider for breakable queues.
-    public static <E> @NonNull CollectionProvider<E, BreakableQueue<E>> queueProvider(
+    /// @param elementProvider the element objectProvider to use.
+    /// @return a collection objectProvider for breakable queues.
+    public static <E> @NonNull CollectionProvider<BreakableQueue<E>, E> queueProvider(
             final @NonNull ObjectProvider<E> elementProvider) {
         return CollectionProviders.from(
                 BreakableQueue::new,
@@ -1032,14 +1040,14 @@ public class BreakableQueue<E> extends BreakableCollection<E> implements Queue<E
         );
     }
 
-    /// Creates a collection provider for instances of `BreakableQueue`, given an element provider and a set of
+    /// Creates a collection objectProvider for instances of `BreakableQueue`, given an element objectProvider and a set of
     /// breaks.
     /// @param <E> the element type.
-    /// @param elementProvider the element provider to use.
+    /// @param elementProvider the element objectProvider to use.
     /// @param breaks the breaks to apply to each instance of `BreakableQueue`.
     /// @param methodStatuses the method statuses to apply to each instance of `BreakableQueue`.
-    /// @return a collection provider for breakable queues.
-    public static <E> @NonNull CollectionProvider<E, BreakableQueue<E>> queueProvider(
+    /// @return a collection objectProvider for breakable queues.
+    public static <E> @NonNull CollectionProvider<BreakableQueue<E>, E> queueProvider(
             final @NonNull ObjectProvider<E> elementProvider,
             final @NonNull Set<Break> breaks,
             final @NonNull Map<InterfaceMethod, MethodStatus> methodStatuses) {
@@ -1055,12 +1063,12 @@ public class BreakableQueue<E> extends BreakableCollection<E> implements Queue<E
         );
     }
 
-    /// Mixin interface that adds an implementation of the `provider()` method that provides instances of
+    /// Mixin interface that adds an implementation of the `objectProvider()` method that provides instances of
     /// `BreakableQueue` that do not have any breaks applied.
     /// @param <E> element type
-    public interface WithProvider<E> extends CollectionProviderSupport<E, BreakableQueue<E>> {
+    public interface WithProvider<E> extends CollectionProviderSupport<BreakableQueue<E>, E> {
         @Override
-        default @NonNull CollectionProvider<E, BreakableQueue<E>> provider() {
+        default @NonNull CollectionProvider<BreakableQueue<E>, E> provider() {
             return BreakableQueue.queueProvider(elementProvider());
         }
     }

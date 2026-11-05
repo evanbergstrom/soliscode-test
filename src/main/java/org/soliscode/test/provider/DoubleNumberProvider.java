@@ -18,8 +18,7 @@ package org.soliscode.test.provider;
 
 import org.jspecify.annotations.NonNull;
 
-/// Provides instances of a class that implements the [Number] interface that represent an integer value for the
-/// purposes of testing.
+/// Provides instances of a class that implements the [Number] interface that represent an integer value for testing.
 ///
 /// @param <T> The number.
 /// @author evanbergstrom

@@ -29,7 +29,7 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
 /// ```java
 /// class MyCollectionRemoveIfTest implements RemoveIfContract<String, MyCollection<String>> {
 ///     @Override
-///     public CollectionProvider<String, MyCollection<String>> provider() {
+///     public CollectionProvider<String, MyCollection<String>> objectProvider() {
 ///         return MyCollection::new;
 ///     }
 /// }
@@ -44,7 +44,7 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
 /// @author evanbergstrom
 /// @see Collection#removeIf
 /// @since 1.0.0
-public interface RemoveIfContract<E, C extends Collection<E>> extends CollectionContractSupport<E, C> {
+public interface RemoveIfContract<C extends Collection<E>, E> extends CollectionContractSupport<C, E> {
 
     /// Tests that the [removeIf][Collection#removeIf] method returns `false` when called on an empty collection.
     ///

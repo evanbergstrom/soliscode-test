@@ -30,6 +30,11 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
 public class BreakableListTest extends AbstractTest
         implements ListContract<Integer, BreakableList<Integer>>, WithIntegerElement {
 
+    /// Default constructor.
+    public BreakableListTest() {
+        super();
+    }
+
     @Override
     public @NonNull CollectionProvider<Integer, BreakableList<Integer>> provider() {
         return FunctionalCollectionProvider.from(

@@ -9,7 +9,7 @@ import org.soliscode.test.provider.ObjectProvider;
 /// @since 1.0
 public interface ElementProviderSupport<E> {
 
-    /// Returns the elements provider for the contract.
-    /// @return the element provider.
+    /// Returns the elements objectProvider for the contract.
+    /// @return the element objectProvider.
     @NonNull ObjectProvider<E> elementProvider();
 }

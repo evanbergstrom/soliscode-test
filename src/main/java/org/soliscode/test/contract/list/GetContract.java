@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /// ```java
 /// class MyListGetTest implements GetContract<String, MyList<String>> {
 ///     @Override
-///     public CollectionProvider<String, MyList<String>> provider() {
+///     public CollectionProvider<String, MyList<String>> objectProvider() {
 ///         return MyList::new;
 ///     }
 /// }
@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /// @author evanbergstrom
 /// @see List#get
 /// @since 1.0.0
-public interface GetContract<E, L extends List<E>> extends CollectionContractSupport<E, L> {
+public interface GetContract<L extends List<E>, E> extends CollectionContractSupport<L, E> {
 
     /// Tests that the [get][List#get] method works for valid indices.
     ///

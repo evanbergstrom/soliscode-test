@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// ```java
 /// class MyQueueOfferTest implements OfferContract<String, MyQueue<String>> {
 ///     @Override
-///     public CollectionProvider<String, MyQueue<String>> provider() {
+///     public CollectionProvider<String, MyQueue<String>> objectProvider() {
 ///         return MyQueue::new;
 ///     }
 /// }
@@ -39,12 +39,12 @@ import static org.junit.jupiter.api.Assertions.*;
 /// This contract interface does not provide any thread-safety guarantees. The thread safety of the
 /// tests depends on the [Queue] and [org.soliscode.test.provider.CollectionProvider] implementations being tested.
 ///
-/// @param <E> The element type being tested.
 /// @param <Q> The queue type being tested.
+/// @param <E> The element type being tested.
 /// @author evanbergstrom
 /// @see Queue#offer
 /// @since 1.0.0
-public interface OfferContract<E, Q extends Queue<E>> extends CollectionContractSupport<E, Q> {
+public interface OfferContract<Q extends Queue<E>, E> extends CollectionContractSupport<Q, E> {
 
     /// Tests that the [offer][Queue#offer] method successfully adds an element to the queue.
     ///

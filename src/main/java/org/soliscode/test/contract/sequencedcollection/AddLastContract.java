@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// ```java
 /// class MySequencedCollectionTest implements AddLastContract<Integer, MySequencedCollection<Integer>> {
 ///     @Override
-///     public CollectionProvider<Integer, MySequencedCollection<Integer>> provider() {
+///     public CollectionProvider<Integer, MySequencedCollection<Integer>> objectProvider() {
 ///         return MySequencedCollection::new;
 ///     }
 ///
@@ -61,7 +61,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// @author evanbergstrom
 /// @see SequencedCollection#addLast
 /// @since 1.0.0
-public interface AddLastContract<E, C extends SequencedCollection<E>> extends CollectionContractSupport<E, C> {
+public interface AddLastContract<C extends SequencedCollection<E>, E> extends CollectionContractSupport<C, E> {
 
     /// Tests that the [addLast][SequencedCollection#addLast] method successfully adds an element to the back.
     ///

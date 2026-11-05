@@ -38,6 +38,7 @@ import java.util.function.Consumer;
 /// @since 1.0
 /// @see Spliterator
 public class BreakableSpliterator<E> extends AbstractBreakable implements Spliterator<E> {
+
     /// The spliterator always has no elements.
     public static final Break SPLITERATOR_IS_ALWAYS_EMPTY =
             new Break("spliterator always has no elements");
@@ -107,7 +108,10 @@ public class BreakableSpliterator<E> extends AbstractBreakable implements Splite
     public static final Break SPLITERATOR_GET_COMPARATOR_ALWAYS_RETURNS_NULL = new
             Break("spliterator getComparator always returns null");
 
+    /// The underlying spliterator.
     private final @NonNull Spliterator<E> iterator;
+
+    /// The characteristics of the spliterator.
     private final int characteristics;
 
     /// Constructs a breakable spliterator from a spliterator that will provide the implementation.

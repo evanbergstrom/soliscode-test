@@ -47,7 +47,7 @@ import static org.soliscode.test.util.IterableTestUtils.size;
 /// ```java
 /// class MyIterableIteratorTest implements IteratorMethodContract<String, MyIterable<String>> {
 ///     @Override
-///     public CollectionProvider<String, MyIterable<String>> provider() {
+///     public CollectionProvider<String, MyIterable<String>> objectProvider() {
 ///         return MyIterable::new;
 ///     }
 /// }
@@ -63,7 +63,7 @@ import static org.soliscode.test.util.IterableTestUtils.size;
 /// @see Iterable#iterator
 /// @see Iterator
 /// @since 1.0.0
-public interface IteratorMethodContract<E, I extends Iterable<E>> extends CollectionContractSupport<E, I> {
+public interface IteratorMethodContract<I extends Iterable<E>, E> extends CollectionContractSupport<I, E> {
 
 
     /// Tests that the [Iterator#hasNext] and [Iterator#next] methods work for an empty collection.

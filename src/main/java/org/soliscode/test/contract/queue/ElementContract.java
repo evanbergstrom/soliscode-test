@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /// ```java
 /// class MyQueueElementTest implements ElementContract<String, MyQueue<String>> {
 ///     @Override
-///     public CollectionProvider<String, MyQueue<String>> provider() {
+///     public CollectionProvider<String, MyQueue<String>> objectProvider() {
 ///         return MyQueue::new;
 ///     }
 /// }
@@ -38,12 +38,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /// This contract interface does not provide any thread-safety guarantees. The thread safety of the
 /// tests depends on the [Queue] and [org.soliscode.test.provider.CollectionProvider] implementations being tested.
 ///
-/// @param <E> The element type being tested.
 /// @param <Q> The queue type being tested.
+/// @param <E> The element type being tested.
 /// @author evanbergstrom
 /// @see Queue#element
 /// @since 1.0.0
-public interface ElementContract<E, Q extends Queue<E>> extends CollectionContractSupport<E, Q> {
+public interface ElementContract<Q extends Queue<E>, E> extends CollectionContractSupport<Q, E> {
 
     /// Tests that the [element][Queue#element] method correctly retrieves the head of the queue.
     ///

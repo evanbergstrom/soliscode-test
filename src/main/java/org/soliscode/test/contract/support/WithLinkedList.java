@@ -6,7 +6,7 @@ import org.soliscode.test.provider.CollectionProviders;
 
 import java.util.LinkedList;
 
-/// Mixing for a collection contract class that implements a collection provider for instances of LinkedList.
+/// Mixing for a collection contract class that implements a collection objectProvider for instances of LinkedList.
 /// ```java
 ///    public class LinkedListTest extends AbstractTest implements ListContract<Integer, LinkedList<Integer>>
 ///         WithLinkedList<Integer>, WithIntegerElement {
@@ -16,12 +16,12 @@ import java.util.LinkedList;
 /// @since 1.0
 /// @see CollectionProvider
 /// @see LinkedList
-public interface WithLinkedList<E> extends CollectionProviderSupport<E, LinkedList<E>> {
+public interface WithLinkedList<E> extends CollectionProviderSupport<LinkedList<E>, E> {
 
-    // Returns a collection provider that can be used to create instances of [LinkedList].
-    /// @return a `LinkedList` collection provider.
+    // Returns a collection objectProvider that can be used to create instances of [LinkedList].
+    /// @return a `LinkedList` collection objectProvider.
     @Override
-    default @NonNull CollectionProvider<E, LinkedList<E>> provider() {
+    default @NonNull CollectionProvider<LinkedList<E>, E> provider() {
         return CollectionProviders.provideLinkedList(elementProvider());
     }
 }

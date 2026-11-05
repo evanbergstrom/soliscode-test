@@ -31,6 +31,11 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Tests for MatchEverything")
 public class MatchEverythingTest extends AbstractTest {
 
+    /// Default constructor.
+    public MatchEverythingTest() {
+        super();
+    }
+
     // Tests for constructor
 
     /// Test that default constructor creates a valid instance.

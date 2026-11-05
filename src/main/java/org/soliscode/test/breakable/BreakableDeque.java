@@ -1510,6 +1510,11 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
             return new Builder<>(this);
         }
 
+        @Override
+        public @NonNull BreakableDeque<E> copy(final @NonNull BreakableDeque<E> other) {
+            return new BreakableDeque<>(other);
+        }
+
         /// Builds a new BreakableDeque instance with the configured settings.
         ///
         /// This method creates and returns a new BreakableDeque instance configured with
@@ -1662,11 +1667,11 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
         return new BreakableDeque<>(deque, breaks, DEFAULT_METHOD_STATUSES, characteristics, DEFAULT_PERMITS,
                 DEFAULT_SAFETY, Object.class);
     }
-    /// Creates a collection provider for instances of BreakableDeque, given an element provider.
+    /// Creates a collection objectProvider for instances of BreakableDeque, given an element objectProvider.
     /// @param <E> the element type.
-    /// @param elementProvider the element provider to use.
-    /// @return a collection provider for breakable deques.
-    public static <E> @NonNull CollectionProvider<E, BreakableDeque<E>> dequeProvider(
+    /// @param elementProvider the element objectProvider to use.
+    /// @return a collection objectProvider for breakable deques.
+    public static <E> @NonNull CollectionProvider<BreakableDeque<E>, E> dequeProvider(
             final @NonNull ObjectProvider<E> elementProvider) {
         return CollectionProviders.from(
                 BreakableDeque::new,
@@ -1677,13 +1682,13 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
         );
     }
 
-    /// Creates a collection provider for instances of `BreakableDeque`, given an element provider and a set of
+    /// Creates a collection objectProvider for instances of `BreakableDeque`, given an element objectProvider and a set of
     /// breaks.
     /// @param <E> the element type.
-    /// @param elementProvider the element provider to use.
+    /// @param elementProvider the element objectProvider to use.
     /// @param breaks the breaks to apply to each instance of `BreakableDeque`.
     /// @param methodStatuses the method statuses to apply to each instance of `BreakableDeque`.
-    /// @return a collection provider for breakable deques.
+    /// @return a collection objectProvider for breakable deques.
     public static <E> @NonNull CollectionProvider<E, BreakableDeque<E>> dequeProvider(
             final @NonNull ObjectProvider<E> elementProvider,
             final @NonNull Set<Break> breaks,
@@ -1712,12 +1717,12 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
         return new Builder<>();
     }
 
-    /// Mixin interface that adds an implementation of the `provider()` method that provides instances of
+    /// Mixin interface that adds an implementation of the `objectProvider()` method that provides instances of
     /// `BreakableDeque` that do not have any breaks applied.
     /// @param <E> element type
-    public interface WithProvider<E> extends CollectionProviderSupport<E, BreakableDeque<E>> {
+    public interface WithProvider<E> extends CollectionProviderSupport<BreakableDeque<E>, E> {
         @Override
-        default @NonNull CollectionProvider<E, BreakableDeque<E>> provider() {
+        default @NonNull CollectionProvider<BreakableDeque<E>, E> provider() {
             return BreakableDeque.dequeProvider(elementProvider());
         }
     }

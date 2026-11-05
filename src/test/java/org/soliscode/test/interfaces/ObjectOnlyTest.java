@@ -17,6 +17,11 @@ import org.soliscode.test.provider.ObjectProvider;
 @DisplayName("Tests for the ObjectOnly class")
 public class ObjectOnlyTest extends AbstractTest implements ObjectContract<ObjectOnly> {
 
+    /// Default constructor.
+    public ObjectOnlyTest() {
+        super();
+    }
+
     @Override
     public @NonNull ObjectProvider<ObjectOnly> provider() {
         return new FunctionalProvider<>(ObjectOnly::new, ObjectOnly::new, ObjectOnly::new);

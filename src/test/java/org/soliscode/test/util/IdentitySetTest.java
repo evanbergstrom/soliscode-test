@@ -27,6 +27,11 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Tests for IdentitySet")
 public class IdentitySetTest extends AbstractTest {
 
+    /// Default constructor.
+    public IdentitySetTest() {
+        super();
+    }
+
     // Tests for constructors
 
     /// Test that default constructor creates an empty set.

@@ -12,5 +12,5 @@ import java.util.List;
 /// @since 1.0
 /// @see List#add(int, java.lang.Object)
 /// @see ListContract
-public interface AddAtPositionContract<E, L extends List<E>> extends CollectionContractSupport<E, L> {
+public interface AddAtPositionContract<L extends List<E>, E> extends CollectionContractSupport<L, E> {
 }

@@ -40,6 +40,8 @@ import java.util.function.Consumer;
 /// @since 1.0
 /// @see Iterator
 public class BreakableIterator<E> extends AbstractBreakable implements Iterator<E> {
+
+    /// The underlying iterator.
     private final Iterator<E> iterator;
 
     /// The iterator will always have no elements

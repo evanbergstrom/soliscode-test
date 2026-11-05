@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /// ```java
 /// class MyMapGetOrDefaultTest implements GetOrDefaultContract<String, String, MyMap<String, String>> {
 ///     @Override
-///     public MapProvider<String, String, MyMap<String, String>> provider() {
+///     public MapProvider<String, String, MyMap<String, String>> objectProvider() {
 ///         return MyMap::new;
 ///     }
 /// }
@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /// @author evanbergstrom
 /// @see Map#getOrDefault
 /// @since 1.0.0
-public interface GetOrDefaultContract<K, V, M extends Map<K, V>> extends MapContractSupport<K, V, M> {
+public interface GetOrDefaultContract<M extends Map<K, V>, K, V> extends MapContractSupport<M, K, V> {
 
     /// Tests that the [getOrDefault][Map#getOrDefault] method returns the default value for a non-existent key.
     ///

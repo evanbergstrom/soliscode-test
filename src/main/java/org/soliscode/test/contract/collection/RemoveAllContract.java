@@ -32,7 +32,7 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
 /// ```java
 /// class MyCollectionRemoveAllTest implements RemoveAllContract<String, MyCollection<String>> {
 ///     @Override
-///     public CollectionProvider<String, MyCollection<String>> provider() {
+///     public CollectionProvider<String, MyCollection<String>> objectProvider() {
 ///         return MyCollection::new;
 ///     }
 /// }
@@ -47,7 +47,7 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
 /// @author evanbergstrom
 /// @see Collection#removeAll
 /// @since 1.0.0
-public interface RemoveAllContract<E, C extends Collection<E>> extends CollectionContractSupport<E, C> {
+public interface RemoveAllContract<C extends Collection<E>, E> extends CollectionContractSupport<C, E> {
 
     /// Tests that the [removeAll][Collection#removeAll] method returns `false` when called on an empty collection.
     ///
@@ -79,7 +79,7 @@ public interface RemoveAllContract<E, C extends Collection<E>> extends Collectio
     /// @since 1.0.0
     @DisplayName("removeAll(Collection) removes argument elements from a non-empty collection")
     @Test
-    default void removeAll_whenNotEmpty_removesArgumentElements() {
+    default void removeAll_whenNotEmpty_removesElements() {
         if (supportsMethod(CollectionMethods.REMOVE_ALL)) {
             List<E> values = elementProvider().createUniqueInstances(DEFAULT_SIZE);
             Collection<E> collection = provider().createInstance(values);

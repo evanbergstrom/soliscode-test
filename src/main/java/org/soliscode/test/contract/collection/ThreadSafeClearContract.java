@@ -29,7 +29,7 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
 /// ```java
 /// class MyThreadSafeCollectionClearTest implements ThreadSafeClearContract<Integer, MyThreadSafeCollection<Integer>> {
 ///     @Override
-///     public CollectionProvider<Integer, MyThreadSafeCollection<Integer>> provider() {
+///     public CollectionProvider<Integer, MyThreadSafeCollection<Integer>> objectProvider() {
 ///         return MyThreadSafeCollection::new;
 ///     }
 /// }
@@ -44,8 +44,8 @@ import static org.soliscode.test.assertions.collection.CollectionAssertions.asse
 /// @author evanbergstrom
 /// @see Collection#clear
 /// @since 1.0.0
-public interface ThreadSafeClearContract<E, C extends Collection<E>>
-        extends ThreadSafeCollectionContractSupport<E, C> {
+public interface ThreadSafeClearContract<C extends Collection<E>, E>
+        extends ThreadSafeCollectionContractSupport<C, E> {
 
     /// Tests that the [clear][Collection#clear] method is thread-safe when called under contention.
     ///
@@ -65,8 +65,6 @@ public interface ThreadSafeClearContract<E, C extends Collection<E>>
 
             assertIsEmpty(collection);
             assertCollectionStillWorks(collection);
-        } else {
-            assertThrows(UnsupportedOperationException.class, collection::clear);
         }
     }
 
@@ -92,8 +90,6 @@ public interface ThreadSafeClearContract<E, C extends Collection<E>>
 
             assertIsEmpty(collection);
             assertCollectionStillWorks(collection);
-        } else {
-            assertThrows(UnsupportedOperationException.class, collection::clear);
         }
     }
 }

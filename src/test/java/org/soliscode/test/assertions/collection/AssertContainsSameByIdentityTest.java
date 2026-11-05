@@ -67,6 +67,9 @@ public class AssertContainsSameByIdentityTest {
 
     private static final String TEST_MESSAGE = "Test message";
 
+    /// Default constructor.
+    public AssertContainsSameByIdentityTest() {}
+
     /// Tests the `assertContainsSameByIdentity` assertion with empty collections.
     ///
     /// Verifies that:

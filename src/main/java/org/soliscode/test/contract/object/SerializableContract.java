@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /// ```java
 /// class MySerializableTest implements SerializableContract<MyClass> {
 ///     @Override
-///     public ObjectProvider<MyClass> provider() {
+///     public ObjectProvider<MyClass> objectProvider() {
 ///         return MyClass::new;
 ///     }
 /// }
@@ -93,11 +93,11 @@ public interface SerializableContract<T extends Serializable> extends ContractSu
     /// @throws IOException if an I/O error occurs during serialization
     /// @since 1.0.0
     default byte[] serialize(final @NonNull Serializable object) throws java.io.IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-            oos.writeObject(object);
+        ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+        try (ObjectOutputStream objectStream = new ObjectOutputStream(byteStream)) {
+            objectStream.writeObject(object);
         }
-        return baos.toByteArray();
+        return byteStream.toByteArray();
     }
 
     /// Deserializes an object from the specified byte array.

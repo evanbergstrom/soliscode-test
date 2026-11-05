@@ -71,6 +71,11 @@ import static org.soliscode.test.breakable.BreakableDeque.*;
 /// @see AbstractTest
 public class BreakableDequeTest extends AbstractTest {
 
+    /// Default constructor.
+    public BreakableDequeTest() {
+        super();
+    }
+
     // ========== Constructor Tests ==========
 
     /// Tests the default constructor functionality and initial state validation.
@@ -649,7 +654,7 @@ public class BreakableDequeTest extends AbstractTest {
 
     // ========== Static Factory Method Tests ==========
 
-    /// Tests the static [BreakableDeque#wrap(Deque, Set)] factory method functionality.
+    /// Tests the static [BreakableDeque#wrap(LinkedList, Set)] factory method functionality.
     @Test
     @DisplayName("wrap(Deque, Set) creates a breakable deque wrapping an existing one")
     public void wrap_withDequeAndBreaks_createsWrappedDeque() {

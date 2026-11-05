@@ -252,6 +252,7 @@ public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
     /// @param characteristics the spliterator characteristics
     /// @param permits         the flags that indicate what types of values are supported by the collection.
     /// @param isSafe          whether the collection is safe for concurrent access.
+    /// @param compatibleType  the element type that the collection supports.
     /// @throws NullPointerException if set or breaks is null
     protected BreakableSet(final @NonNull Set<E> set, final @NonNull Set<Break> breaks,
                            final @NonNull Map<InterfaceMethod, MethodStatus> methodStatuses,
@@ -760,6 +761,11 @@ public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
             return new BreakableSet.Builder<>(this);
         }
 
+        @Override
+        public BreakableSet<E> copy(final @NonNull BreakableSet<E> other) {
+            return new BreakableSet<>(other);
+        }
+
         /// Constructs a new BreakableSet instance with the current builder configuration.
         ///
         /// This method creates a new BreakableSet using all the settings configured in
@@ -793,9 +799,11 @@ public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
         /// ```
         ///
         /// @return a new BreakableSet instance configured according to this builder's settings
-        public BreakableSet<E> build() {
-            return new BreakableSet<>(new HashSet<>(elements()), new HashSet<>(breaks()),
-                    new HashMap<>(methodStatuses()), characteristics(), permits(), isSafe(), compatibleType());
+        public @NonNull BreakableSet<E> build(final Iterable<E> elements) {
+            HashSet<E> storage = new HashSet<>(elements());
+            elements.forEach(storage::add);
+            return new BreakableSet<>(storage, new HashSet<>(breaks()), new HashMap<>(methodStatuses()),
+                    characteristics(), permits(), isSafe(), compatibleType());
         }
     }
 }

@@ -19,6 +19,11 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Tests for AlwaysThrows")
 public class AlwaysThrowsTest extends AbstractTest {
 
+    /// Default constructor.
+    public AlwaysThrowsTest() {
+        super();
+    }
+
     // Tests for default constructor behavior
 
     /// Test that the default constructor creates an instance that throws UnsupportedOperationException.

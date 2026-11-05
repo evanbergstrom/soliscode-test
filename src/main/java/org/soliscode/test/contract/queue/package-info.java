@@ -42,7 +42,7 @@
 ///                    WithProvider<String> {
 ///
 ///     @Override
-///     public CollectionProvider<String, MyQueue<String>> provider() {
+///     public CollectionProvider<String, MyQueue<String>> objectProvider() {
 ///         return CollectionProviders.from(
 ///             MyQueue::new,
 ///             MyQueue::new,

@@ -53,6 +53,11 @@ import static org.soliscode.test.breakable.BreakableConcurrentNavigableMap.*;
 /// @see ConcurrentNavigableMap
 public class BreakableConcurrentNavigableMapTest extends AbstractTest {
 
+    /// Default constructor.
+    public BreakableConcurrentNavigableMapTest() {
+        super();
+    }
+
     /// Verifies that the default constructor creates an empty map.
     @Test
     @DisplayName("defaultConstructor: creates empty concurrent navigable map")

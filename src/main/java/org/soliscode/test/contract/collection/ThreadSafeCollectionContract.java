@@ -18,7 +18,7 @@ import java.util.Collection;
 /// ```java
 /// class MyThreadSafeCollectionTest implements ThreadSafeCollectionContract<Integer, MyThreadSafeCollection<Integer>> {
 ///     @Override
-///     public CollectionProvider<Integer, MyThreadSafeCollection<Integer>> provider() {
+///     public CollectionProvider<Integer, MyThreadSafeCollection<Integer>> objectProvider() {
 ///         return MyThreadSafeCollection::new;
 ///     }
 /// }
@@ -35,7 +35,7 @@ import java.util.Collection;
 /// @see ThreadSafeClearContract
 /// @see ThreadSafeAddContract
 /// @since 1.0.0
-public interface ThreadSafeCollectionContract<E, C extends Collection<E>> extends CollectionContract<E, C>,
-        ThreadSafeClearContract<E, C>,
-        ThreadSafeAddContract<E, C> {
+public interface ThreadSafeCollectionContract<C extends Collection<E>, E> extends CollectionContract<C, E>,
+        ThreadSafeClearContract<C, E>,
+        ThreadSafeAddContract<C, E> {
 }

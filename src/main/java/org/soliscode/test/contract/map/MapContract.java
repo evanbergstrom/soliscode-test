@@ -24,7 +24,7 @@ import java.util.Map;
 /// ```java
 /// class MyMapContractTest implements MapContract<String, String, MyMap<String, String>> {
 ///     @Override
-///     public MapProvider<String, String, MyMap<String, String>> provider() {
+///     public MapProvider<String, String, MyMap<String, String>> objectProvider() {
 ///         return MyMap::new;
 ///     }
 /// }
@@ -40,30 +40,30 @@ import java.util.Map;
 /// @author evanbergstrom
 /// @see Map
 /// @since 1.0.0
-public interface MapContract<K, V, M extends Map<K, V>> extends ObjectContract<M>,
-        SizeContract<K, V, M>,
-        IsEmptyContract<K, V, M>,
-        ContainsKeyContract<K, V, M>,
-        ContainsValueContract<K, V, M>,
-        GetContract<K, V, M>,
-        PutContract<K, V, M>,
-        RemoveContract<K, V, M>,
-        PutAllContract<K, V, M>,
-        ClearContract<K, V, M>,
-        KeySetContract<K, V, M>,
-        ValuesContract<K, V, M>,
-        EntrySetContract<K, V, M>,
-        GetOrDefaultContract<K, V, M>,
-        ForEachContract<K, V, M>,
-        ReplaceAllContract<K, V, M>,
-        PutIfAbsentContract<K, V, M>,
-        RemoveTwoArgContract<K, V, M>,
-        ReplaceTwoArgContract<K, V, M>,
-        ReplaceThreeArgContract<K, V, M>,
-        ComputeIfAbsentContract<K, V, M>,
-        ComputeIfPresentContract<K, V, M>,
-        ComputeContract<K, V, M>,
-        MergeContract<K, V, M> {
+public interface MapContract<M extends Map<K, V>, K, V> extends ObjectContract<M>,
+        SizeContract<M, K, V>,
+        IsEmptyContract<M, K, V>,
+        ContainsKeyContract<M, K, V>,
+        ContainsValueContract<M, K, V>,
+        GetContract<M, K, V>,
+        PutContract<M, K, V>,
+        RemoveContract<M, K, V>,
+        PutAllContract<M, K, V>,
+        ClearContract<M, K, V>,
+        KeySetContract<M, K, V>,
+        ValuesContract<M, K, V>,
+        EntrySetContract<M, K, V>,
+        GetOrDefaultContract<M, K, V>,
+        ForEachContract<M, K, V>,
+        ReplaceAllContract<M, K, V>,
+        PutIfAbsentContract<M, K, V>,
+        RemoveTwoArgContract<M, K, V>,
+        ReplaceTwoArgContract<M, K, V>,
+        ReplaceThreeArgContract<M, K, V>,
+        ComputeIfAbsentContract<M, K, V>,
+        ComputeIfPresentContract<M, K, V>,
+        ComputeContract<M, K, V>,
+        MergeContract<M, K, V> {
 
     @Override
     boolean supportsMethod(InterfaceMethod method);

@@ -9,7 +9,7 @@ import org.soliscode.test.AbstractTest;
 import org.soliscode.test.InterfaceMethod;
 import org.soliscode.test.breakable.Break;
 import org.soliscode.test.breakable.BreakableQueue;
-import org.soliscode.test.contract.ContractTest;
+import org.soliscode.test.contract.AbstractContractTest;
 import org.soliscode.test.contract.DynamicContract;
 import org.soliscode.test.contract.dynamic.DynamicBrokenQueueContract;
 import org.soliscode.test.contract.support.WithIntegerElement;
@@ -22,7 +22,12 @@ import static org.soliscode.test.breakable.BreakableQueue.*;
 
 /// Tests for the [QueueContract] interface.
 @DisplayName("Tests for QueueContract class")
-public class QueueContractTest extends ContractTest<BreakableQueue<Integer>> {
+public class QueueContractTest extends AbstractContractTest<BreakableQueue<Integer>> {
+
+    /// Default constructor.
+    public QueueContractTest() {
+        super();
+    }
 
     /// Verifies that the tests all pass when testing a working Queue implementation.
     @Nested

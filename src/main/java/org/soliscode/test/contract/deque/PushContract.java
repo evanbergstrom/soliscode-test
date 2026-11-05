@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /// @author evanbergstrom
 /// @see Deque#push
 /// @since 1.0.0
-public interface PushContract<E, D extends Deque<E>> extends CollectionContractSupport<E, D> {
+public interface PushContract<D extends Deque<E>, E> extends CollectionContractSupport<D, E> {
 
     /// Tests that the [push][Deque#push] method correctly adds a single element to the front.
     @DisplayName("push(E) adds a single element to the front and updates size")

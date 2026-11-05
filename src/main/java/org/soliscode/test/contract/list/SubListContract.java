@@ -12,7 +12,7 @@ import java.util.List;
 /// @author evanbergstrom
 /// @since 1.0
 /// @see List#subList(int, int)
-public interface SubListContract<E, L extends List<E>> extends CollectionContractSupport<E, L> {
+public interface SubListContract<L extends List<E>, E> extends CollectionContractSupport<L, E> {
 
     // TODO: Implement tests for the List::subList method.
 }

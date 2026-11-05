@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /// ```java
 /// class MyListToArrayTest implements ListToArrayContract<String, MyList<String>> {
 ///     @Override
-///     public CollectionProvider<String, MyList<String>> provider() {
+///     public CollectionProvider<String, MyList<String>> objectProvider() {
 ///         return MyList::new;
 ///     }
 /// }
@@ -44,8 +44,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /// @author evanbergstrom
 /// @see List#toArray
 /// @since 1.0.0
-public interface ListToArrayContract<E, L extends List<E>>
-        extends ToArrayContract<E, L>, CollectionContractSupport<E, L> {
+public interface ListToArrayContract<L extends List<E>, E>
+        extends ToArrayContract<L, E>, CollectionContractSupport<L, E> {
 
 
     /// Tests that the [toArray()][List#toArray] method works for a collection with elements.

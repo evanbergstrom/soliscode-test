@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/// Tests for the `StringProvider` class. These tests verify that the provider correctly implements
+/// Tests for the `StringProvider` class. These tests verify that the objectProvider correctly implements
 /// all inherited interface contracts and provides proper String instances for testing purposes.
 ///
 /// @author evanbergstrom
@@ -20,7 +20,13 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Tests for StringProvider")
 public class StringProviderTest extends AbstractTest {
 
-    private final StringProvider provider = Providers.stringProvider();
+    private final StringProvider provider;
+
+    /// Default constructor.
+    public StringProviderTest() {
+        super();
+        provider = Providers.stringProvider();
+    }
 
     // Tests for ObjectProvider interface methods
 
@@ -239,7 +245,7 @@ public class StringProviderTest extends AbstractTest {
     @Test
     @DisplayName("Test createUniqueInstances method with size exceeding limit")
     public void testCreateUniqueInstancesExceedsLimit() {
-        // Create a mock provider with a smaller unique size limit for testing
+        // Create a mock objectProvider with a smaller unique size limit for testing
         StringProvider limitedProvider = new StringProvider() {
             @Override
             public long uniqueSizeLimit() {
@@ -385,11 +391,11 @@ public class StringProviderTest extends AbstractTest {
         assertSame(first, copied);
     }
 
-    /// Test that the provider follows all interface contracts properly.
+    /// Test that the objectProvider follows all interface contracts properly.
     @Test
-    @DisplayName("Test provider interface contracts")
+    @DisplayName("Test objectProvider interface contracts")
     public void testProviderContracts() {
-        // Test that the provider implements the expected interface
+        // Test that the objectProvider implements the expected interface
         assertInstanceOf(ObjectProvider.class, provider);
 
         // Test that generic type parameter is correctly specified
