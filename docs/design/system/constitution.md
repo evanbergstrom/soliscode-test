@@ -61,11 +61,13 @@ Contracts for `Object` (`equals`, `hashCode`, `toString`, `Serializable`), `Iter
 
 `ContractCoverageTest` covers 14 contracts: `Iterable`, `Collection`, `SequencedCollection`, `List`, `Set`, `SequencedSet`, `Queue`, `Deque`, `Map`, `SequencedMap`, `SortedMap`, `NavigableMap`, `ThreadSafeCollection` and `Serializable`. `ObjectContract` and `IntegerContract` are not in it. `SerializableContract` is run against a chosen few breaks, not each.
 
+Built by #8 and #51: the `preventNulls` wrappers refuse `null` through their bulk methods, and the `List` wrapper through its queries, list iterators, sub-lists and `replaceAll`.
+
 Built by #9: the `com.soliscode` coordinates and packages, the shared parent, JSpecify nullness in every package, ErrorProne and NullAway. Built by #10: Checkstyle passes on main and test code, every test method has a plain camelCase name and a `@DisplayName`, and the coverage check passes.
 
 ### 4.2 Designed
 - `CLEAR_IS_NOT_THREAD_SAFE` caught reliably, so that `ContractCoverageTest` can check it: #7.
-- Fixes: `preventNulls(Collection)` checks the wrong collection (#8); `ContentionCoordinator` yields on half the iterations, not every `yieldInterval` (#12).
+- Fixes: `ContentionCoordinator` yields on half the iterations, not every `yieldInterval` (#12).
 - Breakables and contracts typed with nullable elements (#13).
 
 The packages `contract.sortedset` and `contract.concurrentmap` exist with only a `package-info.java`; `contract.blockingqueue`, `contract.blockingdeque` and `contract.transferqueue` hold only their method enums.

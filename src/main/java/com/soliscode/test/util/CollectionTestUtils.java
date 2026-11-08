@@ -2,10 +2,14 @@ package com.soliscode.test.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Objects;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 import org.jspecify.annotations.Nullable;
@@ -176,10 +180,18 @@ public final class CollectionTestUtils {
     }
 
     /// Creates a list backed by the provided list that does not accept null values as elements.
-    /// The returned list will throw a NullPointerException when attempting to add, set, or
-    /// insert null values. This is useful for testing list implementations that should
-    /// not permit null values. Its `containsAll`, `addAll`, `removeAll` and `retainAll` throw a NullPointerException
-    /// when their argument has a null element, and otherwise act as the backing list does.
+    /// This is useful for testing list implementations that should not permit null values.
+    ///
+    /// The returned list throws a NullPointerException:
+    /// - from `add`, `add(int, Object)`, `set`, `contains`, `remove(Object)`, `indexOf` and `lastIndexOf` given null;
+    /// - from `containsAll`, both `addAll`s, `removeAll` and `retainAll` given an argument with a null element;
+    /// - from `replaceAll` when the operator returns null;
+    /// - from the `add` and `set` of its list iterators given null.
+    ///
+    /// Its `subList` returns the backing list's view, wrapped in the same way. Otherwise the list, its list iterators
+    /// and its sub-lists act as the backing list and its own do; `sort` sorts the backing list as it sorts itself,
+    /// even when it already holds a null. Its `reversed()` is [List]'s default view of this list: its writes go
+    /// through this list and refuse null, but its `remove(Object)`, `removeAll` and `retainAll` do not check for null.
     ///
     /// @param <E> the element type of the list
     /// @param c the backing list
@@ -235,6 +247,9 @@ public final class CollectionTestUtils {
 
             @Override
             public boolean remove(final Object o) {
+                if (o == null) {
+                    throw new NullPointerException();
+                }
                 return list.remove(o);
             }
 
@@ -317,27 +332,55 @@ public final class CollectionTestUtils {
 
             @Override
             public int indexOf(final Object o) {
+                if (o == null) {
+                    throw new NullPointerException();
+                }
                 return list.indexOf(o);
             }
 
             @Override
             public int lastIndexOf(final Object o) {
+                if (o == null) {
+                    throw new NullPointerException();
+                }
                 return list.lastIndexOf(o);
             }
 
             @Override
             public ListIterator<E> listIterator() {
-                return list.listIterator();
+                return new PreventNullsListIterator<>(list.listIterator());
             }
 
             @Override
             public ListIterator<E> listIterator(final int index) {
-                return list.listIterator(index);
+                return new PreventNullsListIterator<>(list.listIterator(index));
             }
 
+            /// Returns the backing list's view, wrapped so that it refuses `null` as this list does.
             @Override
             public List<E> subList(final int fromIndex, final int toIndex) {
-                return list.subList(fromIndex, toIndex);
+                return new PreventNullsList<>(list.subList(fromIndex, toIndex));
+            }
+
+            /// Replaces each element with the operator's result, throwing a NullPointerException when that is null.
+            /// What a null result leaves replaced is up to the backing list's `replaceAll`.
+            @Override
+            public void replaceAll(final UnaryOperator<E> operator) {
+                Objects.requireNonNull(operator);
+                list.replaceAll(e -> {
+                    final E r = operator.apply(e);
+                    if (r == null) {
+                        throw new NullPointerException();
+                    }
+                    return r;
+                });
+            }
+
+            /// Sorts the backing list, as it sorts itself. `List`'s default would write the elements back through
+            /// this list's iterator, which would refuse a null that the backing list already holds.
+            @Override
+            public void sort(final @Nullable Comparator<? super E> c) {
+                list.sort(c);
             }
 
             @Override
@@ -355,6 +398,67 @@ public final class CollectionTestUtils {
         @Override
         public int hashCode() {
             return list.hashCode();
+        }
+    }
+
+    /// A list iterator of a `preventNulls` list: its `add` and `set` throw a NullPointerException for null, and
+    /// otherwise it acts as the backing list's iterator does.
+    private record PreventNullsListIterator<E>(ListIterator<E> iterator) implements ListIterator<E> {
+
+        @Override
+        public boolean hasNext() {
+            return iterator.hasNext();
+        }
+
+        @Override
+        public E next() {
+            return iterator.next();
+        }
+
+        @Override
+        public boolean hasPrevious() {
+            return iterator.hasPrevious();
+        }
+
+        @Override
+        public E previous() {
+            return iterator.previous();
+        }
+
+        @Override
+        public int nextIndex() {
+            return iterator.nextIndex();
+        }
+
+        @Override
+        public int previousIndex() {
+            return iterator.previousIndex();
+        }
+
+        @Override
+        public void remove() {
+            iterator.remove();
+        }
+
+        @Override
+        public void set(final E e) {
+            if (e == null) {
+                throw new NullPointerException();
+            }
+            iterator.set(e);
+        }
+
+        @Override
+        public void add(final E e) {
+            if (e == null) {
+                throw new NullPointerException();
+            }
+            iterator.add(e);
+        }
+
+        @Override
+        public void forEachRemaining(final Consumer<? super E> action) {
+            iterator.forEachRemaining(action);
         }
     }
 

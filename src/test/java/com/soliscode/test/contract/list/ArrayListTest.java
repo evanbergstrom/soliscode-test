@@ -102,7 +102,7 @@ public class ArrayListTest extends AbstractTest
     ///
     /// This nested test class validates that List implementations correctly handle null rejection
     /// by throwing {@link NullPointerException} when null values are added. The wrapper is applied
-    /// using {@link CollectionTestUtils#preventNulls(Collection)} which decorates the ArrayList
+    /// using {@link CollectionTestUtils#preventNulls(List)} which decorates the ArrayList
     /// to reject nulls.
     ///
     /// The test implements {@link DoesNotPermitNulls} to inform the contract framework

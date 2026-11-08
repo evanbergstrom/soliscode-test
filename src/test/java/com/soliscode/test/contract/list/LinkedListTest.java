@@ -110,7 +110,7 @@ public class LinkedListTest extends AbstractTest
     ///
     /// This nested test class validates that List implementations correctly handle null rejection
     /// by throwing [NullPointerException] when null values are added. The wrapper is applied
-    /// using [CollectionTestUtils#preventNulls(Collection)] which decorates the LinkedList
+    /// using [CollectionTestUtils#preventNulls(List)] which decorates the LinkedList
     /// to reject nulls.
     ///
     /// The test implements [DoesNotPermitNulls] to inform the contract framework

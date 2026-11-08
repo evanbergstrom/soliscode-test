@@ -88,13 +88,22 @@ public interface IndexOfContract<L extends List<E>, E> extends CollectionContrac
 
     /// Tests that the [indexOf][List#indexOf] method works with a null value.
     ///
+    /// A list that permits null returns -1. A list that does not may instead throw [NullPointerException]:
+    /// [List#indexOf] makes that exception optional (T-0051).
+    ///
     /// @see List#indexOf
     /// @throws org.opentest4j.AssertionFailedError if the test fails.
     /// @since 1.0.0
     @Test
-    @DisplayName("indexOf(Object) returns -1 for null value when not present")
+    @DisplayName("indexOf(null) returns -1 when not present, or throws NPE for a list that refuses null")
     default void indexOfWithNullValueReturnsMinusOne() {
         List<E> list = provider().createInstanceWithUniqueElements();
-        assertEquals(-1, list.indexOf(null));
+        try {
+            assertEquals(-1, list.indexOf(null));
+        } catch (final NullPointerException e) {
+            if (permitNulls()) {
+                throw e;
+            }
+        }
     }
 }
