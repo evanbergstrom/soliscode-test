@@ -101,7 +101,7 @@ Built (#1, #4, #6).
 
 **A provider** makes instances. `ObjectProvider<T>` makes values (a default one, one from an integer seed, unique ones, a copy that is equal but not identical); `CollectionProvider` and `MapProvider` make the class under test, empty or filled from elements.
 
-**`ContractCoverageTest`** shows that each contract can pass and fail (constitution, goal 1). For each covered contract, `ContractRuns` runs every test method, outside JUnit, against a contract instance on a JDK class, then on the unbroken breakable, then on the breakable with each of its breaks in turn, each applied alone through the builder, with the configuration a break needs to show (a method not supported, incompatible types refused). A test method that hangs is stopped after 10 seconds (60 for a concurrency test), and a concurrency test is tried up to 5 times before a break is taken to be missed. Thread-safety breaks are checked by `ThreadSafeCollectionContract` only.
+**`ContractCoverageTest`** shows that each contract can pass and fail (constitution, goal 4). For each covered contract, `ContractRuns` runs every test method, outside JUnit, against a contract instance on a JDK class, then on the unbroken breakable, then on the breakable with each of its breaks in turn, each applied alone through the builder, with the configuration a break needs to show (a method not supported, incompatible types refused). A test method that hangs is stopped after 10 seconds (60 for a concurrency test), and a concurrency test is tried up to 5 times before a break is taken to be missed. Thread-safety breaks are checked by `ThreadSafeCollectionContract` only.
 
 ## 5. Threading
 

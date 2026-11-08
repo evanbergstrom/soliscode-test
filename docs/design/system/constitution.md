@@ -35,10 +35,24 @@ It replaces `org.soliscode:soliscode-test` 1.0.x (Java 23, JUnit 5, semantic-rel
 
 Each goal has a "strong means" criterion: a test or a measurement that shows it met. Section 9 gives each criterion's state.
 
-1. **Each contract can pass and can fail.** A contract that never fails tests nothing.
+### 3.1 What the library is for
+
+The user's three goals for the library (2026-11-08, #29):
+
+1. **Test methods that JUnit lacks.** Assertions that are generally useful in tests but missing from JUnit: on collections, strings, ordering, exceptions, actions on elements and deadlocks.
+   Strong means: each assertion has tests that show it passing and failing, and that check its failure message. Partly built: the collection, ordering, exception, action and deadlock assertions have tests that pass and fail and check their messages (the collection assertions' since #15 and #16). `AssertStringContains`, `AssertStringContainsInOrder` and `ArrayAssertions` have no tests of their own, and `AssertContains`'s message overloads are not checked on failure: #49.
+2. **Test suites for the JDK's interfaces.** A contract for each JDK interface a test suite is useful for, which tests any class that implements it.
+   Which interfaces: every collection interface, that is `Iterable`, and `Collection`, `Map` and each interface of `java.util` and `java.util.concurrent` that extends them; and the iterator, spliterator, entry and stream types they return (`Iterator`, `ListIterator`, `Spliterator`, `Map.Entry`, `Stream`; the primitive streams are not chosen). Beyond the collections, an interface can get a suite when its Javadoc states behaviour a test can check beyond its method signatures, in order of how commonly classes implement it. An interface whose Javadoc states nothing more than its signatures gets none: the `java.util.function` interfaces, `Runnable`, `RandomAccess`. Which interfaces are chosen is the user's decision, and each chosen interface has a task.
+   Strong means: each chosen interface has a contract that `ContractCoverageTest` checks (goal 4). Partly built: section 4.1 lists the contracts there are, and section 4.2 the tasks for the rest.
+3. **Thread-safety testing.** Utilities for testing code under concurrent use, and test suites for what the JDK says is thread-safe.
+   Strong means: `ContentionCoordinator` and `AssertNoDeadlocks` have tests; and each chosen interface whose Javadoc states thread safety or atomicity (the `java.util.concurrent` collections, `Lock`, `ExecutorService`, `Future`) has a thread-safety contract, bounded in time and with no `Thread.sleep`, that passes against a JDK class and fails for a thread-unsafe break. Partly built: the utilities have tests (`ContentionCoordinatorTest`, `AssertNoDeadlocksTest`), and #12 fixes a `ContentionCoordinator` fault; `ThreadSafeCollectionContract` is built (#5, #6; `CLEAR_IS_NOT_THREAD_SAFE` waits on #7); the rest by #32–#36 and #44–#46.
+
+### 3.2 Quality goals
+
+4. **Each contract can pass and can fail.** A contract that never fails tests nothing.
    Strong means: each interface contract passes against a JDK class and against its unbroken breakable, and fails against the breakable with each of its breaks, applied one at a time. `ContractCoverageTest` checks this (#6). A break it leaves unchecked has a reason in `uncheckedReason`, which says why no test could see it or which other contract checks it. Partly built: see section 4.
-2. **Usable by any SolisCode library.** Strong means: its only compile-scope dependencies are JUnit 6 (Jupiter API, params and engine, Platform commons), OpenTest4J and JSpecify, at the parent's versions; it depends on no other SolisCode library; and a release is installed into `~/.m2` as `com.soliscode:soliscode-test:0.1.N`. The dependencies: Built (#9). The release: Built (#3): `0.1.1`, tagged `v0.1.1`, made by `release.sh`.
-3. **The same gates as every SolisCode library.** Strong means: every gate the parent gives (section 7) runs and passes, with no gate turned off or lowered. Built (#10).
+5. **Usable by any SolisCode library.** Strong means: its only compile-scope dependencies are JUnit 6 (Jupiter API, params and engine, Platform commons), OpenTest4J and JSpecify, at the parent's versions; it depends on no other SolisCode library; and a release is installed into `~/.m2` as `com.soliscode:soliscode-test:0.1.N`. The dependencies: Built (#9). The release: Built (#3): `0.1.1`, tagged `v0.1.1`, made by `release.sh`.
+6. **The same gates as every SolisCode library.** Strong means: every gate the parent gives (section 7) runs and passes, with no gate turned off or lowered. Built (#10).
 
 ## 4. Scope
 
@@ -54,7 +68,11 @@ Built by #9: the `com.soliscode` coordinates and packages, the shared parent, JS
 - Fixes: `preventNulls(Collection)` checks the wrong collection (#8); `ContentionCoordinator` yields on half the iterations, not every `yieldInterval` (#12).
 - Breakables and contracts typed with nullable elements (#13).
 
-The packages `contract.sortedset` and `contract.concurrentmap` exist with only a `package-info.java`; `contract.blockingqueue`, `contract.blockingdeque` and `contract.transferqueue` hold only their method enums. No task is filed yet for their contracts.
+The packages `contract.sortedset` and `contract.concurrentmap` exist with only a `package-info.java`; `contract.blockingqueue`, `contract.blockingdeque` and `contract.transferqueue` hold only their method enums.
+
+Contracts for the interfaces chosen under goal 2 (the user's decision, 2026-11-08, #29), each with a task:
+- The collection interfaces without one: `SortedSet` (#30), `NavigableSet` (#31), `BlockingQueue` (#32), `BlockingDeque` (#33), `TransferQueue` (#34), `ConcurrentMap` (#35), `ConcurrentNavigableMap` (#36); and the types they return, `Iterator` and `ListIterator` (#37), `Spliterator` (#38), `Map.Entry` (#39), `Stream` (#50).
+- Other interfaces, in order of how commonly classes implement them: `Comparable` (#40), `AutoCloseable` and `Closeable` (#41), `Comparator` (#42), `CharSequence` (#43), `Future` (#44), `ExecutorService` (#45), `Lock` and `ReadWriteLock` (#46), `Collector` (#47), `Appendable` (#48).
 
 ### 4.3 Not goals
 - A test runner or engine of its own: the contracts run on JUnit's.
@@ -104,7 +122,10 @@ Gates fail the build like a compile error; "the tests pass" is no substitute. Th
 | Criterion | State |
 |-----------|-------|
 | Every test passes | Yes (#9) |
-| Goal 1: each contract in `ContractCoverageTest` passes against a JDK class and its unbroken breakable, and fails for each break, an unchecked break having a reason | Yes for the 14 contracts it covers (#6); `ObjectContract` and `IntegerContract` are not covered, and `CLEAR_IS_NOT_THREAD_SAFE` waits on #7 |
-| Goal 2: only JUnit 6, OpenTest4J and JSpecify at compile scope | Yes (#9) |
-| Goal 2: `0.1.1` installed into `~/.m2` from a tag | Yes (#3) |
-| Goal 3: every gate in section 7 passes | Yes (#10) |
+| Goal 1: each assertion has tests that show it passing and failing, and check its message | Partly (#15, #16); the string and array assertions and `AssertContains`'s messages are #49 |
+| Goal 2: each chosen interface has a contract that `ContractCoverageTest` checks | 12 of the collection interfaces, with `Serializable` (#6); the rest are #30–#48 and #50 |
+| Goal 3: the concurrency utilities have tests, and each chosen thread-safe interface a thread-safety contract that can fail | The utilities have tests (#12 fixes a fault); `ThreadSafeCollectionContract` (#6), `CLEAR_IS_NOT_THREAD_SAFE` waiting on #7; the rest are #32–#36 and #44–#46 |
+| Goal 4: each contract in `ContractCoverageTest` passes against a JDK class and its unbroken breakable, and fails for each break, an unchecked break having a reason | Yes for the 14 contracts it covers (#6); `ObjectContract` and `IntegerContract` are not covered, and `CLEAR_IS_NOT_THREAD_SAFE` waits on #7 |
+| Goal 5: only JUnit 6, OpenTest4J and JSpecify at compile scope | Yes (#9) |
+| Goal 5: `0.1.1` installed into `~/.m2` from a tag | Yes (#3) |
+| Goal 6: every gate in section 7 passes | Yes (#10) |

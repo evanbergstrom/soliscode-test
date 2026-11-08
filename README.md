@@ -2,8 +2,15 @@
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](./LICENSE.txt)
 
-SolisCode Test is a Java library that provides tests of classes that implement the standard
-interfaces in the JDK: the collection and map interfaces, and `Object`'s methods.
+SolisCode Test is a Java library for JUnit 6 with three goals:
+
+1. **Test methods JUnit lacks.** Assertions that are useful in many tests but missing from JUnit: on collections,
+   strings, ordering, exceptions, actions on elements and deadlocks.
+2. **Test suites for the JDK's interfaces.** A ready-made suite of tests (a *contract*) for each JDK interface that a
+   suite is useful for, which tests any class that implements it. Every collection interface gets one; other interfaces
+   are added in order of how commonly classes implement them.
+3. **Thread-safety testing.** Utilities for running code on many threads at once and checking it for deadlocks, and
+   suites that test what the JDK says is thread-safe.
 
 This library is designed to work exclusively with JUnit 6, and requires it at compile time. It is meant to be used in
 the test scope, unless it is being used by another library that is expanding its functionality to interfaces outside
@@ -12,7 +19,10 @@ the JDK.
 This library provides support for:\
 - **Contracts** - Classes that test the functionality of individual methods in the standard interfaces.
 - **Interface Restriction** - Wrapper classes that restrict the methods of an object to only those in an interface.
-- **Assertions** - Assertions that help test collection methods.
+- **Assertions** - Assertions JUnit lacks: on collections, strings, ordering, exceptions, actions on elements and
+  deadlocks.
+- **Concurrency support** - `ContentionCoordinator`, which runs operations on one object from many threads at once,
+  and `AssertNoDeadlocks`.
 - **Providers** - Provider classes that produce elements for collection tests.
 - **Breakables** - Implementations of the standard collection classes that can be programmatically broken in various ways.
 
