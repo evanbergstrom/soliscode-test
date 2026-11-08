@@ -1,0 +1,285 @@
+/*
+ * Copyright 2024 Evan Bergstrom
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.soliscode.test.provider;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
+
+import com.soliscode.test.util.RecordingSupplier;
+
+/// Provides [Object] instances for use in testing.
+///
+/// @implSpec
+/// Implementations of this interface must provide two methods:
+/// - [createInstance(int)][#createInstance(int)]
+/// - [copyInstance()][#copyInstance(T)]
+///
+/// @param <T> the type being tested.
+/// @author evanbergstrom
+/// @since 1.0.0
+public interface ObjectProvider<T> {
+
+    /// How many candidates ({@value}) [#createInstanceNotIn] tries before it gives up.
+    int NOT_IN_ATTEMPTS = 10_000;
+
+    /// Creates a single instance of class being tested using the default constructor.
+    /// @return  an instance of class.
+    T defaultInstance();
+
+    /// Creates a single instance of class being tested based upon an integer seed value.
+    ///
+    /// @implSpec
+    /// Calls to this method with different seed values should return objects with different values.
+    ///
+    /// @param   seed an integer seed to use to create and instance of the class.
+    /// @return  an instance of class.
+    T createInstance(long seed);
+
+    /// Copies an instance of the class being tested. The copy will satisfy equality semantics with the original
+    /// instance being copied.
+    ///
+    /// @implSpec
+    /// The copy of the object should satisfy the equality semantics with the original object (_i.e._ for `o1` and
+    /// `o2`, `o1.equals(o2)` should return `true` and `o1.hashCode() == o2.hashCode()` should evaluate to `true`.
+    ///
+    /// @param      other the instance to copy.
+    /// @return     a copy of the instance.
+    /// @throws     NullPointerException if the argument is a null value.
+    /// @complexity _constant time_.
+    T copyInstance(T other);
+
+    /// Creates a single instance of class being tested.
+    ///
+    /// @implSpec
+    /// Each call must return a valid object instance, but there is no requirement that successive calls to the method
+    /// return instances that satisfy equality semantics, or that they be unique. The default implementation is the
+    /// same as calling `createInstance(0)`.
+    ///
+    /// @return     an instance of class.
+    /// @complexity _constant time_.
+    default T createInstance() {
+        return createInstance(0);
+    }
+
+    /// Creates a new instance of type `T` that is guaranteed not to be present
+    /// in the provided collection of excluded instances.
+    /// This method uses a supplier to generate unique instances of type `T`,
+    /// repeatedly generating a new instance until one is found that does not exist
+    /// in the provided collection.
+    ///
+    /// @param excluded The collection of instances of type `T` to exclude
+    ///                 from the result. The new instance is guaranteed to not be
+    ///                 contained within this collection. Must not be `null`.
+    /// @return A new, non-`null` instance of type `T` that is not present
+    ///         in the `excluded` collection.
+    /// @throws AssertionError If no instance outside `excluded` is found in [#NOT_IN_ATTEMPTS] tries, as when the
+    ///                        collection's `contains(Object)` always returns `true`.
+    default T createInstanceNotIn(final Collection<T> excluded) {
+        Supplier<T> supplier = uniqueInstanceSupplier();
+        T notPresent = supplier.get();
+        int attempts = 1;
+        while (excluded.contains(notPresent)) {
+            if (attempts++ >= NOT_IN_ATTEMPTS) {
+                throw new AssertionError("no instance found that the collection does not contain after "
+                        + NOT_IN_ATTEMPTS + " attempts: its contains(Object) may be broken");
+            }
+            notPresent = supplier.get();
+        }
+        return notPresent;
+    }
+
+    /// Returns the number of unique instances of the class that can be created.
+    ///
+    /// @implSpec
+    /// The default implementation returns [Integer#MAX_VALUE]. This should be overridden for enumerations or any
+    /// classes that have a bounded number of unique values.
+    ///
+    /// @return     the maximum number of unique instances that can be created.
+    /// @complexity _constant time_.
+    @SuppressWarnings("SameReturnValue")
+    default long uniqueSizeLimit() {
+        return Long.MAX_VALUE;
+    }
+
+    /// Creates a [Supplier] that will generate equal instances of the class being provided.
+    ///
+    /// @implSpec
+    /// The supplier should produce equal instances of the class for each the call to `get()`.
+    ///
+    /// @implNote
+    /// The default implementation will call `createInstance(0)` to create each instance.
+    ///
+    /// @return     A supplier the returns instances of the class that are equal.
+    /// @complexity _constant time_.
+    default Supplier<T> equalInstanceSupplier() {
+        final ObjectProvider<T> provider = this;
+        return new Supplier<>() {
+            private final T orig = provider.createInstance(0);
+
+            @Override
+            public T get() {
+                return provider.copyInstance(orig);
+            }
+        };
+    }
+
+    /// Creates a [Supplier] that will generate unique instances of the class being provided. Uniqueness will be
+    /// guaranteed for all instances created by this supplier. Instances may not be unique from multiple suppliers.
+    ///
+    /// @implSpec
+    /// The supplier should produce unique instances of the class for each the call to `get()`, and it should be
+    /// callable
+    /// a number of times up to the value returned by `uniqueSizeLimit()`. If it is called more that `uniqueSizeLimit`
+    /// times, it should throw an [IllegalStateException].
+    ///
+    /// @implNote
+    /// The default implementation will call `createInstance(int)` with successive integers starting with 0.
+    ///
+    /// @return A supplier the returns instances of the class that are unique.
+    /// @throws IllegalStateException if `get` is called on the supplier more than `uniqueSizeLimit` times.
+    /// @complexity _constant time_.
+    default RecordingSupplier<T> uniqueInstanceSupplier() {
+        return uniqueInstanceSupplier(0);
+    }
+
+    /// Creates a [Supplier] that will generate unique instances of the class being provided. Uniqueness will be
+    /// guaranteed for all instances created by this supplier. Instances may not be unique from multiple suppliers.
+    ///
+    /// @implSpec
+    /// The supplier should produce unique instances of the class for each the call to `get()`, and it should be
+    /// callable a number of times up to the value returned by `uniqueSizeLimit()`. If it is called more that
+    /// `uniqueSizeLimit` times, it should throw an [IllegalStateException].
+    ///
+    /// @implNote
+    /// The default implementation will call `createInstance(int)` with successive integers starting with 0.
+    ///
+    /// param seed the initial seed to use to crate the first instance.
+    /// @param seed the seed to use to create elements.
+    /// @return A supplier the returns instances of the class that are unique.
+    /// @throws IllegalStateException if `get` is called on the supplier more than `uniqueSizeLimit` times.
+    /// @complexity _constant time_.
+    default RecordingSupplier<T> uniqueInstanceSupplier(final long seed) {
+        final ObjectProvider<T> provider = this;
+        return new RecordingSupplier<>() {
+            private final AtomicLong i = new AtomicLong(seed);
+            private final List<T> recorded = Collections.synchronizedList(new ArrayList<>());
+
+            @Override
+            public T get() {
+                if (i.get() >= uniqueSizeLimit()) {
+                    throw new IllegalStateException("cannot create " + i + " unique instances, limit is "
+                            + uniqueSizeLimit());
+                }
+                T instance = provider.createInstance(i.getAndIncrement());
+                recorded.add(instance);
+                return instance;
+            }
+
+            @Override
+            public List<T> recorded() {
+                return recorded;
+            }
+        };
+    }
+
+    /// Creates a [Supplier] that will generate random instances of the class being provided. This should be used where
+    /// the individual values of the instances is not important, such here we are testing for performance of some part
+    /// of the implementation, but where creating instances with successive seed values might bias the algorithm (_e.g._
+    /// hash code distribution). In most cases, the methods {@link #uniqueInstanceSupplier()} should be
+    /// preferred so that the test data is stable across executions.
+    ///
+    /// @implSpec
+    /// The supplier should produce random instances of the class for each the call to `get()`. The order of the objects
+    /// created should be stable across instances of the supplier.
+    ///
+    /// @implNote
+    /// The default implementation will call `createInstance(int)` with random integers between 0 and the value returned
+    /// by `upperUniqueLimit()`.
+    ///
+    /// @return A supplier the returns random instances of the class.
+    default RecordingSupplier<T> randomInstanceSupplier() {
+        final ObjectProvider<T> provider = this;
+        return new RecordingSupplier<>() {
+            private final Random r = new Random();
+            private final List<T> recorded = Collections.synchronizedList(new ArrayList<>());
+
+            @Override
+            public T get() {
+                T instance = provider.createInstance(r.nextLong(Long.MAX_VALUE));
+                recorded.add(instance);
+                return instance;
+            }
+
+            @Override
+            public List<T> recorded() {
+                return recorded;
+            }
+        };
+    }
+
+    /// Creates s list of instances that are equal to each other.
+    ///
+    /// @param size The number of equal instances to create.
+    /// @return A list of equal instances.
+    /// @complexity _linear time_ based upon the number of instance (the `size` argument).
+    default List<T> createEqualObjects(final int size) {
+        return Stream.generate(equalInstanceSupplier()).limit(size).toList();
+    }
+
+    /// Creates multiple instances of class being tested with unique values.
+    ///
+    /// @param size the number of instances to create.
+    /// @return a list of the created instances.
+    /// @throws IllegalArgumentException if size is greater than `uniqueSizeLimit()`
+    /// @complexity _linear time_ based upon the number of instance (the `size` argument).
+    default List<T> createUniqueInstances(final int size) {
+        return createUniqueInstances(size, 0);
+    }
+
+    /// Creates multiple instances of class being tested with unique values.
+    ///
+    /// @param size the number of instances to create.
+    /// @param seed the seed to use to create elements.
+    /// @return a list of the created instances.
+    /// @throws IllegalArgumentException if size is greater than `uniqueSizeLimit()`
+    /// @complexity _linear time_ based upon the number of instance (the `size` argument).
+    default List<T> createUniqueInstances(final int size, final long seed) {
+        if (size > uniqueSizeLimit()) {
+            throw new IllegalArgumentException("cannot create " + size + " unique instances, limit is "
+                    + uniqueSizeLimit());
+        }
+        return new ArrayList<>(Stream.generate(uniqueInstanceSupplier(seed)).limit(size).toList());
+    }
+
+    /// Creates multiple instances of class being tested with random values. This should be used where the individual
+    /// values of the instances is not important, such as here we are testing for performance of some part of the
+    /// implementation (_e.g._ hash code distribution). In most cases, the method {@link #createUniqueInstances(int)}
+    /// should be preferred so that the test data is stable across executions.
+    ///
+    /// @param size the number of instances to create.
+    /// @return a list of the created instances.
+    /// @complexity _linear time_ based upon the number of instance (the `size` argument).
+    default List<T> createRandomInstances(final int size) {
+        return new ArrayList<>(Stream.generate(randomInstanceSupplier()).limit(size).toList());
+    }
+}

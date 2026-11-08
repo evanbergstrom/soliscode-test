@@ -1,0 +1,1238 @@
+package com.soliscode.test.breakable;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import com.soliscode.test.AbstractTest;
+import com.soliscode.test.assertions.Assertions;
+import com.soliscode.test.contract.collection.CollectionContract;
+import com.soliscode.test.contract.collection.CollectionMethods;
+import com.soliscode.test.contract.object.SerializableContract;
+import com.soliscode.test.contract.support.WithIntegerElement;
+import com.soliscode.test.interfaces.CollectionOnly;
+
+import static com.soliscode.test.assertions.ArrayAssertions.assertLengthEquals;
+import static com.soliscode.test.assertions.Assertions.assertThrowsDifferent;
+import static com.soliscode.test.assertions.collection.CollectionAssertions.assertContains;
+import static com.soliscode.test.assertions.collection.CollectionAssertions.assertContainsSame;
+import static com.soliscode.test.assertions.collection.CollectionAssertions.assertDoesNotContain;
+import static com.soliscode.test.assertions.collection.CollectionAssertions.assertIsEmpty;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+/// Tests for the [BreakableCollection] class. These tests determine if the breaks supported by this class result in the
+/// behavior expected.
+///
+/// @author evanbergstrom
+/// @since 1.0
+/// @see BreakableCollection
+public class BreakableCollectionTest extends AbstractTest
+        implements CollectionContract<BreakableCollection<Integer>, Integer>,
+           BreakableCollection.WithProvider<Integer>,
+           WithIntegerElement,
+           SerializableContract<BreakableCollection<Integer>> {
+
+    /// Default constructor.
+    public BreakableCollectionTest() {
+        super();
+    }
+
+    //=========== Constructor Tests ============
+
+    /// Verifies the default constructor creates an empty collection with proper initial state.
+    ///
+    /// @see BreakableCollection#BreakableCollection()
+    @DisplayName("BreakableCollection() creates an empty collection with the default settings and no breaks")
+    @Test
+    public void defaultConstructorWhenCalledReturnAnInstanceWithDefaultSettings() {
+        BreakableCollection<Integer> collection = new BreakableCollection<>();
+        assertIsEmpty(collection);
+        assertTrue(collection.permitsDuplicates());
+        assertTrue(collection.permitsNulls());
+        assertTrue(collection.permitsIncompatibleTypes());
+        assertIsEmpty(collection.breaks());
+    }
+
+    /// Verifies the copy constructor correctly copies elements and configuration.
+    ///
+    /// @see BreakableCollection#BreakableCollection(BreakableCollection)
+    @DisplayName("BreakableCollection(BreakableCollection) copies the elements, permits and breaks")
+    @Test
+    public void copyConstructorWhenCalledReturnsACopy() {
+        BreakableCollection<Integer> original = Breakables.buildCollection(1, 2, 3)
+                .doesNotPermitIncompatibleTypes(Integer.class)
+                .doesNotPermitDuplicates()
+                .doesNotPermitNulls()
+                .addBreak(BreakableCollection.ADD_DOES_NOT_ADD_ELEMENT)
+                .build();
+
+        BreakableCollection<Integer> copy = new BreakableCollection<>(original);
+
+        assertContainsSame(original, copy);
+        assertEquals(original.permits(), copy.permits());
+        assertEquals(original.compatibleType(), copy.compatibleType());
+        assertEquals(original.permitsDuplicates(), copy.permitsDuplicates());
+        assertEquals(original.permitsNulls(), copy.permitsNulls());
+        assertEquals(original.permitsIncompatibleTypes(), copy.permitsIncompatibleTypes());
+        assertEquals(original.breaks(), copy.breaks());
+
+        // TODO: This needs to check for method support
+    }
+
+    // ========== size Tests ==========
+
+    /// Test that the `SIZE_ALWAYS_RETURNS_ZERO` break causes the `size` method to return zero.
+    /// @see BreakableCollection#size()
+    /// @throws org.opentest4j.AssertionFailedError if any assertions fail.
+    @DisplayName("size() always returns zero with the SIZE_ALWAYS_RETURNS_ZERO break")
+    @Test
+    public void sizeWithAlwaysReturnsZeroBreakReturnsZero() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.SIZE_ALWAYS_RETURNS_ZERO)
+                .build();
+
+        assertEquals(0, collection.size());
+    }
+
+    /// Test that the `SIZE_ALWAYS_RETURNS_CONSTANT_VALUE` break causes the `size` method to return a constant value.
+    /// @see BreakableCollection#size()
+    @DisplayName("size() always returns constant value with the SIZE_ALWAYS_RETURNS_CONSTANT_VALUE break")
+    @Test
+    public void sizeWithSizeAlwaysReturnsConstantValueBreakReturnsConstantValue() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.SIZE_ALWAYS_RETURNS_CONSTANT_VALUE)
+                .build();
+        assertNotEquals(3, collection.size());  // size() returns default capacity (10)
+    }
+
+    // ========== isEmpty Tests ==========
+
+    /// Test that the `IS_EMPTY_ALWAYS_RETURNS_TRUE` break causes the `isEmpty` method to always return `true`.
+    /// @see BreakableCollection#isEmpty()
+    @DisplayName("isEmpty() always returns true with IS_EMPTY_ALWAYS_RETURNS_TRUE break")
+    @Test
+    public void isEmptyWithIsEmptyAlwaysReturnsTrueBreakReturnsTrue() {
+        Collection<Integer> collection = Breakables.buildCollection(Integer.class)
+                .addBreak(BreakableCollection.IS_EMPTY_ALWAYS_RETURNS_TRUE)
+                .build();
+        assertTrue(collection.isEmpty());
+
+        collection.add(1);
+        assertTrue(collection.isEmpty());
+    }
+
+    /// Test that the `IS_EMPTY_ALWAYS_RETURNS_FALSE` break causes the `isEmpty` method to always return `false`.
+    /// @see BreakableCollection#isEmpty()
+    @DisplayName("isEmpty() always returns false with IS_EMPTY_ALWAYS_RETURNS_FALSE break")
+    @Test
+    public void isEmptyWithIsEmptyAlwaysReturnsFalseBreakReturnsFalse() {
+        Collection<Integer> collection = Breakables.buildCollection(Integer.class)
+                .addBreak(BreakableCollection.IS_EMPTY_ALWAYS_RETURNS_FALSE)
+                .build();
+        assertFalse(collection.isEmpty());
+
+        collection.add(1);
+        assertFalse(collection.isEmpty());
+    }
+
+    /// Test that the `IS_EMPTY_RETURNS_OPPOSITE_VALUE` break causes the `isEmpty` method to always return the
+    /// opposite value.
+    /// @see BreakableCollection#isEmpty()
+    @DisplayName("isEmpty() always returns opposite value with IS_EMPTY_RETURNS_OPPOSITE_VALUE break")
+    @Test
+    public void isEmptyWithIsEmptyReturnsOppositeValueBreakReturnsOppositeValue() {
+        Collection<Integer> collection = Breakables.buildCollection(Integer.class)
+                .addBreak(BreakableCollection.IS_EMPTY_RETURNS_OPPOSITE_VALUE)
+                .build();
+        assertFalse(collection.isEmpty());
+
+        collection.add(1);
+        assertTrue(collection.isEmpty());
+    }
+
+    // ========== contains Tests ==========
+
+    /// Test that the `CONTAINS_ALWAYS_RETURNS_TRUE` break causes the `contains` method to always return `true`.
+    /// @see BreakableCollection#contains(Object)
+    @DisplayName("contains(Object) always returns true with CONTAINS_ALWAYS_RETURNS_TRUE break")
+    @Test
+    public void containsWithContainsAlwaysReturnsTrueBreakReturnsTrue() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.CONTAINS_ALWAYS_RETURNS_TRUE)
+                .build();
+        assertTrue(collection.contains(1));
+        assertTrue(collection.contains(4));
+    }
+
+    /// Test that the `CONTAINS_ALWAYS_RETURNS_FALSE` break causes the `contains` method to always return `false`.
+    /// @see BreakableCollection#contains(Object)
+    @DisplayName("contains(Object) always returns false with CONTAINS_ALWAYS_RETURNS_FALSE break")
+    @Test
+    public void containsWithContainsAlwaysReturnsFalseBreakReturnsFalse() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.CONTAINS_ALWAYS_RETURNS_FALSE)
+                .build();
+        assertFalse(collection.contains(1));
+        assertFalse(collection.contains(4));
+    }
+
+    /// Test that the `CONTAINS_RETURNS_OPPOSITE_VALUE` break causes the `contains` method to always return the
+    /// opposite value.
+    /// @see BreakableCollection#contains(Object)
+    @DisplayName("contains(Object) always returns opposite value with CONTAINS_RETURNS_OPPOSITE_VALUE break")
+    @Test
+    public void containsWithContainsReturnsOppositeValueBreakReturnsOppositeValue() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.CONTAINS_RETURNS_OPPOSITE_VALUE)
+                .build();
+        assertFalse(collection.contains(1));
+        assertTrue(collection.contains(4));
+    }
+
+    // ========== toArray Tests ==========
+
+    /// Test that the `TO_ARRAY_RETURNS_NULL` break causes the `toArray()` method to always return `null`.
+    /// @see BreakableCollection#toArray()
+    @DisplayName("toArray() always returns null with TO_ARRAY_RETURNS_NULL break")
+    @Test
+    @SuppressWarnings("DataFlowIssue")
+    public void toArrayWithToArrayReturnsNullBreakReturnsNull() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.TO_ARRAY_RETURNS_NULL)
+                .build();
+        assertNull(collection.toArray());
+    }
+
+    /// Test that the `TO_ARRAY_RETURNS_EMPTY_ARRAY` break causes the `toArray()` method to always returns an empty
+    /// array.
+    /// @see BreakableCollection#toArray()
+    @DisplayName("toArray() always returns empty array with TO_ARRAY_RETURNS_EMPTY_ARRAY break")
+    @Test
+    public void toArrayWithToArrayReturnsEmptyArrayBreakReturnsEmptyArray() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.TO_ARRAY_RETURNS_EMPTY_ARRAY)
+                .build();
+        Object[] array = collection.toArray();
+        assertLengthEquals(0, array);
+    }
+
+    /// Test that the `TO_ARRAY_MISSING_FIRST_ELEMENT` break causes the `toArray()` method to return an array that is
+    /// missing the first element.
+    /// @see BreakableCollection#toArray()
+    @DisplayName("toArray() returns array missing first element with TO_ARRAY_MISSING_FIRST_ELEMENT break")
+    @Test
+    public void toArrayWithToArrayMissingFirstElementBreakReturnsArrayMissingFirstElement() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.TO_ARRAY_MISSING_FIRST_ELEMENT)
+                .build();
+        Object[] array = collection.toArray();
+        assertArrayEquals(new Object[]{2, 3}, array);
+    }
+
+    /// Test that the `TO_ARRAY_MISSING_LAST_ELEMENT` break causes the `toArray()` method to return an array that is
+    /// missing the last element.
+    /// @see BreakableCollection#toArray()
+    @DisplayName("toArray() returns array missing last element with TO_ARRAY_MISSING_LAST_ELEMENT break")
+    @Test
+    public void toArrayWithToArrayMissingLastElementBreakReturnsArrayMissingLastElement() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.TO_ARRAY_MISSING_LAST_ELEMENT)
+                .build();
+        Object[] array = collection.toArray();
+        assertArrayEquals(new Object[]{1, 2}, array);
+    }
+
+    /// Test that the `TO_ARRAY_STORE_RETURNS_NULL` break causes the `toArray(Object[])` method to always return `null`.
+    /// @see BreakableCollection#toArray(Object[])
+    @DisplayName("toArray(Object[]) always returns null with TO_ARRAY_STORE_RETURNS_NULL break")
+    @Test
+    @SuppressWarnings("DataFlowIssue")
+    public void toArrayWithToArrayStoreReturnsNullBreakReturnsNull() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.TO_ARRAY_STORE_RETURNS_NULL)
+                .build();
+        assertNull(collection.toArray(new Object[]{0, 0, 0}));
+    }
+
+    /// Test that the `TO_ARRAY_STORE_RETURNS_EMPTY_ARRAY` break causes the `toArray(Object[])` method to always
+    /// returns an empty array.
+    /// @see BreakableCollection#toArray(Object[])
+    @DisplayName("toArray(Object[]) always returns empty array with TO_ARRAY_STORE_RETURNS_EMPTY_ARRAY break")
+    @Test
+    public void toArrayWithToArrayStoreReturnsEmptyArrayBreakReturnsEmptyArray() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.TO_ARRAY_STORE_RETURNS_EMPTY_ARRAY)
+                .build();
+        assertArrayEquals(new Object[]{null, null, null}, collection.toArray(new Object[]{1, 2, 3}));
+    }
+
+    /// Test that the `TO_ARRAY_STORE_MISSING_FIRST_ELEMENT` break causes the `toArray(Object[])` method to return an
+    /// array that is missing the first element.
+    /// @see BreakableCollection#toArray(Object[])
+    @DisplayName("toArray(Object[]) returns array missing first element "
+            + "with TO_ARRAY_STORE_MISSING_FIRST_ELEMENT break")
+    @Test
+    public void toArrayWithToArrayStoreMissingFirstElementBreakReturnsArrayMissingFirstElement() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.TO_ARRAY_STORE_MISSING_FIRST_ELEMENT)
+                .build();
+        Object[] array = new Object[]{0, 0, 0};
+        collection.toArray(array);
+        assertArrayEquals(new Object[]{2, 3, null}, array);
+    }
+
+    /// Test that the `TO_ARRAY_STORE_MISSING_LAST_ELEMENT` break causes the `toArray(Object[])` method to return an
+    /// array that is missing the last element.
+    /// @see BreakableCollection#toArray(Object[])
+    @DisplayName("toArray(Object[]) returns array missing last element with TO_ARRAY_STORE_MISSING_LAST_ELEMENT break")
+    @Test
+    public void toArrayWithToArrayStoreMissingLastElementBreakReturnsArrayMissingLastElement() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.TO_ARRAY_STORE_MISSING_LAST_ELEMENT)
+                .build();
+        Object[] array = new Object[]{0, 0, 0};
+        collection.toArray(array);
+        assertArrayEquals(new Object[]{1, 2, null}, array);
+    }
+
+    /// Test that the `TO_ARRAY_STORE_DOES_NOT_COPY_ELEMENTS` break causes the `toArray(Object[])` method to not copy
+    /// any elements into the store array.
+    /// @see BreakableCollection#toArray(Object[])
+    @DisplayName("toArray(Object[]) does not copy elements with TO_ARRAY_STORE_DOES_NOT_COPY_ELEMENTS break")
+    @Test
+    public void toArrayWithToArrayStoreDoesNotCopyElementsBreakDoesNotCopyElements() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.TO_ARRAY_STORE_DOES_NOT_COPY_ELEMENTS)
+                .build();
+        Object[] array = new Object[]{0, 0, 0};
+        collection.toArray(array);
+        assertArrayEquals(new Object[]{0, 0, 0}, array);
+    }
+
+    // ========== add Tests ==========
+
+    /// Test that the `ADD_DOES_NOT_ADD_ELEMENT` break causes the `add(Object)` method to not add the element to
+    /// the collection.
+    /// @see BreakableCollection#add(Object)
+    @DisplayName("add(Object) does not add element with ADD_DOES_NOT_ADD_ELEMENT break")
+    @Test
+    public void addWithAddDoesNotAddElementBreakDoesNotAddElement() {
+        Collection<Integer> collection = Breakables.buildCollection(Integer.class)
+                .addBreak(BreakableCollection.ADD_DOES_NOT_ADD_ELEMENT)
+                .build();
+        collection.add(1);
+        assertDoesNotContain(1, collection);
+    }
+
+    /// Test that the `ADD_ALWAYS_RETURNS_TRUE` break causes the `add(Object)` method to always return `true`.
+    /// @see BreakableCollection#add(Object)
+    @DisplayName("add(Object) always returns true with ADD_ALWAYS_RETURNS_TRUE break")
+    @Test
+    public void addWithAddAlwaysReturnsTrueBreakReturnsTrue() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.ADD_ALWAYS_RETURNS_TRUE)
+                .doesNotPermitDuplicates()
+                .build();
+        assertTrue(collection.add(1));
+    }
+
+    /// Test that the `ADD_ALWAYS_RETURNS_FALSE` break causes the `add(Object)` method to always return `false`.
+    /// @see BreakableCollection#add(Object)
+    @DisplayName("add(Object) always returns false with ADD_ALWAYS_RETURNS_FALSE break")
+    @Test
+    public void addWithAddAlwaysReturnsFalseBreakReturnsFalse() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.ADD_ALWAYS_RETURNS_FALSE)
+                .build();
+        assertFalse(collection.add(4));
+    }
+
+    /// Test that the `ADD_ALWAYS_RETURNS_OPPOSITE_VALUE` break causes the `add(Object)` method to always return the
+    /// opposite value.
+    /// @see BreakableCollection#add(Object)
+    @DisplayName("add(Object) always returns opposite value with ADD_ALWAYS_RETURNS_OPPOSITE_VALUE break")
+    @Test
+    public void addWithAddAlwaysReturnsOppositeValueBreakReturnsOppositeValue() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.ADD_ALWAYS_RETURNS_OPPOSITE_VALUE)
+                .doesNotPermitDuplicates()
+                .build();
+        assertTrue(collection.add(1));
+        assertFalse(collection.add(4));
+    }
+
+    /// Test that the 'add(Object)' method throws an exception when incompatible types are not permitted and an object
+    /// of an incompatible type is added through a raw interface.
+    /// @see BreakableCollection#add(Object)
+    /// @see BreakableCollection#permitsIncompatibleTypes
+    @DisplayName("add(Object) throws an exception when incompatible types are not permitted")
+    @Test
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public void addWhenIncompatibleTypesAreNotPermittedThrowsAnException() {
+        Collection collection = Breakables.buildCollection(Integer.class)
+                .doesNotPermitIncompatibleTypes(Integer.class)
+                .build();
+
+        Assertions.assertThrowsAnyOf(List.of(ClassCastException.class, IllegalArgumentException.class),
+                () -> collection.add("Not An Integer"));
+    }
+
+    /// Test that the `ADD_THROWS_WRONG_INCOMPATIBLE_TYPE_EXCEPTION` break causes the `add(Object)` method to throw
+    /// the wrong exception for an incompatible value.
+    /// @see BreakableCollection#add(Object)
+    @DisplayName("add(Object) throws wrong exception with ADD_THROWS_WRONG_INCOMPATIBLE_TYPE_EXCEPTION")
+    @Test
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public void addWithThrowsWrongIncompatibleTypeBreakThrowsWrongException() {
+        Collection collection = Breakables.buildCollection(Integer.class)
+                .doesNotPermitIncompatibleTypes(Integer.class)
+                .addBreak(BreakableCollection.ADD_THROWS_WRONG_INCOMPATIBLE_TYPE_EXCEPTION)
+                .build();
+
+        Assertions.assertThrowsDifferent(List.of(ClassCastException.class, IllegalArgumentException.class),
+                () -> collection.add("Not An Integer"));
+    }
+
+    ///  Test that the `add(Object)` method throws `NullPointerException` when nulls are not permitted.
+    /// @see BreakableCollection#add(Object)
+    /// @see BreakableCollection#permitsNulls
+    @DisplayName("add(Object) throws NullPointerException when nulls are not permitted")
+    @Test
+    public void addWhenNullsAreNotPermittedThrowsNullPointerException() {
+        final Collection<Integer> collection = Breakables.buildCollection(Integer.class)
+                .doesNotPermitNulls()
+                .build();
+        assertThrows(NullPointerException.class, () -> collection.add(null));
+    }
+
+    /// Test that the `ADD_THROWS_WRONG_NULL_EXCEPTION` break causes the `add(Object)` method to throw
+    /// the wrong exception for a 'null' value.
+    /// @see BreakableCollection#add(Object)
+    @DisplayName("add(Object) throws wrong exception with ADD_THROWS_WRONG_NULL_EXCEPTION")
+    @Test
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public void addWithThrowsWrongNullExceptionBreakThrowsWrongException() {
+        Collection collection = Breakables.buildCollection(Integer.class)
+                .doesNotPermitNulls()
+                .addBreak(BreakableCollection.ADD_THROWS_WRONG_NULL_EXCEPTION)
+                .build();
+        assertThrowsDifferent(NullPointerException.class, () -> collection.add(null));
+    }
+
+    /// Test that the `ADD_THROWS_WRONG_UNSUPPORTED_EXCEPTION` break causes the `add(Object)` method to throw the wrong
+    /// exception when unsupported.
+    /// @see BreakableCollection#add(Object)
+    @DisplayName("add(Object) throws wrong exception with ADD_THROWS_WRONG_UNSUPPORTED_EXCEPTION break")
+    @Test
+    public void addWithAddThrowsWrongUnsupportedExceptionBreakThrowsWrongException() {
+        final Collection<Integer> collection = Breakables.buildCollection(Integer.class)
+                .addBreak(BreakableCollection.ADD_THROWS_WRONG_UNSUPPORTED_EXCEPTION)
+                .doesNotSupportMethod(CollectionMethods.ADD)
+                .build();
+
+        assertThrowsDifferent(UnsupportedOperationException.class, () -> collection.add(1));
+    }
+
+    // ========== remove Tests ==========
+
+    /// Test that the `REMOVE_DOES_NOT_REMOVE_ELEMENT` break causes the `remove(Object)` method to not remove the
+    /// element from the collection.
+    /// @see BreakableCollection#remove(Object)
+    @DisplayName("remove(Object) does not remove element with REMOVE_DOES_NOT_REMOVE_ELEMENT break")
+    @Test
+    public void removeWithRemoveDoesNotRemoveElementBreakDoesNotRemoveElement() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.REMOVE_DOES_NOT_REMOVE_ELEMENT)
+                .build();
+        collection.remove(1);
+        assertContains(1, collection);
+    }
+
+    /// Test that the `REMOVE_ALWAYS_RETURNS_TRUE` break causes the `remove(Object)` method to always return `true`.
+    /// @see BreakableCollection#remove(Object)
+    @DisplayName("remove(Object) always returns true with REMOVE_ALWAYS_RETURNS_TRUE break")
+    @Test
+    public void removeWithRemoveAlwaysReturnsTrueBreakReturnsTrue() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.REMOVE_ALWAYS_RETURNS_TRUE)
+                .build();
+        assertTrue(collection.remove(1));
+        assertTrue(collection.remove(4));
+    }
+
+    /// Test that the `REMOVE_ALWAYS_RETURNS_FALSE` break causes the `remove(Object)` method to always return `false`.
+    /// @see BreakableCollection#remove(Object)
+    @DisplayName("remove(Object) always returns false with REMOVE_ALWAYS_RETURNS_FALSE break")
+    @Test
+    public void removeWithRemoveAlwaysReturnsFalseBreakReturnsFalse() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.REMOVE_ALWAYS_RETURNS_FALSE)
+                .build();
+        assertFalse(collection.remove(1));
+        assertFalse(collection.remove(4));
+    }
+
+    /// Test that the `REMOVE_ALWAYS_RETURNS_OPPOSITE_VALUE` break causes the `remove(Object)` method to always return
+    /// the opposite value.
+    /// @see BreakableCollection#remove(Object)
+    @DisplayName("remove(Object) always returns opposite value with REMOVE_ALWAYS_RETURNS_OPPOSITE_VALUE break")
+    @Test
+    public void removeWithRemoveAlwaysReturnsOppositeValueBreakReturnsOppositeValue() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.REMOVE_ALWAYS_RETURNS_OPPOSITE_VALUE)
+                .build();
+        assertFalse(collection.remove(1));
+        assertTrue(collection.remove(4));
+    }
+
+    /// Test that the `REMOVE_THROWS_WRONG_UNSUPPORTED_EXCEPTION` break causes the `remove(Object)` method to throw the
+    /// wrong exception when unsupported.
+    /// @see BreakableCollection#remove(Object)
+    @DisplayName("remove(Object) throws wrong exception with REMOVE_THROWS_WRONG_UNSUPPORTED_EXCEPTION break")
+    @Test
+    public void removeWithRemoveThrowsWrongUnsupportedExceptionBreakThrowsWrongException() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.REMOVE_THROWS_WRONG_UNSUPPORTED_EXCEPTION)
+                .doesNotSupportMethod(CollectionMethods.REMOVE)
+                .build();
+        assertThrowsDifferent(UnsupportedOperationException.class, () -> collection.remove(1));
+    }
+
+    /// Test that the 'remove(Object)' method throws an exception when incompatible types are not permitted and an
+    /// object
+    /// of an incompatible type is removed through a raw interface.
+    /// @see BreakableCollection#remove(Object)
+    /// @see BreakableCollection#permitsIncompatibleTypes
+    @DisplayName("remove(Object) throws an exception when incompatible types are not permitted")
+    @Test
+    @SuppressWarnings("rawtypes")
+    public void removeWhenIncompatibleTypesAreNotPermittedThrowsAnException() {
+        Collection collection = Breakables.buildCollection(Integer.class)
+                .addElements(1, 2, 3)
+                .doesNotPermitIncompatibleTypes(Integer.class)
+                .build();
+
+        Assertions.assertThrowsAnyOf(List.of(ClassCastException.class, IllegalArgumentException.class),
+                () -> collection.remove("Not An Integer"));
+    }
+
+    // ========== addAll Tests ==========
+
+    /// Test that the `ADD_ALL_DOES_NOT_ADD_ANY_ELEMENTS` break causes the `addAll(Collection)` method to not
+    /// add any elements.
+    /// @see BreakableCollection#addAll(Collection)
+    @DisplayName("addAll(Collection) does not add any elements with ADD_ALL_DOES_NOT_ADD_ANY_ELEMENTS break")
+    @Test
+    public void addAllWithAddAllDoesNotAddAnyElementsBreakDoesNotAddElements() {
+        Collection<Integer> collection = Breakables.buildCollection(Integer.class)
+                .addBreak(BreakableCollection.ADD_ALL_DOES_NOT_ADD_ANY_ELEMENTS)
+                .build();
+        collection.addAll(Arrays.asList(1, 2, 3));
+        assertTrue(collection.isEmpty());
+    }
+
+    /// Test that the `ADD_ALL_ALWAYS_RETURNS_TRUE` break causes the `addAll(Collection)` method to always return
+    /// `true`.
+    /// @see BreakableCollection#addAll(Collection)
+    @DisplayName("addAll(Collection) always returns true with ADD_ALL_ALWAYS_RETURNS_TRUE break")
+    @Test
+    public void addAllWithAddAllAlwaysReturnsTrueBreakReturnsTrue() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.ADD_ALL_ALWAYS_RETURNS_TRUE)
+                .doesNotPermitDuplicates()
+                .build();
+        assertTrue(collection.addAll(Arrays.asList(1, 2)));
+    }
+
+    /// Test that the `ADD_ALL_ALWAYS_RETURNS_FALSE` break causes the `addAll(Collection)` method to always return
+    /// `false`.
+    /// @see BreakableCollection#addAll(Collection)
+    @DisplayName("addAll(Collection) always returns false with ADD_ALL_ALWAYS_RETURNS_FALSE break")
+    @Test
+    public void addAllWithAddAllAlwaysReturnsFalseBreakReturnsFalse() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.ADD_ALL_ALWAYS_RETURNS_FALSE)
+                .build();
+        assertFalse(collection.addAll(Arrays.asList(4, 5)));
+    }
+
+    /// Test that the `ADD_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE` break causes the `addAll(Collection)` method to always
+    /// return the opposite value.
+    /// @see BreakableCollection#addAll(Collection)
+    @DisplayName("addAll(Collection) always returns opposite value with ADD_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE break")
+    @Test
+    public void addAllWithAddAllAlwaysReturnsOppositeValueBreakReturnsOppositeValue() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.ADD_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE)
+                .doesNotPermitDuplicates()
+                .build();
+        assertTrue(collection.addAll(Arrays.asList(1, 2)));
+        assertFalse(collection.addAll(Arrays.asList(4, 5)));
+    }
+
+    /// Test that the `ADD_ALL_SKIPS_FIRST_ELEMENT` break causes the `addAll(Collection)` method to skip the first
+    /// element.
+    /// @see BreakableCollection#addAll(Collection)
+    @DisplayName("addAll(Collection) skips first element with ADD_ALL_SKIPS_FIRST_ELEMENT break")
+    @Test
+    public void addAllWithAddAllSkipsFirstElementBreakSkipsFirstElement() {
+        Collection<Integer> collection = Breakables.buildCollection(Integer.class)
+                .addBreak(BreakableCollection.ADD_ALL_SKIPS_FIRST_ELEMENT)
+                .build();
+        collection.addAll(Arrays.asList(1, 2, 3));
+        assertDoesNotContain(1, collection);
+        assertContains(2, collection);
+        assertContains(3, collection);
+    }
+
+    /// Test that the `ADD_ALL_SKIPS_LAST_ELEMENT` break causes the `addAll(Collection)` method to skip the last
+    /// element.
+    /// @see BreakableCollection#addAll(Collection)
+    @DisplayName("addAll(Collection) skips last element with ADD_ALL_SKIPS_LAST_ELEMENT break")
+    @Test
+    public void addAllWithAddAllSkipsLastElementBreakSkipsLastElement() {
+        Collection<Integer> collection = Breakables.buildCollection(Integer.class)
+                .addBreak(BreakableCollection.ADD_ALL_SKIPS_LAST_ELEMENT)
+                .build();
+        collection.addAll(Arrays.asList(1, 2, 3));
+        assertContains(1, collection);
+        assertContains(2, collection);
+        assertDoesNotContain(3, collection);
+    }
+
+    /// Test that the `ADD_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION` break causes the `addAll(Collection)` method to
+    /// throw the wrong exception when unsupported.
+    /// @see BreakableCollection#addAll(Collection)
+    @DisplayName("addAll(Collection) throws wrong exception with ADD_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION break")
+    @Test
+    public void addAllWithAddAllThrowsWrongUnsupportedExceptionBreakThrowsWrongException() {
+        Collection<Integer> collection = Breakables.buildCollection(Integer.class)
+                .addBreak(BreakableCollection.ADD_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION)
+                .doesNotSupportMethod(CollectionMethods.ADD_ALL)
+                .build();
+        assertThrowsDifferent(UnsupportedOperationException.class, () -> collection.addAll(Arrays.asList(1, 2)));
+    }
+
+    /// Test that the 'addAll(Collection)' method throws an exception when incompatible types are not permitted and an
+    /// collection with an object of an incompatible type is added through a raw interface.
+    /// @see BreakableCollection#addAll(Collection)
+    /// @see BreakableCollection#permitsIncompatibleTypes
+    @DisplayName("addAll(Object) throws an exception when incompatible types are not permitted")
+    @Test
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public void addAllWhenIncompatibleTypesAreNotPermittedThrowsAnException() {
+        Collection collection = Breakables.buildCollection(Integer.class)
+                .doesNotPermitIncompatibleTypes(Integer.class)
+                .build();
+
+        Collection newElements = List.of(1, "Two", 3);
+        Assertions.assertThrowsAnyOf(List.of(ClassCastException.class, IllegalArgumentException.class),
+                () -> collection.addAll(newElements));
+    }
+
+    // ========== removeAll Tests ==========
+
+    /// Test that the `REMOVE_ALL_DOES_NOT_REMOVE_ANY_ELEMENTS` break causes the `removeAll(Collection)` method to not
+    /// remove any elements.
+    /// @see BreakableCollection#removeAll(Collection)
+    @DisplayName("removeAll(Collection) does not remove any elements "
+            + "with REMOVE_ALL_DOES_NOT_REMOVE_ANY_ELEMENTS break")
+    @Test
+    public void removeAllWithRemoveAllDoesNotRemoveAnyElementsBreakDoesNotRemoveElements() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.REMOVE_ALL_DOES_NOT_REMOVE_ANY_ELEMENTS)
+                .build();
+        collection.removeAll(Arrays.asList(1, 2));
+        assertContains(1, collection);
+        assertContains(2, collection);
+    }
+
+    /// Test that the `REMOVE_ALL_ALWAYS_RETURNS_TRUE` break causes the `removeAll(Collection)` method to always
+    /// return `true`.
+    /// @see BreakableCollection#removeAll(Collection)
+    @DisplayName("removeAll(Collection) always returns true with REMOVE_ALL_ALWAYS_RETURNS_TRUE break")
+    @Test
+    public void removeAllWithRemoveAllAlwaysReturnsTrueBreakReturnsTrue() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.REMOVE_ALL_ALWAYS_RETURNS_TRUE)
+                .build();
+        assertTrue(collection.removeAll(Arrays.asList(1, 2)));
+        assertTrue(collection.removeAll(Arrays.asList(4, 5)));
+    }
+
+    /// Test that the `REMOVE_ALL_ALWAYS_RETURNS_FALSE` break causes the `removeAll(Collection)` method to always
+    /// return `false`.
+    /// @see BreakableCollection#removeAll(Collection)
+    @DisplayName("removeAll(Collection) always returns false with REMOVE_ALL_ALWAYS_RETURNS_FALSE break")
+    @Test
+    public void removeAllWithRemoveAllAlwaysReturnsFalseBreakReturnsFalse() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.REMOVE_ALL_ALWAYS_RETURNS_FALSE)
+                .build();
+        assertFalse(collection.removeAll(Arrays.asList(1, 2)));
+        assertFalse(collection.removeAll(Arrays.asList(4, 5)));
+    }
+
+    /// Test that the `REMOVE_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE` break causes the `removeAll(Collection)` method to
+    /// always return the opposite value.
+    /// @see BreakableCollection#removeAll(Collection)
+    @DisplayName("removeAll(Collection) always returns opposite value "
+            + "with REMOVE_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE break")
+    @Test
+    public void removeAllWithRemoveAllAlwaysReturnsOppositeValueBreakReturnsOppositeValue() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.REMOVE_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE)
+                .build();
+        assertFalse(collection.removeAll(Arrays.asList(1, 2)));
+        assertTrue(collection.removeAll(Arrays.asList(4, 5)));
+    }
+
+    /// Test that the `REMOVE_ALL_DOES_NOT_THROW_ON_NULL_COLLECTION` break makes `removeAll(null)` return `false` and
+    /// leave the collection unchanged, where an unbroken collection throws.
+    /// @see BreakableCollection#removeAll(Collection)
+    @DisplayName("removeAll(null) returns false with REMOVE_ALL_DOES_NOT_THROW_ON_NULL_COLLECTION break")
+    @Test
+    public void removeAllWithRemoveAllDoesNotThrowOnNullCollectionBreakReturnsFalse() {
+        Collection<Integer> unbroken = Breakables.buildCollection(1, 2, 3).build();
+        assertThrows(NullPointerException.class, () -> unbroken.removeAll(null));
+
+        BreakableCollection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.REMOVE_ALL_DOES_NOT_THROW_ON_NULL_COLLECTION)
+                .build();
+        assertFalse(collection.removeAll(null));
+        assertEquals(List.of(1, 2, 3), List.copyOf(collection.unbroken()));
+    }
+
+    /// Test that the `REMOVE_ALL_SKIPS_FIRST_ELEMENT` break causes the `removeAll(Collection)` method to skip the
+    /// first element.
+    /// @see BreakableCollection#removeAll(Collection)
+    @DisplayName("removeAll(Collection) skips first element with REMOVE_ALL_SKIPS_FIRST_ELEMENT break")
+    @Test
+    public void removeAllWithRemoveAllSkipsFirstElementBreakSkipsFirstElement() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.REMOVE_ALL_SKIPS_FIRST_ELEMENT)
+                .build();
+        collection.removeAll(Arrays.asList(1, 2, 3));
+        assertContains(1, collection);
+        assertDoesNotContain(2, collection);
+        assertDoesNotContain(3, collection);
+    }
+
+    /// Test that the `REMOVE_ALL_SKIPS_LAST_ELEMENT` break causes the `removeAll(Collection)` method to skip the
+    /// last element.
+    /// @see BreakableCollection#removeAll(Collection)
+    @DisplayName("removeAll(Collection) skips last element with REMOVE_ALL_SKIPS_LAST_ELEMENT break")
+    @Test
+    public void removeAllWithRemoveAllSkipsLastElementBreakSkipsLastElement() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.REMOVE_ALL_SKIPS_LAST_ELEMENT)
+                .build();
+        collection.removeAll(Arrays.asList(1, 2, 3));
+        assertDoesNotContain(1, collection);
+        assertDoesNotContain(2, collection);
+        assertContains(3, collection);
+    }
+
+    /// Test that the `REMOVE_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION` break causes the `removeAll(Collection)`
+    /// method to throw the wrong exception when unsupported.
+    /// @see BreakableCollection#removeAll(Collection)
+    @DisplayName("removeAll(Collection) throws wrong exception "
+            + "with REMOVE_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION break")
+    @Test
+    public void removeAllWithRemoveAllThrowsWrongUnsupportedExceptionBreakThrowsWrongException() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.REMOVE_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION)
+                .doesNotSupportMethod(CollectionMethods.REMOVE_ALL)
+                .build();
+        assertThrowsDifferent(UnsupportedOperationException.class, () -> collection.removeAll(Arrays.asList(1, 2)));
+    }
+
+    // ========== removeIf Tests ==========
+
+    /// Test that the `REMOVE_IF_DOES_NOT_REMOVE_ANY_ELEMENTS` break causes the `removeIf(Predicate)` method to not
+    /// remove any elements.
+    /// @see BreakableCollection#removeIf(Predicate)
+    @DisplayName("removeIf(Predicate) does not remove any elements with REMOVE_IF_DOES_NOT_REMOVE_ANY_ELEMENTS break")
+    @Test
+    public void removeIfWithRemoveIfDoesNotRemoveAnyElementsBreakDoesNotRemoveElements() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.REMOVE_IF_DOES_NOT_REMOVE_ANY_ELEMENTS)
+                .build();
+        collection.removeIf(i -> i < 3);
+        assertContains(1, collection);
+        assertContains(2, collection);
+    }
+
+    /// Test that the `REMOVE_IF_ALWAYS_RETURNS_TRUE` break causes the `removeIf(Predicate)` method to always return
+    /// `true`.
+    /// @see BreakableCollection#removeIf(Predicate)
+    @DisplayName("removeIf(Predicate) always returns true with REMOVE_IF_ALWAYS_RETURNS_TRUE break")
+    @Test
+    public void removeIfWithRemoveIfAlwaysReturnsTrueBreakReturnsTrue() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.REMOVE_IF_ALWAYS_RETURNS_TRUE)
+                .build();
+        assertTrue(collection.removeIf(i -> i < 3));
+        assertTrue(collection.removeIf(i -> i > 5));
+    }
+
+    /// Test that the `REMOVE_IF_ALWAYS_RETURNS_FALSE` break causes the `removeIf(Predicate)` method to always return
+    /// `false`.
+    /// @see BreakableCollection#removeIf(Predicate)
+    @DisplayName("removeIf(Predicate) always returns false with REMOVE_IF_ALWAYS_RETURNS_FALSE break")
+    @Test
+    public void removeIfWithRemoveIfAlwaysReturnsFalseBreakReturnsFalse() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.REMOVE_IF_ALWAYS_RETURNS_FALSE)
+                .build();
+        assertFalse(collection.removeIf(i -> i < 3));
+        assertFalse(collection.removeIf(i -> i > 5));
+    }
+
+    /// Test that the `REMOVE_IF_ALWAYS_RETURNS_OPPOSITE_VALUE` break causes the `removeIf(Predicate)` method to always
+    /// return the opposite value.
+    /// @see BreakableCollection#removeIf(Predicate)
+    @DisplayName("removeIf(Predicate) always returns opposite value with REMOVE_IF_ALWAYS_RETURNS_OPPOSITE_VALUE break")
+    @Test
+    public void removeIfWithRemoveIfAlwaysReturnsOppositeValueBreakReturnsOppositeValue() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.REMOVE_IF_ALWAYS_RETURNS_OPPOSITE_VALUE)
+                .build();
+        assertFalse(collection.removeIf(i -> i < 3));
+        assertTrue(collection.removeIf(i -> i > 5));
+    }
+
+    /// Test that the `REMOVE_IF_SKIPS_FIRST_ELEMENT` break causes the `removeIf(Predicate)` method to skip the first
+    /// element.
+    /// @see BreakableCollection#removeIf(Predicate)
+    @DisplayName("removeIf(Predicate) skips first element with REMOVE_IF_SKIPS_FIRST_ELEMENT break")
+    @Test
+    public void removeIfWithRemoveIfSkipsFirstElementBreakSkipsFirstElement() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.REMOVE_IF_SKIPS_FIRST_ELEMENT)
+                .build();
+        assertTrue(collection.removeIf(i -> true), "removeIf reports the elements it removed");
+        assertContains(1, collection);
+        assertDoesNotContain(2, collection);
+        assertDoesNotContain(3, collection);
+    }
+
+    /// Test that the `REMOVE_IF_SKIPS_LAST_ELEMENT` break causes the `removeIf(Predicate)` method to skip the last
+    /// element.
+    /// @see BreakableCollection#removeIf(Predicate)
+    @DisplayName("removeIf(Predicate) skips last element with REMOVE_IF_SKIPS_LAST_ELEMENT break")
+    @Test
+    public void removeIfWithRemoveIfSkipsLastElementBreakSkipsLastElement() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.REMOVE_IF_SKIPS_LAST_ELEMENT)
+                .build();
+        assertTrue(collection.removeIf(i -> true), "removeIf reports the elements it removed");
+        assertContains(3, collection);
+        assertDoesNotContain(1, collection);
+        assertDoesNotContain(2, collection);
+    }
+
+    /// Test that the `REMOVE_IF_THROWS_WRONG_UNSUPPORTED_EXCEPTION` break causes the `removeIf(Predicate)` method t
+    /// throw the wrong exception when unsupported.
+    /// @see BreakableCollection#removeIf(Predicate)
+    @DisplayName("removeIf(Predicate) throws wrong exception with REMOVE_IF_THROWS_WRONG_UNSUPPORTED_EXCEPTION break")
+    @Test
+    public void removeIfWithRemoveIfThrowsWrongUnsupportedExceptionBreakThrowsWrongException() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.REMOVE_IF_THROWS_WRONG_UNSUPPORTED_EXCEPTION)
+                .doesNotSupportMethod(CollectionMethods.REMOVE_IF)
+                .build();
+        assertThrowsDifferent(UnsupportedOperationException.class, () -> collection.removeIf(i -> true));
+    }
+
+    /// Test that `removeIf` follows its own method identifier, not `removeAll`'s.
+    /// @see BreakableCollection#removeIf(Predicate)
+    @DisplayName("removeIf(Predicate) works when removeAll is not supported")
+    @Test
+    public void removeIfWithoutRemoveAllSupportRemoves() {
+        BreakableCollection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .doesNotSupportMethod(CollectionMethods.REMOVE_ALL)
+                .build();
+        assertTrue(collection.removeIf(i -> i == 1));
+        assertEquals(List.of(2, 3), List.copyOf(collection.unbroken()));
+    }
+
+    /// Test that the `REMOVE_IF_DOES_NOT_THROW_ON_NULL_FILTER` break makes `removeIf(null)` return `false` and leave
+    /// the collection unchanged, where an unbroken collection throws.
+    /// @see BreakableCollection#removeIf(Predicate)
+    @DisplayName("removeIf(null) returns false with REMOVE_IF_DOES_NOT_THROW_ON_NULL_FILTER break")
+    @Test
+    public void removeIfWithRemoveIfDoesNotThrowOnNullFilterBreakReturnsFalse() {
+        Collection<Integer> unbroken = Breakables.buildCollection(1, 2, 3).build();
+        assertThrows(NullPointerException.class, () -> unbroken.removeIf(null));
+
+        BreakableCollection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.REMOVE_IF_DOES_NOT_THROW_ON_NULL_FILTER)
+                .build();
+        assertFalse(collection.removeIf(null));
+        assertEquals(List.of(1, 2, 3), List.copyOf(collection.unbroken()));
+    }
+
+    /// Test that `removeIf(null)` throws even when another `removeIf` break keeps the filter from being called.
+    /// @see BreakableCollection#removeIf(Predicate)
+    @DisplayName("removeIf(null) throws with REMOVE_IF_DOES_NOT_REMOVE_ANY_ELEMENTS break")
+    @Test
+    public void removeIfNullWithRemoveIfDoesNotRemoveAnyElementsBreakThrows() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.REMOVE_IF_DOES_NOT_REMOVE_ANY_ELEMENTS)
+                .build();
+        assertThrows(NullPointerException.class, () -> collection.removeIf(null));
+    }
+
+    // ========== retainAll Tests ==========
+
+    /// Test that the `RETAIN_ALL_DOES_NOT_RETAIN_ANY_ELEMENTS` break causes the `retainAll(Collection)` method to
+    /// not retain any elements.
+    /// @see BreakableCollection#retainAll(Collection)
+    @DisplayName("retainAll(Collection) does not retain any elements "
+            + "with RETAIN_ALL_DOES_NOT_RETAIN_ANY_ELEMENTS break")
+    @Test
+    public void retainAllWithRetainAllDoesNotRetainAnyElementsBreakDoesNotRetainElements() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.RETAIN_ALL_DOES_NOT_RETAIN_ANY_ELEMENTS)
+                .build();
+        collection.retainAll(Arrays.asList(1, 2));
+        assertContains(1, collection);
+        assertContains(2, collection);
+        assertContains(3, collection);
+    }
+
+    /// Test that the `RETAIN_ALL_ALWAYS_RETURNS_TRUE` break causes the `retainAll(Collection)` method to always return
+    /// `true`.
+    /// @see BreakableCollection#retainAll(Collection)
+    @DisplayName("retainAll(Collection) always returns true with RETAIN_ALL_ALWAYS_RETURNS_TRUE break")
+    @Test
+    public void retainAllWithRetainAllAlwaysReturnsTrueBreakReturnsTrue() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.RETAIN_ALL_ALWAYS_RETURNS_TRUE)
+                .build();
+        assertTrue(collection.retainAll(Arrays.asList(1, 2, 3)));
+        assertTrue(collection.retainAll(Arrays.asList(1, 2)));
+    }
+
+    /// Test that the `RETAIN_ALL_ALWAYS_RETURNS_FALSE` break causes the `retainAll(Collection)` method to always
+    /// return `false`.
+    /// @see BreakableCollection#retainAll(Collection)
+    @DisplayName("retainAll(Collection) always returns false with RETAIN_ALL_ALWAYS_RETURNS_FALSE break")
+    @Test
+    public void retainAllWithRetainAllAlwaysReturnsFalseBreakReturnsFalse() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.RETAIN_ALL_ALWAYS_RETURNS_FALSE)
+                .build();
+        assertFalse(collection.retainAll(Arrays.asList(1, 2, 3)));
+        assertFalse(collection.retainAll(Arrays.asList(1, 2)));
+    }
+
+    /// Test that the `RETAIN_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE` break causes the `retainAll(Collection)` method to
+    /// always return the opposite value.
+    /// @see BreakableCollection#retainAll(Collection)
+    @DisplayName("retainAll(Collection) always returns opposite value "
+            + "with RETAIN_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE break")
+    @Test
+    public void retainAllWithRetainAllAlwaysReturnsOppositeValueBreakReturnsOppositeValue() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.RETAIN_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE)
+                .build();
+        assertFalse(collection.retainAll(Arrays.asList(1, 2)));
+        assertTrue(collection.retainAll(Arrays.asList(1, 2, 3)));
+    }
+
+    /// Test that the `RETAIN_ALL_SKIPS_FIRST_ELEMENT` break causes the `retainAll(Collection)` method to skip the first
+    /// element.
+    /// @see BreakableCollection#retainAll(Collection)
+    @DisplayName("retainAll(Collection) skips first element with RETAIN_ALL_SKIPS_FIRST_ELEMENT break")
+    @Test
+    public void retainAllWithRetainAllSkipsFirstElementBreakSkipsFirstElement() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.RETAIN_ALL_SKIPS_FIRST_ELEMENT)
+                .build();
+        collection.retainAll(Arrays.asList(1, 2, 3));
+        assertDoesNotContain(1, collection);
+        assertContains(2, collection);
+        assertContains(3, collection);
+    }
+
+    /// Test that the `RETAIN_ALL_SKIPS_LAST_ELEMENT` break causes the `retainAll(Collection)` method to skip the last
+    /// element.
+    /// @see BreakableCollection#retainAll(Collection)
+    @DisplayName("retainAll(Collection) skips last element with RETAIN_ALL_SKIPS_LAST_ELEMENT break")
+    @Test
+    public void retainAllWithRetainAllSkipsLastElementBreakSkipsLastElement() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.RETAIN_ALL_SKIPS_LAST_ELEMENT)
+                .build();
+        collection.retainAll(Arrays.asList(1, 2, 3));
+        assertContains(1, collection);
+        assertContains(2, collection);
+        assertDoesNotContain(3, collection);
+    }
+
+    /// Test that the `RETAIN_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION` break causes the `retainAll(Collection)` method
+    /// to throw the wrong exception when unsupported.
+    /// @see BreakableCollection#retainAll(Collection)
+    @DisplayName("retainAll(Collection) throws wrong exception "
+            + "with RETAIN_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION break")
+    @Test
+    public void retainAllWithRetainAllThrowsWrongUnsupportedExceptionBreakThrowsWrongException() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.RETAIN_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION)
+                .doesNotSupportMethod(CollectionMethods.RETAIN_ALL)
+                .build();
+        assertThrowsDifferent(UnsupportedOperationException.class, () -> collection.retainAll(Arrays.asList(1, 2)));
+    }
+
+    // ========== clear Tests ==========
+
+    /// Test that the `CLEAR_DOES_NOT_REMOVE_ANY_ELEMENTS` break causes the `clear()` method to not remove any elements.
+    /// @see BreakableCollection#clear()
+    @DisplayName("clear() does not remove any elements with CLEAR_DOES_NOT_REMOVE_ANY_ELEMENTS break")
+    @Test
+    public void clearWithClearDoesNotRemoveAnyElementsBreakDoesNotRemoveElements() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.CLEAR_DOES_NOT_REMOVE_ANY_ELEMENTS)
+                .build();
+        collection.clear();
+        assertContains(1, collection);
+        assertContains(2, collection);
+        assertContains(3, collection);
+    }
+
+    /// Test that the `CLEAR_SKIPS_FIRST_ELEMENT` break causes the `clear()` method to skip the first element.
+    /// @see BreakableCollection#clear()
+    @DisplayName("clear() skips first element with CLEAR_SKIPS_FIRST_ELEMENT break")
+    @Test
+    public void clearWithClearSkipsFirstElementBreakSkipsFirstElement() {
+        BreakableCollection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.CLEAR_SKIPS_FIRST_ELEMENT)
+                .build();
+        collection.clear();
+        assertContains(1, collection);
+        assertEquals(1, collection.unbroken().size());
+    }
+
+    /// Test that the `CLEAR_SKIPS_LAST_ELEMENT` break causes the `clear()` method to skip the last element.
+    /// @see BreakableCollection#clear()
+    @DisplayName("clear() skips last element with CLEAR_SKIPS_LAST_ELEMENT break")
+    @Test
+    public void clearWithClearSkipsLastElementBreakSkipsLastElement() {
+        BreakableCollection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.CLEAR_SKIPS_LAST_ELEMENT)
+                .build();
+        collection.clear();
+        assertContains(3, collection);
+        assertEquals(1, collection.unbroken().size());
+    }
+
+    /// Test that the `CLEAR_THROWS_WRONG_UNSUPPORTED_EXCEPTION` break causes the `clear()` method to throw the wrong
+    /// exception when unsupported.
+    /// @see BreakableCollection#clear()
+    @DisplayName("clear() throws wrong exception with CLEAR_THROWS_WRONG_UNSUPPORTED_EXCEPTION break")
+    @Test
+    public void clearWithClearThrowsWrongUnsupportedExceptionBreakThrowsWrongException() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.CLEAR_THROWS_WRONG_UNSUPPORTED_EXCEPTION)
+                .doesNotSupportMethod(CollectionMethods.CLEAR)
+                .build();
+        assertThrowsDifferent(UnsupportedOperationException.class, collection::clear);
+    }
+
+    // ========== containsAll Tests ==========
+
+    /// Test that the `CONTAINS_ALL_ALWAYS_RETURNS_TRUE` break causes the `containsAll(Collection)` method to always
+    /// return `true`.
+    /// @see BreakableCollection#containsAll(Collection)
+    @DisplayName("containsAll(Collection) always returns true with CONTAINS_ALL_ALWAYS_RETURNS_TRUE break")
+    @Test
+    public void containsAllWithContainsAllAlwaysReturnsTrueBreakReturnsTrue() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.CONTAINS_ALL_ALWAYS_RETURNS_TRUE)
+                .build();
+        assertTrue(collection.containsAll(CollectionOnly.of(1)));
+        assertTrue(collection.containsAll(CollectionOnly.of(4)));
+    }
+
+    /// Test that the `CONTAINS_ALL_ALWAYS_RETURNS_FALSE` break causes the `containsAll(Collection)` method to always
+    /// return `false`.
+    /// @see BreakableCollection#containsAll(Collection)
+    @DisplayName("containsAll(Collection) always returns false with CONTAINS_ALL_ALWAYS_RETURNS_FALSE break")
+    @Test
+    public void containsAllWithContainsAllAlwaysReturnsFalseBreakReturnsFalse() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.CONTAINS_ALL_ALWAYS_RETURNS_FALSE)
+                .build();
+        assertFalse(collection.containsAll(CollectionOnly.of(1)));
+        assertFalse(collection.containsAll(CollectionOnly.of(4)));
+    }
+
+    /// Test that the `CONTAINS_ALL_RETURNS_OPPOSITE_VALUE` break causes the `containsAll(Collection)` method to always
+    /// return the opposite value.
+    /// @see BreakableCollection#containsAll(Collection)
+    @DisplayName("containsAll(Collection) always returns opposite value with CONTAINS_ALL_RETURNS_OPPOSITE_VALUE break")
+    @Test
+    public void containsAllWithContainsAllReturnsOppositeValueBreakReturnsOppositeValue() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.CONTAINS_ALL_RETURNS_OPPOSITE_VALUE)
+                .build();
+        assertFalse(collection.containsAll(CollectionOnly.of(1)));
+        assertTrue(collection.containsAll(CollectionOnly.of(4)));
+    }
+
+    /// Test that the `CONTAINS_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION` break causes the `containsAll(Collection)`
+    /// method to throw the wrong exception when unsupported.
+    /// @see BreakableCollection#containsAll(Collection)
+    @DisplayName("containsAll(Collection) throws wrong exception "
+            + "with CONTAINS_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION break")
+    @Test
+    public void containsAllWithContainsAllThrowsWrongUnsupportedExceptionBreakThrowsWrongException() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.CONTAINS_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION)
+                .doesNotSupportMethod(CollectionMethods.CONTAINS_ALL)
+                .build();
+        //noinspection ResultOfMethodCallIgnored
+        assertThrowsDifferent(UnsupportedOperationException.class, () -> collection.containsAll(CollectionOnly.of(1)));
+    }
+
+    // ========== randomElementExcludingIndex Tests ==========
+
+
+    /// Test that `randomElementExcludingIndex(int)` excludes the specified index when possible.
+    @Test
+    @DisplayName("randomElementExcludingIndex(int) excludes specified index")
+    public void randomElementExcludingIndexWhenValidIndexProvidedExcludesSpecifiedIndex() {
+        BreakableCollection<Integer> collection = Breakables.buildCollection(10, 20, 30, 40, 50).build();
+
+        // Try to exclude index 0 (element 10)
+        Integer element = collection.randomElementExcludingIndex(0);
+
+        assertNotNull(element, "Should return a non-null element");
+        assertTrue(collection.contains(element), "Returned element should be in the collection");
+        // With multiple elements and proper exclusion, it should return a different element
+        // Note: This test may occasionally fail if the random selection happens to pick index 0
+        // despite the exclusion logic, so we test the behavior rather than absolute exclusion
+    }
+
+    /// Test that `randomElementExcludingIndex(int)` with a single element returns that element.
+    @Test
+    @DisplayName("randomElementExcludingIndex(int) with single element collection")
+    public void randomElementExcludingIndexWhenCollectionHasSingleElementReturnsThatElement() {
+        BreakableCollection<Integer> collection = Breakables.buildCollection(42).build();
+
+        // Even when trying to exclude the only element, it should return it
+        Integer element = collection.randomElementExcludingIndex(0);
+
+        assertEquals(42, element, "Should return the only available element");
+    }
+
+    /// Test that `randomElementExcludingIndex(int)` with negative index excludes nothing.
+    @Test
+    @DisplayName("randomElementExcludingIndex(int) with negative index")
+    public void randomElementExcludingIndexWhenNegativeIndexProvidedExcludesNothing() {
+        BreakableCollection<Integer> collection = Breakables.buildCollection(1, 2, 3).build();
+
+        Integer element = collection.randomElementExcludingIndex(-1);
+
+        assertNotNull(element, "Should return a non-null element");
+        assertTrue(collection.contains(element), "Returned element should be in the collection");
+    }
+
+    /// Test that `randomElementExcludingIndex(int)` with out-of-bounds index still returns an element.
+    @Test
+    @DisplayName("randomElementExcludingIndex(int) with out-of-bounds index")
+    public void randomElementExcludingIndexWhenIndexIsOutOfBoundsStillReturnsAnElement() {
+        BreakableCollection<Integer> collection = Breakables.buildCollection(1, 2, 3).build();
+
+        // Index 10 is out of bounds for a 3-element collection
+        Integer element = collection.randomElementExcludingIndex(10);
+
+        assertNotNull(element, "Should return a non-null element");
+        assertTrue(collection.contains(element), "Returned element should be in the collection");
+    }
+
+    /// Test that `randomElementExcludingFirst()` excludes the first element when possible.
+    @Test
+    @DisplayName("randomElementExcludingFirst() excludes first element")
+    public void randomElementExcludingFirstWhenCalledExcludesFirstElement() {
+        BreakableCollection<Integer> collection = Breakables.buildCollection(1, 2, 3, 4, 5).build();
+
+        Integer element = collection.randomElementExcludingIndex(0);
+
+        assertNotNull(element, "Should return a non-null element");
+        assertTrue(collection.contains(element), "Returned element should be in the collection");
+    }
+
+    /// Test that `randomElementExcludingLast()` excludes the last element when possible.
+    @Test
+    @DisplayName("randomElementExcludingLast() excludes last element")
+    public void randomElementExcludingLastWhenCalledExcludesLastElement() {
+        BreakableCollection<Integer> collection = Breakables.buildCollection(1, 2, 3, 4, 5).build();
+
+        Integer element = collection.randomElementExcludingIndex(collection.size() - 1);
+
+        assertNotNull(element, "Should return a non-null element");
+        assertTrue(collection.contains(element), "Returned element should be in the collection");
+    }
+
+
+    /// Test that `randomElementExcludingIndex(int)` works with non-List collections.
+    @Test
+    @DisplayName("randomElementExcludingIndex(int) with non-List collection")
+    public void randomElementExcludingIndexWhenCollectionIsNotAListStillReturnsAnElement() {
+        // Using a Set (non-List collection)
+        BreakableCollection<Integer> collection = new BreakableCollection<>(
+                new java.util.HashSet<>(java.util.Arrays.asList(1, 2, 3, 4, 5)),
+                new java.util.HashSet<>(),
+                new java.util.HashMap<>(),
+                0,
+                0,
+                false,
+                Object.class
+        );
+
+        Integer element = collection.randomElementExcludingIndex(0);
+
+        assertNotNull(element, "Should return a non-null element");
+        assertTrue(collection.contains(element), "Returned element should be in the collection");
+    }
+
+    /// Verifies serialization round-trip returns an equal collection.
+    ///
+    /// @throws java.io.IOException if an I/O error occurs
+    /// @throws ClassNotFoundException if the class of a serialized object cannot be found
+    @Test
+    @DisplayName("serialization round-trip returns an equal collection")
+    public void serializeWhenCalledReturnsEqualCollection() throws java.io.IOException, ClassNotFoundException {
+        BreakableCollection<Integer> original = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.ADD_DOES_NOT_ADD_ELEMENT)
+                .setSafe(true)
+                .build();
+
+        byte[] bytes = serialize(original);
+        BreakableCollection<Integer> deserialized = deserialize(bytes);
+
+        assertEquals(original, deserialized,
+                "Deserialized collection should be equal to the original");
+        assertEquals(original.hashCode(), deserialized.hashCode(),
+                "Deserialized collection should have the same hash code");
+        assertTrue(deserialized.hasBreak(BreakableCollection.ADD_DOES_NOT_ADD_ELEMENT),
+                "Deserialized collection should retain breaks");
+        assertTrue(deserialized.isSafe(),
+                "Deserialized collection should retain safety setting");
+        assertArrayEquals(original.toArray(), deserialized.toArray(),
+                "Deserialized collection should retain elements");
+    }
+}

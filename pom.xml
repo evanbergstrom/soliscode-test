@@ -5,26 +5,25 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
+  <!-- The shared parent: versions, plugins and every gate (soliscode-parent, docs/design/reference/build-and-test.md) -->
   <parent>
-    <groupId>org.soliscode</groupId>
+    <groupId>com.soliscode</groupId>
     <artifactId>soliscode-parent</artifactId>
-    <version>1.0.5-SNAPSHOT</version>
+    <version>0.1.2</version>
+    <relativePath/>
   </parent>
 
-  <!-- Project Coordinates -->
+  <groupId>com.soliscode</groupId>
   <artifactId>soliscode-test</artifactId>
-  <!-- Keep development on a SNAPSHOT so publish:snapshot has something to push.
-       semantic-release will set a non-SNAPSHOT for releases, then bump back. -->
-  <version>1.0.15-SNAPSHOT</version>
+  <!-- 0.1-SNAPSHOT on main; scripts/release/release.sh sets 0.1.N for a release (RELEASES.md) -->
+  <version>${revision}</version>
   <packaging>jar</packaging>
 
-  <!-- Project Information -->
   <name>SolisCode Test</name>
   <description>Library for writing unit tests for classes that implement standard interfaces</description>
   <url>https://soliscode.org</url>
   <inceptionYear>2025</inceptionYear>
 
-  <!-- Legal Information -->
   <licenses>
     <license>
       <name>The Apache License, Version 2.0</name>
@@ -56,42 +55,20 @@
     <url>https://gitlab.com/soliscode/soliscode-test.git</url>
   </scm>
 
-  <!-- Continuous Integration -->
-  <ciManagement>
-    <system>GitLab CI</system>
-    <url>https://gitlab.com/soliscode/soliscode-test/-/pipelines</url>
-  </ciManagement>
-
-  <!-- Distribution Management -->
-  <distributionManagement>
-    <!-- release repository and snapshot repository managed by parent -->
-    <site>
-      <id>${project.artifactId}-site</id>
-      <name>SolisCode Test Site</name>
-      <url>${project.baseUri}</url>
-    </site>
-  </distributionManagement>
-
-  <!-- Properties -->
   <properties>
-    <!-- JUnit tags the default build skips; the all-tests profile clears it. README "Test tags". -->
-    <test.excludedGroups>extremely-slow</test.excludedGroups>
-
-   <!-- Override checkstyle version to match parent resources -->
-    <soliscode.checkstyle.version> ${project.parent.version}</soliscode.checkstyle.version>
-
-    <!-- Parent Overrides -->
-    <java.version>25</java.version>
+    <revision>0.1-SNAPSHOT</revision>
+    <!-- The line coverage the tests must keep (build-and-test.md, "Coverage") -->
+    <jacoco.minimum.coverage>0.70</jacoco.minimum.coverage>
+    <!-- The JUnit tags Surefire skips by default; -Pall-tests runs every test (build-and-test.md, "Test tags") -->
+    <excludedGroups>extremely-slow</excludedGroups>
   </properties>
 
-  <!-- Dependency Management -->
+  <!-- Compile scope: this is a test library, and its users' tests run on these -->
   <dependencies>
     <dependency>
       <groupId>org.jspecify</groupId>
       <artifactId>jspecify</artifactId>
-      <version>1.0.0</version>
     </dependency>
-    <!-- Versions managed by parent pom dependencyManagement -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
@@ -100,146 +77,26 @@
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
     </dependency>
-    <!-- Used by the main code directly, so declared: JUnit's commons (AnnotationSupport) and its failure types -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-params</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.junit.platform</groupId>
       <artifactId>junit-platform-commons</artifactId>
-      <version>${junit-platform.version}</version>
-    </dependency>
-    <!-- Surefire runs the tests through the launcher, which must match JUnit's version -->
-    <dependency>
-      <groupId>org.junit.platform</groupId>
-      <artifactId>junit-platform-launcher</artifactId>
-      <version>${junit-platform.version}</version>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.opentest4j</groupId>
       <artifactId>opentest4j</artifactId>
-      <version>1.3.0</version>
     </dependency>
   </dependencies>
 
-
-  <build>
-    <plugins>
-      <!-- Most plugins are fully configured in parent pom pluginManagement -->
-      <!-- Only include plugins that need project-specific configuration -->
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <configuration>
-          <failOnError>true</failOnError>           <!-- default: true -->
-          <doclint>all</doclint>                    <!-- treat warnings as errors -->
-          <additionalOptions>
-            <additionalOption>-Werror</additionalOption>
-          </additionalOptions>
-        </configuration>
-      </plugin>
-
-      <!-- JaCoCo with project-specific report-aggregate execution -->
-      <plugin>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>prepare-agent</id>
-            <phase>pre-site</phase>
-            <goals>
-              <goal>prepare-agent</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-
-      <!-- Central Publishing Plugin (project-specific configuration) -->
-      <plugin>
-        <groupId>org.sonatype.central</groupId>
-        <artifactId>central-publishing-maven-plugin</artifactId>
-        <extensions>true</extensions>
-        <configuration>
-          <publishingServerId>central</publishingServerId>
-          <autoPublish>true</autoPublish>
-          <waitUntil>validated</waitUntil>
-          <centralSnapshotsUrl>https://central.sonatype.com/repository/maven-snapshots/</centralSnapshotsUrl>
-        </configuration>
-      </plugin>
-
-      <!-- Configure Surefire to run tests in a single thread. The JUnit tags it skips are set by
-           test.excludedGroups (see the properties and the all-tests profile, and README "Test tags"). -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <forkCount>1</forkCount>
-          <reuseForks>true</reuseForks>
-          <threadCount>1</threadCount>
-          <excludedGroups>${test.excludedGroups}</excludedGroups>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-
-  <reporting>
-    <plugins>
-      <!-- Only project-specific reporting configuration -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-report-plugin</artifactId>
-        <configuration>
-          <aggregate>true</aggregate>
-          <linkXRef>true</linkXRef>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
-        <reportSets>
-          <reportSet>
-            <reports>
-              <report>report</report>
-            </reports>
-          </reportSet>
-        </reportSets>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jxr-plugin</artifactId>
-        <reportSets>
-          <reportSet>
-            <id>aggregate</id>
-            <inherited>false</inherited>
-            <reports>
-              <report>aggregate</report>
-            </reports>
-          </reportSet>
-        </reportSets>
-      </plugin>
-      <!-- OWASP Dependency Check with OSS Index disabled -->
-      <plugin>
-        <groupId>org.owasp</groupId>
-        <artifactId>dependency-check-maven</artifactId>
-        <reportSets>
-          <reportSet>
-            <reports>
-              <report>aggregate</report>
-            </reports>
-          </reportSet>
-        </reportSets>
-        <configuration>
-          <!-- Disable OSS Index analyzer to avoid 401 authentication errors -->
-          <ossindexAnalyzerEnabled>false</ossindexAnalyzerEnabled>
-        </configuration>
-      </plugin>
-    </plugins>
-  </reporting>
   <profiles>
-    <!-- Runs every test, including the tags the default build skips: mvn verify -Pall-tests -->
+    <!-- Runs every test, the tags the default build skips included: mvn verify -Pall-tests -->
     <profile>
       <id>all-tests</id>
       <properties>
-        <test.excludedGroups></test.excludedGroups>
+        <excludedGroups></excludedGroups>
       </properties>
     </profile>
   </profiles>

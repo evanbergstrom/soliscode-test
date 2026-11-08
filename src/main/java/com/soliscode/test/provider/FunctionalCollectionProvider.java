@@ -1,0 +1,129 @@
+package com.soliscode.test.provider;
+
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
+/// A collection objectProvider that uses a set of functions to construct instances of the collection. There are four
+/// elements required to create a collection objectProvider using this class:
+/// - Default constructor function
+/// - Copy constructor function
+/// - Collection constructor function
+/// - Element objectProvider.
+/// For example, to create a collection objectProvider for an `ArrayList` of Integer objects:
+/// ```java
+///     CollectionProvider<Integer> objectProvider = FunctionalCollectionProvider<Integer, ArrayList>(
+///         ArrayList;:new, ArrayList::new, ArrayList::new, Providers.integerProvider());
+/// ```
+///
+/// @param <E> the element type for the iterable
+/// @param <I> the iterable type.
+/// @author evanbergstrom
+/// @since 1.0.0
+public class FunctionalCollectionProvider<I extends Iterable<E>, E> extends FunctionalProvider<I>
+        implements CollectionProvider<I, E> {
+
+    /// Default number of elements to use for a test.
+    private static final int DEFAULT_SIZE = 10;
+
+    private final Function<Collection<E>, I> collectionConstructor;
+    private final ObjectProvider<E> elementProvider;
+
+    /// Create an instance of this collection objectProvider that uses the methods and element objectProvider specified
+    /// in the arguments for its implementation.
+    /// @param defaultConstructor the supplier to use to create default instances of the collection.
+    /// @param copyConstructor the function to use to create a copy of the collection.
+    /// @param collectionConstructorArg the function to use to create an instance from another collection.
+    /// @param elementProviderArg the element objectProvider.
+    /// @throws NullPointerException if any of the arguments are `null`
+    public FunctionalCollectionProvider(final Supplier<I> defaultConstructor,
+                                        final Function<I, I> copyConstructor,
+                                        final Function<Collection<E>, I> collectionConstructorArg,
+                                        final ObjectProvider<E> elementProviderArg) {
+        super(defaultConstructor, copyConstructor);
+        this.collectionConstructor = Objects.requireNonNull(collectionConstructorArg);
+        this.elementProvider = Objects.requireNonNull(elementProviderArg);
+    }
+
+    @Override
+    public ObjectProvider<E> elementProvider() {
+        return elementProvider;
+    }
+
+    /// Creates an instance of iterable with no elements.
+    /// @return and instance of iterable
+    @Override
+    public I emptyInstance() {
+        return defaultInstance();
+    }
+
+    @Override
+    public I createInstance(final Collection<E> c) {
+        return collectionConstructor.apply(c);
+    }
+
+    @Override
+    public I createInstance(final long seed) {
+        return createInstance(elementProvider().createUniqueInstances(DEFAULT_SIZE, seed));
+    }
+
+    @Override
+    public I createSingleton() {
+        return createInstance(Collections.singleton(elementProvider.createInstance()));
+    }
+
+    /// Creates an instance of iterable with a single element.
+    /// @param e the element for the iterable.
+    /// @return and instance of iterable.
+    @Override
+    public I createSingleton(final E e) {
+        return createInstance(Collections.singleton(e));
+    }
+
+    /// Creates an instance of iterable with the same elements provided.
+    /// @param elements the elements for the iterable.
+    /// @return and instance of iterable.
+    /// @throws NullPointerException if the argument is `null`.
+    @Override
+    public I createInstance(final E[] elements) {
+        return createInstance(Arrays.asList(elements));
+    }
+
+    @Override
+    public I createInstanceWithUniqueElements() {
+        return createInstance(elementProvider.createUniqueInstances(DEFAULT_SIZE));
+    }
+
+    @Override
+    public I createInstanceWithUniqueElements(final int size) {
+        return createInstance(elementProvider.createUniqueInstances(size));
+    }
+
+    @Override
+    public I createInstanceWithUniqueElements(final int size, final int seed) {
+        return createInstance(elementProvider.createUniqueInstances(size, seed));
+    }
+
+    /// Create an instance of this collection objectProvider that uses the methods and element objectProvider specified
+    /// in the arguments for its implementation.
+    /// @param <E> the type of the elements.
+    /// @param <I> the type of the iterable.
+    /// @param defaultConstructor the supplier to use to create default instances of the collection.
+    /// @param copyConstructor the function to use to create a copy of the collection.
+    /// @param collectionConstructor the function to use to create an instance from another collection.
+    /// @param elementProvider the element objectProvider.
+    /// @return the collection objectProvider.
+    /// @throws NullPointerException if any of the arguments are `null`
+    public static <I extends Iterable<E>, E> FunctionalCollectionProvider<I, E> from(
+            final Supplier<I> defaultConstructor,
+            final Function<I, I> copyConstructor,
+            final Function<Collection<E>, I> collectionConstructor,
+            final ObjectProvider<E> elementProvider) {
+        return new FunctionalCollectionProvider<>(defaultConstructor, copyConstructor, collectionConstructor,
+                elementProvider);
+    }
+}

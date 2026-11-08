@@ -1,2 +1,44 @@
-**/target/
-node_modules/
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+.bloop/
+*.iml
+.project
+.classpath
+.settings/
+.factorypath
+.aiassistant/
+
+# Maven
+target/
+build/
+*.jar
+*.war
+*.class
+.flattened-pom.xml
+
+# Java
+hs_err_pid*
+replay_pid*
+
+# Logs and runtime
+*.log
+logs/
+tmp/
+*.pid
+
+# Generated sources
+**/generated-sources/
+**/generated-test-sources/
+
+# OS
+Thumbs.db
+
+# Claude Code: personal settings and session state; GitLab is reached with glab, not an MCP server
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+.claude/worktrees/
+.mcp.json

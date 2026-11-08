@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# Copyright 2026 Evan Bergstrom
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Compiles the main and test sources when the staged changes touch Java or a build file, and so runs
+# whatever is bound to validate and compile (the enforcer, Checkstyle, ErrorProne and NullAway). On
+# success it records the staged tree, which pre-push looks for (docs/design/reference/build-and-test.md,
+# "Git hooks").
+
+set -euo pipefail
+
+root=$(git rev-parse --show-toplevel)
+cd "$root"
+# shellcheck source=../lib/records.sh
+source "$root/scripts/lib/records.sh"
+records="$(records_dir)/pre-commit"
+mkdir -p "$records"
+
+build=false
+
+# HEAD with no record (a --no-verify commit being amended, the first commit after the hooks are
+# installed, a commit from elsewhere): its changes were never built here, so build.
+if head_tree=$(git rev-parse -q --verify 'HEAD^{tree}'); then
+    [[ -e "$records/$head_tree" ]] || build=true
+else
+    build=true
+fi
+
+# Maven builds the working copy, but the record is for the staged tree: refuse a commit that leaves
+# a build file unstaged or untracked, since the build would vouch for something the commit lacks.
+status=$(git -c core.quotePath=off status --porcelain --untracked-files=all -- pom.xml .mvn .errorprone src)
+dirty=$(printf '%s\n' "$status" | grep -vE '^([MADRCT] |$)' || true)
+if [[ -n "$dirty" ]]; then
+    echo "pre-commit: these build files are not staged as they are in the working copy:" >&2
+    echo "$dirty" >&2
+    echo "pre-commit: stage them, or set them aside, and commit again." >&2
+    exit 1
+fi
+
+while IFS= read -r -d '' file; do
+    case "$file" in
+        pom.xml|.mvn/*|.errorprone|src/*) build=true ;;
+    esac
+done < <(git diff --cached --name-only -z)
+
+if $build; then
+    echo "pre-commit: compiling the main and test sources"
+    mvn -B -q -DskipTests -Djacoco.skip=true test-compile
+fi
+
+touch "$records/$(git write-tree)"
