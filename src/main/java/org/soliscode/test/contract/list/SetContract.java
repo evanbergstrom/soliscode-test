@@ -2,36 +2,66 @@ package org.soliscode.test.contract.list;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.opentest4j.AssertionFailedError;
-import org.soliscode.test.contract.CollectionMethods;
 import org.soliscode.test.contract.support.CollectionContractSupport;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/// This interface tests if a list class has implemented the [set][List#set] method correctly.
+/// **Contract for the `set` method of a `List`**
+///
+/// This interface defines tests for the [set(int, E)][List#set] method. It is designed
+/// to be used as a mix-in interface by test classes that verify [List] implementations.
+///
+/// ## Purpose
+/// The purpose of this contract is to ensure that a list's `set` implementation correctly:
+/// - Replaces the element at the specified position with the specified element.
+/// - Returns the element previously at the specified position (though currently not verified by these tests).
+/// - Throws [IndexOutOfBoundsException] for invalid indices.
+/// - Handles null values according to the list's configuration.
+/// - Throws [UnsupportedOperationException] if the method is not supported.
+///
+/// ## Usage Examples
+/// To use this contract, implement it in your test class along with the required support interfaces:
+///
+/// ```java
+/// class MyListSetTest implements SetContract<String, MyList<String>> {
+///     @Override
+///     public CollectionProvider<String, MyList<String>> objectProvider() {
+///         return MyList::new;
+///     }
+/// }
+/// ```
+///
+/// ## Thread Safety
+/// This contract interface does not provide any thread-safety guarantees. The thread safety of the
+/// tests depends on the [List] and [org.soliscode.test.provider.CollectionProvider] implementations being tested.
 ///
 /// @param <E> The element type for the list being tested.
 /// @param <L> The type of the list being tested.
 /// @author evanbergstrom
-/// @since 1.0
 /// @see List#set
-public interface SetContract<E, L extends List<E>> extends CollectionContractSupport<E, L> {
+/// @since 1.0.0
+public interface SetContract<L extends List<E>, E> extends CollectionContractSupport<L, E> {
 
-    /// Tests that the [set][List#set] method works.
-    /// @throws AssertionFailedError if the test fails.
+    /// Tests that the [set][List#set] method works for valid indices.
+    ///
+    /// This test verifies that `set(int, E)` correctly replaces elements at valid positions.
+    ///
+    /// @see List#set
+    /// @throws org.opentest4j.AssertionFailedError if the test fails.
+    /// @since 1.0.0
     @Test
-    @DisplayName("Test that the set method works")
-    default void testSet() {
+    @DisplayName("set(int, E) replaces elements at valid indices")
+    default void set_whenIndexIsValid_replacesElement() {
         List<E> values = elementProvider().createUniqueInstances(DEFAULT_SIZE * 2);
         List<E> original = values.subList(0, DEFAULT_SIZE);
         List<E> updated = values.subList(DEFAULT_SIZE, DEFAULT_SIZE * 2);
         List<E> list = provider().createInstance(original);
 
-        if (supportsMethod(CollectionMethods.Set)) {
+        if (supportsMethod(ListMethods.SET)) {
             for (int i = 0; i < DEFAULT_SIZE; i++) {
-                list.set(i, updated.get(i));
+                assertEquals(original.get(i), list.set(i, updated.get(i)), "set(int, E) returns the element replaced");
                 assertEquals(updated.get(i), list.get(i));
             }
         } else {
@@ -40,12 +70,15 @@ public interface SetContract<E, L extends List<E>> extends CollectionContractSup
         }
     }
 
-    /// Tests that the [set][List#set] method works on an empty list.
-    /// @throws AssertionFailedError if the test fails.
+    /// Tests that the [set][List#set] method throws [IndexOutOfBoundsException] for an empty list.
+    ///
+    /// @see List#set
+    /// @throws org.opentest4j.AssertionFailedError if the test fails.
+    /// @since 1.0.0
     @Test
-    @DisplayName("Test that the set method works on an empty list")
-    default void testSetWithEmptyCollection() {
-        if (supportsMethod(CollectionMethods.Set)) {
+    @DisplayName("set(int, E) throws IndexOutOfBoundsException for an empty list")
+    default void set_whenEmpty_throwsIndexOutOfBoundsException() {
+        if (supportsMethod(ListMethods.SET)) {
             List<E> list = provider().emptyInstance();
             E e = elementProvider().createInstance();
             assertThrows(IndexOutOfBoundsException.class, () -> list.set(0, e));
@@ -53,12 +86,17 @@ public interface SetContract<E, L extends List<E>> extends CollectionContractSup
     }
 
     /// Tests that the [set][List#set] method throws for an invalid index.
-    /// @throws AssertionFailedError if the test fails.
+    ///
+    /// This test verifies that `set(int, E)` throws [IndexOutOfBoundsException] for indices
+    /// that are less than 0 or greater than or equal to the size of the list.
+    ///
+    /// @see List#set
+    /// @throws org.opentest4j.AssertionFailedError if the test fails.
+    /// @since 1.0.0
     @Test
-    @DisplayName("Test that the set method throws for invalid index")
-    default void testSetThrowsForInvalidIndex() {
-        if (supportsMethod(CollectionMethods.Set)) {
-            List<E> values = elementProvider().createUniqueInstances(DEFAULT_SIZE);
+    @DisplayName("set(int, E) throws IndexOutOfBoundsException for invalid index")
+    default void set_whenIndexIsInvalid_throwsIndexOutOfBoundsException() {
+        if (supportsMethod(ListMethods.SET)) {
             List<E> list = provider().createInstanceWithUniqueElements();
             E e = elementProvider().createInstance();
             assertThrows(IndexOutOfBoundsException.class, () -> list.set(-1, e));
@@ -66,12 +104,17 @@ public interface SetContract<E, L extends List<E>> extends CollectionContractSup
         }
     }
 
-    /// Tests that the [set][List#set] method works with a null element.
-    /// @throws AssertionFailedError if the test fails.
+    /// Tests that the [set][List#set] method handles `null` values correctly.
+    ///
+    /// This test verifies the behavior based on [CollectionContractSupport#permitNulls()].
+    ///
+    /// @see List#set
+    /// @throws org.opentest4j.AssertionFailedError if the test fails.
+    /// @since 1.0.0
     @Test
-    @DisplayName("Test that the set method works with a null element")
-    default void testSetWithNullElement() {
-        if (supportsMethod(CollectionMethods.Set)) {
+    @DisplayName("set(int, E) handles null values based on permission")
+    default void set_withNullValue_handlesCorrectly() {
+        if (supportsMethod(ListMethods.SET)) {
             List<E> list = provider().createInstanceWithUniqueElements();
             if (permitNulls()) {
                 list.set(1, null);
@@ -81,5 +124,4 @@ public interface SetContract<E, L extends List<E>> extends CollectionContractSup
             }
         }
     }
-
 }

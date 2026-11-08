@@ -25,5 +25,5 @@ public interface SupportedMethods {
     /// Used to determine if this object supports an optional method.
     /// @param method The identifier for the method.
     /// @return 'true' if the method is supported. `false` if it is not.
-    boolean supportsMethod(OptionalMethod method);
+    boolean supportsMethod(InterfaceMethod method);
 }

@@ -16,21 +16,21 @@
 
 package org.soliscode.test.contract.support;
 
-import org.jetbrains.annotations.NotNull;
-import org.soliscode.test.contract.object.ObjectContract;
-import org.soliscode.test.provider.*;
+import org.jspecify.annotations.NonNull;
+import org.soliscode.test.provider.IntegerNumberProvider;
+import org.soliscode.test.provider.IntegerProvider;
 
 /// Provides an implementation of the [#provider()] method that provides instances of [Integer].
 ///
 /// @author evanbergstrom
-/// @see ObjectContract
+/// @see org.soliscode.test.contract.object.ObjectContract
 /// @see IntegerProvider
 /// @since 1.0
 public interface WithInteger extends IntegerSupport<Integer> {
 
     /// Returns an instance of `NumberProvider` that provides [Integer] objects.
     /// @return an instance of [IntegerProvider].
-    default @NotNull IntegerNumberProvider<Integer> provider() {
+    default @NonNull IntegerNumberProvider<Integer> provider() {
         return new IntegerProvider();
     }
 }

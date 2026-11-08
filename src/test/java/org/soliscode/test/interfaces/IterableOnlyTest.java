@@ -1,6 +1,6 @@
 package org.soliscode.test.interfaces;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.soliscode.test.AbstractTest;
@@ -11,7 +11,6 @@ import org.soliscode.test.provider.CollectionProvider;
 import org.soliscode.test.provider.FunctionalCollectionProvider;
 
 import java.util.ArrayList;
-import java.util.Collection;
 
 
 /// Tests for the [IterableOnly] class.
@@ -20,19 +19,27 @@ import java.util.Collection;
 /// @since 1.0
 /// @see IterableOnly
 @DisplayName("Tests for the IterableOnly class")
-public class IterableOnlyTest extends AbstractTest implements IterableContract<Integer, IterableOnly<Integer>>,
+public class IterableOnlyTest extends AbstractTest implements IterableContract<IterableOnly<Integer>, Integer>,
         WithIntegerElement {
 
+    /// Default constructor.
+    public IterableOnlyTest() {
+        super();
+    }
+
+
     @Override
-    public @NotNull CollectionProvider<Integer, IterableOnly<Integer>> provider() {
+    public @NonNull CollectionProvider<IterableOnly<Integer>, Integer> provider() {
         return new FunctionalCollectionProvider<>(IterableOnly::new, IterableOnly::new,
                 (c) -> new IterableOnly<>(new ArrayList<>(c)), elementProvider());
     }
 
-    /// Test that `IterableOnly` only implements the `Iterable` interface.
+    /// Verifies that [IterableOnly] only implements the [Iterable] interface.
+    ///
+    /// @see IterableOnly
+    @DisplayName("constructor_whenCalled_returnsIterableThatImplementsOnlyIterable")
     @Test
-    @DisplayName("IterableOnly only implements the Iterable interface.")
-    public void testIterableIsOnlyInterface() {
+    public void constructor_whenCalled_returnsIterableThatImplementsOnlyIterable() {
         Iterable<Integer> iterable = new IterableOnly<>();
         Assertions.assertImplementsOnly(Iterable.class, iterable);
     }

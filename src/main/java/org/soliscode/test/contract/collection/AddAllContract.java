@@ -1,74 +1,236 @@
 package org.soliscode.test.contract.collection;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.soliscode.test.contract.CollectionMethods;
 import org.soliscode.test.contract.support.CollectionContractSupport;
+import org.soliscode.test.util.MatchNothing;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
+import static java.util.Collections.unmodifiableCollection;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.soliscode.test.assertions.collection.CollectionAssertions.*;
+import static org.soliscode.test.assertions.collection.CollectionAssertions.assertContainsAll;
+import static org.soliscode.test.assertions.collection.CollectionAssertions.assertContainsSameByIdentity;
 
-/// This interface tests if a collection class has implemented the `addAll()` method correctly. This is a "mix-in"
-/// interface that is added to a test class.
+/// **Contract for the `addAll` method of a `Collection`**
+///
+/// This interface defines tests for the [addAll][Collection#addAll] method. It is designed
+/// to be used as a mix-in interface by test classes that verify [Collection] implementations.
+///
+/// ## Purpose
+/// The purpose of this contract is to ensure that a collection's `addAll` implementation correctly:
+/// - Adds all elements from the specified collection to the target collection.
+/// - Returns `true` if the collection changed as a result of the call.
+/// - Handles null values according to the collection's configuration (permitting or rejecting nulls).
+/// - Handles duplicate values according to the collection's configuration (permitting or ignoring duplicates).
+/// - Throws [UnsupportedOperationException] if the method is not supported by the implementation.
+///
+/// ## Usage Examples
+/// To use this contract, implement it in your test class along with the required support interfaces:
+///
+/// ```java
+/// class MyCollectionAddAllTest implements AddAllContract<String, MyCollection<String>> {
+///     @Override
+///     public CollectionProvider<String, MyCollection<String>> objectProvider() {
+///         return MyCollection::new;
+///     }
+///
+///     @Override
+///     public ObjectProvider<String> elementProvider() {
+///         return () -> Stream.of("a", "b", "c");
+///     }
+/// }
+/// ```
+///
+/// ## Thread Safety
+/// This contract interface does not provide any thread-safety guarantees. The thread safety of the
+/// tests depends on the [Collection] and [org.soliscode.test.provider.CollectionProvider] implementations being tested.
 ///
 /// @param <E> The element type being tested.
 /// @param <C> The collection type being tested.
 /// @author evanbergstrom
 /// @see Collection#addAll
 /// @since 1.0.0
-public interface AddAllContract<E, C extends Collection<E>> extends CollectionContractSupport<E, C> {
+public interface AddAllContract<C extends Collection<E>, E> extends CollectionContractSupport<C, E> {
 
 
-    /// Tests that the `addAll()` method works.
+    /// Tests that the [addAll][Collection#addAll] method successfully adds elements to an empty collection.
+    ///
+    /// This test verifies that:
+    /// 1. Elements from a source collection are added to the target collection.
+    /// 2. The method returns `true` indicating the collection has changed.
+    /// 3. If `addAll` is not supported, it verifies that [UnsupportedOperationException] is thrown.
+    ///
+    /// @since 1.0.0
+    @DisplayName("addAll(Collection) adds all argument elements to an empty collection")
     @Test
-    default void testAddAllToContainer() {
-        if (supportsMethod(CollectionMethods.AddAll)) {
+    default void addAll_whenContainerIsEmpty_addsAllArgumentElements() {
+        if (supportsMethod(CollectionMethods.ADD_ALL)) {
             Collection<E> collection = provider().emptyInstance();
             Collection<E> values = elementProvider().createUniqueInstances(DEFAULT_SIZE);
 
-            assertTrue(collection.addAll(values));
+            assertTrue(collection.addAll(unmodifiableCollection(values)));
             assertContainsSameByIdentity(values, collection);
-        } else {
-            Collection<E> collection = provider().emptyInstance();
-            assertThrows(UnsupportedOperationException.class, () -> collection.add(elementProvider().createInstance()));
         }
     }
 
-    /// Tests that the `addAll()` method handles null values correctly.
+    /// Tests that the [Collection#addAll(Collection)] method successfully adds all elements
+    /// from a source collection to a target collection that already contains elements.
+    ///
+    /// This test verifies the following:
+    ///     - The target collection's size increases to include all elements from the source collection.
+    ///     - The method returns `true`, indicating that the collection has been modified.
+    ///     - The target collection contains all elements from both the initial state and the source collection,
+    ///     maintaining element identity.
+    ///
+    /// If the `addAll` method is not supported, the test is skipped by verifying the result
+    /// of [#supportsMethod(org.soliscode.test.InterfaceMethod)] with [CollectionMethods#ADD_ALL].
+    ///
+    /// Implementation assumptions:
+    ///     - The initial collection is created with unique elements provided by [#elementProvider()].
+    ///     - Verification ensures that the final collection contains the same instances as provided, ensuring
+    ///     correctness by identity comparison.
+    /// @since 1.0.0
+    @DisplayName("addAll(Collection) adds all argument elements to a collection with elements")
     @Test
-    default void testAddAllWithNullValue() {
-        if (supportsMethod(CollectionMethods.AddAll)) {
+    default void addAll_whenContainerHasElements_addsAllArgumentElements() {
+        if (supportsMethod(CollectionMethods.ADD_ALL)) {
+            List<E> values = elementProvider().createUniqueInstances(DEFAULT_SIZE);
+            Collection<E> collection = provider().createInstance(values.subList(0, DEFAULT_SIZE / 2 ));
+
+            assertTrue(collection.addAll(unmodifiableCollection(values.subList(DEFAULT_SIZE / 2, DEFAULT_SIZE))));
+            assertContainsSameByIdentity(values, collection);
+        }
+    }
+
+    /// Tests that the [addAll][Collection#addAll] method returns `false` when adding an empty collection.
+    ///
+    /// This test verifies that:
+    /// 1. Adding an empty collection to the target collection returns `false`.
+    /// 2. The target collection remains unchanged.
+    ///
+    /// @since 1.0.0
+    @DisplayName("addAll(Collection) returns false when adding an empty collection")
+    @Test
+    default void addAll_withEmptyCollection_returnsFalse() {
+        if (supportsMethod(CollectionMethods.ADD_ALL)) {
             Collection<E> collection = provider().emptyInstance();
+            assertFalse(collection.addAll(Collections.emptyList()));
+            assertFalse(collection.iterator().hasNext(), "addAll of an empty collection added an element");
+        }
+    }
+
+    /// Tests that the [addAll][Collection#addAll] method throws [NullPointerException] when the argument is `null`.
+    ///
+    /// @since 1.0.0
+    @DisplayName("addAll(Collection) throws NullPointerException when the argument is null")
+    @Test
+    default void addAll_withNullCollection_throwsNullPointerException() {
+        if (supportsMethod(CollectionMethods.ADD_ALL)) {
+            Collection<E> collection = provider().emptyInstance();
+            //noinspection DataFlowIssue
+            assertThrows(NullPointerException.class, () -> collection.addAll(null));
+        }
+    }
+
+    /// Tests that the [addAll][Collection#addAll] method handles `null` values correctly.
+    ///
+    /// This test verifies the behavior based on [CollectionContractSupport#permitNulls()]:
+    /// - If `null` is permitted: Adding a collection containing `null` should succeed.
+    /// - If `null` is not permitted: Adding a collection containing `null` should throw [NullPointerException].
+    ///
+    /// @since 1.0.0
+    @DisplayName("addAll(Collection) handles null values based on permission")
+    @Test
+    default void addAll_withNullValue_handlesCorrectly() {
+        if (supportsMethod(CollectionMethods.ADD_ALL)) {
+            Collection<E> collection = provider().emptyInstance();
+            Collection<E> values = Collections.singletonList(null);
             if (permitNulls()) {
-                collection.add(null);
+                assertTrue(collection.addAll(values));
                 assertTrue(collection.contains(null));
                 assertEquals(1, collection.size());
             } else {
-                assertThrows(NullPointerException.class, () -> collection.add(null));
+                assertThrows(NullPointerException.class, () -> collection.addAll(values));
             }
         }
     }
 
-    /// Tests that the `addAll()` method handles duplicate values correctly.
+    /// Tests that the [addAll][Collection#addAll] method handles duplicate values correctly.
+    ///
+    /// This test verifies the behavior based on [CollectionContractSupport#permitDuplicates()]:
+    /// - If duplicates are permitted: Adding existing elements should increase the collection size.
+    /// - If duplicates are not permitted: Adding existing elements should not increase the collection size,
+    ///   and the method should return `false` if no elements were added.
+    ///
+    /// @since 1.0.0
+    @DisplayName("addAll(Collection) handles duplicate values based on permission")
     @Test
     @SuppressWarnings("RedundantCollectionOperation")
-    default void testAddAllWithDuplicateValue() {
-        if (supportsMethod(CollectionMethods.AddAll)) {
+    default void addAll_withDuplicateValue_handlesCorrectly() {
+        if (supportsMethod(CollectionMethods.ADD_ALL)) {
             if (permitDuplicates()) {
                 List<E> values = elementProvider().createUniqueInstances(DEFAULT_SIZE);
                 Collection<E> collection = provider().createInstance(values);
-                collection.addAll(values);
+                assertTrue(collection.addAll(unmodifiableCollection(values)));
                 assertEquals(values.size() * 2, collection.size());
                 assertContainsAll(values, collection);
             } else {
-                Collection<E> collection = provider().emptyInstance();
                 E value = elementProvider().createInstance();
-                collection.add(value);
+                Collection<E> collection = provider().createSingleton(value);
                 E otherValue = elementProvider().copyInstance(value);
-                collection.addAll(Collections.singleton(otherValue));
+                assertFalse(collection.addAll(Collections.singleton(otherValue)));
                 assertEquals(1, collection.size());
             }
+        }
+    }
+
+    /// Tests that the [addAll][Collection#addAll] method handles incompatible element types correctly.
+    ///
+    /// This test verifies the behavior based on [CollectionContractSupport#permitIncompatibleTypes()]:
+    /// - If incompatible types are not permitted: Adding a collection with incompatible types should throw [ClassCastException].
+    /// - If incompatible types are permitted: The behavior is implementation-dependent, but usually it should either
+    ///   work or throw [ClassCastException] depending on how strict the implementation is.
+    ///
+    /// @since 1.0.0
+    @DisplayName("addAll(Collection) handles incompatible types based on permission")
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    default void addAll_withIncompatibleType_handlesCorrectly() {
+        if (supportsMethod(CollectionMethods.ADD_ALL)) {
+            if (permitIncompatibleTypes()) {
+                Collection<E> collection = provider().emptyInstance();
+                Object element = new Object();
+                Collection incompatibleValues = Collections.singletonList(element);
+                collection.addAll(incompatibleValues);
+                assertEquals(1, collection.size());
+                assertTrue(collection.contains(element));
+            } else {
+                Collection<E> collection = provider().emptyInstance();
+                Collection incompatibleValues = Collections.singletonList(new MatchNothing());
+                assertThrows(ClassCastException.class, () -> collection.addAll(incompatibleValues));
+            }
+        }
+    }
+
+    /// Verifies that the [Collection#addAll(Collection)] method throws [UnsupportedOperationException]
+    /// when the operation is not supported by the collection implementation.
+    ///
+    /// This test ensures compliance with the [Collection] contract, which specifies that an
+    /// `UnsupportedOperationException` must be thrown if the `addAll` method is optional
+    /// and not supported by the collection being tested.
+    ///
+    /// @throws AssertionError if the `addAll(Collection)` method does not throw [UnsupportedOperationException]
+    ///         for unsupported collections.
+    /// @since 1.0.0
+    @DisplayName("addAll(Collection) throws UnsupportedOperationException when not supported")
+    @Test
+    default void addAll_whenNotSupported_throwsUnsupportedOperationException() {
+        if (!supportsMethod(CollectionMethods.ADD_ALL)) {
+            assertThrows(UnsupportedOperationException.class,
+                    () -> provider().emptyInstance().addAll(Collections.emptyList()));
         }
     }
 }

@@ -16,7 +16,7 @@
 
 package org.soliscode.test.provider;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 /// Provides instances of the class [Float] for the purposes of testing.
 ///
@@ -24,13 +24,30 @@ import org.jetbrains.annotations.NotNull;
 /// @since 1.0.0
 public class FloatProvider implements DoubleNumberProvider<Float> {
 
+    ///  Default constructor.
+    public FloatProvider() { }
+
     /// Creates an instance of the [Float] class with a numeric value equal to the
     /// primitive float value.
     ///
     /// @param value the primitive float value.
     /// @return an instance of the `Float` class.
     @Override
-    public @NotNull Float createValue(final double value) {
-        return (float)value;
+    public @NonNull Float createValue(final double value) {
+        return (float) value;
+    }
+
+    // The maximum double value that can be represented by the double class.
+    /// @return the maximum double value.
+    @SuppressWarnings("SameReturnValue")
+    public double maxPrimitiveValue() {
+        return Float.MAX_VALUE;
+    }
+
+    /// The minimum double value that can be represented by the double class.
+    /// @return the minimum double value.
+    @SuppressWarnings("SameReturnValue")
+    public double minPrimitiveValue() {
+        return Float.MIN_VALUE;
     }
 }

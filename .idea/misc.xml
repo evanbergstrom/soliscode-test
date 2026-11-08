@@ -14,18 +14,11 @@
         <option value="$PROJECT_DIR$/pom.xml" />
       </list>
     </option>
-    <option name="ignoredFiles">
-      <set>
-        <option value="$PROJECT_DIR$/collection-test/pom.xml" />
-        <option value="$PROJECT_DIR$/collection/pom.xml" />
-        <option value="$PROJECT_DIR$/core/pom.xml" />
-        <option value="$PROJECT_DIR$/quant/pom.xml" />
-        <option value="$PROJECT_DIR$/test/pom.xml" />
-      </set>
-    </option>
   </component>
   <component name="ProjectResources">
+    <resource url="http://maven.apache.org/DECORATION/1.8.0" location="$PROJECT_DIR$" />
+    <resource url="http://maven.apache.org/xsd/decoration-1.8.0.xsd" location="$PROJECT_DIR$" />
     <resource url="https://checkstyle.org/dtds/suppressions_1_2.dtd" location="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_23" project-jdk-name="23" project-jdk-type="JavaSDK" />
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_25" project-jdk-name="openjdk-25" project-jdk-type="JavaSDK" />
 </project>

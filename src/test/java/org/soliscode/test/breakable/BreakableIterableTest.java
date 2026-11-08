@@ -1,27 +1,37 @@
 package org.soliscode.test.breakable;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.soliscode.test.AbstractTest;
 import org.soliscode.test.assertions.actions.AssertActions;
-import org.soliscode.test.contract.CollectionMethods;
 import org.soliscode.test.contract.iterable.IterableContract;
+import org.soliscode.test.contract.iterable.IterableMethods;
 import org.soliscode.test.contract.support.WithIntegerElement;
 import org.soliscode.test.provider.CollectionProvider;
 import org.soliscode.test.provider.CollectionProviders;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.Spliterator;
 import java.util.function.Consumer;
 
 import static java.util.Spliterator.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.soliscode.test.assertions.Assertions.assertNotInstanceOf;
 import static org.soliscode.test.assertions.collection.CollectionAssertions.assertContainsSame;
 import static org.soliscode.test.breakable.BreakableIterable.*;
+import static org.soliscode.test.breakable.BreakableIterator.ITERATOR_IS_ALWAYS_EMPTY;
+import static org.soliscode.test.breakable.BreakableIterator.ITERATOR_NEXT_THROWS_WRONG_EXCEPTION;
+import static org.soliscode.test.breakable.BreakableSpliterator.SPLITERATOR_FOR_EACH_REMAINING_DOES_NOT_CALL_ACTION;
 import static org.soliscode.test.breakable.BreakableSpliterator.SPLITERATOR_IS_ALWAYS_EMPTY;
 
 /// Tests for the `BreakableIterable` class. These tests determine if the breaks supported by this class result in the
@@ -32,10 +42,15 @@ import static org.soliscode.test.breakable.BreakableSpliterator.SPLITERATOR_IS_A
 /// @see BreakableIterable
 @DisplayName("Tests for BreakableIterable")
 public class BreakableIterableTest extends AbstractTest
-        implements IterableContract<Integer, BreakableIterable<Integer>>, WithIntegerElement {
+        implements IterableContract<BreakableIterable<Integer>, Integer>, WithIntegerElement {
+
+    /// Default constructor.
+    public BreakableIterableTest() {
+        super();
+    }
 
     @Override
-    public @NotNull CollectionProvider<Integer, BreakableIterable<Integer>> provider() {
+    public @NonNull CollectionProvider<BreakableIterable<Integer>, Integer> provider() {
         return CollectionProviders.from(
                 BreakableIterable::new,
                 BreakableIterable::new,
@@ -70,7 +85,7 @@ public class BreakableIterableTest extends AbstractTest
         BreakableIterable<Integer> iterable = Breakables.buildIterable(1, 2, 3)
                 .addBreak(FOR_EACH_DOES_NOT_CALL_ACTION)
                 .build();
-        iterable.forEach(AssertActions.assertConsumeNone());
+        iterable.forEach(AssertActions.consumeNone());
     }
 
     /// Test that the `FOR_EACH_SKIPS_FIRST_ELEMENT` break causes the `forEach` method to skip the first element.
@@ -118,7 +133,9 @@ public class BreakableIterableTest extends AbstractTest
         }
     }
 
+    /// Test the builder addElements methods.
     @Test
+    @DisplayName("Test the addElements methods of the builder.")
     public void testBuilderAddElements() {
         BreakableIterable<Integer> actual1 = Breakables.buildIterable(Integer.class)
                 .addElements(List.of(1,2,3))
@@ -133,17 +150,23 @@ public class BreakableIterableTest extends AbstractTest
         assertContainsSame(List.of(1,2,3), actual2);
     }
 
+    /// Test the builder setCharacteristics method.
+    /// @param characteristics the characteristics to set.
     @ParameterizedTest
     @ValueSource(ints = {ORDERED, DISTINCT, SORTED, SIZED, SUBSIZED, NONNULL, IMMUTABLE, CONCURRENT})
+    @DisplayName("Test the setCharacteristics method of the builder.")
     public void testBuilderSetCharacteristics(final int characteristics) {
         BreakableIterable<Integer> iterable = Breakables.buildIterable(1, 2, 3)
                 .setCharacteristics(characteristics)
                 .build();
 
-        assertEquals(characteristics, iterable.spliterator().characteristics());
+        // The spliterator reports the characteristics set, with those of the backing collection's spliterator.
+        assertTrue(iterable.spliterator().hasCharacteristics(characteristics));
     }
 
+    /// Test the builder copy method.
     @Test
+    @DisplayName("The builder copy method creates a correct copy.")
     public void testBuilderCopy() {
         BreakableIterable.Builder<Integer> builder = Breakables.buildIterable(1, 2, 3)
                 .setCharacteristics(ORDERED)
@@ -161,28 +184,178 @@ public class BreakableIterableTest extends AbstractTest
 
     // Tests for Method Support
 
+    /// Test iterator remove without support.
     @Test
+    @DisplayName("iterator.remove() throws UnsupportedOperationException when it is not supported")
     public void testIteratorRemoveWithoutSupport() {
         BreakableIterable<Integer> iterable = Breakables.buildIterable(1, 2, 3)
-                .doesNotSupport(CollectionMethods.IteratorRemove)
+                .doesNotSupport(IterableMethods.ITERATOR_REMOVE)
                 .build();
 
         final Iterator<?> iterator = iterable.iterator();
         iterator.next();
-        assertThrows(UnsupportedOperationException.class, () -> {
-            iterator.remove();
-        });
+        assertThrows(UnsupportedOperationException.class, iterator::remove);
     }
 
+    /// Test iterator forEachRemaining without support.
     @Test
+    @DisplayName("iterator.forEachRemaining() throws UnsupportedOperationException when it is not supported")
     public void testIteratorForEachRemainingWithoutSupport() {
         BreakableIterable<Integer> iterable = Breakables.buildIterable(1, 2, 3)
-                .doesNotSupport(CollectionMethods.IteratorForEachRemaining)
+                .doesNotSupport(IterableMethods.ITERATOR_FOR_EACH_REMAINING)
                 .build();
 
         final Iterator<?> iterator = iterable.iterator();
-        assertThrows(UnsupportedOperationException.class, () -> {
-            iterator.forEachRemaining((e) -> {});
-        });
+        assertThrows(UnsupportedOperationException.class, () -> iterator.forEachRemaining((e) -> {}));
+    }
+
+    // Tests for Iterator Break Delegation
+
+    /// Test that iterator breaks are properly delegated to the BreakableIterator.
+    @Test
+    @DisplayName("Test iterator break delegation - ITERATOR_IS_ALWAYS_EMPTY")
+    public void testIteratorBreakDelegation() {
+        BreakableIterable<Integer> iterable = Breakables.buildIterable(1, 2, 3)
+                .addBreak(ITERATOR_IS_ALWAYS_EMPTY)
+                .build();
+
+        Iterator<Integer> iterator = iterable.iterator();
+        Collection<Integer> found = new ArrayList<>();
+        while (iterator.hasNext()) {
+            found.add(iterator.next());
+        }
+
+        assertContainsSame(Collections.emptyList(), found);
+    }
+
+    /// Test that iterator next throws exception break is properly delegated when iterator is empty.
+    @Test
+    @DisplayName("Test iterator break delegation - ITERATOR_NEXT_THROWS_WRONG_EXCEPTION")
+    public void testIteratorNextThrowsExceptionBreakDelegation() {
+        BreakableIterable<Integer> iterable = Breakables.buildIterable(Integer.class)
+                .addBreak(ITERATOR_NEXT_THROWS_WRONG_EXCEPTION)
+                .build();
+
+        Iterator<Integer> iterator = iterable.iterator();
+        assertThrows(RuntimeException.class, iterator::next);
+    }
+
+    // Tests for Spliterator Break Delegation
+
+    /// Test that spliterator breaks are properly delegated to the BreakableSpliterator.
+    @Test
+    @DisplayName("Test spliterator break delegation - SPLITERATOR_FOR_EACH_REMAINING_DOES_NOT_CALL_ACTION")
+    public void testSpliteratorBreakDelegation() {
+        BreakableIterable<Integer> iterable = Breakables.buildIterable(1, 2, 3)
+                .addBreak(SPLITERATOR_FOR_EACH_REMAINING_DOES_NOT_CALL_ACTION)
+                .build();
+
+        Spliterator<Integer> spliterator = iterable.spliterator();
+        Collection<Integer> found = new ArrayList<>();
+        spliterator.forEachRemaining(found::add);
+
+        assertContainsSame(Collections.emptyList(), found);
+    }
+
+    // Tests for Edge Cases
+
+    /// Test forEach breaks with empty iterable.
+    @Test
+    @DisplayName("Test forEach breaks with empty iterable")
+    public void testForEachBreaksWithEmptyIterable() {
+        BreakableIterable<Integer> emptyIterable = Breakables.buildIterable(Integer.class)
+                .addBreak(FOR_EACH_SKIPS_FIRST_ELEMENT)
+                .build();
+
+        Collection<Integer> found = new ArrayList<>();
+        emptyIterable.forEach(found::add);
+        assertContainsSame(Collections.emptyList(), found);
+    }
+
+    /// Test forEach with single element and skip first break.
+    @Test
+    @DisplayName("Test forEach with single element and skip first break")
+    public void testForEachSkipFirstWithSingleElement() {
+        BreakableIterable<Integer> singleElement = Breakables.buildIterable(1)
+                .addBreak(FOR_EACH_SKIPS_FIRST_ELEMENT)
+                .build();
+
+        Collection<Integer> found = new ArrayList<>();
+        singleElement.forEach(found::add);
+        assertContainsSame(Collections.emptyList(), found);
+    }
+
+    /// Test forEach with single element and skip last break.
+    @Test
+    @DisplayName("Test forEach with single element and skip last break")
+    public void testForEachSkipLastWithSingleElement() {
+        BreakableIterable<Integer> singleElement = Breakables.buildIterable(1)
+                .addBreak(FOR_EACH_SKIPS_LAST_ELEMENT)
+                .build();
+
+        Collection<Integer> found = new ArrayList<>();
+        singleElement.forEach(found::add);
+        assertContainsSame(Collections.emptyList(), found);
+    }
+
+    // Tests for Combined Breaks
+
+    /// Test multiple forEach breaks together (should respect priority).
+    @Test
+    @DisplayName("Test multiple forEach breaks - does not call action takes priority")
+    public void testMultipleForEachBreaks() {
+        BreakableIterable<Integer> iterable = Breakables.buildIterable(1, 2, 3)
+                .addBreak(FOR_EACH_DOES_NOT_CALL_ACTION)
+                .addBreak(FOR_EACH_SKIPS_FIRST_ELEMENT)
+                .build();
+
+        iterable.forEach(AssertActions.consumeNone());
+    }
+
+    // Tests for Provider Methods
+
+    /// Test the static iterableProvider method.
+    @Test
+    @DisplayName("Test the iterableProvider static factory method.")
+    public void testIterableProvider() {
+        CollectionProvider<BreakableIterable<Integer>, Integer> provider =
+                BreakableIterable.iterableProvider(elementProvider());
+
+        BreakableIterable<Integer> empty = provider.emptyInstance();
+        BreakableIterable<Integer> withElements = provider.createInstance(new Integer[]{1, 2, 3});
+
+        assertContainsSame(Collections.emptyList(), empty);
+        assertContainsSame(List.of(1, 2, 3), withElements);
+    }
+
+    /// Test the static iterableProvider method with a builder that has breaks.
+    @Test
+    @DisplayName("Test the iterableProvider static factory method with a builder that has breaks.")
+    public void testIterableProviderWithBreaks() {
+        Set<Break> breaks = Set.of(FOR_EACH_DOES_NOT_CALL_ACTION);
+        CollectionProvider<BreakableIterable<Integer>, Integer> provider = BreakableIterable.iterableProvider(
+                new BreakableIterable.Builder<Integer>().addBreaks(breaks), elementProvider());
+
+        BreakableIterable<Integer> iterable = provider.createInstance(new Integer[]{1, 2, 3});
+
+        assertContainsSame(breaks, iterable.breaks());
+        iterable.forEach(AssertActions.consumeNone());
+    }
+
+    // Tests for Object Contract
+
+    /// Test unbroken method returns original iterable.
+    @Test
+    @DisplayName("Test unbroken method")
+    public void testUnbroken() {
+        BreakableIterable<Integer> iterable = Breakables.buildIterable(1, 2, 3)
+                .addBreak(FOR_EACH_DOES_NOT_CALL_ACTION)
+                .build();
+
+        Iterable<Integer> unbroken = iterable.unbroken();
+        Collection<Integer> found = new ArrayList<>();
+        unbroken.forEach(found::add);
+
+        assertContainsSame(List.of(1, 2, 3), found);
     }
 }

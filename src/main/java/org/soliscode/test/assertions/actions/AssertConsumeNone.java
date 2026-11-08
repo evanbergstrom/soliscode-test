@@ -16,15 +16,15 @@
 
 package org.soliscode.test.assertions.actions;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
 
-/// A consumer that expects to consume no objects. It will throw an exception if any object is consumed, including 'null'.
-///  Instead of instantiating this class directly, the [AssertActions] utility class should be used:
+/// A consumer that expects to consume no objects. It will throw an exception if any object is consumed, including
+/// 'null'. Instead of instantiating this class directly, the [AssertActions] utility class should be used:
 /// ```java
 /// Consumer<Integer> consumer = AssertActions.consumeNone();
 /// ```
@@ -32,8 +32,8 @@ import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
 /// @author evanbergstrom
 /// @since 1.0
 /// @see AssertActions
-/// @see Consumer
-public class AssertConsumeNone<T> implements AssertConsumer<T> {
+/// @see java.util.function.Consumer
+public class AssertConsumeNone<T> implements Consumer<T> {
 
     private final @Nullable Object messageOrSupplier;
 
@@ -57,7 +57,7 @@ public class AssertConsumeNone<T> implements AssertConsumer<T> {
     }
 
     @Override
-    public void accept(T e) {
+    public void accept(final T e) {
         throw assertionFailure()
                 .message(messageOrSupplier)
                 .build();

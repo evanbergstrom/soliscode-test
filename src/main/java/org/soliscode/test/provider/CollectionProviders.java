@@ -16,9 +16,13 @@
 
 package org.soliscode.test.provider;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -27,14 +31,14 @@ import java.util.function.Supplier;
 /// @since 1.0
 public final class CollectionProviders {
 
-    private CollectionProviders() {}
+    private CollectionProviders() { }
 
-    /// Create an instance of this collection provider that uses the methods and element provider specified in the
+    /// Create an instance of this collection objectProvider that uses the methods and element objectProvider specified in the
     /// arguments for its implementation.
     ///
-    /// For example, to create a collection provider for an `ArrayList` of Integer objects:
+    /// For example, to create a collection objectProvider for an `ArrayList` of Integer objects:
     /// ```java
-    ///     CollectionProvider<Integer> provider = CollectionProviders.from(ArrayList::new, ArrayList::new,
+    ///     CollectionProvider<Integer> objectProvider = CollectionProviders.from(ArrayList::new, ArrayList::new,
     ///         ArrayList::new, Providers.integerProvider());
     /// ```
     /// @param <E> the element type.
@@ -42,113 +46,132 @@ public final class CollectionProviders {
     /// @param defaultConstructor the supplier to use to create default instances of the collection.
     /// @param copyConstructor the function to use to create a copy of the collection.
     /// @param collectionConstructor the function to use to create an instance from another collection.
-    /// @param elementProvider the element provider.
-    /// @return the collection provider.
+    /// @param elementProvider the element objectProvider.
+    /// @return the collection objectProvider.
     /// @throws NullPointerException if any of the arguments are `null`
-    public static <E, C extends Iterable<E>> CollectionProvider<E, C> from(final @NotNull Supplier<C> defaultConstructor,
-                                                final @NotNull Function<C, C> copyConstructor,
-                                                final @NotNull Function<Collection<E>, C> collectionConstructor,
-                                                final @NotNull ObjectProvider<E> elementProvider) {
+    public static <C extends Iterable<E>, E> CollectionProvider<C, E> from(
+            final @NonNull Supplier<C> defaultConstructor,
+            final @NonNull Function<C, C> copyConstructor,
+            final @NonNull Function<Collection<E>, C> collectionConstructor,
+            final @NonNull ObjectProvider<E> elementProvider) {
         return new FunctionalCollectionProvider<>(defaultConstructor, copyConstructor, collectionConstructor,
                 elementProvider);
     }
 
-    /// Creates a collection provider for instances of [ArrayList] with elements creates using the specified
-    /// @param elementProvider the provider to use to create the elements.
+    /// Creates a collection objectProvider for instances of [ArrayList] with elements creates using the specified
+    /// @param elementProvider the objectProvider to use to create the elements.
     /// @param <E> The type of the elements
-    /// @return the collection provider.
-    public static <E> @NotNull CollectionProvider<E, ArrayList<E>> provideArrayList(final @NotNull ObjectProvider<E> elementProvider) {
+    /// @return the collection objectProvider.
+    public static <E> @NonNull CollectionProvider<ArrayList<E>, E> provideArrayList(
+            final @NonNull ObjectProvider<E> elementProvider) {
         return CollectionProviders.from(ArrayList::new, ArrayList::new, ArrayList::new, elementProvider);
     }
 
-    /// Creates a collection provider for instances of [LinkedList] with elements creates using the specified
-    /// @param elementProvider the provider to use to create the elements.
+    /// Creates a collection objectProvider for instances of [LinkedList] with elements creates using the specified
+    /// @param elementProvider the objectProvider to use to create the elements.
     /// @param <E> The type of the elements
-    /// @return the collection provider.
-    public static <E> CollectionProvider<E, LinkedList<E>> provideLinkedList(final @NotNull ObjectProvider<E> elementProvider) {
+    /// @return the collection objectProvider.
+    public static <E> CollectionProvider<LinkedList<E>, E> provideLinkedList(
+            final @NonNull ObjectProvider<E> elementProvider) {
         return CollectionProviders.from(LinkedList::new, LinkedList::new, LinkedList::new, elementProvider);
     }
 
-    /// Creates a collection provider for instances of [HashSet] with elements creates using the specified
-    /// @param elementProvider the provider to use to create the elements.
+    /// Creates a collection objectProvider for instances of [HashSet] with elements creates using the specified
+    /// @param elementProvider the objectProvider to use to create the elements.
     /// @param <E> The type of the elements
-    /// @return the collection provider.
-    public static <E> CollectionProvider<E, HashSet<E>> provideHashSet(final @NotNull ObjectProvider<E> elementProvider) {
+    /// @return the collection objectProvider.
+    public static <E> CollectionProvider<HashSet<E>, E> provideHashSet(
+            final @NonNull ObjectProvider<E> elementProvider) {
         return CollectionProviders.from(HashSet::new, HashSet::new, HashSet::new, elementProvider);
     }
 
-    /// Creates a provider that wraps the provided collection from an underlying provider.
+    /// Provides a collection objectProvider that supplies synchronized collections using the provided element objectProvider.
+    /// This method wraps an [ArrayList] collection objectProvider into a synchronized collection
+    /// by using [Collections#synchronizedCollection(Collection)].
+    /// It ensures thread-safety during access to the returned collection instances.
+    ///
+    /// @param <E> the type of elements in the collection.
+    /// @param elementProvider the objectProvider responsible for supplying elements to the collection.
+    ///                        Must not be `null`.
+    /// @return a [CollectionProvider] that provides thread-safe synchronized collections.
+    /// @throws NullPointerException if `elementProvider` is `null`.
+    public static <E> CollectionProvider<Collection<E>, E> provideSynchronizedCollection(
+            final @NonNull ObjectProvider<E> elementProvider) {
+        return CollectionProviders.wrap(provideArrayList(elementProvider), Collections::synchronizedCollection);
+    }
+
+    /// Creates a objectProvider that wraps the provided collection from an underlying objectProvider.
     /// @param <E> the element type.
     /// @param <C> the collection type provided by the underlying collection.
     /// @param <W> the collection type of the wrapped collection.
-    /// @param provider the underlying provider.
+    /// @param provider the underlying objectProvider.
     /// @param wrapper the function used to wrap the provided collection.
     /// @return the wrapped collection.
     public static <E, C extends Collection<E>, W extends Collection<E>>
-        CollectionProvider<E, W> wrap(CollectionProvider<E,C> provider, Function<C,W> wrapper)  {
+        CollectionProvider<W, E> wrap(final CollectionProvider<C, E> provider, final Function<C, W> wrapper)  {
         return new WrappedCollectionProvider<>(provider, wrapper);
     }
 
     private record WrappedCollectionProvider<E, C extends Collection<E>, W extends Collection<E>>(
-            @NotNull CollectionProvider<E, C> provider, @NotNull Function<C, W> wrapper)
-                implements CollectionProvider<E, W> {
+            @NonNull CollectionProvider<C, E> provider, @NonNull Function<C, W> wrapper)
+                implements CollectionProvider<W, E> {
 
         @Override
-            public @NotNull ObjectProvider<E> elementProvider() {
+            public @NonNull ObjectProvider<E> elementProvider() {
                 return provider.elementProvider();
             }
 
         @Override
-        public @NotNull W defaultInstance() {
+        public @NonNull W defaultInstance() {
             return wrapper.apply(provider.defaultInstance());
         }
 
         @Override
-            public @NotNull W emptyInstance() {
+            public @NonNull W emptyInstance() {
                 return wrapper.apply(provider.emptyInstance());
             }
 
             @Override
-            public @NotNull W copyInstance(@NotNull W ws) {
+            public @NonNull W copyInstance(final @NonNull W ws) {
                 return wrapper.apply(provider.createInstance(ws));
             }
 
-            public @NotNull W createInstance(@NotNull Collection<E> c) {
+            public @NonNull W createInstance(final @NonNull Collection<E> c) {
                 return wrapper.apply(provider.createInstance(c));
             }
 
             @Override
-            public @NotNull W createInstance(int seed) {
+            public @NonNull W createInstance(final long seed) {
                 return wrapper.apply(provider.createInstance(seed));
             }
 
             @Override
-            public @NotNull W createSingleton() {
+            public @NonNull W createSingleton() {
                 return wrapper.apply(provider.createSingleton());
             }
 
             @Override
-            public @NotNull W createInstanceWithUniqueElements() {
+            public @NonNull W createInstanceWithUniqueElements() {
                 return wrapper.apply(provider.createInstanceWithUniqueElements());
             }
 
             @Override
-            public @NotNull W createInstanceWithUniqueElements(int size) {
+            public @NonNull W createInstanceWithUniqueElements(final int size) {
                 return wrapper.apply(provider.createInstanceWithUniqueElements(size));
             }
 
             @Override
-            public @NotNull W createInstanceWithUniqueElements(int size, int seed) {
+            public @NonNull W createInstanceWithUniqueElements(final int size, final int seed) {
                 return wrapper.apply(provider.createInstanceWithUniqueElements(size, seed));
             }
 
             @Override
-            public @NotNull W createInstance(@NotNull E[] elements) {
+            public @NonNull W createInstance(final @NonNull E[] elements) {
                 return wrapper.apply(provider.createInstance(elements));
             }
 
             @Override
-            public @NotNull W createSingleton(E e) {
+            public @NonNull W createSingleton(final E e) {
                 return wrapper.apply(provider.createSingleton(e));
             }
         }

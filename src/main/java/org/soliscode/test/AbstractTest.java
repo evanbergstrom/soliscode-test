@@ -16,13 +16,13 @@
 
 package org.soliscode.test;
 
-import org.soliscode.test.contract.support.ContractSupport;
-
 /// Utility class for adding optional method support to contract classes.
 ///
 /// @author evanbergstrom
 /// @since 1.0
-/// @see ContractSupport
-public abstract class AbstractTest extends OptionalMethodSupport {
+/// @see org.soliscode.test.contract.support.ContractSupport
+public abstract class AbstractTest extends MethodSupport {
 
+    /// Default constructor.
+    protected AbstractTest() { }
 }

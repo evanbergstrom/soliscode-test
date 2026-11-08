@@ -16,7 +16,11 @@
 
 package org.soliscode.test.util;
 
-import java.util.*;
+import org.jspecify.annotations.NonNull;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * An integer class that does not use cached values. This class is used for testing methods that match
@@ -27,6 +31,7 @@ import java.util.*;
  */
 public class UncachedInteger extends Number implements Comparable<UncachedInteger> {
 
+    /// The value of the integer
     private final int value;
 
     /**
@@ -137,7 +142,7 @@ public class UncachedInteger extends Number implements Comparable<UncachedIntege
      *          greater than the argument {@code Integer} (signed comparison).
      */
     @Override
-    public int compareTo(final UncachedInteger o) {
+    public int compareTo(final @NonNull UncachedInteger o) {
         return Integer.compare(value, o.intValue());
     }
 

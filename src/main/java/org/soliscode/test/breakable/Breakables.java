@@ -15,16 +15,23 @@
  */
 package org.soliscode.test.breakable;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Collection;
 
 /// Utility class for creating breakable objects for testing contract classes.
+///
+/// ## Thread Safety
+///
+/// This class is thread-safe. All methods are static and stateless, making concurrent
+/// access safe from multiple threads. However, the breakable objects created by the
+/// builders are not thread-safe and synchronization is the responsibility of the caller.
+///
 /// @author evanbergstrom
 /// @since 1.0
 public final class Breakables {
 
-    private Breakables() {}
+    private Breakables() { }
 
     /// Creates a builder for a `BreakableIterable`.
     /// @param <E> the type of the elements.
@@ -36,10 +43,10 @@ public final class Breakables {
 
     /// Creates a builder for a `BreakableIterable` initialized with a set of elements.
     /// @param <E> the type of the elements.
-    /// @param e the elements to add to the iterable.
+    /// @param e the elements to add_singleElement_returnsTrueAndUpdatesSize to the iterable.
     /// @return a builder.
     @SafeVarargs
-    public static <E> BreakableIterable.Builder<E> buildIterable(final E...e) {
+    public static <E> BreakableIterable.Builder<E> buildIterable(final @NonNull E... e) {
         return new BreakableIterable.Builder<E>()
                 .addElements(e);
     }
@@ -54,7 +61,7 @@ public final class Breakables {
 
     /// Creates a builder for a `BreakableCollection` initialized with a set of elements.
     /// @param <E> the type of the elements.
-    /// @param e the elements to add to the collection.
+    /// @param e the elements to add_singleElement_returnsTrueAndUpdatesSize to the collection.
     /// @return a builder.
     @SafeVarargs
     public static <E> BreakableCollection.Builder<E> buildCollection(final E... e) {
@@ -73,7 +80,7 @@ public final class Breakables {
 
     /// Creates a builder for a `BreakableSequencedCollection` initialized with a set of elements.
     /// @param <E> the type of the elements.
-    /// @param e the elements to add to the collection.
+    /// @param e the elements to add_singleElement_returnsTrueAndUpdatesSize to the collection.
     /// @return a builder.
     @SafeVarargs
     public static <E> BreakableSequencedCollection.Builder<E> buildSequencedCollection(final E... e) {
@@ -81,11 +88,40 @@ public final class Breakables {
                 .addElements(e);
     }
 
+    /// Creates a builder for a `BreakableList`.
+    /// @param <E> the type of the elements.
+    /// @param c the class of the element for the list.
+    /// @return a builder.
+    public static <E> BreakableList.Builder<E> buildList(final Class<E> c) {
+        return new BreakableList.Builder<>();
+    }
+
+    /// Creates a builder for a `BreakableList` initialized with a set of elements.
+    /// @param <E> the type of the elements.
+    /// @param e the elements to add_singleElement_returnsTrueAndUpdatesSize to the list.
+    /// @return a builder.
+    @SafeVarargs
+    public static <E> BreakableList.Builder<E> buildList(final E... e) {
+        return new BreakableList.Builder<E>()
+                .addElements(e);
+    }
+
+    /// Creates a builder for a `BreakableSet` initialized with a set of elements.
+    /// @param <E> the type of the elements.
+    /// @param e the elements to add_singleElement_returnsTrueAndUpdatesSize to the set.
+    /// @return a builder.
+    @SafeVarargs
+    public static <E> BreakableSet.Builder<E> buildSet(final E... e) {
+        return new BreakableSet.Builder<E>()
+                .addElements(e);
+    }
+
     /// Makes sure that the iterator is not a broken iterator. If the argument is an instance of `BreakableIterator`
     /// then the underlying iterator used as the element store is returned.
+    /// @param <E> the type of the elements.
     /// @param i an instance of iterator.
     /// @return an unbroken iterator.
-    public static <E> Iterable<E> ensureUnbroken(final @NotNull Iterable<E> i) {
+    public static <E> Iterable<E> ensureUnbroken(final @NonNull Iterable<E> i) {
         if (i instanceof BreakableIterable<E> b) {
             return b.unbroken();
         } else {
@@ -93,11 +129,12 @@ public final class Breakables {
         }
     }
 
-    /// Makes sure that the collection is not a broken collection. If the argument is an instance of `BreakableCollection`
-    /// then the underlying collection used as the element store is returned.
+    /// Makes sure that the collection is not a broken collection. If the argument is an instance of
+    /// BreakableCollection` then the underlying collection used as the element store is returned.
+    /// @param <E> the type of the elements.
     /// @param i an instance of collection.
     /// @return an unbroken collection.
-    public static <E> Collection<E> ensureUnbroken(final @NotNull Collection<E> i) {
+    public static <E> Collection<E> ensureUnbroken(final @NonNull Collection<E> i) {
         if (i instanceof BreakableCollection<E> b) {
             return b.unbroken();
         } else {

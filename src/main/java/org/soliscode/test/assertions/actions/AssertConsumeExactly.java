@@ -16,18 +16,19 @@
 
 package org.soliscode.test.assertions.actions;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.soliscode.test.util.IterableTestOps;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+import org.soliscode.test.util.IterableTestUtils;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
 
 /// A consumer that checks that is consumes a specified set of objects, consuming each of those objects once, and not
-/// consuming any objects not in the set. This consumer requires that all of the objects in the set are consumed.
+/// consuming any objects not in the set. This consumer requires that all the objects in the set are consumed.
 /// Instead of instantiating this class directly, the [AssertActions] utility class should be used:
 /// ```java
 /// Consumer<Integer> consumer = AssertActions.consumeExactly(Set.of(1, 3, 5, 7));
@@ -43,25 +44,25 @@ import static org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure;
 /// @author evanbergstrom
 /// @since 1.0
 /// @see AssertActions
-/// @see Consumer
-public class AssertConsumeExactly<T> implements AssertConsumer<T> {
+/// @see java.util.function.Consumer
+public class AssertConsumeExactly<T> implements Consumer<T>, CheckableAction {
 
-    private final @NotNull Collection<T> expected;
+    private final @NonNull Collection<T> expected;
     private final @Nullable Object messageOrSupplier;
 
     /// A consumer that checks that is consumes a specified set of objects.
     /// @param expected the set of objects that should be consumed.
-    public AssertConsumeExactly(final @NotNull Iterable<T> expected) {
-        this.expected = IterableTestOps.asCollection(expected);
+    public AssertConsumeExactly(final @NonNull Iterable<T> expected) {
+        this.expected = Collections.synchronizedCollection(IterableTestUtils.asCollection(expected));
         this.messageOrSupplier = null;
     }
 
     /// A consumer that checks that is consumes a specified set of objects. This constructor allows specification of
-    /// a string to be included in the exception of the assertion fails.
+    /// a string to be included in the exception if the assertion fails.
     /// @param expected the set of objects that should be consumed.
     /// @param message the text to include in the exception.
-    public AssertConsumeExactly(final @NotNull Iterable<T> expected, final @Nullable String message) {
-        this.expected = IterableTestOps.asCollection(expected);
+    public AssertConsumeExactly(final @NonNull Iterable<T> expected, final @Nullable String message) {
+        this.expected = IterableTestUtils.asCollection(expected);
         this.messageOrSupplier = message;
     }
 
@@ -69,13 +70,13 @@ public class AssertConsumeExactly<T> implements AssertConsumer<T> {
     /// a supplier of a message to be included in the exception.
     /// @param expected the set of objects that should be consumed.
     /// @param messageSupplier the supplier of the text to include in the exception.
-    public AssertConsumeExactly(final @NotNull Iterable<T> expected, final @Nullable Supplier<String> messageSupplier) {
-        this.expected = IterableTestOps.asCollection(expected);
+    public AssertConsumeExactly(final @NonNull Iterable<T> expected, final @Nullable Supplier<String> messageSupplier) {
+        this.expected = IterableTestUtils.asCollection(expected);
         this.messageOrSupplier = messageSupplier;
     }
 
     @Override
-    public void accept(T e) {
+    public void accept(final T e) {
         if (expected.contains(e)) {
             expected.remove(e);
         } else {

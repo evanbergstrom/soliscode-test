@@ -16,7 +16,7 @@
 
 package org.soliscode.test.util;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 /**
  * An instance of this class will not compare equal to any other object.
@@ -25,6 +25,9 @@ import org.jetbrains.annotations.NotNull;
  * @since 1.0.0
  */
 public class MatchNothing implements Comparable<MatchNothing> {
+
+    /// Default constructor
+    public MatchNothing() { }
 
     /**
      * Always returns {@code false}.
@@ -52,7 +55,7 @@ public class MatchNothing implements Comparable<MatchNothing> {
      */
     @SuppressWarnings("ComparatorMethodParameterNotUsed")
     @Override
-    public int compareTo(@NotNull final MatchNothing obj) {
+    public int compareTo(@NonNull final MatchNothing obj) {
         return 1;
     }
 }

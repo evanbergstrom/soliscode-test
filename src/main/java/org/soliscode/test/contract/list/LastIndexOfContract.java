@@ -1,17 +1,44 @@
 package org.soliscode.test.contract.list;
 
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.soliscode.test.contract.support.CollectionContractSupport;
 
+import java.util.ArrayList;
 import java.util.List;
 
-/// This interface tests if a list class has implemented the [indexOf][List#indexOf(Object)] method correctly.
+import static org.junit.jupiter.api.Assertions.*;
+
+/// Contract for the [lastIndexOf(Object)][List#lastIndexOf(Object)] method of the [List] interface.
 ///
-/// @param <E> The element type being tested.
-/// @param <L> The list type being tested.
+/// @param <L> The type of the list
+/// @param <E> The element type for the list
 /// @author evanbergstrom
 /// @since 1.0
-/// @see List#indexOf(Object)
-public interface LastIndexOfContract<E, L extends List<E>> extends CollectionContractSupport<E, L> {
+/// @see List#lastIndexOf(Object)
+/// @see ListContract
+public interface LastIndexOfContract<L extends List<E>, E> extends CollectionContractSupport<L, E> {
 
-    // TODO: Implement tests for the List::indexOf methods.
+    /// Tests that [lastIndexOf(Object)][List#lastIndexOf(Object)] returns the index of the last occurrence of an
+    /// element, and -1 for an element not in the list.
+    @Test
+    @DisplayName("lastIndexOf(Object) returns the index of the last occurrence")
+    default void lastIndexOf_whenCalled_returnsLastIndex() {
+        List<E> values = elementProvider().createUniqueInstances(DEFAULT_SIZE + 1);
+        List<E> unique = values.subList(0, DEFAULT_SIZE);
+        if (permitDuplicates()) {
+            List<E> twice = new ArrayList<>(unique);
+            twice.addAll(unique);
+            L list = provider().createInstance(twice);
+            for (int i = 0; i < DEFAULT_SIZE; i++) {
+                assertEquals(DEFAULT_SIZE + i, list.lastIndexOf(unique.get(i)));
+            }
+        } else {
+            L list = provider().createInstance(unique);
+            for (int i = 0; i < DEFAULT_SIZE; i++) {
+                assertEquals(i, list.lastIndexOf(unique.get(i)));
+            }
+        }
+        assertEquals(-1, provider().createInstance(unique).lastIndexOf(values.getLast()));
+    }
 }

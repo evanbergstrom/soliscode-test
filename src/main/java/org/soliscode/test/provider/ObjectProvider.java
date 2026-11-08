@@ -16,9 +16,15 @@
 
 package org.soliscode.test.provider;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
+import org.soliscode.test.util.RecordingSupplier;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -34,9 +40,12 @@ import java.util.stream.Stream;
 /// @since 1.0.0
 public interface ObjectProvider<T> {
 
+    /// How many candidates ({@value}) [#createInstanceNotIn] tries before it gives up.
+    int NOT_IN_ATTEMPTS = 10_000;
+
     /// Creates a single instance of class being tested using the default constructor.
     /// @return  an instance of class.
-    @NotNull T defaultInstance();
+    @NonNull T defaultInstance();
 
     /// Creates a single instance of class being tested based upon an integer seed value.
     ///
@@ -45,7 +54,7 @@ public interface ObjectProvider<T> {
     ///
     /// @param   seed an integer seed to use to create and instance of the class.
     /// @return  an instance of class.
-    @NotNull T createInstance(int seed);
+    @NonNull T createInstance(long seed);
 
     /// Copies an instance of the class being tested. The copy will satisfy equality semantics with the original
     /// instance being copied.
@@ -58,7 +67,7 @@ public interface ObjectProvider<T> {
     /// @return     a copy of the instance.
     /// @throws     NullPointerException if the argument is a null value.
     /// @complexity _constant time_.
-    @NotNull T copyInstance(@NotNull T other);
+    @NonNull T copyInstance(@NonNull T other);
 
     /// Creates a single instance of class being tested.
     ///
@@ -69,21 +78,48 @@ public interface ObjectProvider<T> {
     ///
     /// @return     an instance of class.
     /// @complexity _constant time_.
-    default @NotNull T createInstance(){
+    default @NonNull T createInstance() {
         return createInstance(0);
+    }
+
+    /// Creates a new instance of type `T` that is guaranteed not to be present
+    /// in the provided collection of excluded instances.
+    /// This method uses a supplier to generate unique instances of type `T`,
+    /// repeatedly generating a new instance until one is found that does not exist
+    /// in the provided collection.
+    ///
+    /// @param excluded The collection of instances of type `T` to exclude
+    ///                 from the result. The new instance is guaranteed to not be
+    ///                 contained within this collection. Must not be `null`.
+    /// @return A new, non-`null` instance of type `T` that is not present
+    ///         in the `excluded` collection.
+    /// @throws AssertionError If no instance outside `excluded` is found in [#NOT_IN_ATTEMPTS] tries, as when the
+    ///                        collection's `contains(Object)` always returns `true`.
+    default @NonNull T createInstanceNotIn(final @NonNull Collection<T> excluded) {
+        Supplier<T> supplier = uniqueInstanceSupplier();
+        T notPresent = supplier.get();
+        int attempts = 1;
+        while (excluded.contains(notPresent)) {
+            if (attempts++ >= NOT_IN_ATTEMPTS) {
+                throw new AssertionError("no instance found that the collection does not contain after "
+                        + NOT_IN_ATTEMPTS + " attempts: its contains(Object) may be broken");
+            }
+            notPresent = supplier.get();
+        }
+        return notPresent;
     }
 
     /// Returns the number of unique instances of the class that can be created.
     ///
     /// @implSpec
-    /// The default implementation returns [Integer#MAX_VALUE]. This should be overridden for enumerations or any classes
-    /// that have a bounded number of unique values.
+    /// The default implementation returns [Integer#MAX_VALUE]. This should be overridden for enumerations or any
+    /// classes that have a bounded number of unique values.
     ///
     /// @return     the maximum number of unique instances that can be created.
     /// @complexity _constant time_.
     @SuppressWarnings("SameReturnValue")
-    default int uniqueSizeLimit() {
-        return Integer.MAX_VALUE;
+    default long uniqueSizeLimit() {
+        return Long.MAX_VALUE;
     }
 
     /// Creates a [Supplier] that will generate equal instances of the class being provided.
@@ -96,7 +132,7 @@ public interface ObjectProvider<T> {
     ///
     /// @return     A supplier the returns instances of the class that are equal.
     /// @complexity _constant time_.
-    default @NotNull Supplier<T> equalInstanceSupplier() {
+    default @NonNull Supplier<T> equalInstanceSupplier() {
         final ObjectProvider<T> provider = this;
         return new Supplier<>() {
             private final T orig = provider.createInstance(0);
@@ -112,17 +148,18 @@ public interface ObjectProvider<T> {
     /// guaranteed for all instances created by this supplier. Instances may not be unique from multiple suppliers.
     ///
     /// @implSpec
-     /// The supplier should produce unique instances of the class for each the call to `get()`, and it should be callable
-     /// a number of times up to the value returned by `uniqueSizeLimit()`. If it is called more that `uniqueSizeLimit`
-     /// times, it should throw an [IllegalStateException].
-     ///
-     /// @implNote
-     /// The default implementation will call `createInstance(int)` with successive integers starting with 0.
-     ///
-     /// @return A supplier the returns instances of the class that are unique.
-     /// @throws IllegalStateException if `get` is called on the supplier more than `uniqueSizeLimit` times.
-     /// @complexity _constant time_.
-    default @NotNull Supplier<T> uniqueInstanceSupplier() {
+    /// The supplier should produce unique instances of the class for each the call to `get()`, and it should be
+    /// callable
+    /// a number of times up to the value returned by `uniqueSizeLimit()`. If it is called more that `uniqueSizeLimit`
+    /// times, it should throw an [IllegalStateException].
+    ///
+    /// @implNote
+    /// The default implementation will call `createInstance(int)` with successive integers starting with 0.
+    ///
+    /// @return A supplier the returns instances of the class that are unique.
+    /// @throws IllegalStateException if `get` is called on the supplier more than `uniqueSizeLimit` times.
+    /// @complexity _constant time_.
+    default @NonNull RecordingSupplier<T> uniqueInstanceSupplier() {
         return uniqueInstanceSupplier(0);
     }
 
@@ -130,9 +167,9 @@ public interface ObjectProvider<T> {
     /// guaranteed for all instances created by this supplier. Instances may not be unique from multiple suppliers.
     ///
     /// @implSpec
-    /// The supplier should produce unique instances of the class for each the call to `get()`, and it should be callable
-    /// a number of times up to the value returned by `uniqueSizeLimit()`. If it is called more that `uniqueSizeLimit`
-    /// times, it should throw an [IllegalStateException].
+    /// The supplier should produce unique instances of the class for each the call to `get()`, and it should be
+    /// callable a number of times up to the value returned by `uniqueSizeLimit()`. If it is called more that
+    /// `uniqueSizeLimit` times, it should throw an [IllegalStateException].
     ///
     /// @implNote
     /// The default implementation will call `createInstance(int)` with successive integers starting with 0.
@@ -142,17 +179,26 @@ public interface ObjectProvider<T> {
     /// @return A supplier the returns instances of the class that are unique.
     /// @throws IllegalStateException if `get` is called on the supplier more than `uniqueSizeLimit` times.
     /// @complexity _constant time_.
-    default @NotNull Supplier<T> uniqueInstanceSupplier(final int seed) {
+    default @NonNull RecordingSupplier<T> uniqueInstanceSupplier(final long seed) {
         final ObjectProvider<T> provider = this;
-        return new Supplier<>() {
-            private int i = seed;
+        return new RecordingSupplier<>() {
+            private final AtomicLong i = new AtomicLong(seed);
+            private final List<T> recorded = Collections.synchronizedList(new ArrayList<>());
 
             @Override
             public T get() {
-                if (i >= uniqueSizeLimit()) {
-                    throw new IllegalStateException("cannot create " + i + " unique instances, limit is " + uniqueSizeLimit());
+                if (i.get() >= uniqueSizeLimit()) {
+                    throw new IllegalStateException("cannot create " + i + " unique instances, limit is "
+                            + uniqueSizeLimit());
                 }
-                return provider.createInstance(i++);
+                T instance = provider.createInstance(i.getAndIncrement());
+                recorded.add(instance);
+                return instance;
+            }
+
+            @Override
+            public @NonNull List<T> recorded() {
+                return recorded;
             }
         };
     }
@@ -172,14 +218,22 @@ public interface ObjectProvider<T> {
     /// by `upperUniqueLimit()`.
     ///
     /// @return A supplier the returns random instances of the class.
-    default @NotNull Supplier<T> randomInstanceSupplier() {
+    default @NonNull RecordingSupplier<T> randomInstanceSupplier() {
         final ObjectProvider<T> provider = this;
-        return new Supplier<>() {
+        return new RecordingSupplier<>() {
             private final Random r = new Random();
+            private final List<T> recorded = Collections.synchronizedList(new ArrayList<>());
 
             @Override
             public T get() {
-                return provider.createInstance(r.nextInt(uniqueSizeLimit()));
+                T instance = provider.createInstance(r.nextLong(Long.MAX_VALUE));
+                recorded.add(instance);
+                return instance;
+            }
+
+            @Override
+            public @NonNull List<T> recorded() {
+                return recorded;
             }
         };
     }
@@ -189,7 +243,7 @@ public interface ObjectProvider<T> {
     /// @param size The number of equal instances to create.
     /// @return A list of equal instances.
     /// @complexity _linear time_ based upon the number of instance (the `size` argument).
-    default @NotNull List<T> createEqualObjects(int size) {
+    default @NonNull List<T> createEqualObjects(final int size) {
         return Stream.generate(equalInstanceSupplier()).limit(size).toList();
     }
 
@@ -199,7 +253,7 @@ public interface ObjectProvider<T> {
      /// @return a list of the created instances.
      /// @throws IllegalArgumentException if size is greater than `uniqueSizeLimit()`
      /// @complexity _linear time_ based upon the number of instance (the `size` argument).
-    default @NotNull List<T> createUniqueInstances(int size) {
+    default @NonNull List<T> createUniqueInstances(final int size) {
         return createUniqueInstances(size, 0);
     }
 
@@ -210,9 +264,10 @@ public interface ObjectProvider<T> {
     /// @return a list of the created instances.
     /// @throws IllegalArgumentException if size is greater than `uniqueSizeLimit()`
     /// @complexity _linear time_ based upon the number of instance (the `size` argument).
-    default @NotNull List<T> createUniqueInstances(int size, int seed) {
+    default @NonNull List<T> createUniqueInstances(final int size, final long seed) {
         if (size > uniqueSizeLimit()) {
-            throw new IllegalArgumentException("cannot create " + size + " unique instances, limit is " + uniqueSizeLimit());
+            throw new IllegalArgumentException("cannot create " + size + " unique instances, limit is "
+                    + uniqueSizeLimit());
         }
         return new ArrayList<>(Stream.generate(uniqueInstanceSupplier(seed)).limit(size).toList());
     }
@@ -225,7 +280,7 @@ public interface ObjectProvider<T> {
     /// @param size the number of instances to create.
     /// @return a list of the created instances.
     /// @complexity _linear time_ based upon the number of instance (the `size` argument).
-    default @NotNull List<T> createRandoInstances(int size) {
+    default @NonNull List<T> createRandomInstances(final int size) {
         return new ArrayList<>(Stream.generate(randomInstanceSupplier()).limit(size).toList());
     }
 }

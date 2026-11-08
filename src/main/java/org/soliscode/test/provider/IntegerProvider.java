@@ -16,22 +16,135 @@
 
 package org.soliscode.test.provider;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
-/// Provides instances of an [Integer] for the purposes of testing.
+/// Provides instances of `Integer` for testing purposes.
+///
+/// This objectProvider creates `Integer` instances with values ranging from `Integer.MIN_VALUE`
+/// to `Integer.MAX_VALUE`. It implements `IntegerNumberProvider` to provide integer-specific
+/// functionality while maintaining all the general object objectProvider capabilities.
+///
+/// ## Features
+///
+/// - **Full Range Support**: Can create any valid Integer value
+/// - **Boundary Value Access**: Provides direct access to min/max values
+/// - **Seed-Based Generation**: Deterministic instance creation from seeds
+/// - **Type Safety**: Validates input values to prevent overflow
+///
+/// ## Usage Examples
+///
+/// ### Basic Usage
+/// ```java
+/// IntegerProvider objectProvider = new IntegerProvider();
+///
+/// // Create instances with different approaches
+/// Integer zero = objectProvider.defaultInstance();        // 0
+/// Integer fromSeed = objectProvider.createInstance(42);   // 42
+/// Integer max = objectProvider.maxValue();                // 2147483647
+/// Integer min = objectProvider.minValue();                // -2147483648
+/// ```
+///
+/// ### Boundary Testing
+/// ```java
+/// IntegerProvider objectProvider = new IntegerProvider();
+///
+/// // Test edge cases
+/// Integer maxValue = objectProvider.maxValue();
+/// Integer minValue = objectProvider.minValue();
+///
+/// // Verify boundaries
+/// assertEquals(Integer.MAX_VALUE, maxValue.intValue());
+/// assertEquals(Integer.MIN_VALUE, minValue.intValue());
+/// ```
+///
+/// ### Collection Generation
+/// ```java
+/// IntegerProvider objectProvider = new IntegerProvider();
+///
+/// // Generate test data sets
+/// List<Integer> equalValues = objectProvider.createEqualObjects(5);     // [0, 0, 0, 0, 0]
+/// List<Integer> uniqueValues = objectProvider.createUniqueInstances(5); // [0, 1, 2, 3, 4]
+/// List<Integer> randomValues = objectProvider.createRandomInstances(5); // Random integers
+/// ```
+///
+/// ## Implementation Details
+///
+/// This objectProvider uses the integer value directly from the seed parameter, with validation
+/// to ensure the value fits within the Integer range. Values outside the valid range will
+/// cause an `IllegalArgumentException` to be thrown.
 ///
 /// @author evanbergstrom
 /// @since 1.0
 /// @see Integer
+/// @see IntegerNumberProvider
+/// @see NumberProvider
 public class IntegerProvider implements IntegerNumberProvider<Integer> {
 
-    /// Creates an instance of the [Integer] class with a numeric value equal to the
-    /// primitive integer value.
+    /// Creates a new IntegerProvider instance.
     ///
-    /// @param value the primitive integer value.
-    /// @return an instance of the `Integer` class.
+    /// This constructor initializes the objectProvider with default settings for creating
+    /// Integer instances within the full range of valid integer values.
+    public IntegerProvider() { }
+
+    /// Creates an `Integer` instance with a numeric value equal to the specified long value.
+    ///
+    /// This method performs range validation to ensure the provided value can be
+    /// represented as a valid `Integer`. Values outside the valid range will result
+    /// in an exception.
+    ///
+    /// ## Value Range
+    ///
+    /// Valid input values must be within the range:
+    /// - Minimum: `-2,147,483,648` (`Integer.MIN_VALUE`)
+    /// - Maximum: `2,147,483,647` (`Integer.MAX_VALUE`)
+    ///
+    /// ## Examples
+    ///
+    /// ```java
+    /// IntegerProvider objectProvider = new IntegerProvider();
+    ///
+    /// Integer zero = objectProvider.createValue(0);                    // 0
+    /// Integer positive = objectProvider.createValue(42);               // 42
+    /// Integer negative = objectProvider.createValue(-100);             // -100
+    /// Integer max = objectProvider.createValue(Integer.MAX_VALUE);     // 2147483647
+    ///
+    /// // This would throw an exception:
+    /// // objectProvider.createValue(Long.MAX_VALUE);  // IllegalArgumentException
+    /// ```
+    ///
+    /// @param value the primitive long value to convert to an Integer
+    /// @return an Integer instance with the specified value
+    /// @throws IllegalArgumentException if the value is outside the valid Integer range
+    /// @complexity constant time
     @Override
-    public @NotNull Integer createValue(final int value) {
-        return value;
+    public @NonNull Integer createValue(final long value) {
+        if (value < Integer.MIN_VALUE || value > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException("value (" + value + ") is not a valid Integer value");
+        }
+        return (int) value;
+    }
+
+    /// Returns the maximum integer value that can be represented by this objectProvider.
+    ///
+    /// This method returns `Integer.MAX_VALUE` which represents the largest value
+    /// that can be stored in a 32-bit signed integer.
+    ///
+    /// @return `Integer.MAX_VALUE` (2,147,483,647)
+    /// @complexity constant time
+    @Override
+    public long maxIntegerValue() {
+        return Integer.MAX_VALUE;
+    }
+
+    /// Returns the minimum integer value that can be represented by this objectProvider.
+    ///
+    /// This method returns `Integer.MIN_VALUE` which represents the smallest value
+    /// that can be stored in a 32-bit signed integer.
+    ///
+    /// @return `Integer.MIN_VALUE` (-2,147,483,648)
+    /// @complexity constant time
+    @Override
+    public long minIntegerValue() {
+        return Integer.MIN_VALUE;
     }
 }

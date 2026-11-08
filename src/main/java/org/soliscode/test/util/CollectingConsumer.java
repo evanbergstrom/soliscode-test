@@ -1,6 +1,9 @@
 package org.soliscode.test.util;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 /// Collects the arguments for each call to the [accept()][Consumer#accept] method.
@@ -12,6 +15,9 @@ import java.util.function.Consumer;
 public class CollectingConsumer<E> implements Consumer<E> {
 
     private final List<E> collected = new ArrayList<>();
+
+    /// Default constructor.
+    public CollectingConsumer() { }
 
     /// Collects the argument provided to this method.
     /// @param e The argument to collect.
