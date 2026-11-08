@@ -2,17 +2,22 @@ package org.soliscode.test.breakable;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.soliscode.test.contract.collection.CollectionMethods;
+import org.soliscode.test.contract.iterable.IterableMethods;
+import org.soliscode.test.contract.sequencedcollection.SequencedCollectionMethods;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /// Tests that builders build objects holding their own copy of the builder's state, that `build(Iterable)` and
@@ -136,6 +141,56 @@ public class BuilderIsolationTest {
         List<Integer> given = new ArrayList<>();
         new BreakableDeque.Builder<>(given).addElements(1);
         assertTrue(given.isEmpty());
+    }
+
+    // ========== Unsupported methods reach the object built ==========
+
+    @Test
+    @DisplayName("Collection builder: methods marked unsupported throw in the collection built")
+    void collectionBuilder_doesNotSupport_methodsThrow() {
+        BreakableCollection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .doesNotSupportMethod(CollectionMethods.ADD)
+                .doesNotSupport(CollectionMethods.REMOVE)
+                .build();
+        assertThrows(UnsupportedOperationException.class, () -> collection.add(4));
+        assertThrows(UnsupportedOperationException.class, () -> collection.remove(1));
+        assertEquals(List.of(1, 2, 3), List.copyOf(collection));
+        collection.clear();
+        assertTrue(collection.isEmpty());
+    }
+
+    @Test
+    @DisplayName("SequencedCollection builder: methods marked unsupported throw in the collection built")
+    void sequencedCollectionBuilder_doesNotSupport_methodsThrow() {
+        BreakableSequencedCollection<Integer> collection = Breakables.buildSequencedCollection(1, 2, 3)
+                .doesNotSupport(SequencedCollectionMethods.ADD_FIRST)
+                .doesNotSupport(SequencedCollectionMethods.REMOVE_LAST)
+                .build();
+        assertThrows(UnsupportedOperationException.class, () -> collection.addFirst(0));
+        assertThrows(UnsupportedOperationException.class, collection::removeLast);
+        collection.addLast(4);
+        assertEquals(List.of(1, 2, 3, 4), List.copyOf(collection));
+    }
+
+    @Test
+    @DisplayName("Iterable builder: an unsupported iterator remove throws in the iterable's iterators")
+    void iterableBuilder_doesNotSupportIteratorRemove_iteratorThrows() {
+        BreakableIterable<Integer> iterable = Breakables.buildIterable(1, 2, 3)
+                .doesNotSupport(IterableMethods.ITERATOR_REMOVE)
+                .build();
+        Iterator<Integer> iterator = iterable.iterator();
+        iterator.next();
+        assertThrows(UnsupportedOperationException.class, iterator::remove);
+    }
+
+    @Test
+    @DisplayName("Collection builder: a copy keeps the methods marked unsupported")
+    void collectionBuilderCopy_keepsUnsupportedMethods() {
+        BreakableCollection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .doesNotSupportMethod(CollectionMethods.ADD)
+                .copy()
+                .build();
+        assertThrows(UnsupportedOperationException.class, () -> collection.add(4));
     }
 
     // ========== Comparators ==========

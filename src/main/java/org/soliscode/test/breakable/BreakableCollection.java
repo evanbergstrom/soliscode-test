@@ -16,6 +16,7 @@
 package org.soliscode.test.breakable;
 
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.soliscode.test.InterfaceMethod;
 import org.soliscode.test.MethodStatus;
 import org.soliscode.test.contract.collection.CollectionMethods;
@@ -669,6 +670,14 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     public static final Break REMOVE_ALL_SKIPS_LAST_ELEMENT =
             new Break("REMOVE_ALL_SKIPS_LAST_ELEMENT");
 
+    /// #### REMOVE_ALL_DOES_NOT_THROW_ON_NULL_COLLECTION
+    /// **Purpose**: Forces `removeAll()` method to accept a `null` collection.
+    /// **Effect**: Returns `false` for a `null` argument instead of throwing `NullPointerException`.
+    /// **Affected Methods**: `removeAll(Collection)`
+    /// @see BreakableCollection#removeAll(Collection)
+    public static final Break REMOVE_ALL_DOES_NOT_THROW_ON_NULL_COLLECTION =
+            new Break("REMOVE_ALL_DOES_NOT_THROW_ON_NULL_COLLECTION");
+
     /// #### REMOVE_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION
     /// **Purpose**: Forces `removeAll()` method to throw the wrong exception when it is not supported.
     /// **Effect**: Throws `RuntimeException` instead of `UnsupportedOperationException`.
@@ -732,6 +741,14 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// @see BreakableCollection#removeIf(Predicate)
     public static final Break REMOVE_IF_SKIPS_LAST_ELEMENT =
             new Break("REMOVE_IF_SKIPS_LAST_ELEMENT");
+
+    /// #### REMOVE_IF_DOES_NOT_THROW_ON_NULL_FILTER
+    /// **Purpose**: Forces `removeIf()` method to accept a `null` filter.
+    /// **Effect**: Returns `false` for a `null` filter instead of throwing `NullPointerException`.
+    /// **Affected Methods**: `removeIf(Predicate)`
+    /// @see BreakableCollection#removeIf(Predicate)
+    public static final Break REMOVE_IF_DOES_NOT_THROW_ON_NULL_FILTER =
+            new Break("REMOVE_IF_DOES_NOT_THROW_ON_NULL_FILTER");
 
     /// #### REMOVE_IF_THROWS_WRONG_UNSUPPORTED_EXCEPTION
     /// **Purpose**: Forces `removeIf()` method to throw the wrong exception when it is not supported.
@@ -1247,7 +1264,7 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// @see Collection#toArray()
     @SuppressWarnings({"DataFlowIssue"})
     @Override
-    public Object @NonNull [] toArray() {
+    public Object @Nullable [] toArray() {
         if (hasBreak(TO_ARRAY_RETURNS_NULL)) {
             return null;
         }
@@ -1283,7 +1300,7 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// @see Collection#toArray(Object[])
     @SuppressWarnings("DataFlowIssue")
     @Override
-    public <T> T @NonNull [] toArray(final @NonNull T @NonNull [] a) {
+    public <T> T @Nullable [] toArray(final @NonNull T @NonNull [] a) {
         if (hasBreak(TO_ARRAY_STORE_RETURNS_NULL)) {
             return null;
         } else if (hasBreak(TO_ARRAY_STORE_DOES_NOT_COPY_ELEMENTS)) {
@@ -1521,6 +1538,7 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// - [REMOVE_ALL_ALWAYS_RETURNS_TRUE][BreakableCollection#REMOVE_ALL_ALWAYS_RETURNS_TRUE]
     /// - [REMOVE_ALL_ALWAYS_RETURNS_FALSE][BreakableCollection#REMOVE_ALL_ALWAYS_RETURNS_FALSE]
     /// - [REMOVE_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE][BreakableCollection#REMOVE_ALL_ALWAYS_RETURNS_OPPOSITE_VALUE]
+    /// - [REMOVE_ALL_DOES_NOT_THROW_ON_NULL_COLLECTION][BreakableCollection#REMOVE_ALL_DOES_NOT_THROW_ON_NULL_COLLECTION]
     /// - [REMOVE_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION][BreakableCollection#REMOVE_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION]
     ///
     /// A collection that has any of these breaks can be constructed using the builder:
@@ -1551,6 +1569,10 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     @Override
     public boolean removeAll(final @NonNull Collection<?> c) {
         checkOptionalMethodSupport(CollectionMethods.REMOVE_ALL, REMOVE_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION);
+        if (c == null && hasBreak(REMOVE_ALL_DOES_NOT_THROW_ON_NULL_COLLECTION)) {
+            return false;
+        }
+        Objects.requireNonNull(c);
         checkArgumentElements(c);
 
         boolean result = false;
@@ -1589,6 +1611,7 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// - [REMOVE_IF_ALWAYS_RETURNS_TRUE][BreakableCollection#REMOVE_IF_ALWAYS_RETURNS_TRUE]
     /// - [REMOVE_IF_ALWAYS_RETURNS_FALSE][BreakableCollection#REMOVE_IF_ALWAYS_RETURNS_FALSE]
     /// - [REMOVE_IF_ALWAYS_RETURNS_OPPOSITE_VALUE][BreakableCollection#REMOVE_IF_ALWAYS_RETURNS_OPPOSITE_VALUE]
+    /// - [REMOVE_IF_DOES_NOT_THROW_ON_NULL_FILTER][BreakableCollection#REMOVE_IF_DOES_NOT_THROW_ON_NULL_FILTER]
     ///
     /// A collection that has any of these breaks can be constructed using the builder:
     /// ```java
@@ -1613,6 +1636,10 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     @Override
     public boolean removeIf(final @NonNull Predicate<? super E> filter) {
         checkOptionalMethodSupport(CollectionMethods.REMOVE_IF, REMOVE_IF_THROWS_WRONG_UNSUPPORTED_EXCEPTION);
+        if (filter == null && hasBreak(REMOVE_IF_DOES_NOT_THROW_ON_NULL_FILTER)) {
+            return false;
+        }
+        Objects.requireNonNull(filter);
 
         AtomicBoolean result = new AtomicBoolean(false);
         if (hasBreak(REMOVE_IF_SKIPS_FIRST_ELEMENT)) {
@@ -2169,7 +2196,7 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// @return a random element from the collection, or null if collection is empty
     /// @see #randomInt()
     @SuppressWarnings("unchecked")
-    protected E randomElementExcludingIndex(final int exclude) {
+    protected @Nullable E randomElementExcludingIndex(final int exclude) {
         if (isEmpty()) {
             return null;
         }

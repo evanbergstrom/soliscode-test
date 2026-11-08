@@ -1152,7 +1152,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// @throws UnsupportedOperationException if this map does not support the 'get' operation
     /// @see java.util.Map#get(Object)
     @Override
-    public V get(final Object key) {
+    public @Nullable V get(final Object key) {
         if (supportsMethod(MapMethods.GET)) {
             validateKey(key);
             if (hasBreak(GET_ALWAYS_RETURNS_NULL)
@@ -1186,7 +1186,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     ///                                  in this map
     /// @see java.util.Map#put(Object, Object)
     @Override
-    public V put(final K key, final V value) {
+    public @Nullable V put(final K key, final V value) {
         if (supportsMethod(MapMethods.PUT)) {
             validateKey(key);
             validateValue(value);
@@ -1220,7 +1220,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// @throws UnsupportedOperationException if this map does not support the 'remove' operation
     /// @see java.util.Map#remove(Object)
     @Override
-    public V remove(final Object key) {
+    public @Nullable V remove(final Object key) {
         validateKey(key);
         if (supportsMethod(MapMethods.REMOVE)) {
             if (hasBreak(REMOVE_DOES_NOT_REMOVE_KEY)) {
@@ -1322,7 +1322,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// @see java.util.Map#keySet()
     @SuppressWarnings("DataFlowIssue") // may violate @NonNull contract
     @Override
-    public @NonNull Set<K> keySet() {
+    public @Nullable Set<K> keySet() {
         if (supportsMethod(MapMethods.KEY_SET)) {
             if (hasBreak(KEY_SET_RETURNS_EMPTY_SET)) {
                 return Collections.emptySet();
@@ -1357,7 +1357,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// @see java.util.Map#values()
     @Override
     @SuppressWarnings("DataFlowIssue") // may violate @NonNull contract
-    public @NonNull Collection<V> values() {
+    public @Nullable Collection<V> values() {
         if (supportsMethod(MapMethods.VALUES)) {
             if (hasBreak(VALUES_RETURNS_EMPTY_COLLECTION)) {
                 return Collections.emptyList();
@@ -1386,7 +1386,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// @see java.util.Map#entrySet()
     @SuppressWarnings("DataFlowIssue") // may violate @NonNull contract
     @Override
-    public @NonNull Set<Entry<K, V>> entrySet() {
+    public @Nullable Set<Entry<K, V>> entrySet() {
         if (supportsMethod(MapMethods.ENTRY_SET)) {
             // TODO: This needs to support entry sets that potentially prevent null keys and values
 
@@ -1420,7 +1420,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// @throws UnsupportedOperationException if this map does not support the 'getOrDefault' operation
     /// @see java.util.Map#getOrDefault(Object, Object)
     @Override
-    public V getOrDefault(final Object key, final V defaultValue) {
+    public @Nullable V getOrDefault(final Object key, final V defaultValue) {
         if (supportsMethod(MapMethods.GET_OR_DEFAULT)) {
             validateKey(key);
             if (hasBreak(GET_OR_DEFAULT_ALWAYS_RETURNS_NULL)) {
@@ -1684,7 +1684,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// @throws IllegalArgumentException if some property of the specified key or value prevents it from being stored in this map
     /// @see java.util.Map#replace(Object, Object)
     @Override
-    public V replace(final K key, final V value) {
+    public @Nullable V replace(final K key, final V value) {
         if (supportsMethod(MapMethods.REPLACE_TWO_ARG)) {
             validateKey(key);
             validateValue(value);
@@ -1723,7 +1723,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// @throws IllegalArgumentException if some property of the specified key or value prevents it from being stored in this map
     /// @see java.util.Map#computeIfAbsent(Object, Function)
     @Override
-    public V computeIfAbsent(final K key, final @NonNull Function<? super K, ? extends V> mappingFunction) {
+    public @Nullable V computeIfAbsent(final K key, final @NonNull Function<? super K, ? extends V> mappingFunction) {
         if (supportsMethod(MapMethods.COMPUTE_IF_ABSENT)) {
             validateKey(key);
             V computed;
@@ -1766,7 +1766,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// @throws IllegalArgumentException if some property of the specified key or value prevents it from being stored in this map
     /// @see java.util.Map#computeIfPresent(Object, BiFunction)
     @Override
-    public V computeIfPresent(final K key,
+    public @Nullable V computeIfPresent(final K key,
                               final @NonNull BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         validateKey(key);
         if (supportsMethod(MapMethods.COMPUTE_IF_PRESENT)) {
@@ -1809,7 +1809,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// @throws IllegalArgumentException if some property of the specified key or value prevents it from being stored in this map
     /// @see java.util.Map#compute(Object, BiFunction)
     @Override
-    public V compute(final K key,
+    public @Nullable V compute(final K key,
                      final @NonNull BiFunction<? super K, ? super @Nullable V, ? extends V> remappingFunction) {
         if (supportsMethod(MapMethods.COMPUTE)) {
             validateKey(key);
@@ -1849,7 +1849,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// @throws IllegalArgumentException if some property of the specified key or value prevents it from being stored in this map
     /// @see java.util.Map#merge(Object, Object, BiFunction)
     @Override
-    public V merge(final K key, final @NonNull V value,
+    public @Nullable V merge(final K key, final @NonNull V value,
                    final @NonNull BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
         if (supportsMethod(MapMethods.MERGE)) {
             validateKey(key);

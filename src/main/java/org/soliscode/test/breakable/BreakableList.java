@@ -1,6 +1,7 @@
 package org.soliscode.test.breakable;
 
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.soliscode.test.InterfaceMethod;
 import org.soliscode.test.MethodStatus;
 import org.soliscode.test.contract.list.ListMethods;
@@ -759,7 +760,7 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     /// @return the element at the specified position in this list, or possibly a different element if the list is broken.
     /// @throws IndexOutOfBoundsException if the index is out of range `index < 0 || index >= size()}`
     @Override
-    public E get(final int index) {
+    public @Nullable E get(final int index) {
         if (supportsMethod(ListMethods.GET)) {
             if (hasBreak(GET_ALWAYS_RETURNS_NULL)) {
                 return null;
@@ -809,7 +810,7 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     /// @return the element at the specified position in this list, or possibly a different element if the list is broken.
     /// @throws IndexOutOfBoundsException if the index is out of range `index < 0 || index >= size()}`
     @Override
-    public E set(final int index, final E element) {
+    public @Nullable E set(final int index, final E element) {
         if (supportsMethod(ListMethods.SET)) {
             if (element == null && !permitsNulls()) {
                 throw new NullPointerException("set(int, E): this list does not permit null elements");
@@ -908,7 +909,7 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     /// @throws UnsupportedOperationException if the `remove` operation is not supported by this list
     /// @throws IndexOutOfBoundsException if the index is out of range (`@code index < 0 || index >= size()`)
     @Override
-    public E remove(final int index) {
+    public @Nullable E remove(final int index) {
         if (supportsMethod(ListMethods.REMOVE_AT_INDEX)) {
             if (index < 0 || index >= list.size()) {
                 if (hasBreak(REMOVE_AT_INDEX_RETURNS_NULL_ON_BAD_INDEX)) {

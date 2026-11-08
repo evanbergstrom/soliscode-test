@@ -16,7 +16,6 @@
 
 package org.soliscode.test.assertions.collection;
 
-import org.assertj.core.util.Lists;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.junit.platform.commons.util.StringUtils;
@@ -97,7 +96,8 @@ public final class AssertContainsNoneByIdentity {
                                                        final @NonNull Iterable<?> actual,
                                                        final @NonNull Collection<?> found,
                                                        final @Nullable Object messageOrSupplier) {
-        Collection<?> expected = Lists.newArrayList(actual);
+        Collection<Object> expected = new ArrayList<>();
+        actual.forEach(expected::add);
         Collection<?> removed = CollectionTestUtils.removeAllByIdentity(expected, found);
 
         return assertionFailure()

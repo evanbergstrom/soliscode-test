@@ -647,7 +647,7 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     /// - Throws UnsupportedOperationException if the method is not supported
     /// - May throw InterruptedException due to TAKE_FIRST_THROWS_INTERRUPTED_EXCEPTION break
     @Override
-    public @NonNull E takeFirst() throws InterruptedException {
+    public @Nullable E takeFirst() throws InterruptedException {
         checkMethodSupport(BlockingDequeMethods.TAKE_FIRST);
 
         if (hasBreak(TAKE_FIRST_THROWS_INTERRUPTED_EXCEPTION)) {
@@ -655,7 +655,6 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
         }
 
         if (hasBreak(TAKE_FIRST_ALWAYS_RETURNS_NULL)) {
-            //noinspection DataFlowIssue
             return null; // Non-standard behavior for testing
         }
 
@@ -683,7 +682,7 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     /// - May throw InterruptedException due to TAKE_LAST_THROWS_INTERRUPTED_EXCEPTION break
     @SuppressWarnings("DataFlowIssue")
     @Override
-    public @NonNull E takeLast() throws InterruptedException {
+    public @Nullable E takeLast() throws InterruptedException {
         checkMethodSupport(BlockingDequeMethods.TAKE_LAST);
 
         if (hasBreak(TAKE_LAST_THROWS_INTERRUPTED_EXCEPTION)) {

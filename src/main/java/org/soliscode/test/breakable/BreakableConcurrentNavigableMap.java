@@ -128,11 +128,11 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
 
     /// Break that causes the firstKey method to throw NoSuchElementException even when the map is not empty.
     /// This tests error handling for extrema operations in navigable maps.
-    public static final Break FIRST_KEY_THROWS_EXCEPTION = new Break("FIRST_KEY_THROWS_EXCEPTION");
+    public static final Break FIRST_KEY_THROWS_EXCEPTION = new Break("CONCURRENT_NAVIGABLE_MAP_FIRST_KEY_THROWS_EXCEPTION");
 
     /// Break that causes the lastKey method to throw NoSuchElementException even when the map is not empty.
     /// This tests error handling for extrema operations in navigable maps.
-    public static final Break LAST_KEY_THROWS_EXCEPTION = new Break("LAST_KEY_THROWS_EXCEPTION");
+    public static final Break LAST_KEY_THROWS_EXCEPTION = new Break("CONCURRENT_NAVIGABLE_MAP_LAST_KEY_THROWS_EXCEPTION");
 
     /// Break that causes the lowerEntry method to return null even when a lower entry exists.
     /// This tests handling of navigation operations that fail to find existing entries.
@@ -184,27 +184,27 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
 
     /// Break that causes the descendingMap method to return null instead of a descending view.
     /// This tests handling of view operations that fail to create proper views.
-    public static final Break DESCENDING_MAP_RETURNS_NULL = new Break("DESCENDING_MAP_RETURNS_NULL");
+    public static final Break DESCENDING_MAP_RETURNS_NULL = new Break("CONCURRENT_NAVIGABLE_MAP_DESCENDING_MAP_RETURNS_NULL");
 
     /// Break that causes the navigableKeySet method to return null instead of a navigable key set.
     /// This tests handling of view operations that fail to create proper key set views.
-    public static final Break NAVIGABLE_KEY_SET_RETURNS_NULL = new Break("NAVIGABLE_KEY_SET_RETURNS_NULL");
+    public static final Break NAVIGABLE_KEY_SET_RETURNS_NULL = new Break("CONCURRENT_NAVIGABLE_MAP_NAVIGABLE_KEY_SET_RETURNS_NULL");
 
     /// Break that causes the descendingKeySet method to return null instead of a descending key set.
     /// This tests handling of view operations that fail to create proper descending key set views.
-    public static final Break DESCENDING_KEY_SET_RETURNS_NULL = new Break("DESCENDING_KEY_SET_RETURNS_NULL");
+    public static final Break DESCENDING_KEY_SET_RETURNS_NULL = new Break("CONCURRENT_NAVIGABLE_MAP_DESCENDING_KEY_SET_RETURNS_NULL");
 
     /// Break that causes all subMap methods to return null instead of creating submaps.
     /// This tests handling of submap operations that fail to create proper submap views.
-    public static final Break SUB_MAP_RETURNS_NULL = new Break("SUB_MAP_RETURNS_NULL");
+    public static final Break SUB_MAP_RETURNS_NULL = new Break("CONCURRENT_NAVIGABLE_MAP_SUB_MAP_RETURNS_NULL");
 
     /// Break that causes all headMap methods to return null instead of creating head maps.
     /// This tests handling of submap operations that fail to create proper head map views.
-    public static final Break HEAD_MAP_RETURNS_NULL = new Break("HEAD_MAP_RETURNS_NULL");
+    public static final Break HEAD_MAP_RETURNS_NULL = new Break("CONCURRENT_NAVIGABLE_MAP_HEAD_MAP_RETURNS_NULL");
 
     /// Break that causes all tailMap methods to return null instead of creating tail maps.
     /// This tests handling of submap operations that fail to create proper tail map views.
-    public static final Break TAIL_MAP_RETURNS_NULL = new Break("TAIL_MAP_RETURNS_NULL");
+    public static final Break TAIL_MAP_RETURNS_NULL = new Break("CONCURRENT_NAVIGABLE_MAP_TAIL_MAP_RETURNS_NULL");
 
     /// Break that causes subMap operations to ignore the specified bounds and return the entire map.
     /// This tests handling of submap operations that fail to properly respect bounds.
@@ -513,7 +513,7 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
     }
 
     @Override
-    public NavigableSet<K> navigableKeySet() {
+    public @Nullable NavigableSet<K> navigableKeySet() {
         checkMethodSupport(NavigableMapMethods.NAVIGABLE_KEY_SET);
         if (hasBreak(NAVIGABLE_KEY_SET_RETURNS_NULL)) {
             return null;
@@ -528,7 +528,7 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
     }
 
     @Override
-    public NavigableSet<K> descendingKeySet() {
+    public @Nullable NavigableSet<K> descendingKeySet() {
         checkMethodSupport(NavigableMapMethods.DESCENDING_KEY_SET);
         if (hasBreak(DESCENDING_KEY_SET_RETURNS_NULL)) {
             return null;
@@ -537,7 +537,7 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
     }
 
     @Override
-    public ConcurrentNavigableMap<K, V> subMap(final K fromKey, final boolean fromInclusive,
+    public @Nullable ConcurrentNavigableMap<K, V> subMap(final K fromKey, final boolean fromInclusive,
                                                final K toKey, final boolean toInclusive) {
         checkMethodSupport(NavigableMapMethods.NAVIGABLE_KEY_SET);
         if (hasBreak(SUB_MAP_RETURNS_NULL)) {
@@ -556,7 +556,7 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
     }
 
     @Override
-    public ConcurrentNavigableMap<K, V> headMap(final K toKey, final boolean inclusive) {
+    public @Nullable ConcurrentNavigableMap<K, V> headMap(final K toKey, final boolean inclusive) {
         checkMethodSupport(NavigableMapMethods.HEAD_MAP_TWO_ARG);
 
         if (hasBreak(HEAD_MAP_RETURNS_NULL)) {
@@ -569,7 +569,7 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
     }
 
     @Override
-    public ConcurrentNavigableMap<K, V> tailMap(final K fromKey, final boolean inclusive) {
+    public @Nullable ConcurrentNavigableMap<K, V> tailMap(final K fromKey, final boolean inclusive) {
         checkMethodSupport(NavigableMapMethods.TAIL_MAP_TWO_ARG);
 
         if (hasBreak(TAIL_MAP_RETURNS_NULL)) {
@@ -582,36 +582,33 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
     }
 
     @Override
-    public @NonNull ConcurrentNavigableMap<K, V> subMap(final K fromKey, final K toKey) {
+    public @Nullable ConcurrentNavigableMap<K, V> subMap(final K fromKey, final K toKey) {
         checkMethodSupport(SortedMapMethods.SUB_MAP);
 
         if (hasBreak(SUB_MAP_RETURNS_NULL)) {
-            //noinspection DataFlowIssue
             return null;
         }
         return concurrentNavigableMap.subMap(fromKey, toKey);
     }
 
     @Override
-    public @NonNull ConcurrentNavigableMap<K, V> headMap(final K toKey) {
+    public @Nullable ConcurrentNavigableMap<K, V> headMap(final K toKey) {
         checkMethodSupport(SortedMapMethods.HEAD_MAP);
 
         if (!supportsMethod(SortedMapMethods.HEAD_MAP)) {
             throw new UnsupportedOperationException("headMap(K) method is not supported");
         }
         if (hasBreak(HEAD_MAP_RETURNS_NULL)) {
-            //noinspection DataFlowIssue
             return null;
         }
         return concurrentNavigableMap.headMap(toKey);
     }
 
     @Override
-    public @NonNull ConcurrentNavigableMap<K, V> tailMap(final K fromKey) {
+    public @Nullable ConcurrentNavigableMap<K, V> tailMap(final K fromKey) {
         checkMethodSupport(SortedMapMethods.TAIL_MAP);
 
         if (hasBreak(TAIL_MAP_RETURNS_NULL)) {
-            //noinspection DataFlowIssue
             return null;
         }
         return concurrentNavigableMap.tailMap(fromKey);

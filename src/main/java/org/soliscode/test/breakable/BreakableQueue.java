@@ -416,7 +416,7 @@ public class BreakableQueue<E> extends BreakableCollection<E> implements Queue<E
     ///
     /// @since 1.0
     public static final Break REMOVE_DOES_NOT_REMOVE_ELEMENT =
-            new Break("REMOVE_DOES_NOT_REMOVE_ELEMENT");
+            new Break("QUEUE_REMOVE_DOES_NOT_REMOVE_ELEMENT");
 
     // ========== Instance Fields ==========
 
@@ -715,7 +715,7 @@ public class BreakableQueue<E> extends BreakableCollection<E> implements Queue<E
     /// @since 1.0
     @SuppressWarnings("DataFlowIssue") // enable NonNull method to return null when broken
     @Override
-    public @NonNull E remove() {
+    public @Nullable E remove() {
         checkMethodSupport(QueueMethods.REMOVE);
 
         if (hasBreak(REMOVE_THROWS_EXCEPTION)) {

@@ -1,6 +1,7 @@
 package org.soliscode.test.breakable;
 
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.soliscode.test.InterfaceMethod;
 import org.soliscode.test.MethodStatus;
 
@@ -205,7 +206,7 @@ public class BreakableSequencedSet<E> extends BreakableSet<E> implements Sequenc
     /// @return the first element
     /// @throws NoSuchElementException if this set is empty (or if broken)
     @Override
-    public E getFirst() {
+    public @Nullable E getFirst() {
         if (hasBreak(BreakableSequencedCollection.GET_FIRST_ALWAYS_THROWS)) {
             throw new NoSuchElementException();
         }
@@ -234,7 +235,7 @@ public class BreakableSequencedSet<E> extends BreakableSet<E> implements Sequenc
     /// @return the last element
     /// @throws NoSuchElementException if this set is empty (or if broken)
     @Override
-    public E getLast() {
+    public @Nullable E getLast() {
         if (hasBreak(BreakableSequencedCollection.GET_LAST_ALWAYS_THROWS)) {
             throw new NoSuchElementException();
         }
@@ -263,7 +264,7 @@ public class BreakableSequencedSet<E> extends BreakableSet<E> implements Sequenc
     /// @return the removed element
     /// @throws NoSuchElementException if this set is empty (or if broken)
     @Override
-    public E removeFirst() {
+    public @Nullable E removeFirst() {
         if (hasBreak(BreakableSequencedCollection.REMOVE_FIRST_ALWAYS_THROWS)) {
             throw new NoSuchElementException();
         }
@@ -290,7 +291,7 @@ public class BreakableSequencedSet<E> extends BreakableSet<E> implements Sequenc
     /// @return the removed element
     /// @throws NoSuchElementException if this set is empty (or if broken)
     @Override
-    public E removeLast() {
+    public @Nullable E removeLast() {
         if (hasBreak(BreakableSequencedCollection.REMOVE_LAST_ALWAYS_THROWS)) {
             throw new NoSuchElementException();
         }

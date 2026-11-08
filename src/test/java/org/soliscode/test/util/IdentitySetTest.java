@@ -132,10 +132,10 @@ public class IdentitySetTest extends AbstractTest {
         boolean result2 = set.add(str);
         boolean result3 = set.add(str);
 
-        // All should return true (implementation detail of IdentitySet.add_singleElement_returnsTrueAndUpdatesSize())
+        // Only the first add changes the set
         assertTrue(result1);
-        assertTrue(result2);
-        assertTrue(result3);
+        assertFalse(result2);
+        assertFalse(result3);
 
         // But size should remain 1 since it's the same reference
         assertEquals(1, set.size());
@@ -202,9 +202,9 @@ public class IdentitySetTest extends AbstractTest {
         IdentitySet<String> set = new IdentitySet<>();
         String str = "test";
 
-        // Remove from empty set - should return true (bug in IdentitySet implementation)
+        // Remove from empty set: nothing to remove
         boolean result1 = set.remove(str);
-        assertTrue(result1); // The implementation incorrectly returns true when element is not found
+        assertFalse(result1);
 
         // Add and then remove
         set.add(str);
@@ -228,9 +228,9 @@ public class IdentitySetTest extends AbstractTest {
         IdentitySet<UncachedString> set = new IdentitySet<>();
         set.add(str1);
 
-        // Should not be able to remove str2 (different reference) but returns true due to bug
+        // Should not be able to remove str2 (different reference)
         boolean result = set.remove(str2);
-        assertTrue(result); // Bug: IdentitySet.remove() always returns true
+        assertFalse(result);
         assertEquals(1, set.size()); // But the size should remain unchanged
         assertTrue(set.contains(str1)); // And the element should still be there
 

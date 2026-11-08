@@ -16,6 +16,7 @@
 package org.soliscode.test.breakable;
 
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.soliscode.test.InterfaceMethod;
 import org.soliscode.test.MethodStatus;
 
@@ -76,22 +77,22 @@ public class BreakableSpliterator<E> extends AbstractBreakable implements Splite
     /// The `estimateSize` method always returns the max value.
     /// @see BreakableSpliterator#estimateSize()
     public static final Break SPLITERATOR_ESTIMATE_SIZE_ALWAYS_RETURNS_MAX_VALUE =
-            new Break("spliterator estimateSize always returns the max value.");
+            new Break("spliterator estimateSize always returns the max value");
 
     /// The `estimateSize` method always returns zero.
     /// @see BreakableSpliterator#estimateSize()
     public static final Break SPLITERATOR_ESTIMATE_SIZE_ALWAYS_RETURNS_ZERO =
-            new Break("spliterator estimateSize` always returns zero.");
+            new Break("spliterator estimateSize always returns zero");
 
     /// The `getExactSizeIfKnown` method always returns negative one (-1).
     /// @see BreakableSpliterator#getExactSizeIfKnown()
     public static final Break SPLITERATOR_GET_EXACT_SIZE_IF_KNOWN_ALWAYS_RETURNS_NEGATIVE_ONE =
-            new Break("");
+            new Break("spliterator getExactSizeIfKnown always returns -1");
 
     /// The `characteristics` method always returns zero (0).
     /// @see BreakableSpliterator#characteristics()
     public static final Break SPLITERATOR_CHARACTERISTICS_ALWAYS_RETURNS_ZERO =
-            new Break("spliterator getExactSizeIfKnown always returns -1");
+            new Break("spliterator characteristics always returns zero");
 
     /// The `hasCharacteristics` method always returns `true`.
     /// @see BreakableSpliterator#hasCharacteristics(int)
@@ -178,7 +179,7 @@ public class BreakableSpliterator<E> extends AbstractBreakable implements Splite
     }
 
     @Override
-    public Spliterator<E> trySplit() {
+    public @Nullable Spliterator<E> trySplit() {
         if (hasBreak(SPLITERATOR_IS_ALWAYS_EMPTY)) {
             return null;
         } else if (hasBreak(SPLITERATOR_TRY_SPLIT_ALWAYS_RETURNS_NULL)) {
@@ -333,7 +334,7 @@ public class BreakableSpliterator<E> extends AbstractBreakable implements Splite
     }
 
     @Override
-    public Comparator<? super E> getComparator() {
+    public @Nullable Comparator<? super E> getComparator() {
         if (hasBreak(SPLITERATOR_GET_COMPARATOR_ALWAYS_RETURNS_NULL)) {
             return null;
         } else {

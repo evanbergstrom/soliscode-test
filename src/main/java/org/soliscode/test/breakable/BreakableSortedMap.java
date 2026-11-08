@@ -615,7 +615,7 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
     /// @throws ClassCastException if toKey is not compatible with this map's comparator
     /// @throws NullPointerException if toKey is null and this map does not permit null keys
     @Override
-    public @NonNull SortedMap<K, V> headMap(final K toKey) {
+    public @Nullable SortedMap<K, V> headMap(final K toKey) {
         if (!supportsMethod(SortedMapMethods.HEAD_MAP)) {
             throw new UnsupportedOperationException("headMap() method is not supported");
         }
@@ -626,7 +626,6 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
         }
 
         if (hasBreak(HEAD_MAP_RETURNS_NULL)) {
-            //noinspection DataFlowIssue
             return null;
         }
 
@@ -669,7 +668,7 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
     /// @throws ClassCastException if fromKey is not compatible with this map's comparator
     /// @throws NullPointerException if fromKey is null and this map does not permit null keys
     @Override
-    public @NonNull SortedMap<K, V> tailMap(final K fromKey) {
+    public @Nullable SortedMap<K, V> tailMap(final K fromKey) {
         if (!supportsMethod(SortedMapMethods.TAIL_MAP)) {
             throw new UnsupportedOperationException("tailMap() method is not supported");
         }
@@ -680,7 +679,6 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
         }
 
         if (hasBreak(TAIL_MAP_RETURNS_NULL)) {
-            //noinspection DataFlowIssue
             return null;
         }
 
@@ -726,7 +724,7 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
     /// @throws ClassCastException if fromKey or toKey is not compatible with this map's comparator
     /// @throws NullPointerException if fromKey or toKey is null and this map does not permit null keys
     @Override
-    public @NonNull SortedMap<K, V> subMap(final K fromKey, final K toKey) {
+    public @Nullable SortedMap<K, V> subMap(final K fromKey, final K toKey) {
         if (!supportsMethod(SortedMapMethods.SUB_MAP)) {
             throw new UnsupportedOperationException("subMap() method is not supported");
         }
@@ -737,7 +735,6 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
         }
 
         if (hasBreak(SUB_MAP_RETURNS_NULL)) {
-            //noinspection DataFlowIssue
             return null;
         }
 

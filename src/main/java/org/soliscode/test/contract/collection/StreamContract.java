@@ -5,10 +5,12 @@ import org.junit.jupiter.api.Test;
 import org.soliscode.test.contract.support.CollectionContractSupport;
 
 import java.util.Collection;
+import java.util.Spliterator;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.soliscode.test.assertions.collection.CollectionAssertions.assertEqualsByIdentity;
+import static org.junit.jupiter.api.Assertions.assertIterableEquals;
+import static org.soliscode.test.assertions.collection.CollectionAssertions.assertContainsSame;
 import static org.soliscode.test.assertions.collection.CollectionAssertions.assertSameSize;
 
 /// **Contract for the `stream` and `parallelStream` methods of a `Collection`**
@@ -78,7 +80,7 @@ public interface StreamContract<C extends Collection<E>, E> extends CollectionCo
         Collection<E> collection = provider().createInstanceWithUniqueElements();
         Collection<E> elements = collection.stream().toList();
         assertSameSize(collection, elements);
-        assertEqualsByIdentity(elements, collection);
+        assertStreamed(collection, elements);
     }
 
     /// Tests that the [parallelStream][Collection#parallelStream] method works for an empty collection.
@@ -110,6 +112,19 @@ public interface StreamContract<C extends Collection<E>, E> extends CollectionCo
         Collection<E> collection = provider().createInstanceWithUniqueElements();
         Collection<E> elements = collection.parallelStream().toList();
         assertSameSize(collection, elements);
-        assertEqualsByIdentity(elements, collection);
+        assertStreamed(collection, elements);
+    }
+
+    /// Asserts that a stream of the collection gave its elements: in the collection's order when its spliterator is
+    /// [ORDERED][Spliterator#ORDERED], and in any order otherwise. Elements are compared with `equals`.
+    ///
+    /// @param collection the collection streamed
+    /// @param elements the elements the stream gave
+    private static void assertStreamed(final Collection<?> collection, final Collection<?> elements) {
+        if (collection.spliterator().hasCharacteristics(Spliterator.ORDERED)) {
+            assertIterableEquals(collection, elements);
+        } else {
+            assertContainsSame(collection, elements);
+        }
     }
 }

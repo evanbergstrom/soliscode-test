@@ -620,11 +620,10 @@ public class BreakableBlockingQueue<E> extends BreakableQueue<E> implements Bloc
     /// @throws UnsupportedOperationException if the `take` method is not supported
     /// @since 1.0
     @Override
-    public @NonNull E take() throws InterruptedException {
+    public @Nullable E take() throws InterruptedException {
         checkMethodSupport(BlockingQueueMethods.TAKE);
 
         if (hasBreak(TAKE_ALWAYS_RETURNS_NULL)) {
-            //noinspection DataFlowIssue
             return null; // Non-standard behavior for testing
         }
 
@@ -645,7 +644,6 @@ public class BreakableBlockingQueue<E> extends BreakableQueue<E> implements Bloc
                     throw ie;
                 }
             }
-            //noinspection DataFlowIssue
             return null; // This line will never be reached
         }
 

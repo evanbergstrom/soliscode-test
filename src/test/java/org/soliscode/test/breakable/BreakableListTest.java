@@ -182,6 +182,52 @@ public class BreakableListTest extends AbstractTest
         });
     }
 
+    /// Test that the `ADD_AT_INDEX_ADDS_AT_PREVIOUS_POSITION` break adds the element before the index.
+    /// @see BreakableList#add(int, Object)
+    @Test
+    @DisplayName("add(int, E) adds before the index with the ADD_AT_INDEX_ADDS_AT_PREVIOUS_POSITION break")
+    public void addAtIndex_withAddsAtPreviousPositionBreak_addsBeforeIndex() {
+        BreakableList<Integer> list = Breakables.buildList(1, 2, 3, 4)
+                .addBreak(BreakableList.ADD_AT_INDEX_ADDS_AT_PREVIOUS_POSITION)
+                .build();
+
+        list.add(2, 9);
+        assertEquals(Arrays.asList(1, 9, 2, 3, 4), list);
+    }
+
+    /// Test that index `size()` is not a bad index for `add(int, E)`: it appends, even with the break that throws the
+    /// wrong exception on a bad index.
+    /// @see BreakableList#add(int, Object)
+    @Test
+    @DisplayName("add(int, E) at size() appends with the ADD_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX break")
+    public void addAtIndex_atSizeWithThrowsWrongExceptionBreak_appends() {
+        BreakableList<Integer> list = Breakables.buildList(1, 2, 3, 4)
+                .addBreak(BreakableList.ADD_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX)
+                .build();
+
+        list.add(4, 9);
+        assertEquals(Arrays.asList(1, 2, 3, 4, 9), list);
+        assertThrows(IllegalArgumentException.class, () -> list.add(-1, 9));
+    }
+
+    /// Test that `add(int, E)` is controlled by its own method identifier, not by `set`'s.
+    /// @see BreakableList#add(int, Object)
+    @Test
+    @DisplayName("add(int, E) is unsupported without ADD_AT_INDEX, and works without SET")
+    public void addAtIndex_whenSupportRemoved_followsAddAtIndexOnly() {
+        BreakableList<Integer> withoutAddAtIndex = Breakables.buildList(1, 2, 3, 4)
+                .doesNotSupportMethod(ListMethods.ADD_AT_INDEX)
+                .build();
+        assertThrows(UnsupportedOperationException.class, () -> withoutAddAtIndex.add(2, 9));
+        assertEquals(Arrays.asList(1, 2, 3, 4), withoutAddAtIndex);
+
+        BreakableList<Integer> withoutSet = Breakables.buildList(1, 2, 3, 4)
+                .doesNotSupportMethod(ListMethods.SET)
+                .build();
+        withoutSet.add(2, 9);
+        assertEquals(Arrays.asList(1, 2, 9, 3, 4), withoutSet);
+    }
+
     // ========== get(int) Tests ==========
 
     /// Test that the `GET_ALWAYS_RETURNS_NULL` break causes the `get` method to always return null.

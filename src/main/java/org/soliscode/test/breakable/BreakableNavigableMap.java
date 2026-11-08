@@ -925,7 +925,7 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     /// @throws UnsupportedOperationException if the method is not supported
     /// @see NavigableMap#descendingMap()
     @Override
-    public @NonNull NavigableMap<K, V> descendingMap() {
+    public @Nullable NavigableMap<K, V> descendingMap() {
         if (!supportsMethod(NavigableMapMethods.DESCENDING_MAP)) {
             throw new UnsupportedOperationException("descendingMap() method is not supported");
         }
@@ -934,7 +934,6 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
             return new TreeMap<>();
         }
         if (hasBreak(DESCENDING_MAP_RETURNS_NULL)) {
-            //noinspection DataFlowIssue
             return null;
         }
         if (hasBreak(DESCENDING_MAP_THROWS_EXCEPTION)) {
@@ -961,7 +960,7 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     /// @see NavigableMap#navigableKeySet()
     @SuppressWarnings("SortedCollectionWithNonComparableKeys")
     @Override
-    public @NonNull NavigableSet<K> navigableKeySet() {
+    public @Nullable NavigableSet<K> navigableKeySet() {
         if (!supportsMethod(NavigableMapMethods.NAVIGABLE_KEY_SET)) {
             throw new UnsupportedOperationException("navigableKeySet() method is not supported");
         }
@@ -969,7 +968,6 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
             return new TreeMap<K, Object>().navigableKeySet();
         }
         if (hasBreak(NAVIGABLE_KEY_SET_RETURNS_NULL)) {
-            //noinspection DataFlowIssue
             return null;
         }
         if (hasBreak(NAVIGABLE_KEY_SET_THROWS_EXCEPTION)) {
@@ -996,7 +994,7 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     /// @see NavigableMap#descendingKeySet()
     @SuppressWarnings("SortedCollectionWithNonComparableKeys")
     @Override
-    public @NonNull NavigableSet<K> descendingKeySet() {
+    public @Nullable NavigableSet<K> descendingKeySet() {
         if (!supportsMethod(NavigableMapMethods.DESCENDING_KEY_SET)) {
             throw new UnsupportedOperationException("descendingKeySet() method is not supported");
         }
@@ -1004,7 +1002,6 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
             return new TreeMap<K, Object>().descendingKeySet();
         }
         if (hasBreak(DESCENDING_KEY_SET_RETURNS_NULL)) {
-            //noinspection DataFlowIssue
             return null;
         }
         if (hasBreak(DESCENDING_KEY_SET_THROWS_EXCEPTION)) {
@@ -1035,7 +1032,7 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     /// @throws UnsupportedOperationException if the method is not supported
     /// @see NavigableMap#subMap(Object, boolean, Object, boolean)
     @Override
-    public @NonNull NavigableMap<K, V> subMap(final K fromKey, final boolean fromInclusive,
+    public @Nullable NavigableMap<K, V> subMap(final K fromKey, final boolean fromInclusive,
                                              final K toKey, final boolean toInclusive) {
         if (!supportsMethod(NavigableMapMethods.SUB_MAP_FOUR_ARG)) {
             throw new UnsupportedOperationException("subMap(K, boolean, K, boolean) method is not supported");
@@ -1045,7 +1042,6 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
             return new TreeMap<>();
         }
         if (hasBreak(SUB_MAP_FOUR_ARG_RETURNS_NULL)) {
-            //noinspection DataFlowIssue
             return null;
         }
         if (hasBreak(SUB_MAP_FOUR_ARG_THROWS_EXCEPTION)) {
@@ -1074,7 +1070,7 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     /// @throws UnsupportedOperationException if the method is not supported
     /// @see NavigableMap#headMap(Object, boolean)
     @Override
-    public @NonNull NavigableMap<K, V> headMap(final K toKey, final boolean inclusive) {
+    public @Nullable NavigableMap<K, V> headMap(final K toKey, final boolean inclusive) {
         if (!supportsMethod(NavigableMapMethods.HEAD_MAP_TWO_ARG)) {
             throw new UnsupportedOperationException("headMap(K, boolean) method is not supported");
         }
@@ -1083,7 +1079,6 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
             return new TreeMap<>();
         }
         if (hasBreak(HEAD_MAP_TWO_ARG_RETURNS_NULL)) {
-            //noinspection DataFlowIssue
             return null;
         }
         if (hasBreak(HEAD_MAP_TWO_ARG_THROWS_EXCEPTION)) {
@@ -1112,7 +1107,7 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     /// @throws UnsupportedOperationException if the method is not supported
     /// @see NavigableMap#tailMap(Object, boolean)
     @Override
-    public @NonNull NavigableMap<K, V> tailMap(final K fromKey, final boolean inclusive) {
+    public @Nullable NavigableMap<K, V> tailMap(final K fromKey, final boolean inclusive) {
         if (!supportsMethod(NavigableMapMethods.TAIL_MAP_TWO_ARG)) {
             throw new UnsupportedOperationException("tailMap(K, boolean) method is not supported");
         }
@@ -1121,7 +1116,6 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
             return new TreeMap<>();
         }
         if (hasBreak(TAIL_MAP_TWO_ARG_RETURNS_NULL)) {
-            //noinspection DataFlowIssue
             return null;
         }
         if (hasBreak(TAIL_MAP_TWO_ARG_THROWS_EXCEPTION)) {

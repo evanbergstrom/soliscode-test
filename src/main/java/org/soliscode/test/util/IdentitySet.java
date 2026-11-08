@@ -6,7 +6,6 @@ import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
-import java.util.Map;
 
 /// An Set that checks for elements by identity rather han by equality. This class is used to implement
 /// assertions that are checking for element identity.
@@ -15,7 +14,7 @@ import java.util.Map;
 /// @since 1.0
 public class IdentitySet<E> extends AbstractSet<E> {
 
-    private final @NonNull Map<E, ?> elements;
+    private final @NonNull IdentityHashMap<E, Boolean> elements;
 
     /// Creates an empty identity set.
     public IdentitySet() {
@@ -26,7 +25,7 @@ public class IdentitySet<E> extends AbstractSet<E> {
     /// @param c the identity set to copy.
     public IdentitySet(final @NonNull Collection<? extends E> c) {
         this.elements = new IdentityHashMap<>();
-        c.forEach((e) -> elements.put(e, null));
+        c.forEach((e) -> elements.put(e, Boolean.TRUE));
     }
 
     @Override
@@ -47,12 +46,11 @@ public class IdentitySet<E> extends AbstractSet<E> {
 
     @Override
     public boolean add(final E e) {
-        elements.put(e, null);
-        return true;
+        return elements.put(e, Boolean.TRUE) == null;
     }
 
     @Override
     public boolean remove(final Object o) {
-        return elements.remove(o) == null;
+        return elements.remove(o) != null;
     }
 }

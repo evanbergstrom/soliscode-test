@@ -538,7 +538,7 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
     /// @return the comparator used to order elements, or null if natural ordering is used
     ///         (or if the COMPARATOR_ALWAYS_RETURNS_NULL break is active)
     @Override
-    public Comparator<? super E> comparator() {
+    public @Nullable Comparator<? super E> comparator() {
         if (hasBreak(COMPARATOR_ALWAYS_RETURNS_NULL)) {
             return null;
         }
@@ -684,7 +684,7 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
     /// @return the first (lowest) element currently in this set
     /// @throws NoSuchElementException if this set is empty (or if FIRST_ALWAYS_THROWS_EXCEPTION break is active)
     @Override
-    public E first() {
+    public @Nullable E first() {
         if (hasBreak(FIRST_ALWAYS_THROWS_EXCEPTION)) {
             throw new NoSuchElementException("First element access is broken");
         } else if (hasBreak(FIRST_ALWAYS_RETURNS_NULL)) {
@@ -723,7 +723,7 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
     /// @return the last (highest) element currently in this set
     /// @throws NoSuchElementException if this set is empty (or if LAST_ALWAYS_THROWS_EXCEPTION break is active)
     @Override
-    public E last() {
+    public @Nullable E last() {
         if (hasBreak(LAST_ALWAYS_THROWS_EXCEPTION)) {
             throw new NoSuchElementException("Last element access is broken");
         } else if (hasBreak(LAST_ALWAYS_RETURNS_NULL)) {

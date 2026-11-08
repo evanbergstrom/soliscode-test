@@ -1,6 +1,7 @@
 package org.soliscode.test.util;
 
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -367,7 +368,7 @@ public final class CollectionTestUtils {
     /// @param <E> the element type
     /// @param e1 the first element
     /// @return a mutable ArrayList containing the one element.
-    public static <E> List<E> listOf(final E e1)   {
+    public static <E> List<E> listOf(final @Nullable E e1)   {
         List<E> l = new ArrayList<>();
         l.add(e1);
         return l;
@@ -380,7 +381,7 @@ public final class CollectionTestUtils {
     /// @param e1 the first element
     /// @param e2 the second element
     /// @return a mutable ArrayList containing the two elements.
-    public static <E> List<E> listOf(final E e1, final E e2)   {
+    public static <E> List<E> listOf(final @Nullable E e1, final @Nullable E e2)   {
         List<E> l = new ArrayList<>();
         l.add(e1);
         l.add(e2);
@@ -396,7 +397,7 @@ public final class CollectionTestUtils {
     /// @param e2 the second element
     /// @param e3 the third element
     /// @return a mutable ArrayList containing the three elements
-    public static <E> List<E> listOf(final E e1, final E e2, final E e3)   {
+    public static <E> List<E> listOf(final @Nullable E e1, final @Nullable E e2, final @Nullable E e3)   {
         List<E> l = new ArrayList<>();
         l.add(e1);
         l.add(e2);

@@ -1,6 +1,7 @@
 package org.soliscode.test.breakable;
 
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.soliscode.test.InterfaceMethod;
 import org.soliscode.test.MethodStatus;
 import org.soliscode.test.contract.sequencedcollection.SequencedCollectionMethods;
@@ -634,7 +635,7 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
     /// @throws NoSuchElementException if this collection is empty
     /// @see SequencedCollection#getFirst
     @Override
-    public E getFirst() {
+    public @Nullable E getFirst() {
         if (supportsMethod(SequencedCollectionMethods.GET_FIRST)) {
             if (hasBreak(GET_FIRST_RETURNS_NULL)) {
                 return null;
@@ -670,7 +671,7 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
     /// @throws UnsupportedOperationException if this method is not supported
     /// @see SequencedCollection#getLast
     @Override
-    public E getLast() {
+    public @Nullable E getLast() {
         if (supportsMethod(SequencedCollectionMethods.GET_LAST)) {
             if (hasBreak(GET_LAST_RETURNS_NULL)) {
                 return null;
@@ -706,7 +707,7 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
     /// @throws UnsupportedOperationException if this method is not supported
     /// @see SequencedCollection#removeFirst
     @Override
-    public E removeFirst() {
+    public @Nullable E removeFirst() {
         if (supportsMethod(SequencedCollectionMethods.REMOVE_FIRST)) {
             if (hasBreak(REMOVE_FIRST_DOES_NOT_REMOVE_ELEMENT)) {
                 return getWithBreakableSafety(REMOVE_FIRST_IS_NOT_THREAD_SAFE, this::getFirst);
@@ -738,7 +739,7 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
     /// @throws UnsupportedOperationException if this method is not supported
     /// @see SequencedCollection#removeLast
     @Override
-    public E removeLast() {
+    public @Nullable E removeLast() {
         if (supportsMethod(SequencedCollectionMethods.REMOVE_LAST)) {
             if (hasBreak(REMOVE_LAST_DOES_NOT_REMOVE_ELEMENT)) {
                 return getWithBreakableSafety(REMOVE_LAST_IS_NOT_THREAD_SAFE, this::getLast);

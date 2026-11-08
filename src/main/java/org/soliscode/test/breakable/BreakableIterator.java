@@ -16,6 +16,7 @@
 package org.soliscode.test.breakable;
 
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.soliscode.test.InterfaceMethod;
 import org.soliscode.test.MethodStatus;
 import org.soliscode.test.contract.iterable.IterableMethods;
@@ -182,7 +183,7 @@ public class BreakableIterator<E> extends AbstractBreakable implements Iterator<
     /// @throws NoSuchElementException if the iteration has no more elements
     /// @see Iterator#next
     @Override
-    public E next() {
+    public @Nullable E next() {
         try {
             E element = iterator.next();
             if (hasBreak(ITERATOR_NEXT_ALWAYS_RETURNS_NULL)) {

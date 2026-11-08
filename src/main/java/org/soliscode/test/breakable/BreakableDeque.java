@@ -539,7 +539,7 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Simulating corrupted deque behavior
     /// - Testing robustness against unexpected return values
     public static final Break GET_FIRST_RETURNS_NULL =
-            new Break("GET_FIRST_RETURNS_NULL");
+            new Break("DEQUE_GET_FIRST_RETURNS_NULL");
 
     /// Break constant that causes getFirst() to always throw NoSuchElementException.
     ///
@@ -554,7 +554,7 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Simulating element access failures
     /// - Testing robustness against unexpected exceptions
     public static final Break GET_FIRST_ALWAYS_THROWS =
-            new Break("GET_FIRST_ALWAYS_THROWS");
+            new Break("DEQUE_GET_FIRST_ALWAYS_THROWS");
 
     /// Break constant that causes getFirst() to skip the first element and return the second.
     ///
@@ -569,7 +569,7 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Simulating corrupted deque order
     /// - Testing robustness against incorrect ordering
     public static final Break GET_FIRST_SKIPS_FIRST_ELEMENT =
-            new Break("GET_FIRST_SKIPS_FIRST_ELEMENT");
+            new Break("DEQUE_GET_FIRST_SKIPS_FIRST_ELEMENT");
 
     /// Break constant that causes getLast() to always return null.
     ///
@@ -585,7 +585,7 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Simulating corrupted deque behavior
     /// - Testing robustness against unexpected return values
     public static final Break GET_LAST_RETURNS_NULL =
-            new Break("GET_LAST_RETURNS_NULL");
+            new Break("DEQUE_GET_LAST_RETURNS_NULL");
 
     /// Break constant that causes getLast() to always throw NoSuchElementException.
     ///
@@ -600,7 +600,7 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Simulating element access failures
     /// - Testing robustness against unexpected exceptions
     public static final Break GET_LAST_ALWAYS_THROWS =
-            new Break("GET_LAST_ALWAYS_THROWS");
+            new Break("DEQUE_GET_LAST_ALWAYS_THROWS");
 
     /// Break constant that causes getLast() to skip the last element and return the second-to-last.
     ///
@@ -615,7 +615,7 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Simulating corrupted deque order
     /// - Testing robustness against incorrect ordering
     public static final Break GET_LAST_SKIPS_LAST_ELEMENT =
-            new Break("GET_LAST_SKIPS_LAST_ELEMENT");
+            new Break("DEQUE_GET_LAST_SKIPS_LAST_ELEMENT");
 
     // ========== AddFirst/AddLast Method Breaks ==========
 
@@ -632,7 +632,7 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Simulating memory or storage issues
     /// - Testing deque state consistency
     public static final Break ADD_FIRST_DOES_NOT_ADD_ELEMENT =
-            new Break("ADD_FIRST_DOES_NOT_ADD_ELEMENT");
+            new Break("DEQUE_ADD_FIRST_DOES_NOT_ADD_ELEMENT");
 
     /// Break constant that causes addFirst() to add_singleElement_returnsTrueAndUpdatesSize elements to the end instead of the front.
     ///
@@ -647,7 +647,7 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Simulating corrupted deque behavior
     /// - Testing robustness against incorrect positioning
     public static final Break ADD_FIRST_ADDS_TO_END =
-            new Break("ADD_FIRST_ADDS_TO_END");
+            new Break("DEQUE_ADD_FIRST_ADDS_TO_END");
 
     /// Break constant that causes addLast() to accept elements but not actually add_singleElement_returnsTrueAndUpdatesSize them.
     ///
@@ -662,7 +662,7 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Simulating memory or storage issues
     /// - Testing deque state consistency
     public static final Break ADD_LAST_DOES_NOT_ADD_ELEMENT =
-            new Break("ADD_LAST_DOES_NOT_ADD_ELEMENT");
+            new Break("DEQUE_ADD_LAST_DOES_NOT_ADD_ELEMENT");
 
     /// Break constant that causes addLast() to add_singleElement_returnsTrueAndUpdatesSize elements to the front instead of the end.
     ///
@@ -677,7 +677,7 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Simulating corrupted deque behavior
     /// - Testing robustness against incorrect positioning
     public static final Break ADD_LAST_ADDS_TO_FRONT =
-            new Break("ADD_LAST_ADDS_TO_FRONT");
+            new Break("DEQUE_ADD_LAST_ADDS_TO_FRONT");
 
     // ========== RemoveFirst/RemoveLast Method Breaks ==========
 
@@ -694,7 +694,7 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Simulating removal operation failures
     /// - Testing duplicate element handling
     public static final Break REMOVE_FIRST_DOES_NOT_REMOVE_ELEMENT =
-            new Break("REMOVE_FIRST_DOES_NOT_REMOVE_ELEMENT");
+            new Break("DEQUE_REMOVE_FIRST_DOES_NOT_REMOVE_ELEMENT");
 
     /// Break constant that causes removeFirst() to always return null.
     ///
@@ -709,7 +709,7 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Simulating corrupted deque behavior
     /// - Testing robustness against unexpected return values
     public static final Break REMOVE_FIRST_RETURNS_NULL =
-            new Break("REMOVE_FIRST_RETURNS_NULL");
+            new Break("DEQUE_REMOVE_FIRST_RETURNS_NULL");
 
     /// Break constant that causes removeFirst() to always throw NoSuchElementException.
     ///
@@ -724,7 +724,7 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Simulating removal operation failures
     /// - Testing robustness against unexpected exceptions
     public static final Break REMOVE_FIRST_ALWAYS_THROWS =
-            new Break("REMOVE_FIRST_ALWAYS_THROWS");
+            new Break("DEQUE_REMOVE_FIRST_ALWAYS_THROWS");
 
     /// Break constant that causes removeLast() to return an element without removing it.
     ///
@@ -739,7 +739,7 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Simulating removal operation failures
     /// - Testing duplicate element handling
     public static final Break REMOVE_LAST_DOES_NOT_REMOVE_ELEMENT =
-            new Break("REMOVE_LAST_DOES_NOT_REMOVE_ELEMENT");
+            new Break("DEQUE_REMOVE_LAST_DOES_NOT_REMOVE_ELEMENT");
 
     /// Break constant that causes removeLast() to always return null.
     ///
@@ -754,7 +754,7 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Simulating corrupted deque behavior
     /// - Testing robustness against unexpected return values
     public static final Break REMOVE_LAST_RETURNS_NULL =
-            new Break("REMOVE_LAST_RETURNS_NULL");
+            new Break("DEQUE_REMOVE_LAST_RETURNS_NULL");
 
     /// Break constant that causes removeLast() to always throw NoSuchElementException.
     ///
@@ -769,7 +769,7 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Simulating removal operation failures
     /// - Testing robustness against unexpected exceptions
     public static final Break REMOVE_LAST_ALWAYS_THROWS =
-            new Break("REMOVE_LAST_ALWAYS_THROWS");
+            new Break("DEQUE_REMOVE_LAST_ALWAYS_THROWS");
 
     // ========== Instance Fields ==========
 
@@ -1138,7 +1138,7 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - May throw IllegalStateException due to POP_THROWS_EXCEPTION break
     @SuppressWarnings("DataFlowIssue") // enable NonNull method to return null when broken
     @Override
-    public @NonNull E pop() {
+    public @Nullable E pop() {
         if (!supportsMethod(DequeMethods.POP)) {
             throw new UnsupportedOperationException("pop() method is not supported");
         }
@@ -1199,7 +1199,7 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Throws NoSuchElementException if this deque is empty (or due to breaks)
     @SuppressWarnings("DataFlowIssue") // enable NonNull method to return null when broken
     @Override
-    public @NonNull E getFirst() {
+    public @Nullable E getFirst() {
         if (!supportsMethod(SequencedCollectionMethods.GET_FIRST)) {
             throw new UnsupportedOperationException("getFirst() method is not supported");
         }
@@ -1242,7 +1242,7 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Throws NoSuchElementException if this deque is empty (or due to breaks)
     @SuppressWarnings("DataFlowIssue") // enable NonNull method to return null when broken
     @Override
-    public @NonNull E getLast() {
+    public @Nullable E getLast() {
         if (!supportsMethod(SequencedCollectionMethods.GET_LAST)) {
             throw new UnsupportedOperationException("getLast() method is not supported");
         }
@@ -1349,7 +1349,7 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Throws NoSuchElementException if this deque is empty (or due to breaks)
     @SuppressWarnings("DataFlowIssue") // enable NonNull method to return null when broken
     @Override
-    public @NonNull E removeFirst() {
+    public @Nullable E removeFirst() {
         if (!supportsMethod(SequencedCollectionMethods.REMOVE_FIRST)) {
             throw new UnsupportedOperationException("removeFirst() method is not supported");
         }
@@ -1385,7 +1385,7 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Throws NoSuchElementException if this deque is empty (or due to breaks)
     @SuppressWarnings("DataFlowIssue") // enable NonNull method to return null when broken
     @Override
-    public @NonNull E removeLast() {
+    public @Nullable E removeLast() {
         if (!supportsMethod(SequencedCollectionMethods.REMOVE_LAST)) {
             throw new UnsupportedOperationException("removeLast() method is not supported");
         }

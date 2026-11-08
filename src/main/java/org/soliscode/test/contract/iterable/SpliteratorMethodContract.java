@@ -27,7 +27,6 @@ import java.util.Spliterator;
 import static java.util.Spliterator.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.soliscode.test.assertions.Assertions.assertLessThan;
 import static org.soliscode.test.assertions.collection.CollectionAssertions.*;
 import static org.soliscode.test.util.IterableTestUtils.contains;
 import static org.soliscode.test.util.IterableTestUtils.size;
@@ -69,8 +68,8 @@ import static org.soliscode.test.util.IterableTestUtils.size;
 @SuppressWarnings("MagicConstant")
 public interface SpliteratorMethodContract<I extends Iterable<E>, E> extends IteratorMethodContract<I, E> {
 
-    /// The full list of supported Spliterator characteristics.
-    int[] CHARACTERISTIC_VALUES = {SIZED, SUBSIZED, SORTED, CONCURRENT,  DISTINCT, IMMUTABLE, NONNULL};
+    /// The spliterator characteristics the contract checks, as an unmodifiable list.
+    List<Integer> CHARACTERISTIC_VALUES = List.of(SIZED, SUBSIZED, SORTED, CONCURRENT, DISTINCT, IMMUTABLE, NONNULL);
 
     /// Tests that the [Spliterator#hasCharacteristics(int)] method works.
     ///
@@ -157,8 +156,12 @@ public interface SpliteratorMethodContract<I extends Iterable<E>, E> extends Ite
         } else {
             Spliterator<E> split = iterator.trySplit();
             if (split != null) {
-                long splitSize = iterator.estimateSize();
-                assertLessThan(splitSize, size);
+                long remaining = iterator.estimateSize();
+                long splitSize = split.estimateSize();
+                assertTrue(remaining <= size, "estimateSize() after trySplit() is " + remaining
+                        + ", more than the " + size + " before it");
+                assertTrue(splitSize <= size, "the split-off part's estimateSize() is " + splitSize
+                        + ", more than the " + size + " before the split");
             }
         }
     }
@@ -188,13 +191,9 @@ public interface SpliteratorMethodContract<I extends Iterable<E>, E> extends Ite
 
         List<E> elements = new ArrayList<>();
         iterator.forEachRemaining(elements::add);
-            assertSameSize(iterable, elements);
+        assertSameSize(iterable, elements);
 
-        if (iterator.hasCharacteristics(Spliterator.ORDERED)) {
-            assertIterableEquals(iterable, elements);
-        } else {
-            assertEqualsByIdentity(iterable, elements);
-        }
+        assertTraversed(iterable, iterator, elements);
     }
 
     /// Tests that the [Spliterator#tryAdvance] method works on an empty collection.
@@ -228,11 +227,7 @@ public interface SpliteratorMethodContract<I extends Iterable<E>, E> extends Ite
         }
         assertSameSize(iterable, elements);
 
-        if (iterator.hasCharacteristics(Spliterator.ORDERED)) {
-            assertIterableEquals(iterable, elements);
-        } else {
-            assertEqualsByIdentity(iterable, elements);
-        }
+        assertTraversed(iterable, iterator, elements);
     }
 
     /// Tests that the [Spliterator#trySplit] method works on an empty collection.
@@ -260,18 +255,34 @@ public interface SpliteratorMethodContract<I extends Iterable<E>, E> extends Ite
         Spliterator<E> split = iterator.trySplit();
         assertNotNull(split);
 
+        // For an ORDERED spliterator, the part split off is a strict prefix: it comes first.
         List<E> elements = new ArrayList<>();
         int calls = 0;
-        while (iterator.tryAdvance(elements::add)) {
-            assertTrue(++calls <= TRAVERSAL_LIMIT, "tryAdvance(Consumer) did not end");
-            assertTrue(contains(iterable, elements.getLast()));
-        }
         while (split.tryAdvance(elements::add)) {
             assertTrue(++calls <= TRAVERSAL_LIMIT, "tryAdvance(Consumer) did not end");
             assertTrue(contains(iterable, elements.getLast()));
         }
+        while (iterator.tryAdvance(elements::add)) {
+            assertTrue(++calls <= TRAVERSAL_LIMIT, "tryAdvance(Consumer) did not end");
+            assertTrue(contains(iterable, elements.getLast()));
+        }
         assertSameSize(iterable, elements);
-        assertContainsSameByIdentity(iterable, elements);
+        assertTraversed(iterable, iterator, elements);
+    }
+
+    /// Asserts that a traversal of the spliterator gave the iterable's elements: in its order when the spliterator is
+    /// [ORDERED][Spliterator#ORDERED], and in any order otherwise. Elements are compared with `equals`.
+    ///
+    /// @param iterable the iterable the spliterator came from
+    /// @param spliterator the spliterator traversed
+    /// @param elements the elements the traversal gave
+    private static void assertTraversed(final Iterable<?> iterable, final Spliterator<?> spliterator,
+                                        final List<?> elements) {
+        if (spliterator.hasCharacteristics(Spliterator.ORDERED)) {
+            assertIterableEquals(iterable, elements);
+        } else {
+            assertContainsSame(iterable, elements);
+        }
     }
 
     /// Tests that [getComparator()][Spliterator#getComparator()] throws [IllegalStateException] for a spliterator

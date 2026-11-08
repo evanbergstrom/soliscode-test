@@ -680,6 +680,22 @@ public class BreakableCollectionTest extends AbstractTest
         assertTrue(collection.removeAll(Arrays.asList(4, 5)));
     }
 
+    /// Test that the `REMOVE_ALL_DOES_NOT_THROW_ON_NULL_COLLECTION` break makes `removeAll(null)` return `false` and
+    /// leave the collection unchanged, where an unbroken collection throws.
+    /// @see BreakableCollection#removeAll(Collection)
+    @DisplayName("removeAll(null) returns false with REMOVE_ALL_DOES_NOT_THROW_ON_NULL_COLLECTION break")
+    @Test
+    public void removeAll_withRemoveAllDoesNotThrowOnNullCollectionBreak_returnsFalse() {
+        Collection<Integer> unbroken = Breakables.buildCollection(1, 2, 3).build();
+        assertThrows(NullPointerException.class, () -> unbroken.removeAll(null));
+
+        BreakableCollection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.REMOVE_ALL_DOES_NOT_THROW_ON_NULL_COLLECTION)
+                .build();
+        assertFalse(collection.removeAll(null));
+        assertEquals(List.of(1, 2, 3), List.copyOf(collection.unbroken()));
+    }
+
     /// Test that the `REMOVE_ALL_SKIPS_FIRST_ELEMENT` break causes the `removeAll(Collection)` method to skip the
     /// first element.
     /// @see BreakableCollection#removeAll(Collection)
@@ -786,7 +802,7 @@ public class BreakableCollectionTest extends AbstractTest
         Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
                 .addBreak(BreakableCollection.REMOVE_IF_SKIPS_FIRST_ELEMENT)
                 .build();
-        collection.removeIf(i -> true);
+        assertTrue(collection.removeIf(i -> true), "removeIf reports the elements it removed");
         assertContains(1, collection);
         assertDoesNotContain(2, collection);
         assertDoesNotContain(3, collection);
@@ -801,7 +817,7 @@ public class BreakableCollectionTest extends AbstractTest
         Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
                 .addBreak(BreakableCollection.REMOVE_IF_SKIPS_LAST_ELEMENT)
                 .build();
-        collection.removeIf(i -> true);
+        assertTrue(collection.removeIf(i -> true), "removeIf reports the elements it removed");
         assertContains(3, collection);
         assertDoesNotContain(1, collection);
         assertDoesNotContain(2, collection);
@@ -818,6 +834,45 @@ public class BreakableCollectionTest extends AbstractTest
                 .doesNotSupportMethod(CollectionMethods.REMOVE_IF)
                 .build();
         assertThrowsDifferent(UnsupportedOperationException.class, () -> collection.removeIf(i -> true));
+    }
+
+    /// Test that `removeIf` follows its own method identifier, not `removeAll`'s.
+    /// @see BreakableCollection#removeIf(Predicate)
+    @DisplayName("removeIf(Predicate) works when removeAll is not supported")
+    @Test
+    public void removeIf_withoutRemoveAllSupport_removes() {
+        BreakableCollection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .doesNotSupportMethod(CollectionMethods.REMOVE_ALL)
+                .build();
+        assertTrue(collection.removeIf(i -> i == 1));
+        assertEquals(List.of(2, 3), List.copyOf(collection.unbroken()));
+    }
+
+    /// Test that the `REMOVE_IF_DOES_NOT_THROW_ON_NULL_FILTER` break makes `removeIf(null)` return `false` and leave
+    /// the collection unchanged, where an unbroken collection throws.
+    /// @see BreakableCollection#removeIf(Predicate)
+    @DisplayName("removeIf(null) returns false with REMOVE_IF_DOES_NOT_THROW_ON_NULL_FILTER break")
+    @Test
+    public void removeIf_withRemoveIfDoesNotThrowOnNullFilterBreak_returnsFalse() {
+        Collection<Integer> unbroken = Breakables.buildCollection(1, 2, 3).build();
+        assertThrows(NullPointerException.class, () -> unbroken.removeIf(null));
+
+        BreakableCollection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.REMOVE_IF_DOES_NOT_THROW_ON_NULL_FILTER)
+                .build();
+        assertFalse(collection.removeIf(null));
+        assertEquals(List.of(1, 2, 3), List.copyOf(collection.unbroken()));
+    }
+
+    /// Test that `removeIf(null)` throws even when another `removeIf` break keeps the filter from being called.
+    /// @see BreakableCollection#removeIf(Predicate)
+    @DisplayName("removeIf(null) throws with REMOVE_IF_DOES_NOT_REMOVE_ANY_ELEMENTS break")
+    @Test
+    public void removeIf_nullWithRemoveIfDoesNotRemoveAnyElementsBreak_throws() {
+        Collection<Integer> collection = Breakables.buildCollection(1, 2, 3)
+                .addBreak(BreakableCollection.REMOVE_IF_DOES_NOT_REMOVE_ANY_ELEMENTS)
+                .build();
+        assertThrows(NullPointerException.class, () -> collection.removeIf(null));
     }
 
     // ========== retainAll Tests ==========

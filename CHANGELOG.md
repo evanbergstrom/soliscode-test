@@ -1,3 +1,24 @@
+## Unreleased
+
+Fixes brought in from soliscode-quant's copy of this library, `quant-test` (#2).
+
+### Breaking changes
+
+* `SpliteratorMethodContract.CHARACTERISTIC_VALUES` is an unmodifiable `List<Integer>`, where it was a public `int[]` any caller could change.
+* Breaks that shared a description with another class's break now have their own. 25 of them did, and `Break` is a record, so each pair was equal: an object given one break of a pair had both. The breaks' fields are unchanged; their descriptions, which show in messages, are now prefixed with their type: `DEQUE_` for the 16 `BreakableDeque` breaks that matched `BreakableSequencedCollection`'s, `CONCURRENT_NAVIGABLE_MAP_` for the 8 `BreakableConcurrentNavigableMap` breaks that matched `BreakableSortedMap`'s and `BreakableNavigableMap`'s, and `QUEUE_` for `BreakableQueue.REMOVE_DOES_NOT_REMOVE_ELEMENT`, which matched `BreakableCollection`'s. So a queue given the collection's `remove(Object)` break no longer has the queue's `remove()` break, and the reverse.
+* The library no longer depends on `junit-platform-testkit`, which it did not use, and so no longer brings AssertJ or `junit-platform-launcher` with it. A build that ran its tests with the launcher this library brought (Gradle needs one on the test runtime class path) must now declare `org.junit.platform:junit-platform-launcher` itself. The library now declares `junit-platform-commons` and `opentest4j` (1.3.0), which its code uses.
+* The breakable methods that return `null` on a break are `@Nullable`. 58 were not, and 26 of those were `@NonNull`, among them `toArray`, `Deque.pop`, `Queue.remove`, `Map.keySet` and the sorted and navigable map views. A caller whose tools read JSpecify annotations (Kotlin, NullAway) must now handle `null` from these methods.
+
+### Bug Fixes
+
+* `BreakableCollection` has two new breaks: `REMOVE_ALL_DOES_NOT_THROW_ON_NULL_COLLECTION` and `REMOVE_IF_DOES_NOT_THROW_ON_NULL_FILTER` make `removeAll(null)` and `removeIf(null)` return `false` instead of throwing. Without them, `removeIf(null)` now always throws `NullPointerException`; with `REMOVE_IF_DOES_NOT_REMOVE_ANY_ELEMENTS`, or with a skip break when no element reached the filter, it returned without throwing.
+* `BreakableSpliterator`'s `SPLITERATOR_GET_EXACT_SIZE_IF_KNOWN_ALWAYS_RETURNS_NEGATIVE_ONE` had an empty description, and `SPLITERATOR_CHARACTERISTICS_ALWAYS_RETURNS_ZERO`'s named the wrong method. Every break now has its own non-empty description, and a test checks that no two breaks are equal.
+* `SpliteratorMethodContract` follows `Spliterator`. After `trySplit`, it requires each part's estimated size to be at most the size before, where it required the remainder to be strictly smaller, which fails every spliterator of unknown size. It traverses an ORDERED spliterator's split-off prefix first and checks the order, where it checked no order after a split. For a spliterator that is not ORDERED it checks only the elements, not their order. It compares elements with `equals`, where for a spliterator that is not ORDERED it compared by identity and in order.
+* `StreamContract` checks the order of `stream()` and `parallelStream()` only when the collection's spliterator is ORDERED, and compares elements with `equals`. It compared by identity and in order, so a collection that is not ordered failed.
+* `IdentitySet.add` and `remove` return whether the set changed, where `add` always returned `true` and `remove` returned `true` for an element it did not hold.
+* `CollectionTestUtils.listOf`'s parameters are `@Nullable`: it always accepted null elements.
+* `AssertContainsNone` and `AssertContainsNoneByIdentity` no longer use AssertJ, which the library did not declare.
+
 ## [1.0.14](https://gitlab.com/soliscode/soliscode-test/compare/v1.0.13...v1.0.14) (2025-08-26)
 
 
