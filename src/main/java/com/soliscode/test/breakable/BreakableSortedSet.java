@@ -559,7 +559,7 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
                                  final int permits,
                                  final boolean isSafe,
                                  final Class<?> compatibleType) {
-        super(sortedSetArg, breaks, methodStatuses, characteristics, permits, DEFAULT_SAFETY, compatibleType);
+        super(sortedSetArg, breaks, methodStatuses, characteristics, permits, isSafe, compatibleType);
         this.sortedSet = Objects.requireNonNull(sortedSetArg);
     }
 
