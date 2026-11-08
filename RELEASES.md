@@ -1,7 +1,5 @@
 # SolisCode Test releases
 
-No release has been made yet.
-
 ## The version scheme
 
 - `main` is `0.1-SNAPSHOT`.
@@ -33,6 +31,12 @@ Install coordinates: `com.soliscode:soliscode-test:0.1.N`.
 As a task merges, it adds what a user of the library will see differently under `## Unreleased`, below. That covers new or changed public API, a changed result, a removed or deprecated type, and a new dependency. At a release, the `release` skill writes the release's changes to a file, as bullets without a heading, starting from those under `## Unreleased`, and `release.sh --changes <file>` puts the release's entry, made from that file, in place of the contents of `## Unreleased`, and leaves an empty `## Unreleased` above it for the next tasks.
 
 ## Unreleased
+
+## 0.1.1 — 2026-11-08
+
+Commit `0d0198c`. Full verify: Tests run: 6230, Failures: 0, Errors: 0.
+
+Install coordinates: `com.soliscode:soliscode-test:0.1.1`.
 
 ### Changes
 - **Breaking, for a build moving from `org.soliscode:soliscode-test` 1.0.14 (T-0001, T-0009).** The library needs **Java 25** (1.0.14 was built for Java 23), so it does not load on an older JDK, and it brings **JUnit 6** (1.0.14 brought JUnit Jupiter 5.10.1 and Platform 1.10.1). It no longer depends on `org.jetbrains:annotations`: its JetBrains `@NotNull` and `@Nullable` are replaced by JSpecify's (below), so code that used them through this library must declare them itself. Every package is renamed (below), and these public types are removed or renamed: `OptionalMethod` (now `InterfaceMethod`, with `MethodStatus`), `OptionalMethodSupport` (now `MethodSupport`), `contract.CollectionMethods` (now in `contract.collection`), the `contract.sequenced` package (now `contract.sequencedcollection`), `contract.iterable.ForEachContract`, `IteratorContract` and `SpliteratorContract` (now `ForEachMethodContract`, `IteratorMethodContract`, `SpliteratorMethodContract`), `contract.object.EqualsContract`, `HashCodeContract` and `ToStringContract` (now `EqualsMethodContract`, `HashCodeMethodContract`, `ToStringMethodContract`), `assertions.AssertThrowsAny` (now `AssertThrowsAnyOf`), `assertions.actions.AssertAction` (now `CheckableAction`) and `AssertConsumer` (now `Consumer` and `CheckableAction`, which the `AssertConsume*` classes implement), `assertions.collection.IterableAssertion` (an internal helper, removed), and `util.CollectionTestOps` and `IterableTestOps` (now `CollectionTestUtils` and `IterableTestUtils`).
