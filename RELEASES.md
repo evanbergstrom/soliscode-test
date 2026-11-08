@@ -32,6 +32,8 @@ As a task merges, it adds what a user of the library will see differently under 
 
 ## Unreleased
 
+- **Fix: `CollectionTestUtils.preventNulls` checks the bulk methods' argument for null (T-0008).** The `preventNulls(Collection)` wrapper's `containsAll`, `addAll`, `removeAll` and `retainAll` checked the wrapped collection for `null` instead of the argument. They let a `null` in through `addAll`, and threw `NullPointerException` for any argument once the wrapped collection held one. They now throw `NullPointerException` for an argument with a `null` element, and otherwise act as the wrapped collection does. The `preventNulls(List)` wrapper's `containsAll`, both `addAll`s, `removeAll` and `retainAll` threw `NullPointerException` for an argument that refuses null, such as `List.of(1)`, because they asked it `contains(null)`. They now accept it. Both wrappers find a `null` by iterating the argument.
+
 ## 0.1.1 — 2026-11-08
 
 Commit `0d0198c`. Full verify: Tests run: 6230, Failures: 0, Errors: 0.

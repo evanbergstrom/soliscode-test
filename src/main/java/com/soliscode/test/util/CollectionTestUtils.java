@@ -45,7 +45,8 @@ public final class CollectionTestUtils {
     /// Creates a collection backed by the provided collection that does not accept null values as elements.
     /// The returned collection will throw a NullPointerException when attempting to add, check for,
     /// or remove null values. This is useful for testing collection implementations that should
-    /// not permit null values.
+    /// not permit null values. Its `containsAll`, `addAll`, `removeAll` and `retainAll` throw a NullPointerException
+    /// when their argument has a null element, and otherwise act as the backing collection does.
     ///
     /// @param <E> the element type of the collection
     /// @param c the backing collection
@@ -54,6 +55,17 @@ public final class CollectionTestUtils {
     /// @see PreventNullsCollection
     public static <E> Collection<E> preventNulls(final Collection<E> c) {
         return new PreventNullsCollection<>(c);
+    }
+
+    /// Returns whether `c` has a null element. It iterates `c` rather than calling `c.contains(null)`, which throws
+    /// on a collection that refuses null, such as `List.of(1)` (T-0008).
+    private static boolean containsNull(final Collection<?> c) {
+        for (final Object e : c) {
+            if (e == null) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private record PreventNullsCollection<E>(Collection<E> collection) implements Collection<E> {
@@ -109,7 +121,7 @@ public final class CollectionTestUtils {
 
             @Override
             public boolean containsAll(final Collection<?> c) {
-                if (collection.contains(null)) {
+                if (containsNull(c)) {
                     throw new NullPointerException();
                 }
                 return collection.containsAll(c);
@@ -117,7 +129,7 @@ public final class CollectionTestUtils {
 
             @Override
             public boolean addAll(final Collection<? extends E> c) {
-                if (collection.contains(null)) {
+                if (containsNull(c)) {
                     throw new NullPointerException();
                 }
                 return collection.addAll(c);
@@ -125,7 +137,7 @@ public final class CollectionTestUtils {
 
             @Override
             public boolean removeAll(final Collection<?> c) {
-                if (collection.contains(null)) {
+                if (containsNull(c)) {
                     throw new NullPointerException();
                 }
                 return collection.removeAll(c);
@@ -133,7 +145,7 @@ public final class CollectionTestUtils {
 
             @Override
             public boolean retainAll(final Collection<?> c) {
-                if (collection.contains(null)) {
+                if (containsNull(c)) {
                     throw new NullPointerException();
                 }
                 return collection.retainAll(c);
@@ -166,7 +178,8 @@ public final class CollectionTestUtils {
     /// Creates a list backed by the provided list that does not accept null values as elements.
     /// The returned list will throw a NullPointerException when attempting to add, set, or
     /// insert null values. This is useful for testing list implementations that should
-    /// not permit null values.
+    /// not permit null values. Its `containsAll`, `addAll`, `removeAll` and `retainAll` throw a NullPointerException
+    /// when their argument has a null element, and otherwise act as the backing list does.
     ///
     /// @param <E> the element type of the list
     /// @param c the backing list
@@ -227,7 +240,7 @@ public final class CollectionTestUtils {
 
             @Override
             public boolean containsAll(final Collection<?> c) {
-                if (c.contains(null)) {
+                if (containsNull(c)) {
                     throw new NullPointerException();
                 }
                 //noinspection SlowListContainsAll
@@ -236,7 +249,7 @@ public final class CollectionTestUtils {
 
             @Override
             public boolean addAll(final Collection<? extends E> c) {
-                if (c.contains(null)) {
+                if (containsNull(c)) {
                     throw new NullPointerException();
                 }
                 return list.addAll(c);
@@ -244,7 +257,7 @@ public final class CollectionTestUtils {
 
             @Override
             public boolean addAll(final int index, final Collection<? extends E> c) {
-                if (c.contains(null)) {
+                if (containsNull(c)) {
                     throw new NullPointerException();
                 }
                 return list.addAll(index, c);
@@ -252,7 +265,7 @@ public final class CollectionTestUtils {
 
             @Override
             public boolean removeAll(final Collection<?> c) {
-                if (c.contains(null)) {
+                if (containsNull(c)) {
                     throw new NullPointerException();
                 }
                 return list.removeAll(c);
@@ -260,7 +273,7 @@ public final class CollectionTestUtils {
 
             @Override
             public boolean retainAll(final Collection<?> c) {
-                if (c.contains(null)) {
+                if (containsNull(c)) {
                     throw new NullPointerException();
                 }
                 return list.retainAll(c);
