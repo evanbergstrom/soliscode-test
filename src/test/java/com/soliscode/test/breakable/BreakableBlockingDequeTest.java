@@ -1,5 +1,8 @@
 package com.soliscode.test.breakable;
 
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
@@ -10,6 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import com.soliscode.test.AbstractTest;
 import com.soliscode.test.contract.blockingdeque.BlockingDequeMethods;
+import com.soliscode.test.contract.blockingqueue.BlockingQueueMethods;
 
 import static com.soliscode.test.breakable.BreakableBlockingDeque.OFFER_FIRST_WITH_TIMEOUT_ALWAYS_RETURNS_FALSE;
 import static com.soliscode.test.breakable.BreakableBlockingDeque.OFFER_FIRST_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION;
@@ -36,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /// Comprehensive test suite for `BreakableBlockingDeque` functionality.
@@ -724,5 +729,212 @@ public class BreakableBlockingDequeTest extends AbstractTest {
 
         // 3. now we can peek safely
         assertEquals("produced", deque.peekFirst());
+    }
+
+    // ========== The fixes and the breaks added by T-0033 ==========
+
+    private static BreakableBlockingDeque<String> dequeOf(final Break b, final String... elements) {
+        return new BreakableBlockingDeque.Builder<>(List.of(elements)).addBreak(b).build();
+    }
+
+    private static List<String> contents(final BreakableBlockingDeque<String> deque) {
+        return new ArrayList<>(deque);
+    }
+
+    /// A drain into the deque itself throws IllegalArgumentException and leaves it unchanged. Before T-0033 the
+    /// breakable passed the call to its store, which compared the collection with itself, not with the breakable,
+    /// and drained the deque into itself.
+    @Test
+    @DisplayName("drainTo(Collection) into the deque itself throws IllegalArgumentException")
+    public void drainToItselfThrowsIllegalArgumentException() {
+        BreakableBlockingDeque<String> deque =
+                new BreakableBlockingDeque.Builder<>(List.of("a", "b")).build();
+        assertThrows(IllegalArgumentException.class, () -> deque.drainTo(deque));
+        assertThrows(IllegalArgumentException.class, () -> deque.drainTo(deque, 1));
+        assertEquals(List.of("a", "b"), contents(deque));
+    }
+
+    /// With TAKE_LAST_DOES_NOT_REMOVE_ELEMENT, takeLast() returns the last element, not the first, and leaves it.
+    /// Before T-0033 it returned the first.
+    ///
+    /// @throws InterruptedException if the thread is interrupted
+    @Test
+    @DisplayName("takeLast(): returns the last element and leaves it when TAKE_LAST_DOES_NOT_REMOVE_ELEMENT")
+    public void takeLastWhenDoesNotRemoveBreakActiveReturnsLastElement() throws InterruptedException {
+        BreakableBlockingDeque<String> deque = dequeOf(TAKE_LAST_DOES_NOT_REMOVE_ELEMENT, "a", "b");
+        assertEquals("b", deque.takeLast());
+        assertEquals(List.of("a", "b"), contents(deque));
+    }
+
+    /// The position breaks act on the other end of the deque.
+    ///
+    /// @throws InterruptedException if the thread is interrupted
+    @Test
+    @DisplayName("the position breaks act on the other end of the deque")
+    public void positionBreaksActOnOtherEnd() throws InterruptedException {
+        BreakableBlockingDeque<String> deque = dequeOf(BreakableBlockingDeque.PUT_FIRST_ADDS_TO_END, "a");
+        deque.putFirst("b");
+        assertEquals(List.of("a", "b"), contents(deque));
+        deque = dequeOf(BreakableBlockingDeque.PUT_LAST_ADDS_TO_FRONT, "a");
+        deque.putLast("b");
+        deque.put("c");
+        assertEquals(List.of("c", "b", "a"), contents(deque));
+        deque = dequeOf(BreakableBlockingDeque.OFFER_FIRST_WITH_TIMEOUT_ADDS_TO_END, "a");
+        assertTrue(deque.offerFirst("b", 1, TimeUnit.SECONDS));
+        assertEquals(List.of("a", "b"), contents(deque));
+        deque = dequeOf(BreakableBlockingDeque.OFFER_LAST_WITH_TIMEOUT_ADDS_TO_FRONT, "a");
+        assertTrue(deque.offerLast("b", 1, TimeUnit.SECONDS));
+        assertEquals(List.of("b", "a"), contents(deque));
+        assertEquals("b", dequeOf(BreakableBlockingDeque.TAKE_FIRST_REMOVES_LAST, "a", "b").takeFirst());
+        assertEquals("b", dequeOf(BreakableBlockingDeque.TAKE_FIRST_REMOVES_LAST, "a", "b").take());
+        assertEquals("a", dequeOf(BreakableBlockingDeque.TAKE_LAST_REMOVES_FIRST, "a", "b").takeLast());
+        assertEquals("b", dequeOf(BreakableBlockingDeque.POLL_FIRST_WITH_TIMEOUT_REMOVES_LAST, "a", "b")
+                .pollFirst(1, TimeUnit.SECONDS));
+        assertEquals("a", dequeOf(BreakableBlockingDeque.POLL_LAST_WITH_TIMEOUT_REMOVES_FIRST, "a", "b")
+                .pollLast(1, TimeUnit.SECONDS));
+    }
+
+    /// With the DOES_NOT_WAIT breaks, the timed methods return at once on a full or empty deque, though the timeout
+    /// is an hour.
+    @Test
+    @DisplayName("the timed methods do not wait when their DOES_NOT_WAIT break is set")
+    public void timedMethodsWhenDoesNotWaitBreakActiveReturnAtOnce() {
+        Duration limit = Duration.ofSeconds(5);
+        BreakableBlockingDeque<String> full = new BreakableBlockingDeque.Builder<>(List.of("a"))
+                .setCapacity(1).addBreak(BreakableBlockingDeque.OFFER_FIRST_WITH_TIMEOUT_DOES_NOT_WAIT)
+                .addBreak(BreakableBlockingDeque.OFFER_LAST_WITH_TIMEOUT_DOES_NOT_WAIT).build();
+        assertFalse(assertTimeoutPreemptively(limit,
+                () -> full.offerFirst("b", 1, TimeUnit.HOURS)));
+        assertFalse(assertTimeoutPreemptively(limit,
+                () -> full.offerLast("b", 1, TimeUnit.HOURS)));
+        assertEquals(List.of("a"), contents(full));
+        BreakableBlockingDeque<String> empty = new BreakableBlockingDeque.Builder<String>()
+                .addBreak(BreakableBlockingDeque.POLL_FIRST_WITH_TIMEOUT_DOES_NOT_WAIT)
+                .addBreak(BreakableBlockingDeque.POLL_LAST_WITH_TIMEOUT_DOES_NOT_WAIT).build();
+        assertNull(assertTimeoutPreemptively(limit,
+                () -> empty.pollFirst(1, TimeUnit.HOURS)));
+        assertNull(assertTimeoutPreemptively(limit,
+                () -> empty.pollLast(1, TimeUnit.HOURS)));
+    }
+
+    /// With an ALWAYS_BLOCKS break, the call blocks on a deque that has room or elements, until interrupted.
+    @Test
+    @DisplayName("the ALWAYS_BLOCKS breaks block until interrupted")
+    public void alwaysBlocksBreaksBlockUntilInterrupted() {
+        assertBlocksUntilInterrupted(BreakableBlockingDeque.PUT_FIRST_ALWAYS_BLOCKS, d -> d.putFirst("b"));
+        assertBlocksUntilInterrupted(BreakableBlockingDeque.PUT_LAST_ALWAYS_BLOCKS, d -> d.putLast("b"));
+        assertBlocksUntilInterrupted(BreakableBlockingDeque.PUT_LAST_ALWAYS_BLOCKS, d -> d.put("b"));
+        assertBlocksUntilInterrupted(BreakableBlockingDeque.TAKE_FIRST_ALWAYS_BLOCKS,
+                BreakableBlockingDeque::takeFirst);
+        assertBlocksUntilInterrupted(BreakableBlockingDeque.TAKE_FIRST_ALWAYS_BLOCKS, BreakableBlockingDeque::take);
+        assertBlocksUntilInterrupted(BreakableBlockingDeque.TAKE_LAST_ALWAYS_BLOCKS, BreakableBlockingDeque::takeLast);
+    }
+
+    /// A call on a deque holding one element, with a break set.
+    @FunctionalInterface
+    private interface DequeCall {
+        /// Makes the call.
+        ///
+        /// @param deque the deque
+        /// @throws InterruptedException if the call is interrupted
+        void call(BreakableBlockingDeque<String> deque) throws InterruptedException;
+    }
+
+    /// Asserts that the call, with the break set, waits on a deque that has room and an element, until its thread is
+    /// interrupted; then it throws InterruptedException and leaves the deque unchanged. A call that returns at once
+    /// never reaches the waiting state, and fails the test after 5 s.
+    private static void assertBlocksUntilInterrupted(final Break b, final DequeCall call) {
+        BreakableBlockingDeque<String> deque = dequeOf(b, "a");
+        AtomicReference<Throwable> thrown = new AtomicReference<>();
+        Thread thread = new Thread(() -> {
+            try {
+                call.call(deque);
+            } catch (final InterruptedException | RuntimeException e) {
+                thrown.set(e);
+            }
+        });
+        thread.setDaemon(true);
+        thread.start();
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+        while (thread.getState() != Thread.State.WAITING && System.nanoTime() - deadline < 0) {
+            Thread.onSpinWait();
+        }
+        assertEquals(Thread.State.WAITING, thread.getState(), b.description() + ": the call did not block");
+        thread.interrupt();
+        assertTimeoutPreemptively(Duration.ofSeconds(5),
+                () -> thread.join());
+        assertTrue(thrown.get() instanceof InterruptedException, b.description() + ": " + thrown.get());
+        assertEquals(List.of("a"), contents(deque), b.description());
+    }
+
+    /// The thread-safety breaks still return and remove the right element on one thread: they show only under
+    /// contention.
+    ///
+    /// @throws InterruptedException if the thread is interrupted
+    @Test
+    @DisplayName("the thread-safety breaks still act correctly on one thread")
+    public void threadSafetyBreaksActCorrectlyOnOneThread() throws InterruptedException {
+        BreakableBlockingDeque<String> deque =
+                dequeOf(BreakableBlockingDeque.TAKE_FIRST_IS_NOT_THREAD_SAFE, "a", "b");
+        assertEquals("a", deque.takeFirst());
+        assertEquals(List.of("b"), contents(deque));
+        deque = dequeOf(BreakableBlockingDeque.TAKE_LAST_IS_NOT_THREAD_SAFE, "a", "b", "a");
+        assertEquals("a", deque.takeLast());
+        assertEquals(List.of("a", "b"), contents(deque));
+        deque = dequeOf(BreakableBlockingDeque.POLL_FIRST_WITH_TIMEOUT_IS_NOT_THREAD_SAFE, "a", "b");
+        assertEquals("a", deque.pollFirst(1, TimeUnit.SECONDS));
+        assertEquals("b", deque.pollFirst(1, TimeUnit.SECONDS));
+        assertNull(deque.pollFirst(1, TimeUnit.MILLISECONDS));
+        deque = dequeOf(BreakableBlockingDeque.POLL_LAST_WITH_TIMEOUT_IS_NOT_THREAD_SAFE, "a", "b");
+        assertEquals("b", deque.pollLast(1, TimeUnit.SECONDS));
+        assertEquals(List.of("a"), contents(deque));
+        deque = dequeOf(BreakableBlockingDeque.DRAIN_TO_IS_NOT_THREAD_SAFE, "a", "b", "c");
+        List<String> first = new ArrayList<>();
+        assertEquals(1, deque.drainTo(first, 1));
+        assertEquals(List.of("a"), first);
+        List<String> rest = new ArrayList<>();
+        assertEquals(2, deque.drainTo(rest));
+        assertEquals(List.of("b", "c"), rest);
+        assertTrue(deque.isEmpty());
+    }
+
+    /// The capacity and drain breaks copied from BreakableBlockingQueue.
+    @Test
+    @DisplayName("the remainingCapacity and drainTo breaks")
+    public void capacityAndDrainBreaks() {
+        assertEquals(0,
+                dequeOf(BreakableBlockingDeque.REMAINING_CAPACITY_ALWAYS_RETURNS_ZERO).remainingCapacity());
+        BreakableBlockingDeque<String> deque = dequeOf(BreakableBlockingDeque.DRAIN_TO_ALWAYS_RETURNS_ZERO, "a");
+        List<String> target = new ArrayList<>();
+        assertEquals(0, deque.drainTo(target));
+        assertEquals(0, deque.drainTo(target, 1));
+        assertTrue(target.isEmpty());
+        BreakableBlockingDeque<String> throwing = dequeOf(BreakableBlockingDeque.DRAIN_TO_THROWS_EXCEPTION, "a");
+        assertThrows(IllegalStateException.class, () -> throwing.drainTo(target));
+        assertThrows(IllegalStateException.class, () -> throwing.drainTo(target, 1));
+        deque = dequeOf(BreakableBlockingDeque.DRAIN_TO_DOES_NOT_REMOVE_ELEMENTS, "a", "b");
+        assertEquals(2, deque.drainTo(target));
+        assertEquals(1, deque.drainTo(target, 1));
+        assertEquals(List.of("a", "b", "a"), target);
+        assertEquals(List.of("a", "b"), contents(deque));
+    }
+
+    /// put, take and the timed offer and poll check their own method support, not only the deque method they call.
+    @Test
+    @DisplayName("put, take and the timed offer and poll check their own method support")
+    public void blockingQueueMethodsCheckTheirOwnSupport() {
+        BreakableBlockingDeque<String> deque = new BreakableBlockingDeque.Builder<String>()
+                .doesNotSupport(BlockingQueueMethods.PUT)
+                .doesNotSupport(BlockingQueueMethods.TAKE)
+                .doesNotSupport(BlockingQueueMethods.OFFER_TIMEOUT)
+                .doesNotSupport(BlockingQueueMethods.POLL_TIMEOUT)
+                .build();
+        assertThrows(UnsupportedOperationException.class, () -> deque.put("a"));
+        assertThrows(UnsupportedOperationException.class, () -> deque.offer("a", 1, TimeUnit.SECONDS));
+        assertTrue(deque.isEmpty());
+        deque.add("a");
+        assertThrows(UnsupportedOperationException.class, deque::take);
+        assertThrows(UnsupportedOperationException.class, () -> deque.poll(1, TimeUnit.SECONDS));
+        assertEquals(List.of("a"), contents(deque));
     }
 }

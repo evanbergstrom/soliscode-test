@@ -18,6 +18,7 @@ import org.jspecify.annotations.Nullable;
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.MethodStatus;
 import com.soliscode.test.contract.blockingdeque.BlockingDequeMethods;
+import com.soliscode.test.contract.blockingqueue.BlockingQueueMethods;
 
 /// A BlockingDeque implementation that can be programmatically broken for testing purposes.
 ///
@@ -50,6 +51,8 @@ import com.soliscode.test.contract.blockingdeque.BlockingDequeMethods;
 /// - **PUT_LAST_THROWS_INTERRUPTED_EXCEPTION**: Forces putLast() to throw InterruptedException
 /// - **PUT_LAST_DOES_NOT_ADD_ELEMENT**: Forces putLast() to accept but not add elements
 /// - **PUT_LAST_THROWS_EXCEPTION**: Forces putLast() to throw exceptions instead of normal operation
+/// - **PUT_FIRST_ALWAYS_BLOCKS**, **PUT_LAST_ALWAYS_BLOCKS**: putFirst() and putLast() block until interrupted
+/// - **PUT_FIRST_ADDS_TO_END**, **PUT_LAST_ADDS_TO_FRONT**: putFirst() and putLast() add at the other end
 ///
 /// ### Blocking Take Operations
 /// - **TAKE_FIRST_THROWS_INTERRUPTED_EXCEPTION**: Forces takeFirst() to throw InterruptedException
@@ -58,6 +61,8 @@ import com.soliscode.test.contract.blockingdeque.BlockingDequeMethods;
 /// - **TAKE_LAST_THROWS_INTERRUPTED_EXCEPTION**: Forces takeLast() to throw InterruptedException
 /// - **TAKE_LAST_ALWAYS_RETURNS_NULL**: Control takeLast() method to always return null
 /// - **TAKE_LAST_DOES_NOT_REMOVE_ELEMENT**: Forces takeLast() to return element without removing it
+/// - **TAKE_FIRST_ALWAYS_BLOCKS**, **TAKE_LAST_ALWAYS_BLOCKS**: takeFirst() and takeLast() block until interrupted
+/// - **TAKE_FIRST_REMOVES_LAST**, **TAKE_LAST_REMOVES_FIRST**: takeFirst() and takeLast() take from the other end
 ///
 /// ### Timeout Operations
 /// - **OFFER_FIRST_WITH_TIMEOUT_ALWAYS_RETURNS_FALSE**: Control offerFirst(timeout) to always return false
@@ -69,6 +74,25 @@ import com.soliscode.test.contract.blockingdeque.BlockingDequeMethods;
 /// - **POLL_FIRST_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION**: Forces pollFirst(timeout) to throw InterruptedException
 /// - **POLL_LAST_WITH_TIMEOUT_ALWAYS_RETURNS_NULL**: Control pollLast(timeout) to always return null
 /// - **POLL_LAST_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION**: Forces pollLast(timeout) to throw InterruptedException
+/// - **OFFER_FIRST_WITH_TIMEOUT_DOES_NOT_WAIT**, **OFFER_LAST_WITH_TIMEOUT_DOES_NOT_WAIT**,
+///   **POLL_FIRST_WITH_TIMEOUT_DOES_NOT_WAIT**, **POLL_LAST_WITH_TIMEOUT_DOES_NOT_WAIT**: the timed methods try once,
+///   without waiting
+/// - **OFFER_FIRST_WITH_TIMEOUT_ADDS_TO_END**, **OFFER_LAST_WITH_TIMEOUT_ADDS_TO_FRONT**,
+///   **POLL_FIRST_WITH_TIMEOUT_REMOVES_LAST**, **POLL_LAST_WITH_TIMEOUT_REMOVES_FIRST**: the timed methods act on the
+///   other end
+///
+/// ### Capacity and Drain Operations
+/// - **REMAINING_CAPACITY_ALWAYS_RETURNS_ZERO**: Forces remainingCapacity() to always return 0
+/// - **DRAIN_TO_ALWAYS_RETURNS_ZERO**, **DRAIN_TO_THROWS_EXCEPTION**, **DRAIN_TO_DOES_NOT_REMOVE_ELEMENTS**: as
+///   [BreakableBlockingQueue]'s breaks of the same names. Their descriptions start with `BLOCKING_DEQUE_`, so that
+///   they are not equal to those breaks ([Break] is a record)
+///
+/// ### Thread Safety
+/// - **TAKE_FIRST_IS_NOT_THREAD_SAFE**, **TAKE_LAST_IS_NOT_THREAD_SAFE**,
+///   **POLL_FIRST_WITH_TIMEOUT_IS_NOT_THREAD_SAFE**, **POLL_LAST_WITH_TIMEOUT_IS_NOT_THREAD_SAFE**,
+///   **DRAIN_TO_IS_NOT_THREAD_SAFE**: read the store and then remove
+///   from it in separate steps, so that two threads can both get one element. The store is a thread-safe JDK
+///   `BlockingDeque`, so the other operations stay atomic whether or not the breakable is built thread safe.
 ///
 /// ## Usage Examples
 ///
@@ -189,6 +213,36 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     public static final Break PUT_FIRST_THROWS_EXCEPTION =
             new Break("PUT_FIRST_THROWS_EXCEPTION");
 
+    /// Break constant that causes `putFirst()` to block until interrupted.
+    ///
+    /// **Purpose:** simulates a `putFirst()` that blocks where it should return at once, though it waits only "if
+    /// necessary" ([BlockingDeque#putFirst(Object)]).
+    ///
+    /// **Effect:** the call waits on a monitor that is never notified, whatever the deque holds, until the thread is
+    /// interrupted; then it throws [InterruptedException]. The element is not added.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #putFirst(Object)} - Blocks until interrupted
+    ///
+    /// @see #putFirst(Object)
+    /// @since 0.1.2
+    public static final Break PUT_FIRST_ALWAYS_BLOCKS =
+            new Break("PUT_FIRST_ALWAYS_BLOCKS");
+
+    /// Break constant that causes `putFirst()` to act on the other end of the deque.
+    ///
+    /// **Purpose:** simulates a `putFirst()` that confuses the deque's ends.
+    ///
+    /// **Effect:** the call does what the store's `putLast(Object)` does, at the other end.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #putFirst(Object)} - Acts on the wrong end
+    ///
+    /// @see #putFirst(Object)
+    /// @since 0.1.2
+    public static final Break PUT_FIRST_ADDS_TO_END =
+            new Break("PUT_FIRST_ADDS_TO_END");
+
     // ========== Put Last Method Breaks ==========
 
     /// Break constant that causes putLast() to throw an InterruptedException.
@@ -235,6 +289,38 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     /// - Testing robustness against unexpected exceptions
     public static final Break PUT_LAST_THROWS_EXCEPTION =
             new Break("PUT_LAST_THROWS_EXCEPTION");
+
+    /// Break constant that causes `putLast()` to block until interrupted.
+    ///
+    /// **Purpose:** simulates a `putLast()` that blocks where it should return at once, though it waits only "if
+    /// necessary" ([BlockingDeque#putLast(Object)]).
+    ///
+    /// **Effect:** the call waits on a monitor that is never notified, whatever the deque holds, until the thread is
+    /// interrupted; then it throws [InterruptedException]. The element is not added.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #putLast(Object)} - Blocks until interrupted
+    /// - {@link #put(Object)} - The same, since `put` is `putLast`
+    ///
+    /// @see #putLast(Object)
+    /// @since 0.1.2
+    public static final Break PUT_LAST_ALWAYS_BLOCKS =
+            new Break("PUT_LAST_ALWAYS_BLOCKS");
+
+    /// Break constant that causes `putLast()` to act on the other end of the deque.
+    ///
+    /// **Purpose:** simulates a `putLast()` that confuses the deque's ends.
+    ///
+    /// **Effect:** the call does what the store's `putFirst(Object)` does, at the other end.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #putLast(Object)} - Acts on the wrong end
+    /// - {@link #put(Object)} - The same, since `put` is `putLast`
+    ///
+    /// @see #putLast(Object)
+    /// @since 0.1.2
+    public static final Break PUT_LAST_ADDS_TO_FRONT =
+            new Break("PUT_LAST_ADDS_TO_FRONT");
 
     // ========== Take First Method Breaks ==========
 
@@ -283,6 +369,56 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     public static final Break TAKE_FIRST_DOES_NOT_REMOVE_ELEMENT =
             new Break("TAKE_FIRST_DOES_NOT_REMOVE_ELEMENT");
 
+    /// Break constant that causes `takeFirst()` to block until interrupted.
+    ///
+    /// **Purpose:** simulates a `takeFirst()` that blocks where it should return at once, though it waits only "if
+    /// necessary" ([BlockingDeque#takeFirst()]).
+    ///
+    /// **Effect:** the call waits on a monitor that is never notified, whatever the deque holds, until the thread is
+    /// interrupted; then it throws [InterruptedException]. No element is removed.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #takeFirst()} - Blocks until interrupted
+    /// - {@link #take()} - The same, since `take` is `takeFirst`
+    ///
+    /// @see #takeFirst()
+    /// @since 0.1.2
+    public static final Break TAKE_FIRST_ALWAYS_BLOCKS =
+            new Break("TAKE_FIRST_ALWAYS_BLOCKS");
+
+    /// Break constant that causes `takeFirst()` to act on the other end of the deque.
+    ///
+    /// **Purpose:** simulates a `takeFirst()` that confuses the deque's ends.
+    ///
+    /// **Effect:** the call does what the store's `takeLast()` does, at the other end.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #takeFirst()} - Acts on the wrong end
+    /// - {@link #take()} - The same, since `take` is `takeFirst`
+    ///
+    /// @see #takeFirst()
+    /// @since 0.1.2
+    public static final Break TAKE_FIRST_REMOVES_LAST =
+            new Break("TAKE_FIRST_REMOVES_LAST");
+
+    /// Break constant that makes `takeFirst()` not atomic.
+    ///
+    /// **Purpose:** simulates a `takeFirst()` that is not thread safe, though a BlockingDeque, "Like BlockingQueue",
+    /// is thread safe ([BlockingDeque]).
+    ///
+    /// **Effect:** on a non-empty deque, the call reads the end with `peekFirst()` and then removes it with
+    /// `removeFirstOccurrence(Object)`, two steps another thread can come between, so two callers can both return one
+    /// element. On an empty deque it waits as normal.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #takeFirst()} - Not atomic
+    /// - {@link #take()} - The same, since `take` is `takeFirst`
+    ///
+    /// @see #takeFirst()
+    /// @since 0.1.2
+    public static final Break TAKE_FIRST_IS_NOT_THREAD_SAFE =
+            new Break("TAKE_FIRST_IS_NOT_THREAD_SAFE");
+
     // ========== Take Last Method Breaks ==========
 
     /// Break constant that causes takeLast() to throw an InterruptedException.
@@ -330,6 +466,53 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     public static final Break TAKE_LAST_DOES_NOT_REMOVE_ELEMENT =
             new Break("TAKE_LAST_DOES_NOT_REMOVE_ELEMENT");
 
+    /// Break constant that causes `takeLast()` to block until interrupted.
+    ///
+    /// **Purpose:** simulates a `takeLast()` that blocks where it should return at once, though it waits only "if
+    /// necessary" ([BlockingDeque#takeLast()]).
+    ///
+    /// **Effect:** the call waits on a monitor that is never notified, whatever the deque holds, until the thread is
+    /// interrupted; then it throws [InterruptedException]. No element is removed.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #takeLast()} - Blocks until interrupted
+    ///
+    /// @see #takeLast()
+    /// @since 0.1.2
+    public static final Break TAKE_LAST_ALWAYS_BLOCKS =
+            new Break("TAKE_LAST_ALWAYS_BLOCKS");
+
+    /// Break constant that causes `takeLast()` to act on the other end of the deque.
+    ///
+    /// **Purpose:** simulates a `takeLast()` that confuses the deque's ends.
+    ///
+    /// **Effect:** the call does what the store's `takeFirst()` does, at the other end.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #takeLast()} - Acts on the wrong end
+    ///
+    /// @see #takeLast()
+    /// @since 0.1.2
+    public static final Break TAKE_LAST_REMOVES_FIRST =
+            new Break("TAKE_LAST_REMOVES_FIRST");
+
+    /// Break constant that makes `takeLast()` not atomic.
+    ///
+    /// **Purpose:** simulates a `takeLast()` that is not thread safe, though a BlockingDeque, "Like BlockingQueue", is
+    /// thread safe ([BlockingDeque]).
+    ///
+    /// **Effect:** on a non-empty deque, the call reads the end with `peekLast()` and then removes it with
+    /// `removeLastOccurrence(Object)`, two steps another thread can come between, so two callers can both return one
+    /// element. On an empty deque it waits as normal.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #takeLast()} - Not atomic
+    ///
+    /// @see #takeLast()
+    /// @since 0.1.2
+    public static final Break TAKE_LAST_IS_NOT_THREAD_SAFE =
+            new Break("TAKE_LAST_IS_NOT_THREAD_SAFE");
+
     // ========== Offer First With Timeout Method Breaks ==========
 
     /// Break constant that causes offerFirst(timeout) to always return false.
@@ -361,6 +544,36 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     /// - Testing exception handling in concurrent timed operations
     public static final Break OFFER_FIRST_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION =
             new Break("OFFER_FIRST_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION");
+
+    /// Break constant that causes the timed `offerFirst` not to wait.
+    ///
+    /// **Purpose:** simulates a timed `offerFirst` that gives up at once, instead of waiting up to the specified wait
+    /// time ([BlockingDeque#offerFirst(Object, long, TimeUnit)]).
+    ///
+    /// **Effect:** the store's `offerFirst(Object)` is called once and the timeout is ignored; on a full deque the
+    /// call returns `false` at once, even with the thread's interrupt status set.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #offerFirst(Object, long, TimeUnit)} - Does not wait
+    ///
+    /// @see #offerFirst(Object, long, TimeUnit)
+    /// @since 0.1.2
+    public static final Break OFFER_FIRST_WITH_TIMEOUT_DOES_NOT_WAIT =
+            new Break("OFFER_FIRST_WITH_TIMEOUT_DOES_NOT_WAIT");
+
+    /// Break constant that causes `offerFirst(E, long, TimeUnit)` to act on the other end of the deque.
+    ///
+    /// **Purpose:** simulates an `offerFirst(E, long, TimeUnit)` that confuses the deque's ends.
+    ///
+    /// **Effect:** the call does what the store's `offerLast(Object, long, TimeUnit)` does, at the other end.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #offerFirst(Object, long, TimeUnit)} - Acts on the wrong end
+    ///
+    /// @see #offerFirst(Object, long, TimeUnit)
+    /// @since 0.1.2
+    public static final Break OFFER_FIRST_WITH_TIMEOUT_ADDS_TO_END =
+            new Break("OFFER_FIRST_WITH_TIMEOUT_ADDS_TO_END");
 
     // ========== Offer Last With Timeout Method Breaks ==========
 
@@ -394,6 +607,38 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     public static final Break OFFER_LAST_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION =
             new Break("OFFER_LAST_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION");
 
+    /// Break constant that causes the timed `offerLast` not to wait.
+    ///
+    /// **Purpose:** simulates a timed `offerLast` that gives up at once, instead of waiting up to the specified wait
+    /// time ([BlockingDeque#offerLast(Object, long, TimeUnit)]).
+    ///
+    /// **Effect:** the store's `offerLast(Object)` is called once and the timeout is ignored; on a full deque the call
+    /// returns `false` at once, even with the thread's interrupt status set.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #offerLast(Object, long, TimeUnit)} - Does not wait
+    /// - {@link #offer(Object, long, TimeUnit)} - The same, since the timed `offer` is the timed `offerLast`
+    ///
+    /// @see #offerLast(Object, long, TimeUnit)
+    /// @since 0.1.2
+    public static final Break OFFER_LAST_WITH_TIMEOUT_DOES_NOT_WAIT =
+            new Break("OFFER_LAST_WITH_TIMEOUT_DOES_NOT_WAIT");
+
+    /// Break constant that causes `offerLast(E, long, TimeUnit)` to act on the other end of the deque.
+    ///
+    /// **Purpose:** simulates an `offerLast(E, long, TimeUnit)` that confuses the deque's ends.
+    ///
+    /// **Effect:** the call does what the store's `offerFirst(Object, long, TimeUnit)` does, at the other end.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #offerLast(Object, long, TimeUnit)} - Acts on the wrong end
+    /// - {@link #offer(Object, long, TimeUnit)} - The same, since the timed `offer` is the timed `offerLast`
+    ///
+    /// @see #offerLast(Object, long, TimeUnit)
+    /// @since 0.1.2
+    public static final Break OFFER_LAST_WITH_TIMEOUT_ADDS_TO_FRONT =
+            new Break("OFFER_LAST_WITH_TIMEOUT_ADDS_TO_FRONT");
+
     // ========== Poll First With Timeout Method Breaks ==========
 
     /// Break constant that causes pollFirst(timeout) to always return null.
@@ -426,6 +671,56 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     public static final Break POLL_FIRST_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION =
             new Break("POLL_FIRST_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION");
 
+    /// Break constant that causes the timed `pollFirst` not to wait.
+    ///
+    /// **Purpose:** simulates a timed `pollFirst` that gives up at once, instead of waiting up to the specified wait
+    /// time ([BlockingDeque#pollFirst(long, TimeUnit)]).
+    ///
+    /// **Effect:** the store's `pollFirst()` is called once and the timeout is ignored; on an empty deque the call
+    /// returns `null` at once, even with the thread's interrupt status set.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #pollFirst(long, TimeUnit)} - Does not wait
+    /// - {@link #poll(long, TimeUnit)} - The same, since the timed `poll` is the timed `pollFirst`
+    ///
+    /// @see #pollFirst(long, TimeUnit)
+    /// @since 0.1.2
+    public static final Break POLL_FIRST_WITH_TIMEOUT_DOES_NOT_WAIT =
+            new Break("POLL_FIRST_WITH_TIMEOUT_DOES_NOT_WAIT");
+
+    /// Break constant that causes `pollFirst(long, TimeUnit)` to act on the other end of the deque.
+    ///
+    /// **Purpose:** simulates a `pollFirst(long, TimeUnit)` that confuses the deque's ends.
+    ///
+    /// **Effect:** the call does what the store's `pollLast(long, TimeUnit)` does, at the other end.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #pollFirst(long, TimeUnit)} - Acts on the wrong end
+    /// - {@link #poll(long, TimeUnit)} - The same, since the timed `poll` is the timed `pollFirst`
+    ///
+    /// @see #pollFirst(long, TimeUnit)
+    /// @since 0.1.2
+    public static final Break POLL_FIRST_WITH_TIMEOUT_REMOVES_LAST =
+            new Break("POLL_FIRST_WITH_TIMEOUT_REMOVES_LAST");
+
+    /// Break constant that makes `pollFirst(long, TimeUnit)` not atomic.
+    ///
+    /// **Purpose:** simulates a `pollFirst(long, TimeUnit)` that is not thread safe, though a BlockingDeque, "Like
+    /// BlockingQueue", is thread safe ([BlockingDeque]).
+    ///
+    /// **Effect:** on a non-empty deque, the call reads the end with `peekFirst()` and then removes it with
+    /// `removeFirstOccurrence(Object)`, two steps another thread can come between, so two callers can both return one
+    /// element. On an empty deque it waits as normal.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #pollFirst(long, TimeUnit)} - Not atomic
+    /// - {@link #poll(long, TimeUnit)} - The same, since the timed `poll` is the timed `pollFirst`
+    ///
+    /// @see #pollFirst(long, TimeUnit)
+    /// @since 0.1.2
+    public static final Break POLL_FIRST_WITH_TIMEOUT_IS_NOT_THREAD_SAFE =
+            new Break("POLL_FIRST_WITH_TIMEOUT_IS_NOT_THREAD_SAFE");
+
     // ========== Poll Last With Timeout Method Breaks ==========
 
     /// Break constant that causes pollLast(timeout) to always return null.
@@ -457,6 +752,131 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     /// - Testing exception handling in concurrent timed operations
     public static final Break POLL_LAST_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION =
             new Break("POLL_LAST_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION");
+
+    /// Break constant that causes the timed `pollLast` not to wait.
+    ///
+    /// **Purpose:** simulates a timed `pollLast` that gives up at once, instead of waiting up to the specified wait
+    /// time ([BlockingDeque#pollLast(long, TimeUnit)]).
+    ///
+    /// **Effect:** the store's `pollLast()` is called once and the timeout is ignored; on an empty deque the call
+    /// returns `null` at once, even with the thread's interrupt status set.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #pollLast(long, TimeUnit)} - Does not wait
+    ///
+    /// @see #pollLast(long, TimeUnit)
+    /// @since 0.1.2
+    public static final Break POLL_LAST_WITH_TIMEOUT_DOES_NOT_WAIT =
+            new Break("POLL_LAST_WITH_TIMEOUT_DOES_NOT_WAIT");
+
+    /// Break constant that causes `pollLast(long, TimeUnit)` to act on the other end of the deque.
+    ///
+    /// **Purpose:** simulates a `pollLast(long, TimeUnit)` that confuses the deque's ends.
+    ///
+    /// **Effect:** the call does what the store's `pollFirst(long, TimeUnit)` does, at the other end.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #pollLast(long, TimeUnit)} - Acts on the wrong end
+    ///
+    /// @see #pollLast(long, TimeUnit)
+    /// @since 0.1.2
+    public static final Break POLL_LAST_WITH_TIMEOUT_REMOVES_FIRST =
+            new Break("POLL_LAST_WITH_TIMEOUT_REMOVES_FIRST");
+
+    /// Break constant that makes `pollLast(long, TimeUnit)` not atomic.
+    ///
+    /// **Purpose:** simulates a `pollLast(long, TimeUnit)` that is not thread safe, though a BlockingDeque, "Like
+    /// BlockingQueue", is thread safe ([BlockingDeque]).
+    ///
+    /// **Effect:** on a non-empty deque, the call reads the end with `peekLast()` and then removes it with
+    /// `removeLastOccurrence(Object)`, two steps another thread can come between, so two callers can both return one
+    /// element. On an empty deque it waits as normal.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #pollLast(long, TimeUnit)} - Not atomic
+    ///
+    /// @see #pollLast(long, TimeUnit)
+    /// @since 0.1.2
+    public static final Break POLL_LAST_WITH_TIMEOUT_IS_NOT_THREAD_SAFE =
+            new Break("POLL_LAST_WITH_TIMEOUT_IS_NOT_THREAD_SAFE");
+
+    // ========== Capacity and Drain Method Breaks ==========
+
+    /// Break constant that causes `remainingCapacity()` to always return zero.
+    ///
+    /// **Purpose:** simulates a deque that reports no room, whatever it holds.
+    ///
+    /// **Effect:** the call returns `0`.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #remainingCapacity()} - Returns 0
+    ///
+    /// @see #remainingCapacity()
+    /// @since 0.1.2
+    public static final Break REMAINING_CAPACITY_ALWAYS_RETURNS_ZERO =
+            new Break("BLOCKING_DEQUE_REMAINING_CAPACITY_ALWAYS_RETURNS_ZERO");
+
+    /// Break constant that causes `drainTo` to always return zero.
+    ///
+    /// **Purpose:** simulates a drain that moves nothing.
+    ///
+    /// **Effect:** both forms return `0` and move nothing.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #drainTo(Collection)} - Returns 0
+    /// - {@link #drainTo(Collection, int)} - Returns 0
+    ///
+    /// @see #drainTo(Collection)
+    /// @since 0.1.2
+    public static final Break DRAIN_TO_ALWAYS_RETURNS_ZERO =
+            new Break("BLOCKING_DEQUE_DRAIN_TO_ALWAYS_RETURNS_ZERO");
+
+    /// Break constant that causes `drainTo` to throw an exception.
+    ///
+    /// **Purpose:** simulates a drain that fails.
+    ///
+    /// **Effect:** both forms throw [IllegalStateException] and move nothing.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #drainTo(Collection)} - Throws IllegalStateException
+    /// - {@link #drainTo(Collection, int)} - Throws IllegalStateException
+    ///
+    /// @see #drainTo(Collection)
+    /// @since 0.1.2
+    public static final Break DRAIN_TO_THROWS_EXCEPTION =
+            new Break("BLOCKING_DEQUE_DRAIN_TO_THROWS_EXCEPTION");
+
+    /// Break constant that causes `drainTo` to copy elements without removing them.
+    ///
+    /// **Purpose:** simulates a drain that leaves what it moved in the deque.
+    ///
+    /// **Effect:** both forms add the elements to the collection and return their count, but leave them in the deque.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #drainTo(Collection)} - Does not remove
+    /// - {@link #drainTo(Collection, int)} - Does not remove
+    ///
+    /// @see #drainTo(Collection)
+    /// @since 0.1.2
+    public static final Break DRAIN_TO_DOES_NOT_REMOVE_ELEMENTS =
+            new Break("BLOCKING_DEQUE_DRAIN_TO_DOES_NOT_REMOVE_ELEMENTS");
+
+    /// Break constant that makes `drainTo` not atomic.
+    ///
+    /// **Purpose:** simulates a `drainTo` that is not thread safe, though a BlockingDeque, "Like BlockingQueue", is
+    /// thread safe ([BlockingDeque]).
+    ///
+    /// **Effect:** `drainTo` copies the elements it would move, adds the copy to the collection, and then removes each
+    /// from the deque, steps another thread can come between, so two drainers can both move one element.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #drainTo(Collection)} - Not atomic
+    /// - {@link #drainTo(Collection, int)} - Not atomic
+    ///
+    /// @see #drainTo(Collection)
+    /// @since 0.1.2
+    public static final Break DRAIN_TO_IS_NOT_THREAD_SAFE =
+            new Break("BLOCKING_DEQUE_DRAIN_TO_IS_NOT_THREAD_SAFE");
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -579,6 +999,8 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     /// - {@link #PUT_FIRST_THROWS_INTERRUPTED_EXCEPTION} - Throws InterruptedException
     /// - {@link #PUT_FIRST_DOES_NOT_ADD_ELEMENT} - Returns normally but doesn't add element
     /// - {@link #PUT_FIRST_THROWS_EXCEPTION} - Throws IllegalStateException
+    /// - {@link #PUT_FIRST_ALWAYS_BLOCKS} - Blocks until interrupted
+    /// - {@link #PUT_FIRST_ADDS_TO_END} - Adds at the end
     ///
     /// **Exception Handling:**
     /// - Throws UnsupportedOperationException if the method is not supported
@@ -600,6 +1022,15 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
             return; // Return without adding the element
         }
 
+        if (hasBreak(PUT_FIRST_ALWAYS_BLOCKS)) {
+            blockUntilInterrupted();
+        }
+
+        if (hasBreak(PUT_FIRST_ADDS_TO_END)) {
+            blockingDeque.putLast(e);
+            return;
+        }
+
         blockingDeque.putFirst(e);
     }
 
@@ -612,6 +1043,8 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     /// - {@link #PUT_LAST_THROWS_INTERRUPTED_EXCEPTION} - Throws InterruptedException
     /// - {@link #PUT_LAST_DOES_NOT_ADD_ELEMENT} - Returns normally but doesn't add element
     /// - {@link #PUT_LAST_THROWS_EXCEPTION} - Throws IllegalStateException
+    /// - {@link #PUT_LAST_ALWAYS_BLOCKS} - Blocks until interrupted
+    /// - {@link #PUT_LAST_ADDS_TO_FRONT} - Adds at the front
     ///
     /// **Exception Handling:**
     /// - Throws UnsupportedOperationException if the method is not supported
@@ -633,6 +1066,15 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
             return; // Return without adding the element
         }
 
+        if (hasBreak(PUT_LAST_ALWAYS_BLOCKS)) {
+            blockUntilInterrupted();
+        }
+
+        if (hasBreak(PUT_LAST_ADDS_TO_FRONT)) {
+            blockingDeque.putFirst(e);
+            return;
+        }
+
         blockingDeque.putLast(e);
     }
 
@@ -645,6 +1087,9 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     /// - {@link #TAKE_FIRST_THROWS_INTERRUPTED_EXCEPTION} - Throws InterruptedException
     /// - {@link #TAKE_FIRST_ALWAYS_RETURNS_NULL} - Returns null
     /// - {@link #TAKE_FIRST_DOES_NOT_REMOVE_ELEMENT} - Returns element but doesn't remove it
+    /// - {@link #TAKE_FIRST_ALWAYS_BLOCKS} - Blocks until interrupted
+    /// - {@link #TAKE_FIRST_REMOVES_LAST} - Takes the last element
+    /// - {@link #TAKE_FIRST_IS_NOT_THREAD_SAFE} - Reads and removes the first element in two steps
     ///
     /// **Exception Handling:**
     /// - Throws UnsupportedOperationException if the method is not supported
@@ -661,10 +1106,26 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
             return null; // Non-standard behavior for testing
         }
 
+        if (hasBreak(TAKE_FIRST_ALWAYS_BLOCKS)) {
+            blockUntilInterrupted();
+        }
+
         if (hasBreak(TAKE_FIRST_DOES_NOT_REMOVE_ELEMENT)) {
             E e = blockingDeque.takeFirst();
             blockingDeque.offerFirst(e);
             return e;
+        }
+
+        if (hasBreak(TAKE_FIRST_REMOVES_LAST)) {
+            return blockingDeque.takeLast();
+        }
+
+        if (hasBreak(TAKE_FIRST_IS_NOT_THREAD_SAFE)) {
+            E first = blockingDeque.peekFirst();
+            if (first != null) {
+                blockingDeque.removeFirstOccurrence(first);
+                return first;
+            }
         }
 
         return blockingDeque.takeFirst();
@@ -679,11 +1140,13 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     /// - {@link #TAKE_LAST_THROWS_INTERRUPTED_EXCEPTION} - Throws InterruptedException
     /// - {@link #TAKE_LAST_ALWAYS_RETURNS_NULL} - Returns null
     /// - {@link #TAKE_LAST_DOES_NOT_REMOVE_ELEMENT} - Returns element but doesn't remove it
+    /// - {@link #TAKE_LAST_ALWAYS_BLOCKS} - Blocks until interrupted
+    /// - {@link #TAKE_LAST_REMOVES_FIRST} - Takes the first element
+    /// - {@link #TAKE_LAST_IS_NOT_THREAD_SAFE} - Reads and removes the last element in two steps
     ///
     /// **Exception Handling:**
     /// - Throws UnsupportedOperationException if the method is not supported
     /// - May throw InterruptedException due to TAKE_LAST_THROWS_INTERRUPTED_EXCEPTION break
-    @SuppressWarnings("DataFlowIssue")
     @Override
     public @Nullable E takeLast() throws InterruptedException {
         checkMethodSupport(BlockingDequeMethods.TAKE_LAST);
@@ -696,12 +1159,26 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
             return null; // Non-standard behavior for testing
         }
 
+        if (hasBreak(TAKE_LAST_ALWAYS_BLOCKS)) {
+            blockUntilInterrupted();
+        }
+
         if (hasBreak(TAKE_LAST_DOES_NOT_REMOVE_ELEMENT)) {
-            E first = takeFirst();
-            if (first != null) {
-                putFirst(first);
+            E e = blockingDeque.takeLast();
+            blockingDeque.offerLast(e);
+            return e;
+        }
+
+        if (hasBreak(TAKE_LAST_REMOVES_FIRST)) {
+            return blockingDeque.takeFirst();
+        }
+
+        if (hasBreak(TAKE_LAST_IS_NOT_THREAD_SAFE)) {
+            E last = blockingDeque.peekLast();
+            if (last != null) {
+                blockingDeque.removeLastOccurrence(last);
+                return last;
             }
-            return first;
         }
 
         return blockingDeque.takeLast();
@@ -715,6 +1192,8 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     /// **Supported Breaks:**
     /// - {@link #OFFER_FIRST_WITH_TIMEOUT_ALWAYS_RETURNS_FALSE} - Returns false regardless of success
     /// - {@link #OFFER_FIRST_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION} - Throws InterruptedException
+    /// - {@link #OFFER_FIRST_WITH_TIMEOUT_DOES_NOT_WAIT} - Offers once, without waiting
+    /// - {@link #OFFER_FIRST_WITH_TIMEOUT_ADDS_TO_END} - Adds at the end
     ///
     /// **Exception Handling:**
     /// - Throws UnsupportedOperationException if the method is not supported
@@ -732,6 +1211,14 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
             return false;
         }
 
+        if (hasBreak(OFFER_FIRST_WITH_TIMEOUT_DOES_NOT_WAIT)) {
+            return blockingDeque.offerFirst(e);
+        }
+
+        if (hasBreak(OFFER_FIRST_WITH_TIMEOUT_ADDS_TO_END)) {
+            return blockingDeque.offerLast(e, timeout, unit);
+        }
+
         return blockingDeque.offerFirst(e, timeout, unit);
     }
 
@@ -743,6 +1230,8 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     /// **Supported Breaks:**
     /// - {@link #OFFER_LAST_WITH_TIMEOUT_ALWAYS_RETURNS_FALSE} - Returns false regardless of success
     /// - {@link #OFFER_LAST_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION} - Throws InterruptedException
+    /// - {@link #OFFER_LAST_WITH_TIMEOUT_DOES_NOT_WAIT} - Offers once, without waiting
+    /// - {@link #OFFER_LAST_WITH_TIMEOUT_ADDS_TO_FRONT} - Adds at the front
     ///
     /// **Exception Handling:**
     /// - Throws UnsupportedOperationException if the method is not supported
@@ -760,6 +1249,14 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
             return false;
         }
 
+        if (hasBreak(OFFER_LAST_WITH_TIMEOUT_DOES_NOT_WAIT)) {
+            return blockingDeque.offerLast(e);
+        }
+
+        if (hasBreak(OFFER_LAST_WITH_TIMEOUT_ADDS_TO_FRONT)) {
+            return blockingDeque.offerFirst(e, timeout, unit);
+        }
+
         return blockingDeque.offerLast(e, timeout, unit);
     }
 
@@ -771,6 +1268,9 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     /// **Supported Breaks:**
     /// - {@link #POLL_FIRST_WITH_TIMEOUT_ALWAYS_RETURNS_NULL} - Returns null regardless of content
     /// - {@link #POLL_FIRST_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION} - Throws InterruptedException
+    /// - {@link #POLL_FIRST_WITH_TIMEOUT_DOES_NOT_WAIT} - Polls once, without waiting
+    /// - {@link #POLL_FIRST_WITH_TIMEOUT_REMOVES_LAST} - Polls the last element
+    /// - {@link #POLL_FIRST_WITH_TIMEOUT_IS_NOT_THREAD_SAFE} - Reads and removes the first element in two steps
     ///
     /// **Exception Handling:**
     /// - Throws UnsupportedOperationException if the method is not supported
@@ -787,6 +1287,22 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
             return null;
         }
 
+        if (hasBreak(POLL_FIRST_WITH_TIMEOUT_DOES_NOT_WAIT)) {
+            return blockingDeque.pollFirst();
+        }
+
+        if (hasBreak(POLL_FIRST_WITH_TIMEOUT_REMOVES_LAST)) {
+            return blockingDeque.pollLast(timeout, unit);
+        }
+
+        if (hasBreak(POLL_FIRST_WITH_TIMEOUT_IS_NOT_THREAD_SAFE)) {
+            E first = blockingDeque.peekFirst();
+            if (first != null) {
+                blockingDeque.removeFirstOccurrence(first);
+                return first;
+            }
+        }
+
         return blockingDeque.pollFirst(timeout, unit);
     }
 
@@ -798,6 +1314,9 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     /// **Supported Breaks:**
     /// - {@link #POLL_LAST_WITH_TIMEOUT_ALWAYS_RETURNS_NULL} - Returns null regardless of content
     /// - {@link #POLL_LAST_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION} - Throws InterruptedException
+    /// - {@link #POLL_LAST_WITH_TIMEOUT_DOES_NOT_WAIT} - Polls once, without waiting
+    /// - {@link #POLL_LAST_WITH_TIMEOUT_REMOVES_FIRST} - Polls the first element
+    /// - {@link #POLL_LAST_WITH_TIMEOUT_IS_NOT_THREAD_SAFE} - Reads and removes the last element in two steps
     ///
     /// **Exception Handling:**
     /// - Throws UnsupportedOperationException if the method is not supported
@@ -814,6 +1333,22 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
             return null;
         }
 
+        if (hasBreak(POLL_LAST_WITH_TIMEOUT_DOES_NOT_WAIT)) {
+            return blockingDeque.pollLast();
+        }
+
+        if (hasBreak(POLL_LAST_WITH_TIMEOUT_REMOVES_FIRST)) {
+            return blockingDeque.pollFirst(timeout, unit);
+        }
+
+        if (hasBreak(POLL_LAST_WITH_TIMEOUT_IS_NOT_THREAD_SAFE)) {
+            E last = blockingDeque.peekLast();
+            if (last != null) {
+                blockingDeque.removeLastOccurrence(last);
+                return last;
+            }
+        }
+
         return blockingDeque.pollLast(timeout, unit);
     }
 
@@ -828,6 +1363,7 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     /// - Delegates to putLast() which may throw exceptions based on configured breaks
     @Override
     public void put(final E e) throws InterruptedException {
+        checkMethodSupport(BlockingQueueMethods.PUT);
         putLast(e);
     }
 
@@ -840,6 +1376,7 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     /// - Delegates to takeFirst() which may throw exceptions based on configured breaks
     @Override
     public @Nullable E take() throws InterruptedException {
+        checkMethodSupport(BlockingQueueMethods.TAKE);
         return takeFirst();
     }
 
@@ -853,6 +1390,7 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     @Override
     public boolean offer(final E e, final long timeout, final TimeUnit unit)
             throws InterruptedException {
+        checkMethodSupport(BlockingQueueMethods.OFFER_TIMEOUT);
         return offerLast(e, timeout, unit);
     }
 
@@ -865,6 +1403,7 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     /// - Delegates to pollFirst() which may throw exceptions based on configured breaks
     @Override
     public @Nullable E poll(final long timeout, final TimeUnit unit) throws InterruptedException {
+        checkMethodSupport(BlockingQueueMethods.POLL_TIMEOUT);
         return pollFirst(timeout, unit);
     }
 
@@ -872,10 +1411,18 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     ///
     /// Returns the number of additional elements that this deque can ideally accept without blocking.
     ///
-    /// **Exception Handling:**
-    /// - Delegates to underlying BlockingDeque implementation
+    /// **Supported Breaks:**
+    /// - {@link #REMAINING_CAPACITY_ALWAYS_RETURNS_ZERO} - Returns 0 regardless of actual capacity
+    ///
+    /// @throws UnsupportedOperationException if `remainingCapacity` is not supported
     @Override
     public int remainingCapacity() {
+        checkMethodSupport(BlockingQueueMethods.REMAINING_CAPACITY);
+
+        if (hasBreak(REMAINING_CAPACITY_ALWAYS_RETURNS_ZERO)) {
+            return 0;
+        }
+
         return blockingDeque.remainingCapacity();
     }
 
@@ -883,10 +1430,41 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     ///
     /// Removes all available elements from this deque and adds them to the given collection.
     ///
-    /// **Exception Handling:**
-    /// - Delegates to underlying BlockingDeque implementation
+    /// **Supported Breaks:**
+    /// - {@link #DRAIN_TO_ALWAYS_RETURNS_ZERO} - Returns 0 and moves nothing
+    /// - {@link #DRAIN_TO_THROWS_EXCEPTION} - Throws IllegalStateException
+    /// - {@link #DRAIN_TO_DOES_NOT_REMOVE_ELEMENTS} - Returns the count but doesn't remove the elements
+    /// - {@link #DRAIN_TO_IS_NOT_THREAD_SAFE} - Copies, adds and removes in separate steps
+    ///
+    /// Without a break, a drain into this deque throws [IllegalArgumentException], as
+    /// [BlockingDeque#drainTo(Collection)] says.
+    ///
+    /// @throws UnsupportedOperationException if `drainTo` is not supported
+    /// @throws IllegalStateException if `DRAIN_TO_THROWS_EXCEPTION` is set
     @Override
     public int drainTo(final Collection<? super E> c) {
+        checkMethodSupport(BlockingQueueMethods.DRAIN_TO);
+
+        if (hasBreak(DRAIN_TO_THROWS_EXCEPTION)) {
+            throw new IllegalStateException("DrainTo operation failed due to break");
+        }
+
+        if (hasBreak(DRAIN_TO_ALWAYS_RETURNS_ZERO)) {
+            return 0;
+        }
+
+        checkNotThis(c);
+
+        if (hasBreak(DRAIN_TO_IS_NOT_THREAD_SAFE)) {
+            return drainInSteps(c, Integer.MAX_VALUE);
+        }
+
+        if (hasBreak(DRAIN_TO_DOES_NOT_REMOVE_ELEMENTS)) {
+            int size = blockingDeque.size();
+            c.addAll(blockingDeque);
+            return size;
+        }
+
         return blockingDeque.drainTo(c);
     }
 
@@ -894,11 +1472,92 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     ///
     /// Removes at most the given number of available elements from this deque and adds them to the given collection.
     ///
-    /// **Exception Handling:**
-    /// - Delegates to underlying BlockingDeque implementation
+    /// **Supported Breaks:**
+    /// - {@link #DRAIN_TO_ALWAYS_RETURNS_ZERO} - Returns 0 and moves nothing
+    /// - {@link #DRAIN_TO_THROWS_EXCEPTION} - Throws IllegalStateException
+    /// - {@link #DRAIN_TO_DOES_NOT_REMOVE_ELEMENTS} - Returns the count but doesn't remove the elements
+    /// - {@link #DRAIN_TO_IS_NOT_THREAD_SAFE} - Copies, adds and removes in separate steps
+    ///
+    /// Without a break, a drain into this deque throws [IllegalArgumentException], as
+    /// [BlockingDeque#drainTo(Collection, int)] says.
+    ///
+    /// @throws UnsupportedOperationException if `drainTo(Collection, int)` is not supported
+    /// @throws IllegalStateException if `DRAIN_TO_THROWS_EXCEPTION` is set
     @Override
     public int drainTo(final Collection<? super E> c, final int maxElements) {
+        checkMethodSupport(BlockingQueueMethods.DRAIN_TO_MAX_ELEMENTS);
+
+        if (hasBreak(DRAIN_TO_THROWS_EXCEPTION)) {
+            throw new IllegalStateException("DrainTo operation failed due to break");
+        }
+
+        if (hasBreak(DRAIN_TO_ALWAYS_RETURNS_ZERO)) {
+            return 0;
+        }
+
+        checkNotThis(c);
+
+        if (hasBreak(DRAIN_TO_IS_NOT_THREAD_SAFE)) {
+            return drainInSteps(c, maxElements);
+        }
+
+        if (hasBreak(DRAIN_TO_DOES_NOT_REMOVE_ELEMENTS)) {
+            List<E> copy = firstElements(maxElements);
+            c.addAll(copy);
+            return copy.size();
+        }
+
         return blockingDeque.drainTo(c, maxElements);
+    }
+
+    /// Refuses a drain into this deque, as [BlockingDeque#drainTo(Collection)] says: the store would compare the
+    /// collection with itself, not with this deque, and drain into it.
+    // ReferenceEquality: the check is for this very deque, by identity, as the JDK's deques make it.
+    @SuppressWarnings("ReferenceEquality")
+    private void checkNotThis(final Collection<? super E> c) {
+        if (c == this) {
+            throw new IllegalArgumentException("drainTo: the collection is this deque");
+        }
+    }
+
+    /// Moves at most `maxElements` elements in steps that are not atomic, for [#DRAIN_TO_IS_NOT_THREAD_SAFE]: copies
+    /// them, adds the copy to `c`, then removes each from the store.
+    private int drainInSteps(final Collection<? super E> c, final int maxElements) {
+        List<E> copy = firstElements(maxElements);
+        c.addAll(copy);
+        for (final E element : copy) {
+            blockingDeque.removeFirstOccurrence(element);
+        }
+        return copy.size();
+    }
+
+    /// Returns at most `maxElements` of the store's elements, from the first.
+    private List<E> firstElements(final int maxElements) {
+        List<E> copy = new ArrayList<>();
+        for (final E element : blockingDeque) {
+            if (copy.size() >= maxElements) {
+                break;
+            }
+            copy.add(element);
+        }
+        return copy;
+    }
+
+    /// Blocks until the thread is interrupted, for the `*_ALWAYS_BLOCKS` breaks; never returns normally. It waits on
+    /// a monitor that is never notified, in a loop, so that a spurious wakeup does not end the block.
+    ///
+    /// @throws InterruptedException when the thread is interrupted; its interrupt status is set again
+    private void blockUntilInterrupted() throws InterruptedException {
+        synchronized (this) {
+            while (true) {
+                try {
+                    wait();
+                } catch (final InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw ie;
+                }
+            }
+        }
     }
 
     // ========== Builder Class ==========

@@ -18,6 +18,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
@@ -32,6 +33,7 @@ import com.soliscode.test.AbstractTest;
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.annotations.VerySlow;
 import com.soliscode.test.breakable.Break;
+import com.soliscode.test.breakable.BreakableBlockingDeque;
 import com.soliscode.test.breakable.BreakableBlockingQueue;
 import com.soliscode.test.breakable.BreakableCollection;
 import com.soliscode.test.breakable.BreakableDeque;
@@ -51,6 +53,8 @@ import com.soliscode.test.breakable.BreakableSpliterator;
 import com.soliscode.test.contract.CollectionContractConfig;
 import com.soliscode.test.contract.DynamicCollectionContract;
 import com.soliscode.test.contract.DynamicMapContract;
+import com.soliscode.test.contract.blockingdeque.BlockingDequeContract;
+import com.soliscode.test.contract.blockingdeque.ThreadSafeBlockingDequeContract;
 import com.soliscode.test.contract.blockingqueue.BlockingQueueContract;
 import com.soliscode.test.contract.blockingqueue.ThreadSafeBlockingQueueContract;
 import com.soliscode.test.contract.collection.CollectionContract;
@@ -178,6 +182,15 @@ public class ContractCoverageTest {
         String field = key.substring(key.indexOf('.') + 1);
         boolean isSet = SetContract.class.isAssignableFrom(contract);
         boolean blockingQueueBreak = key.startsWith(BreakableBlockingQueue.class.getSimpleName() + ".");
+        boolean blockingDequeBreak = key.startsWith(BreakableBlockingDeque.class.getSimpleName() + ".");
+        if (field.endsWith(THREAD_SAFETY_BREAK) && contract == ThreadSafeBlockingDequeContract.class) {
+            return blockingDequeBreak ? null : "not a fault for a BreakableBlockingDeque: its store is a JDK "
+                    + "BlockingDeque, thread safe without the breakable's lock, so running without the lock changes "
+                    + "nothing; ThreadSafeCollectionContract covers it on BreakableCollection, or gives its reason";
+        }
+        if (field.endsWith(THREAD_SAFETY_BREAK) && blockingDequeBreak) {
+            return "a thread-safety break: ThreadSafeBlockingDequeContract checks it";
+        }
         if (field.endsWith(THREAD_SAFETY_BREAK) && contract == ThreadSafeBlockingQueueContract.class) {
             return blockingQueueBreak ? null : "not a fault for a BreakableBlockingQueue: its store is a JDK "
                     + "BlockingQueue, thread safe without the breakable's lock, so running without the lock changes "
@@ -388,6 +401,24 @@ public class ContractCoverageTest {
     }
 
     @TestFactory
+    @DisplayName("BlockingDequeContract")
+    Stream<DynamicNode> blockingDequeContract() {
+        List<Method> methods = ContractRuns.testMethods(BlockingDequeContract.class, false);
+        return Stream.concat(
+                coverage(BlockingDequeContract.class, "LinkedBlockingDeque(" + QUEUE_CAPACITY + ")",
+                        JdkBoundedBlockingDeque::new, collectionBreaks(BreakableBlockingDeque.class),
+                        (key, b) -> {
+                            var builder = boundedDequeBuilder();
+                            var config = configure(builder, key, b);
+                            return () -> new BrokenBlockingDeque(builder, noNulls(config));
+                        }),
+                Stream.of(passes("LinkedBlockingDeque()", JdkBlockingDeque::new, methods),
+                        passes("unbroken BreakableBlockingDeque on a LinkedBlockingDeque()",
+                                () -> new BrokenBlockingDeque(new BreakableBlockingDeque.Builder<Integer>()
+                                        .doesNotPermitNulls(), noNulls(STANDARD)), methods)));
+    }
+
+    @TestFactory
     @DisplayName("MapContract")
     Stream<DynamicNode> mapContract() {
         return coverage(MapContract.class, "HashMap", JdkMap::new,
@@ -463,6 +494,26 @@ public class ContractCoverageTest {
                                 () -> new BrokenThreadSafeBlockingQueue(boundedQueueBuilder()), all)),
                 breaks.entrySet().stream().map(e -> fails(e.getKey(),
                         () -> new BrokenThreadSafeBlockingQueue(boundedQueueBuilder().addBreak(e.getValue())),
+                        all)))));
+    }
+
+    @TestFactory
+    @VerySlow
+    @DisplayName("ThreadSafeBlockingDequeContract")
+    Stream<DynamicNode> threadSafeBlockingDequeContract() {
+        List<Method> all = ContractRuns.testMethods(ThreadSafeBlockingDequeContract.class, true);
+        Map<String, Break> breaks = new java.util.LinkedHashMap<>(
+                ContractRuns.breaks(collectionBreaks(BreakableBlockingDeque.class)));
+        breaks.keySet().removeIf(k -> !k.endsWith(THREAD_SAFETY_BREAK)
+                || uncheckedReason(ThreadSafeBlockingDequeContract.class, k) != null);
+        return Stream.of(dynamicContainer("ThreadSafeBlockingDequeContract", Stream.concat(
+                Stream.of(passes("LinkedBlockingDeque(" + QUEUE_CAPACITY + ")",
+                                JdkThreadSafeBoundedBlockingDeque::new, all),
+                        passes("LinkedBlockingDeque()", JdkThreadSafeBlockingDeque::new, all),
+                        passes("unbroken BreakableBlockingDeque",
+                                () -> new BrokenThreadSafeBlockingDeque(boundedDequeBuilder()), all)),
+                breaks.entrySet().stream().map(e -> fails(e.getKey(),
+                        () -> new BrokenThreadSafeBlockingDeque(boundedDequeBuilder().addBreak(e.getValue())),
                         all)))));
     }
 
@@ -627,6 +678,12 @@ public class ContractCoverageTest {
     /// null.
     private static BreakableBlockingQueue.Builder<Integer> boundedQueueBuilder() {
         return new BreakableBlockingQueue.Builder<Integer>().setCapacity(QUEUE_CAPACITY).doesNotPermitNulls();
+    }
+
+    /// A blocking deque builder on a `LinkedBlockingDeque` of [#QUEUE_CAPACITY]. Like every `BlockingDeque`, it
+    /// refuses null.
+    private static BreakableBlockingDeque.Builder<Integer> boundedDequeBuilder() {
+        return new BreakableBlockingDeque.Builder<Integer>().setCapacity(QUEUE_CAPACITY).doesNotPermitNulls();
     }
 
     private static BreakableCollection.Builder<Integer> threadSafeBuilder() {
@@ -873,6 +930,40 @@ public class ContractCoverageTest {
         }
     }
 
+    static final class JdkBoundedBlockingDeque extends AbstractTest
+            implements BlockingDequeContract<LinkedBlockingDeque<Integer>, Integer>, WithIntegerElement {
+        @Override
+        public CollectionProvider<LinkedBlockingDeque<Integer>, Integer> provider() {
+            return boundedBlockingDeques();
+        }
+    }
+
+    static final class JdkBlockingDeque extends AbstractTest
+            implements BlockingDequeContract<LinkedBlockingDeque<Integer>, Integer>, WithIntegerElement {
+        @Override
+        public CollectionProvider<LinkedBlockingDeque<Integer>, Integer> provider() {
+            return CollectionProviders.from(LinkedBlockingDeque::new, LinkedBlockingDeque::new,
+                    LinkedBlockingDeque::new, PROVIDER);
+        }
+    }
+
+    static final class JdkThreadSafeBoundedBlockingDeque extends AbstractTest
+            implements ThreadSafeBlockingDequeContract<LinkedBlockingDeque<Integer>, Integer>, WithIntegerElement {
+        @Override
+        public CollectionProvider<LinkedBlockingDeque<Integer>, Integer> provider() {
+            return boundedBlockingDeques();
+        }
+    }
+
+    static final class JdkThreadSafeBlockingDeque extends AbstractTest
+            implements ThreadSafeBlockingDequeContract<LinkedBlockingDeque<Integer>, Integer>, WithIntegerElement {
+        @Override
+        public CollectionProvider<LinkedBlockingDeque<Integer>, Integer> provider() {
+            return CollectionProviders.from(LinkedBlockingDeque::new, LinkedBlockingDeque::new,
+                    LinkedBlockingDeque::new, PROVIDER);
+        }
+    }
+
     static final class JdkThreadSafeCollection extends AbstractTest
             implements ThreadSafeCollectionContract<List<Integer>, Integer>, WithIntegerElement {
         @Override
@@ -1028,6 +1119,22 @@ public class ContractCoverageTest {
         }
     }
 
+    static final class BrokenBlockingDeque extends DynamicCollectionContract<BreakableBlockingDeque<Integer>, Integer>
+            implements BlockingDequeContract<BreakableBlockingDeque<Integer>, Integer> {
+        BrokenBlockingDeque(final BreakableBlockingDeque.Builder<Integer> builder,
+                            final CollectionContractConfig config) {
+            super(builder, WithIntegerElement.PROVIDER, config);
+        }
+    }
+
+    static final class BrokenThreadSafeBlockingDeque
+            extends DynamicCollectionContract<BreakableBlockingDeque<Integer>, Integer>
+            implements ThreadSafeBlockingDequeContract<BreakableBlockingDeque<Integer>, Integer> {
+        BrokenThreadSafeBlockingDeque(final BreakableBlockingDeque.Builder<Integer> builder) {
+            super(builder, WithIntegerElement.PROVIDER, noNulls(STANDARD));
+        }
+    }
+
     static final class BrokenThreadSafeCollection
             extends DynamicCollectionContract<BreakableCollection<Integer>, Integer>
             implements ThreadSafeCollectionContract<BreakableCollection<Integer>, Integer> {
@@ -1079,6 +1186,21 @@ public class ContractCoverageTest {
         return CollectionProviders.from(() -> new ArrayBlockingQueue<>(QUEUE_CAPACITY),
                 q -> new ArrayBlockingQueue<>(QUEUE_CAPACITY, false, q),
                 c -> new ArrayBlockingQueue<>(QUEUE_CAPACITY, false, c), WithIntegerElement.PROVIDER);
+    }
+
+    /// Linked blocking deques of [#QUEUE_CAPACITY], with elements from the usual provider.
+    private static CollectionProvider<LinkedBlockingDeque<Integer>, Integer> boundedBlockingDeques() {
+        return CollectionProviders.from(() -> new LinkedBlockingDeque<>(QUEUE_CAPACITY),
+                q -> {
+                    LinkedBlockingDeque<Integer> copy = new LinkedBlockingDeque<>(QUEUE_CAPACITY);
+                    copy.addAll(q);
+                    return copy;
+                },
+                c -> {
+                    LinkedBlockingDeque<Integer> deque = new LinkedBlockingDeque<>(QUEUE_CAPACITY);
+                    deque.addAll(c);
+                    return deque;
+                }, WithIntegerElement.PROVIDER);
     }
 
     /// Tree maps in reverse key order, with keys and values from the usual providers.
