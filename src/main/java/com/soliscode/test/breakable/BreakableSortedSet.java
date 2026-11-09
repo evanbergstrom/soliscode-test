@@ -15,22 +15,28 @@
  */
 package com.soliscode.test.breakable;
 
+import java.util.AbstractSet;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.NavigableSet;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.Spliterator;
 import java.util.TreeSet;
+import java.util.function.Consumer;
 
 import org.jspecify.annotations.Nullable;
 
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.MethodStatus;
+import com.soliscode.test.contract.iterable.IterableMethods;
 
 /// **Breakable SortedSet Implementation for Testing**
 ///
@@ -132,6 +138,19 @@ import com.soliscode.test.MethodStatus;
 /// **Purpose**: Forces subset operations to always throw IllegalArgumentException
 /// **Effect**: All subset operations throw exceptions regardless of valid parameters
 /// **Use Case**: Testing error handling in range-based operations
+///
+/// #### The range, view and order breaks
+/// - [HEAD_SET_INCLUDES_TO_ELEMENT][#HEAD_SET_INCLUDES_TO_ELEMENT],
+///   [TAIL_SET_EXCLUDES_FROM_ELEMENT][#TAIL_SET_EXCLUDES_FROM_ELEMENT] and
+///   [SUBSET_INCLUDES_TO_ELEMENT][#SUBSET_INCLUDES_TO_ELEMENT]: a view's bound is wrong
+/// - [SUBSET_ACCEPTS_REVERSED_RANGE][#SUBSET_ACCEPTS_REVERSED_RANGE]: `subSet` does not refuse a reversed range
+/// - [SUBSET_OPERATIONS_RETURN_COPIES][#SUBSET_OPERATIONS_RETURN_COPIES]: the views are copies
+/// - [SUBSET_OPERATIONS_IGNORE_OUT_OF_RANGE_ADD][#SUBSET_OPERATIONS_IGNORE_OUT_OF_RANGE_ADD]: a view's `add` ignores
+///   an element outside its range
+/// - [ITERATOR_RETURNS_ELEMENTS_IN_REVERSE_ORDER][#ITERATOR_RETURNS_ELEMENTS_IN_REVERSE_ORDER]: iteration is
+///   descending
+/// - [SPLITERATOR_DOES_NOT_REPORT_SORTED][#SPLITERATOR_DOES_NOT_REPORT_SORTED] and
+///   [SPLITERATOR_DOES_NOT_REPORT_ORDERED][#SPLITERATOR_DOES_NOT_REPORT_ORDERED]: the spliterator's characteristics
 ///
 /// ```java
 /// BreakableSortedSet<String> set = new BreakableSortedSet.Builder<String>()
@@ -476,6 +495,115 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
     public static final Break SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION =
         new Break("Subset operations always throw IllegalArgumentException");
 
+    /// **Purpose:** simulates a view whose range is wrong at its upper end.
+    ///
+    /// **Effect:** `headSet(to)` includes `to`, where [SortedSet#headSet(Object)] excludes it. It needs a
+    /// [NavigableSet] store (the builder's always is); with any other store it throws
+    /// [UnsupportedOperationException].
+    ///
+    /// **Affected Methods:** [headSet(Object)][#headSet(Object)]; in a [BreakableNavigableSet], also the emptiness
+    /// check [headSet(Object, boolean)][BreakableNavigableSet#headSet(Object,boolean)] makes through it, so that
+    /// view can come back live (holding `to`, when inclusive) where it would have been a detached empty set
+    /// @see #headSet(Object)
+    public static final Break HEAD_SET_INCLUDES_TO_ELEMENT =
+        new Break("headSet(to) includes to");
+
+    /// **Purpose:** simulates a view whose range is wrong at its lower end.
+    ///
+    /// **Effect:** `tailSet(from)` excludes `from`, where [SortedSet#tailSet(Object)] includes it. It needs a
+    /// [NavigableSet] store (the builder's always is); with any other store it throws
+    /// [UnsupportedOperationException].
+    ///
+    /// **Affected Methods:** [tailSet(Object)][#tailSet(Object)]; in a [BreakableNavigableSet], also the emptiness
+    /// check [tailSet(Object, boolean)][BreakableNavigableSet#tailSet(Object,boolean)] makes through it, so that
+    /// view can come back as a detached empty set where it should hold elements
+    /// @see #tailSet(Object)
+    public static final Break TAIL_SET_EXCLUDES_FROM_ELEMENT =
+        new Break("tailSet(from) excludes from");
+
+    /// **Purpose:** simulates a range view that is closed where it should be half-open.
+    ///
+    /// **Effect:** `subSet(from, to)` includes `to`, where [SortedSet#subSet(Object, Object)] excludes it. It needs
+    /// a [NavigableSet] store (the builder's always is); with any other store it throws
+    /// [UnsupportedOperationException].
+    ///
+    /// **Affected Methods:** [subSet(Object, Object)][#subSet(Object,Object)]; in a [BreakableNavigableSet], also
+    /// the emptiness check
+    /// [subSet(Object, boolean, Object, boolean)][BreakableNavigableSet#subSet(Object,boolean,Object,boolean)]
+    /// makes through it, so that view can come back live where it would have been a detached empty set
+    /// @see #subSet(Object, Object)
+    public static final Break SUBSET_INCLUDES_TO_ELEMENT =
+        new Break("subSet(from, to) includes to");
+
+    /// **Purpose:** simulates a range view that does not check its bounds.
+    ///
+    /// **Effect:** `subSet(from, to)` with `from` after `to` returns an empty set, where
+    /// [SortedSet#subSet(Object, Object)] throws [IllegalArgumentException].
+    ///
+    /// **Affected Methods:** [subSet(Object, Object)][#subSet(Object,Object)]; in a [BreakableNavigableSet], also
+    /// [subSet(Object, boolean, Object, boolean)][BreakableNavigableSet#subSet(Object,boolean,Object,boolean)],
+    /// whose emptiness check goes through it, so a reversed range there returns an empty set too
+    /// @see #subSet(Object, Object)
+    public static final Break SUBSET_ACCEPTS_REVERSED_RANGE =
+        new Break("subSet(from, to) returns an empty set when from is after to");
+
+    /// **Purpose:** simulates range views that are snapshots, not views.
+    ///
+    /// **Effect:** `headSet`, `tailSet` and `subSet` return a copy of the range, so a change to the set does not
+    /// show in it, and a change to it does not reach the set ([SortedSet#subSet(Object, Object)]: "The returned set
+    /// is backed by this set").
+    ///
+    /// **Affected Methods:** [subSet(Object, Object)][#subSet(Object,Object)], [headSet(Object)][#headSet(Object)]
+    /// and [tailSet(Object)][#tailSet(Object)]; not the two-argument views of a [BreakableNavigableSet]
+    /// @see #subSet(Object, Object)
+    public static final Break SUBSET_OPERATIONS_RETURN_COPIES =
+        new Break("Subset operations return copies, not views");
+
+    /// **Purpose:** simulates range views that do not check what is added to them.
+    ///
+    /// **Effect:** the `add(E)` of a view from `headSet`, `tailSet` or `subSet` returns `false` for an element outside
+    /// the view's range, where [SortedSet#subSet(Object, Object)] says it throws [IllegalArgumentException]. The
+    /// view's other methods, `addAll` included, are its store's.
+    ///
+    /// **Affected Methods:** the `add(E)` of the views from [subSet(Object, Object)][#subSet(Object,Object)],
+    /// [headSet(Object)][#headSet(Object)] and [tailSet(Object)][#tailSet(Object)]; not the two-argument views of a
+    /// [BreakableNavigableSet]
+    /// @see #subSet(Object, Object)
+    public static final Break SUBSET_OPERATIONS_IGNORE_OUT_OF_RANGE_ADD =
+        new Break("A subset view's add ignores an element outside its range");
+
+    /// **Purpose:** simulates a sorted set that does not iterate in its order.
+    ///
+    /// **Effect:** `iterator()` returns the elements in descending order, from the set's live reversed view (its
+    /// `remove()` still removes from the set), where [SortedSet] says the iterator traverses the set in ascending
+    /// order. Nothing else that traverses the set (`forEach`, `spliterator`, `toArray`) changes.
+    ///
+    /// **Affected Methods:** [iterator()][#iterator()] only
+    /// @see #iterator()
+    public static final Break ITERATOR_RETURNS_ELEMENTS_IN_REVERSE_ORDER =
+        new Break("iterator() returns the elements in reverse order");
+
+    /// **Purpose:** simulates a spliterator that does not say it is sorted.
+    ///
+    /// **Effect:** `spliterator()` does not report [Spliterator#SORTED], which [SortedSet#spliterator()] requires,
+    /// and so its `getComparator()` throws [IllegalStateException], as [Spliterator#getComparator()] requires of a
+    /// spliterator that is not `SORTED`. The elements it traverses do not change.
+    ///
+    /// **Affected Methods:** [spliterator()][#spliterator()] only
+    /// @see #spliterator()
+    public static final Break SPLITERATOR_DOES_NOT_REPORT_SORTED =
+        new Break("spliterator() does not report SORTED");
+
+    /// **Purpose:** simulates a spliterator that does not say it is ordered.
+    ///
+    /// **Effect:** `spliterator()` does not report [Spliterator#ORDERED], which [SortedSet#spliterator()] requires.
+    /// It still reports `SORTED`. The elements it traverses do not change.
+    ///
+    /// **Affected Methods:** [spliterator()][#spliterator()] only
+    /// @see #spliterator()
+    public static final Break SPLITERATOR_DOES_NOT_REPORT_ORDERED =
+        new Break("spliterator() does not report ORDERED");
+
     /// The backing sorted set that stores the elements in sorted order.
     private final SortedSet<E> sortedSet;
 
@@ -633,6 +761,10 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
     /// - Always throws IllegalArgumentException regardless of parameters
     /// - Simulates subset operations that reject all range specifications
     ///
+    /// ### With the range and view breaks
+    /// The bound, reversed-range, copy and ignore-add breaks listed in the class comment change it as their
+    /// constants' comments say.
+    ///
     /// ```java
     /// BreakableSortedSet<Integer> set = new BreakableSortedSet<>();
     /// set.addAll(Arrays.asList(1, 2, 3, 4, 5));
@@ -661,7 +793,15 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
         if (hasBreak(SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY)) {
             return new TreeSet<>(sortedSet.comparator());
         }
-        return sortedSet.subSet(fromElement, toElement);
+        // reverseOrder(comparator) is natural reverse order for a null comparator, so it compares with no cast.
+        if (hasBreak(SUBSET_ACCEPTS_REVERSED_RANGE)
+                && Collections.reverseOrder(sortedSet.comparator()).compare(fromElement, toElement) < 0) {
+            return new TreeSet<>(sortedSet.comparator());
+        }
+        if (hasBreak(SUBSET_INCLUDES_TO_ELEMENT)) {
+            return brokenView(navigableStore().subSet(fromElement, true, toElement, true));
+        }
+        return brokenView(sortedSet.subSet(fromElement, toElement));
     }
 
     /// Returns a view of the portion of this set whose elements are strictly less than toElement.
@@ -676,6 +816,9 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
     /// ### With Breaks
     /// - SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY: returns empty set
     /// - SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION: throws IllegalArgumentException
+    /// - HEAD_SET_INCLUDES_TO_ELEMENT: includes toElement
+    /// - SUBSET_OPERATIONS_RETURN_COPIES: returns a copy
+    /// - SUBSET_OPERATIONS_IGNORE_OUT_OF_RANGE_ADD: the view's add ignores an element outside its range
     ///
     /// @param toElement high endpoint (exclusive) of the returned set
     /// @return a view of the portion of this set whose elements are strictly less than toElement
@@ -691,7 +834,10 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
         if (hasBreak(SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY)) {
             return new TreeSet<>(sortedSet.comparator());
         }
-        return sortedSet.headSet(toElement);
+        if (hasBreak(HEAD_SET_INCLUDES_TO_ELEMENT)) {
+            return brokenView(navigableStore().headSet(toElement, true));
+        }
+        return brokenView(sortedSet.headSet(toElement));
     }
 
     /// Returns a view of the portion of this set whose elements are greater than or equal to fromElement.
@@ -706,6 +852,9 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
     /// ### With Breaks
     /// - SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY: returns empty set
     /// - SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION: throws IllegalArgumentException
+    /// - TAIL_SET_EXCLUDES_FROM_ELEMENT: excludes fromElement
+    /// - SUBSET_OPERATIONS_RETURN_COPIES: returns a copy
+    /// - SUBSET_OPERATIONS_IGNORE_OUT_OF_RANGE_ADD: the view's add ignores an element outside its range
     ///
     /// @param fromElement low endpoint (inclusive) of the returned set
     /// @return a view of the portion of this set whose elements are greater than or equal to fromElement
@@ -721,7 +870,10 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
         if (hasBreak(SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY)) {
             return new TreeSet<>(sortedSet.comparator());
         }
-        return sortedSet.tailSet(fromElement);
+        if (hasBreak(TAIL_SET_EXCLUDES_FROM_ELEMENT)) {
+            return brokenView(navigableStore().tailSet(fromElement, false));
+        }
+        return brokenView(sortedSet.tailSet(fromElement));
     }
 
     /// Returns the first (lowest) element currently in this set.
@@ -811,6 +963,233 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
             return null;
         } else {
             return sortedSet.last();
+        }
+    }
+
+    /// Returns an iterator over the elements in ascending order, as [SortedSet] requires.
+    ///
+    /// # Breaks
+    /// - [ITERATOR_RETURNS_ELEMENTS_IN_REVERSE_ORDER][#ITERATOR_RETURNS_ELEMENTS_IN_REVERSE_ORDER]: in descending
+    ///   order
+    ///
+    /// The iterator's own breaks are [BreakableIterator]'s.
+    ///
+    /// @return an iterator over the elements
+    @Override
+    public Iterator<E> iterator() {
+        if (!hasBreak(ITERATOR_RETURNS_ELEMENTS_IN_REVERSE_ORDER)) {
+            return super.iterator();
+        }
+        checkMethodSupport(IterableMethods.ITERATOR);
+        BreakableIterator<E> iterator = new BreakableIterator<>(sortedSet.reversed().iterator(), breaks(),
+                methodStatuses(), characteristics(), isSafe());
+        unsupportedMethods().forEach(iterator::doesNotSupportMethod);
+        return iterator;
+    }
+
+    /// Returns a spliterator over the elements that reports `SORTED`, `ORDERED` and `DISTINCT`, as
+    /// [SortedSet#spliterator()] requires.
+    ///
+    /// # Breaks
+    /// - [SPLITERATOR_DOES_NOT_REPORT_SORTED][#SPLITERATOR_DOES_NOT_REPORT_SORTED]
+    /// - [SPLITERATOR_DOES_NOT_REPORT_ORDERED][#SPLITERATOR_DOES_NOT_REPORT_ORDERED]
+    ///
+    /// The spliterator's own breaks are [BreakableSpliterator]'s.
+    ///
+    /// @return a spliterator over the elements
+    @Override
+    public Spliterator<E> spliterator() {
+        int cleared = (hasBreak(SPLITERATOR_DOES_NOT_REPORT_SORTED) ? Spliterator.SORTED : 0)
+                | (hasBreak(SPLITERATOR_DOES_NOT_REPORT_ORDERED) ? Spliterator.ORDERED : 0);
+        if (cleared == 0) {
+            return super.spliterator();
+        }
+        Spliterator<E> store = new ClearedSpliterator<>(sortedSet.spliterator(), cleared);
+        return new BreakableSpliterator<>(store, breaks(), methodStatuses(),
+                store.characteristics() | (characteristics() & ~cleared), isSafe());
+    }
+
+    /// Throws [UnsupportedOperationException], as [SortedSet#addFirst(Object)] requires: a sorted set's order is
+    /// its comparator's. It throws before it looks at the argument, as [TreeSet] does.
+    ///
+    /// # Breaks
+    /// - [ADD_FIRST_DOES_NOT_ADD_ELEMENT][BreakableSequencedCollection#ADD_FIRST_DOES_NOT_ADD_ELEMENT]: returns
+    ///   without throwing
+    ///
+    /// [ADD_FIRST_ADDS_TO_END][BreakableSequencedCollection#ADD_FIRST_ADDS_TO_END] has no effect here: the method it
+    /// would call, [addLast(Object)][#addLast(Object)], throws the same exception.
+    ///
+    /// @param e the element
+    /// @throws UnsupportedOperationException always, unless a break is set
+    @Override
+    public void addFirst(final E e) {
+        if (hasBreak(BreakableSequencedCollection.ADD_FIRST_DOES_NOT_ADD_ELEMENT)) {
+            return;
+        }
+        throw new UnsupportedOperationException("addFirst: a sorted set's order is its comparator's");
+    }
+
+    /// Throws [UnsupportedOperationException], as [SortedSet#addLast(Object)] requires: a sorted set's order is
+    /// its comparator's. It throws before it looks at the argument, as [TreeSet] does.
+    ///
+    /// # Breaks
+    /// - [ADD_LAST_DOES_NOT_ADD_ELEMENT][BreakableSequencedCollection#ADD_LAST_DOES_NOT_ADD_ELEMENT]: returns
+    ///   without throwing
+    ///
+    /// [ADD_LAST_ADDS_TO_FRONT][BreakableSequencedCollection#ADD_LAST_ADDS_TO_FRONT] has no effect here: the method it
+    /// would call, [addFirst(Object)][#addFirst(Object)], throws the same exception.
+    ///
+    /// @param e the element
+    /// @throws UnsupportedOperationException always, unless a break is set
+    @Override
+    public void addLast(final E e) {
+        if (hasBreak(BreakableSequencedCollection.ADD_LAST_DOES_NOT_ADD_ELEMENT)) {
+            return;
+        }
+        throw new UnsupportedOperationException("addLast: a sorted set's order is its comparator's");
+    }
+
+    /// The store as a [NavigableSet], for the breaks that need an inclusive or exclusive bound.
+    private NavigableSet<E> navigableStore() {
+        if (sortedSet instanceof NavigableSet<E> navigable) {
+            return navigable;
+        }
+        throw new UnsupportedOperationException("this break needs a NavigableSet store");
+    }
+
+    /// Applies the view breaks to a range view of the store.
+    private SortedSet<E> brokenView(final SortedSet<E> view) {
+        if (hasBreak(SUBSET_OPERATIONS_RETURN_COPIES)) {
+            return new TreeSet<>(view);
+        }
+        if (hasBreak(SUBSET_OPERATIONS_IGNORE_OUT_OF_RANGE_ADD)) {
+            return new RangeIgnoringView<>(view);
+        }
+        return view;
+    }
+
+    /// A range view whose `add(E)` returns `false` for an element outside the range instead of throwing
+    /// [IllegalArgumentException]; everything else is the view's. For
+    /// [SUBSET_OPERATIONS_IGNORE_OUT_OF_RANGE_ADD][#SUBSET_OPERATIONS_IGNORE_OUT_OF_RANGE_ADD].
+    ///
+    /// @param <E> the element type
+    private static final class RangeIgnoringView<E> extends AbstractSet<E> implements SortedSet<E> {
+        private final SortedSet<E> view;
+
+        RangeIgnoringView(final SortedSet<E> viewArg) {
+            this.view = viewArg;
+        }
+
+        @Override
+        public boolean add(final E e) {
+            try {
+                return view.add(e);
+            } catch (final IllegalArgumentException ignored) {
+                return false;
+            }
+        }
+
+        @Override
+        public boolean addAll(final Collection<? extends E> c) {
+            return view.addAll(c);
+        }
+
+        @Override
+        public Iterator<E> iterator() {
+            return view.iterator();
+        }
+
+        @Override
+        public int size() {
+            return view.size();
+        }
+
+        @Override
+        public boolean contains(final @Nullable Object o) {
+            return view.contains(o);
+        }
+
+        @Override
+        public boolean remove(final @Nullable Object o) {
+            return view.remove(o);
+        }
+
+        @Override
+        public @Nullable Comparator<? super E> comparator() {
+            return view.comparator();
+        }
+
+        @Override
+        public SortedSet<E> subSet(final E fromElement, final E toElement) {
+            return view.subSet(fromElement, toElement);
+        }
+
+        @Override
+        public SortedSet<E> headSet(final E toElement) {
+            return view.headSet(toElement);
+        }
+
+        @Override
+        public SortedSet<E> tailSet(final E fromElement) {
+            return view.tailSet(fromElement);
+        }
+
+        @Override
+        public E first() {
+            return view.first();
+        }
+
+        @Override
+        public E last() {
+            return view.last();
+        }
+    }
+
+    /// A spliterator that does not report some characteristics of the one it wraps; if `SORTED` is among them, its
+    /// `getComparator()` throws [IllegalStateException]. For the spliterator breaks.
+    ///
+    /// @param <E> the element type
+    private static final class ClearedSpliterator<E> implements Spliterator<E> {
+        private final Spliterator<E> spliterator;
+        private final int cleared;
+
+        ClearedSpliterator(final Spliterator<E> spliteratorArg, final int clearedArg) {
+            this.spliterator = spliteratorArg;
+            this.cleared = clearedArg;
+        }
+
+        @Override
+        public boolean tryAdvance(final Consumer<? super E> action) {
+            return spliterator.tryAdvance(action);
+        }
+
+        @Override
+        public void forEachRemaining(final Consumer<? super E> action) {
+            spliterator.forEachRemaining(action);
+        }
+
+        @Override
+        public @Nullable Spliterator<E> trySplit() {
+            Spliterator<E> split = spliterator.trySplit();
+            return split == null ? null : new ClearedSpliterator<>(split, cleared);
+        }
+
+        @Override
+        public long estimateSize() {
+            return spliterator.estimateSize();
+        }
+
+        @Override
+        public int characteristics() {
+            return spliterator.characteristics() & ~cleared;
+        }
+
+        @Override
+        public @Nullable Comparator<? super E> getComparator() {
+            if ((cleared & Spliterator.SORTED) != 0) {
+                throw new IllegalStateException("not SORTED");
+            }
+            return spliterator.getComparator();
         }
     }
 

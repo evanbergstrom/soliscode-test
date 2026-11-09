@@ -41,8 +41,8 @@ Built. Every package is under `com.soliscode.test`, and every main package has a
 | `assertions.string` | `AssertStringContains`, `AssertStringContainsInOrder` |
 | `breakable` | `Break`, `Breakable`, `AbstractBreakable`, the breakable classes and their builders, and `Breakables`, the factory of builders (section 4) |
 | `contract` | `CollectionContractConfig` (whether the class under test permits nulls, duplicates and incompatible types) and its narrowings `DoesNotPermitNulls`, `DoesNotPermitDuplicates`, `DoesNotPermitIncompatibleTypes` |
-| `contract.<interface>` | One package per interface, one level under `contract`: `blockingdeque`, `blockingqueue`, `collection`, `concurrentmap`, `deque`, `iterable`, `list`, `map`, `navigablemap`, `numeric`, `object`, `queue`, `sequencedcollection`, `sequencedmap`, `sequencedset`, `set`, `sortedmap`, `sortedset`, `transferqueue`. Each holds the interface's contract, its method contracts and its method enum (`ListMethods`, for example) |
-| `contract.support` | The interfaces a contract extends: `ContractSupport`, `ProviderSupport`, `CollectionContractSupport`, `MapContractSupport`, `OrderedMapContractSupport`, the provider supports, and the mix-ins that fix a type (`WithInteger`, `WithString`, `WithArrayList`, `WithLinkedList`, `WithSynchronizedCollection`, and others) |
+| `contract.<interface>` | One package per interface, one level under `contract`: `blockingdeque`, `blockingqueue`, `collection`, `concurrentmap`, `deque`, `iterable`, `list`, `map`, `navigablemap`, `numeric`, `object`, `queue`, `sequencedcollection`, `sequencedmap`, `sequencedset`, `set`, `sortedmap`, `sortedset`, `transferqueue`. Each holds the interface's contract, its method contracts and, where its interface has optional methods, its method enum (`ListMethods`, for example; `contract.sortedset` has none, since `SortedSet`'s own methods are not optional) |
+| `contract.support` | The interfaces a contract extends: `ContractSupport`, `ProviderSupport`, `CollectionContractSupport`, `MapContractSupport`, `OrderedMapContractSupport`, `SortedSetContractSupport`, the provider supports, and the mix-ins that fix a type (`WithInteger`, `WithString`, `WithArrayList`, `WithLinkedList`, `WithSynchronizedCollection`, and others) |
 | `interfaces` | `IterableOnly`, `CollectionOnly`, `NumberOnly` and `ObjectOnly`, which hide every method but their interface's, so that code which takes a faster path for a richer interface takes the plain one; `Interfaces` makes them |
 | `provider` | `ObjectProvider` and its kinds (`NumberProvider`, `CollectionProvider`, `MapProvider`, `FunctionalProvider`), providers for `Integer`, `Long`, `Short`, `Double`, `Float` and `String`, and the factories `Providers`, `CollectionProviders` and `MapProviders` |
 | `safety` | `ContentionCoordinator` (section 5) |
@@ -89,7 +89,7 @@ graph LR
 Packages that are odd today:
 - The graph has cycles: `util` depends on `breakable` (`IterableTestUtils` calls `Breakables.ensureUnbroken`), and `breakable` depends on `util` and on `contract`, which depends on `util`. No task is filed to break them.
 - The method enums live in the contract packages but are used by the breakables, and by `MethodSupport` through `InterfaceMethod` in the root package.
-- `contract.sortedset` and `contract.concurrentmap` hold only a `package-info.java`; `contract.blockingqueue`, `contract.blockingdeque` and `contract.transferqueue` hold only their method enums. Their interfaces have breakables but no contract.
+- `contract.concurrentmap` holds only a `package-info.java`; `contract.blockingqueue`, `contract.blockingdeque` and `contract.transferqueue` hold only their method enums. Their interfaces have breakables but no contract.
 
 ## 4. Contracts, breakables and providers
 

@@ -61,7 +61,7 @@ public interface GetFirstContract<C extends SequencedCollection<E>, E> extends C
         if (supportsMethod(SequencedCollectionMethods.GET_FIRST)) {
             List<E> elements = elementProvider().createUniqueInstances(2);
             SequencedCollection<E> collection = provider().createInstance(elements);
-            assertEquals(elements.getFirst(), collection.getFirst());
+            assertEquals(encounterOrder(collection, elements).getFirst(), collection.getFirst());
         }
     }
 

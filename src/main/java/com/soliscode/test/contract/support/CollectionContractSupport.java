@@ -1,5 +1,10 @@
 package com.soliscode.test.contract.support;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
+
 import com.soliscode.test.contract.CollectionContractConfig;
 
 /// The base interface for all classes that test `Collection` methods. It allows the contract class to create
@@ -36,5 +41,25 @@ public interface CollectionContractSupport<C extends Iterable<E>, E>
                 throw e;
             }
         }
+    }
+
+    /// Returns the elements in the order a sequenced collection holding them should encounter them: in the order of
+    /// its comparator, for a [SortedSet], otherwise in the order they were given.
+    ///
+    /// [java.util.SequencedCollection] allows any defined encounter order. A test of a collection whose order is
+    /// neither overrides this method to give that order. A sorted set's expected order comes from its own
+    /// `comparator()`, as the sorted maps' does ([OrderedMapContractSupport#encounterOrder]); the comparator's own
+    /// test checks that it describes the order.
+    ///
+    /// @param collection the collection under test
+    /// @param elements the elements it holds, in the order they were added
+    /// @return the elements in encounter order
+    default List<E> encounterOrder(final Iterable<E> collection, final List<E> elements) {
+        if (collection instanceof SortedSet<E> sorted) {
+            TreeSet<E> reference = new TreeSet<>(sorted.comparator());
+            reference.addAll(elements);
+            return new ArrayList<>(reference);
+        }
+        return elements;
     }
 }

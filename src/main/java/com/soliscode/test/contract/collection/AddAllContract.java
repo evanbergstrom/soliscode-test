@@ -8,7 +8,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.soliscode.test.contract.support.CollectionContractSupport;
-import com.soliscode.test.util.MatchNothing;
 
 import static com.soliscode.test.assertions.collection.CollectionAssertions.assertContainsAll;
 import static com.soliscode.test.assertions.collection.CollectionAssertions.assertContainsSameByIdentity;
@@ -213,8 +212,10 @@ public interface AddAllContract<C extends Collection<E>, E> extends CollectionCo
                 assertEquals(1, collection.size());
                 assertTrue(collection.contains(element));
             } else {
+                // A plain Object, as add(E)'s test uses: an empty sorted set compares a Comparable element only with
+                // itself, so it could accept one of another type.
                 Collection<E> collection = provider().emptyInstance();
-                Collection incompatibleValues = Collections.singletonList(new MatchNothing());
+                Collection incompatibleValues = Collections.singletonList(new Object());
                 assertThrows(ClassCastException.class, () -> collection.addAll(incompatibleValues));
             }
         }

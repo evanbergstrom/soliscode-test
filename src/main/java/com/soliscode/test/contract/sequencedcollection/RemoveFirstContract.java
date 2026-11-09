@@ -66,7 +66,7 @@ public interface RemoveFirstContract<C extends SequencedCollection<E>, E> extend
         List<E> elements = elementProvider().createUniqueInstances(DEFAULT_SIZE);
         if (supportsMethod(SequencedCollectionMethods.REMOVE_FIRST)) {
             SequencedCollection<E> collection = provider().createInstance(elements);
-            for (final E element : elements) {
+            for (final E element : encounterOrder(collection, elements)) {
                 E removed = collection.removeFirst();
                 assertEquals(element, removed);
                 assertFalse(collection.contains(removed));

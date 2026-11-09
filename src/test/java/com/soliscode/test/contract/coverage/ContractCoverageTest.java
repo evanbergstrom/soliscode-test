@@ -12,7 +12,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.SortedSet;
 import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -38,6 +41,7 @@ import com.soliscode.test.breakable.BreakableSequencedCollection;
 import com.soliscode.test.breakable.BreakableSequencedSet;
 import com.soliscode.test.breakable.BreakableSet;
 import com.soliscode.test.breakable.BreakableSortedMap;
+import com.soliscode.test.breakable.BreakableSortedSet;
 import com.soliscode.test.breakable.BreakableSpliterator;
 import com.soliscode.test.contract.CollectionContractConfig;
 import com.soliscode.test.contract.DynamicCollectionContract;
@@ -63,6 +67,7 @@ import com.soliscode.test.contract.sequencedmap.SequencedMapMethods;
 import com.soliscode.test.contract.sequencedset.SequencedSetContract;
 import com.soliscode.test.contract.set.SetContract;
 import com.soliscode.test.contract.sortedmap.SortedMapContract;
+import com.soliscode.test.contract.sortedset.SortedSetContract;
 import com.soliscode.test.contract.support.WithIntegerElement;
 import com.soliscode.test.contract.support.WithIntegerKeyAndStringValue;
 import com.soliscode.test.provider.CollectionProvider;
@@ -114,6 +119,25 @@ public class ContractCoverageTest {
         }
     };
 
+    /// A sorted set's configuration: no nulls, duplicates or elements of other types, whatever the setup a break
+    /// needs, since a sorted set refuses them all.
+    private static final CollectionContractConfig SORTED = new CollectionContractConfig() {
+        @Override
+        public boolean permitDuplicates() {
+            return false;
+        }
+
+        @Override
+        public boolean permitNulls() {
+            return false;
+        }
+
+        @Override
+        public boolean permitIncompatibleTypes() {
+            return false;
+        }
+    };
+
     private static final java.util.regex.Pattern SORTED_MAP_METHOD_BREAK =
             java.util.regex.Pattern.compile("(COMPARATOR|FIRST_KEY|LAST_KEY|HEAD_MAP|TAIL_MAP|SUB_MAP)_");
 
@@ -153,6 +177,11 @@ public class ContractCoverageTest {
         if (field.equals("IS_EMPTY_IS_NOT_THREAD_SAFE") || field.equals("SIZE_IS_NOT_THREAD_SAFE")) {
             return "no test can see it: without the lock, isEmpty() and size() read one field, and any value read is "
                     + "one some interleaving with the lock could give";
+        }
+        if ((field.equals("ADD_FIRST_ADDS_TO_END") || field.equals("ADD_LAST_ADDS_TO_FRONT"))
+                && SortedSetContract.class.isAssignableFrom(contract)) {
+            return "not a fault for a sorted set: addFirst and addLast both throw UnsupportedOperationException "
+                    + "(SortedSet#addFirst), so the one it would call throws as the one called does";
         }
         if (contract == SequencedMapContract.class
                 && SORTED_MAP_METHOD_BREAK.matcher(field).lookingAt()) {
@@ -237,6 +266,26 @@ public class ContractCoverageTest {
                     var config = configure(builder, key, b);
                     return () -> new BrokenSequencedSet(builder, config);
                 });
+    }
+
+    @TestFactory
+    @DisplayName("SortedSetContract")
+    Stream<DynamicNode> sortedSetContract() {
+        List<Method> sortedSetMethods = ContractRuns.testMethods(SortedSetContract.class, false);
+        return Stream.concat(
+                coverage(SortedSetContract.class, "TreeSet(reverseOrder())", JdkSortedSet::new,
+                        collectionBreaks(BreakableSortedSet.class, BreakableSequencedSet.class,
+                                BreakableSequencedCollection.class),
+                        (key, b) -> {
+                            var builder = sortedSetBuilder();
+                            configure(builder, key, b);
+                            return () -> new BrokenSortedSet(builder);
+                        }),
+                Stream.of(passes("ConcurrentSkipListSet(reverseOrder())", JdkConcurrentSortedSet::new,
+                                sortedSetMethods),
+                        passes("TreeSet() in natural order", JdkNaturalSortedSet::new, sortedSetMethods),
+                        passes("unmodifiableSortedSet(TreeSet(reverseOrder()))", JdkUnmodifiableSortedSet::new,
+                                sortedSetMethods)));
     }
 
     @TestFactory
@@ -464,6 +513,14 @@ public class ContractCoverageTest {
         return b == null ? builder : builder.addBreak(b);
     }
 
+    /// A sorted set builder in reverse order. Like TreeSet, it refuses null and elements of other types.
+    private static BreakableSortedSet.Builder<Integer> sortedSetBuilder() {
+        return new BreakableSortedSet.Builder<Integer>()
+                .withComparator(REVERSE)
+                .doesNotPermitNulls()
+                .doesNotPermitIncompatibleTypes(Integer.class);
+    }
+
     private static BreakableCollection.Builder<Integer> threadSafeBuilder() {
         return new BreakableCollection.Builder<Integer>().setSafe(true);
     }
@@ -525,6 +582,71 @@ public class ContractCoverageTest {
         @Override
         public boolean permitDuplicates() {
             return false;
+        }
+    }
+
+    /// A sorted set's contract: no nulls, duplicates or elements of other types.
+    abstract static class SortedSetTest<S extends SortedSet<Integer>> extends AbstractTest
+            implements SortedSetContract<S, Integer>, WithIntegerElement {
+        @Override
+        public boolean permitNulls() {
+            return false;
+        }
+
+        @Override
+        public boolean permitDuplicates() {
+            return false;
+        }
+
+        @Override
+        public boolean permitIncompatibleTypes() {
+            return false;
+        }
+    }
+
+    static final class JdkSortedSet extends SortedSetTest<TreeSet<Integer>> {
+        @Override
+        public CollectionProvider<TreeSet<Integer>, Integer> provider() {
+            return CollectionProviders.from(() -> new TreeSet<>(REVERSE), TreeSet::new, c -> {
+                TreeSet<Integer> set = new TreeSet<>(REVERSE);
+                set.addAll(c);
+                return set;
+            }, PROVIDER);
+        }
+    }
+
+    static final class JdkConcurrentSortedSet extends SortedSetTest<ConcurrentSkipListSet<Integer>> {
+        @Override
+        public CollectionProvider<ConcurrentSkipListSet<Integer>, Integer> provider() {
+            return CollectionProviders.from(() -> new ConcurrentSkipListSet<>(REVERSE),
+                    s -> new ConcurrentSkipListSet<>(s), c -> {
+                        ConcurrentSkipListSet<Integer> set = new ConcurrentSkipListSet<>(REVERSE);
+                        set.addAll(c);
+                        return set;
+                    }, PROVIDER);
+        }
+    }
+
+    static final class JdkNaturalSortedSet extends SortedSetTest<TreeSet<Integer>> {
+        @Override
+        public CollectionProvider<TreeSet<Integer>, Integer> provider() {
+            return CollectionProviders.from(TreeSet::new, TreeSet::new, TreeSet::new, PROVIDER);
+        }
+    }
+
+    static final class JdkUnmodifiableSortedSet extends SortedSetTest<SortedSet<Integer>> {
+        JdkUnmodifiableSortedSet() {
+            doesNotSupportModification();
+        }
+
+        @Override
+        public CollectionProvider<SortedSet<Integer>, Integer> provider() {
+            return CollectionProviders.from(() -> Collections.unmodifiableSortedSet(new TreeSet<>(REVERSE)),
+                    s -> Collections.unmodifiableSortedSet(new TreeSet<>(s)), c -> {
+                        TreeSet<Integer> set = new TreeSet<>(REVERSE);
+                        set.addAll(c);
+                        return Collections.unmodifiableSortedSet(set);
+                    }, PROVIDER);
         }
     }
 
@@ -652,6 +774,13 @@ public class ContractCoverageTest {
         BrokenSequencedSet(final BreakableSequencedSet.Builder<Integer> builder,
                            final CollectionContractConfig config) {
             super(builder, WithIntegerElement.PROVIDER, noDuplicates(config));
+        }
+    }
+
+    static final class BrokenSortedSet extends DynamicCollectionContract<BreakableSortedSet<Integer>, Integer>
+            implements SortedSetContract<BreakableSortedSet<Integer>, Integer> {
+        BrokenSortedSet(final BreakableSortedSet.Builder<Integer> builder) {
+            super(builder, WithIntegerElement.PROVIDER, SORTED);
         }
     }
 

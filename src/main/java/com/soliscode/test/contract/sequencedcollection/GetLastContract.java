@@ -60,7 +60,7 @@ public interface GetLastContract<C extends SequencedCollection<E>, E> extends Co
         if (supportsMethod(SequencedCollectionMethods.GET_LAST)) {
             List<E> elements = elementProvider().createUniqueInstances(2);
             SequencedCollection<E> collection = provider().createInstance(elements);
-            assertEquals(elements.getLast(), collection.getLast());
+            assertEquals(encounterOrder(collection, elements).getLast(), collection.getLast());
         }
     }
 

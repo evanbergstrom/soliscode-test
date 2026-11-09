@@ -35,6 +35,7 @@ This library provides support for:\
 >       - `List`
 >     - `Set`
 >       - `SequencedSet`
+>         - `SortedSet`
 >     - `Queue`
 >       - `Deque`
 > - `Map`
@@ -42,7 +43,7 @@ This library provides support for:\
 >     - `NavigableMap`
 >   - `SequencedMap`
 >
-> It has breakable implementations, but no contracts yet, for `SortedSet`, `NavigableSet`, `ConcurrentMap`,
+> It has breakable implementations, but no contracts yet, for `NavigableSet`, `ConcurrentMap`,
 > `ConcurrentNavigableMap`, `BlockingQueue`, `BlockingDeque` and `TransferQueue`.
 
 **Docs:** https://evanbergstrom.github.io/soliscode-test/

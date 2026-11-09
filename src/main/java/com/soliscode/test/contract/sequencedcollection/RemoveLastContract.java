@@ -65,10 +65,10 @@ public interface RemoveLastContract<C extends SequencedCollection<E>, E> extends
         List<E> elements = elementProvider().createUniqueInstances(DEFAULT_SIZE);
         if (supportsMethod(SequencedCollectionMethods.REMOVE_LAST)) {
             SequencedCollection<E> collection = provider().createInstance(elements);
-
-            for (int i = elements.size() - 1; i >= 0; i--) {
+            List<E> expected = encounterOrder(collection, elements);
+            for (int i = expected.size() - 1; i >= 0; i--) {
                 E removed = collection.removeLast();
-                assertEquals(elements.get(i), removed);
+                assertEquals(expected.get(i), removed);
                 assertFalse(collection.contains(removed));
             }
         } else {

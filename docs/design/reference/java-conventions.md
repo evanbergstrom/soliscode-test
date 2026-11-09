@@ -66,7 +66,7 @@ The user's decision (2026-11-08, on #9): where the code does on purpose what an 
 - with a one-line comment directly above it, `// Check: reason`;
 - no disguised workaround (a cast, a helper or a narrowed type whose only purpose is to quiet the check). An agent once narrowed the providers' return types to interfaces to avoid `NonApiType`; that removed providers users had (`provideLinkedList` could no longer back a `Queue` or `Deque` contract), and was reverted.
 
-A finding that points at a fault is fixed, not suppressed. Built (#9): main code has 31 such suppressions, of these kinds:
+A finding that points at a fault is fixed, not suppressed. Built (#9, #30): main code has 37 such suppressions, of these kinds:
 
 | Check | Count | Where, and why |
 |-------|-------|----------------|
@@ -75,6 +75,7 @@ A finding that points at a fault is fixed, not suppressed. Built (#9): main code
 | `UndefinedEquals` | 4 | Wrappers whose equality is the wrapped collection's (`CollectionOnly`, `IterableOnly`, `BreakableIterable`, `BreakableQueue`) |
 | `NullAway` | 4 | Contract tests that pass null to a JDK method on purpose (`ToArrayContract`, `PushContract`, `OfferFirstContract`, `OfferLastContract`) |
 | `ReferenceEquality` | 3 | Identity comparisons: `AssertEqualsByIdentity`, `AssertEquals` (the same iterable is equal to itself without being iterated), `IterableTestUtils`' `containsByIdentity` |
+| `DoNotCall` | 6 | Contract tests that call `addFirst` or `addLast` on a `SortedSet` on purpose, to check that they throw (`SortedAddFirstContract`, `SortedAddLastContract`; the user's decision on #30) |
 | `EqualsGetClass` | 1 | `BreakableObject`'s exact-class equality, which keeps `equals` symmetric |
 | `ThreadPriorityCheck` | 1 | `Thread.yield()` in `ContentionCoordinator`, which makes contention likelier |
 

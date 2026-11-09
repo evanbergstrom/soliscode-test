@@ -58,14 +58,15 @@ public interface ReversedContract<C extends SequencedCollection<E>, E> extends C
         if (supportsMethod(SequencedCollectionMethods.REVERSED)) {
             List<E> values = elementProvider().createUniqueInstances(DEFAULT_SIZE);
             SequencedCollection<E> collection = provider().createInstance(values);
+            List<E> expected = encounterOrder(collection, values);
 
             SequencedCollection<E> reversed = collection.reversed();
             Iterator<E> iterator = reversed.iterator();
-            for (int i = values.size() - 1; i >= 0; i--) {
-                Assertions.assertEquals(values.get(i), iterator.next());
+            for (int i = expected.size() - 1; i >= 0; i--) {
+                Assertions.assertEquals(expected.get(i), iterator.next());
             }
             // reversed() returns a view: the collection itself keeps its order.
-            Assertions.assertIterableEquals(values, collection, "reversed() changed the collection's order");
+            Assertions.assertIterableEquals(expected, collection, "reversed() changed the collection's order");
         }
     }
 }
