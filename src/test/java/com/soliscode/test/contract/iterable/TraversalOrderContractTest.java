@@ -49,6 +49,13 @@ public class TraversalOrderContractTest {
     }
 
     @Test
+    @DisplayName("SpliteratorMethodContract: a spliterator whose trySplit returns null passes (Spliterator#trySplit)")
+    void spliteratorContractTrySplitReturningNullPasses() {
+        var contract = new SpliteratorRun<>(NeverSplits::new);
+        assertDoesNotThrow(contract::trySplitWhenNotEmptyReturnsNonNullSpliterator);
+    }
+
+    @Test
     @DisplayName("StreamContract: a collection whose spliterator is not ORDERED may stream in another order")
     void streamContractUnorderedInAnotherOrderPasses() {
         var contract = new StreamRun();
@@ -123,6 +130,46 @@ public class TraversalOrderContractTest {
         @Override
         public Spliterator<Integer> spliterator() {
             return Spliterators.spliterator(elements.reversed(), 0);
+        }
+    }
+
+    /// An iterable whose spliterator gives its elements in order but never splits, as `Spliterator#trySplit` allows.
+    private static final class NeverSplits implements Iterable<Integer> {
+        private final List<Integer> elements;
+
+        NeverSplits(final Collection<Integer> c) {
+            this.elements = new ArrayList<>(c);
+        }
+
+        @Override
+        public Iterator<Integer> iterator() {
+            return elements.iterator();
+        }
+
+        @Override
+        public Spliterator<Integer> spliterator() {
+            Spliterator<Integer> whole = elements.spliterator();
+            return new Spliterator<>() {
+                @Override
+                public boolean tryAdvance(final Consumer<? super Integer> action) {
+                    return whole.tryAdvance(action);
+                }
+
+                @Override
+                public @Nullable Spliterator<Integer> trySplit() {
+                    return null;
+                }
+
+                @Override
+                public long estimateSize() {
+                    return whole.estimateSize();
+                }
+
+                @Override
+                public int characteristics() {
+                    return whole.characteristics();
+                }
+            };
         }
     }
 

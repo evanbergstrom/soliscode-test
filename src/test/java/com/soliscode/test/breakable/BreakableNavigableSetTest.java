@@ -3,7 +3,9 @@ package com.soliscode.test.breakable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NavigableSet;
+import java.util.NoSuchElementException;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,20 +13,27 @@ import org.junit.jupiter.api.Test;
 import static com.soliscode.test.breakable.BreakableNavigableSet.CEILING_ALWAYS_RETURNS_NULL;
 import static com.soliscode.test.breakable.BreakableNavigableSet.CEILING_RETURNS_FLOOR_VALUE;
 import static com.soliscode.test.breakable.BreakableNavigableSet.DESCENDING_ITERATOR_RETURNS_EMPTY;
+import static com.soliscode.test.breakable.BreakableNavigableSet.DESCENDING_SET_RETURNS_COPY;
 import static com.soliscode.test.breakable.BreakableNavigableSet.DESCENDING_SET_RETURNS_EMPTY;
 import static com.soliscode.test.breakable.BreakableNavigableSet.FLOOR_ALWAYS_RETURNS_NULL;
 import static com.soliscode.test.breakable.BreakableNavigableSet.FLOOR_RETURNS_CEILING_VALUE;
+import static com.soliscode.test.breakable.BreakableNavigableSet.HEAD_SET_IGNORES_INCLUSIVE;
 import static com.soliscode.test.breakable.BreakableNavigableSet.HIGHER_ALWAYS_RETURNS_NULL;
 import static com.soliscode.test.breakable.BreakableNavigableSet.HIGHER_RETURNS_LOWER_VALUE;
 import static com.soliscode.test.breakable.BreakableNavigableSet.LOWER_ALWAYS_RETURNS_NULL;
 import static com.soliscode.test.breakable.BreakableNavigableSet.LOWER_RETURNS_HIGHER_VALUE;
 import static com.soliscode.test.breakable.BreakableNavigableSet.POLL_FIRST_ALWAYS_RETURNS_NULL;
 import static com.soliscode.test.breakable.BreakableNavigableSet.POLL_FIRST_DOES_NOT_REMOVE;
+import static com.soliscode.test.breakable.BreakableNavigableSet.POLL_FIRST_THROWS_WHEN_EMPTY;
 import static com.soliscode.test.breakable.BreakableNavigableSet.POLL_LAST_ALWAYS_RETURNS_NULL;
 import static com.soliscode.test.breakable.BreakableNavigableSet.POLL_LAST_DOES_NOT_REMOVE;
+import static com.soliscode.test.breakable.BreakableNavigableSet.POLL_LAST_THROWS_WHEN_EMPTY;
+import static com.soliscode.test.breakable.BreakableNavigableSet.SUBSET_IGNORES_INCLUSIVE;
+import static com.soliscode.test.breakable.BreakableNavigableSet.TAIL_SET_IGNORES_INCLUSIVE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -667,5 +676,133 @@ public class BreakableNavigableSetTest {
         assertEquals(Integer.valueOf(5), singleElementSet.ceiling(5));
         assertNull(singleElementSet.lower(5));
         assertNull(singleElementSet.higher(5));
+    }
+
+    // ========== The two-argument and four-argument views (#20) ==========
+
+    private static BreakableNavigableSet<Integer> oddsToNine() {
+        BreakableNavigableSet<Integer> set = new BreakableNavigableSet<>();
+        set.addAll(Arrays.asList(1, 3, 5, 7, 9));
+        return set;
+    }
+
+    /// `subSet(x, true, x, true)` holds `x`, and is a view: removing `x` through it removes it from the set, and
+    /// removing it from the set empties the view. Before #20's fix it was a detached empty set.
+    @Test
+    @DisplayName("subSet(x, true, x, true) holds x and writes through to the set")
+    public void subSetFourArgWhenSingleElementHoldsItAndWritesThrough() {
+        BreakableNavigableSet<Integer> set = oddsToNine();
+        NavigableSet<Integer> view = set.subSet(5, true, 5, true);
+        assertEquals(List.of(5), List.copyOf(view));
+        assertTrue(view.remove(5));
+        assertFalse(set.contains(5));
+        set.add(5);
+        assertTrue(view.contains(5));
+        assertTrue(set.remove(5));
+        assertTrue(view.isEmpty());
+    }
+
+    /// `headSet(first, true)` holds the first element, and an element added through it, before the first, is in the
+    /// set. Before #20's fix it was a detached empty set.
+    @Test
+    @DisplayName("headSet(first, true) holds the first element and writes through to the set")
+    public void headSetTwoArgWhenFirstInclusiveHoldsItAndWritesThrough() {
+        BreakableNavigableSet<Integer> set = oddsToNine();
+        NavigableSet<Integer> view = set.headSet(1, true);
+        assertEquals(List.of(1), List.copyOf(view));
+        assertTrue(view.add(0));
+        assertTrue(set.contains(0));
+    }
+
+    /// `headSet(y, true)` for a `y` before every element is empty, and `y` added through it is in the set. Before
+    /// #20's fix the empty view was detached.
+    @Test
+    @DisplayName("headSet(y, true) on an empty range writes through to the set")
+    public void headSetTwoArgWhenRangeEmptyWritesThrough() {
+        BreakableNavigableSet<Integer> set = oddsToNine();
+        NavigableSet<Integer> view = set.headSet(0, true);
+        assertTrue(view.isEmpty());
+        assertTrue(view.add(0));
+        assertTrue(set.contains(0));
+    }
+
+    /// `tailSet(y, true)` for a `y` after every element is empty, and `y` added through it is in the set. Before
+    /// #20's fix the empty view was detached.
+    @Test
+    @DisplayName("tailSet(y, true) on an empty range writes through to the set")
+    public void tailSetTwoArgWhenRangeEmptyWritesThrough() {
+        BreakableNavigableSet<Integer> set = oddsToNine();
+        NavigableSet<Integer> view = set.tailSet(10, true);
+        assertTrue(view.isEmpty());
+        assertTrue(view.add(10));
+        assertTrue(set.contains(10));
+        assertEquals(List.of(9, 10), List.copyOf(set.tailSet(9, true)));
+    }
+
+    // ========== The breaks added by #31 ==========
+
+    /// `HEAD_SET_IGNORES_INCLUSIVE`: `headSet(to, true)` excludes `to`.
+    @Test
+    @DisplayName("headSet(to, true) excludes to when HEAD_SET_IGNORES_INCLUSIVE is set")
+    public void headSetTwoArgWhenIgnoresInclusiveExcludesBound() {
+        BreakableNavigableSet<Integer> set = new BreakableNavigableSet.Builder<Integer>(Arrays.asList(1, 3, 5))
+                .addBreak(HEAD_SET_IGNORES_INCLUSIVE)
+                .build();
+        assertEquals(List.of(1), List.copyOf(set.headSet(3, true)));
+        assertEquals(List.of(1, 3), List.copyOf(oddsToNine().headSet(3, true)));
+    }
+
+    /// `TAIL_SET_IGNORES_INCLUSIVE`: `tailSet(from, false)` includes `from`.
+    @Test
+    @DisplayName("tailSet(from, false) includes from when TAIL_SET_IGNORES_INCLUSIVE is set")
+    public void tailSetTwoArgWhenIgnoresInclusiveIncludesBound() {
+        BreakableNavigableSet<Integer> set = new BreakableNavigableSet.Builder<Integer>(Arrays.asList(1, 3, 5))
+                .addBreak(TAIL_SET_IGNORES_INCLUSIVE)
+                .build();
+        assertEquals(List.of(3, 5), List.copyOf(set.tailSet(3, false)));
+        assertEquals(List.of(5), List.copyOf(oddsToNine().tailSet(3, false).headSet(7)));
+    }
+
+    /// `SUBSET_IGNORES_INCLUSIVE`: `subSet(from, false, to, true)` is `[from, to)`.
+    @Test
+    @DisplayName("subSet(from, false, to, true) is [from, to) when SUBSET_IGNORES_INCLUSIVE is set")
+    public void subSetFourArgWhenIgnoresInclusiveIsHalfOpen() {
+        BreakableNavigableSet<Integer> set = new BreakableNavigableSet.Builder<Integer>(Arrays.asList(1, 3, 5, 7))
+                .addBreak(SUBSET_IGNORES_INCLUSIVE)
+                .build();
+        assertEquals(List.of(3, 5), List.copyOf(set.subSet(3, false, 7, true)));
+        assertEquals(List.of(5, 7), List.copyOf(oddsToNine().subSet(3, false, 7, true)));
+    }
+
+    /// `DESCENDING_SET_RETURNS_COPY`: `descendingSet()` holds the elements in descending order, but a change to the
+    /// set does not show in it.
+    @Test
+    @DisplayName("descendingSet() is a copy when DESCENDING_SET_RETURNS_COPY is set")
+    public void descendingSetWhenReturnsCopyIsNotBacked() {
+        BreakableNavigableSet<Integer> set = new BreakableNavigableSet.Builder<Integer>(Arrays.asList(1, 3, 5))
+                .addBreak(DESCENDING_SET_RETURNS_COPY)
+                .build();
+        NavigableSet<Integer> descending = set.descendingSet();
+        assertEquals(List.of(5, 3, 1), List.copyOf(descending));
+        set.remove(3);
+        assertTrue(descending.contains(3));
+        NavigableSet<Integer> view = oddsToNine().descendingSet();
+        assertEquals(List.of(9, 7, 5, 3, 1), List.copyOf(view));
+    }
+
+    /// `POLL_FIRST_THROWS_WHEN_EMPTY` and `POLL_LAST_THROWS_WHEN_EMPTY`: polling an empty set throws, and a set that
+    /// is not empty polls as it should.
+    @Test
+    @DisplayName("pollFirst() and pollLast() throw for an empty set when the THROWS_WHEN_EMPTY breaks are set")
+    public void pollWhenThrowsWhenEmptyThrowsOnlyWhenEmpty() {
+        BreakableNavigableSet<Integer> set = new BreakableNavigableSet.Builder<Integer>(Arrays.asList(1, 3, 5))
+                .addBreak(POLL_FIRST_THROWS_WHEN_EMPTY)
+                .addBreak(POLL_LAST_THROWS_WHEN_EMPTY)
+                .build();
+        assertEquals(Integer.valueOf(1), set.pollFirst());
+        assertEquals(Integer.valueOf(5), set.pollLast());
+        assertEquals(Integer.valueOf(3), set.pollFirst());
+        assertThrows(NoSuchElementException.class, set::pollFirst);
+        assertThrows(NoSuchElementException.class, set::pollLast);
     }
 }

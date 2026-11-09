@@ -39,7 +39,6 @@ import static java.util.Spliterator.SUBSIZED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -256,22 +255,27 @@ public interface SpliteratorMethodContract<I extends Iterable<E>, E> extends Ite
         assertNull(split);
     }
 
-    /// Tests that the [Spliterator#trySplit] method works on a collection with elements.
+    /// Tests that the [Spliterator#trySplit] method works on a collection with elements: the part it splits off and
+    /// the part left give every element between them, the part split off first where the spliterator is `ORDERED`.
+    ///
+    /// `trySplit` may return `null` ("for any reason, including ... data structure constraints"), so the test
+    /// accepts it and then checks that the spliterator still gives every element. A
+    /// [java.util.concurrent.ConcurrentSkipListSet]'s, for one, splits only where its random index levels allow.
+    /// The method's name is older than this reading.
     ///
     /// @since 1.0.0
     @Test
-    @DisplayName("trySplit() returns non-null spliterator for non-empty spliterator")
+    @DisplayName("trySplit() splits off a prefix, or returns null, and every element is traversed")
     default void trySplitWhenNotEmptyReturnsNonNullSpliterator() {
         Iterable<E> iterable = provider().createInstanceWithUniqueElements();
         Spliterator<E> iterator = iterable.spliterator();
 
         Spliterator<E> split = iterator.trySplit();
-        assertNotNull(split);
 
         // For an ORDERED spliterator, the part split off is a strict prefix: it comes first.
         List<E> elements = new ArrayList<>();
         int calls = 0;
-        while (split.tryAdvance(elements::add)) {
+        while (split != null && split.tryAdvance(elements::add)) {
             assertTrue(++calls <= TRAVERSAL_LIMIT, "tryAdvance(Consumer) did not end");
             assertTrue(contains(iterable, elements.getLast()));
         }

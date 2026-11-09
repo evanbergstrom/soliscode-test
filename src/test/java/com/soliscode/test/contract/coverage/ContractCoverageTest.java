@@ -11,6 +11,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableSet;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeMap;
@@ -36,6 +37,7 @@ import com.soliscode.test.breakable.BreakableIterator;
 import com.soliscode.test.breakable.BreakableList;
 import com.soliscode.test.breakable.BreakableMap;
 import com.soliscode.test.breakable.BreakableNavigableMap;
+import com.soliscode.test.breakable.BreakableNavigableSet;
 import com.soliscode.test.breakable.BreakableQueue;
 import com.soliscode.test.breakable.BreakableSequencedCollection;
 import com.soliscode.test.breakable.BreakableSequencedSet;
@@ -57,6 +59,7 @@ import com.soliscode.test.contract.list.ListContract;
 import com.soliscode.test.contract.list.ListMethods;
 import com.soliscode.test.contract.map.MapContract;
 import com.soliscode.test.contract.navigablemap.NavigableMapContract;
+import com.soliscode.test.contract.navigableset.NavigableSetContract;
 import com.soliscode.test.contract.object.SerializableContract;
 import com.soliscode.test.contract.queue.QueueContract;
 import com.soliscode.test.contract.queue.QueueMethods;
@@ -165,6 +168,10 @@ public class ContractCoverageTest {
         if (field.equals("ADD_ALWAYS_RETURNS_TRUE") && !isSet) {
             return "not a fault here: add(E) always returns true for a collection that permits duplicates "
                     + "(Collection#add); SetContract checks it";
+        }
+        if (field.equals("SPLITERATOR_TRY_SPLIT_ALWAYS_RETURNS_NULL")) {
+            return "not a fault: Spliterator#trySplit may return null for any reason, and the contracts accept it "
+                    + "(a ConcurrentSkipListSet's spliterator does, where its random index levels allow no split)";
         }
         if (field.equals("OFFER_ALWAYS_RETURNS_TRUE")) {
             return "not a fault for BreakableQueue or BreakableDeque: they have no capacity, so offer(E) always "
@@ -286,6 +293,25 @@ public class ContractCoverageTest {
                         passes("TreeSet() in natural order", JdkNaturalSortedSet::new, sortedSetMethods),
                         passes("unmodifiableSortedSet(TreeSet(reverseOrder()))", JdkUnmodifiableSortedSet::new,
                                 sortedSetMethods)));
+    }
+
+    @TestFactory
+    @DisplayName("NavigableSetContract")
+    Stream<DynamicNode> navigableSetContract() {
+        List<Method> methods = ContractRuns.testMethods(NavigableSetContract.class, false);
+        return Stream.concat(
+                coverage(NavigableSetContract.class, "TreeSet(reverseOrder())", JdkNavigableSet::new,
+                        collectionBreaks(BreakableNavigableSet.class, BreakableSequencedSet.class,
+                                BreakableSequencedCollection.class),
+                        (key, b) -> {
+                            var builder = navigableSetBuilder();
+                            configure(builder, key, b);
+                            return () -> new BrokenNavigableSet(builder);
+                        }),
+                Stream.of(passes("ConcurrentSkipListSet(reverseOrder())", JdkConcurrentNavigableSet::new, methods),
+                        passes("TreeSet() in natural order", JdkNaturalNavigableSet::new, methods),
+                        passes("unmodifiableNavigableSet(TreeSet(reverseOrder()))",
+                                JdkUnmodifiableNavigableSet::new, methods)));
     }
 
     @TestFactory
@@ -521,6 +547,14 @@ public class ContractCoverageTest {
                 .doesNotPermitIncompatibleTypes(Integer.class);
     }
 
+    /// A navigable set builder in reverse order. Like TreeSet, it refuses null and elements of other types.
+    private static BreakableNavigableSet.Builder<Integer> navigableSetBuilder() {
+        return new BreakableNavigableSet.Builder<Integer>()
+                .withComparator(REVERSE)
+                .doesNotPermitNulls()
+                .doesNotPermitIncompatibleTypes(Integer.class);
+    }
+
     private static BreakableCollection.Builder<Integer> threadSafeBuilder() {
         return new BreakableCollection.Builder<Integer>().setSafe(true);
     }
@@ -646,6 +680,71 @@ public class ContractCoverageTest {
                         TreeSet<Integer> set = new TreeSet<>(REVERSE);
                         set.addAll(c);
                         return Collections.unmodifiableSortedSet(set);
+                    }, PROVIDER);
+        }
+    }
+
+    /// A navigable set's contract: no nulls, duplicates or elements of other types.
+    abstract static class NavigableSetTest<S extends NavigableSet<Integer>> extends AbstractTest
+            implements NavigableSetContract<S, Integer>, WithIntegerElement {
+        @Override
+        public boolean permitNulls() {
+            return false;
+        }
+
+        @Override
+        public boolean permitDuplicates() {
+            return false;
+        }
+
+        @Override
+        public boolean permitIncompatibleTypes() {
+            return false;
+        }
+    }
+
+    static final class JdkNavigableSet extends NavigableSetTest<TreeSet<Integer>> {
+        @Override
+        public CollectionProvider<TreeSet<Integer>, Integer> provider() {
+            return CollectionProviders.from(() -> new TreeSet<>(REVERSE), TreeSet::new, c -> {
+                TreeSet<Integer> set = new TreeSet<>(REVERSE);
+                set.addAll(c);
+                return set;
+            }, PROVIDER);
+        }
+    }
+
+    static final class JdkConcurrentNavigableSet extends NavigableSetTest<ConcurrentSkipListSet<Integer>> {
+        @Override
+        public CollectionProvider<ConcurrentSkipListSet<Integer>, Integer> provider() {
+            return CollectionProviders.from(() -> new ConcurrentSkipListSet<>(REVERSE),
+                    s -> new ConcurrentSkipListSet<>(s), c -> {
+                        ConcurrentSkipListSet<Integer> set = new ConcurrentSkipListSet<>(REVERSE);
+                        set.addAll(c);
+                        return set;
+                    }, PROVIDER);
+        }
+    }
+
+    static final class JdkNaturalNavigableSet extends NavigableSetTest<TreeSet<Integer>> {
+        @Override
+        public CollectionProvider<TreeSet<Integer>, Integer> provider() {
+            return CollectionProviders.from(TreeSet::new, TreeSet::new, TreeSet::new, PROVIDER);
+        }
+    }
+
+    static final class JdkUnmodifiableNavigableSet extends NavigableSetTest<NavigableSet<Integer>> {
+        JdkUnmodifiableNavigableSet() {
+            doesNotSupportModification();
+        }
+
+        @Override
+        public CollectionProvider<NavigableSet<Integer>, Integer> provider() {
+            return CollectionProviders.from(() -> Collections.unmodifiableNavigableSet(new TreeSet<>(REVERSE)),
+                    s -> Collections.unmodifiableNavigableSet(new TreeSet<>(s)), c -> {
+                        TreeSet<Integer> set = new TreeSet<>(REVERSE);
+                        set.addAll(c);
+                        return Collections.unmodifiableNavigableSet(set);
                     }, PROVIDER);
         }
     }
@@ -780,6 +879,13 @@ public class ContractCoverageTest {
     static final class BrokenSortedSet extends DynamicCollectionContract<BreakableSortedSet<Integer>, Integer>
             implements SortedSetContract<BreakableSortedSet<Integer>, Integer> {
         BrokenSortedSet(final BreakableSortedSet.Builder<Integer> builder) {
+            super(builder, WithIntegerElement.PROVIDER, SORTED);
+        }
+    }
+
+    static final class BrokenNavigableSet extends DynamicCollectionContract<BreakableNavigableSet<Integer>, Integer>
+            implements NavigableSetContract<BreakableNavigableSet<Integer>, Integer> {
+        BrokenNavigableSet(final BreakableNavigableSet.Builder<Integer> builder) {
             super(builder, WithIntegerElement.PROVIDER, SORTED);
         }
     }

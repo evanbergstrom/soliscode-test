@@ -15,8 +15,10 @@
  */
 package com.soliscode.test.breakable;
 
+import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -129,7 +131,35 @@ import com.soliscode.test.MethodStatus;
 /// **Effect**: Creates inconsistency between return value and set modification behavior
 /// **Use Case**: Testing code that assumes poll operations modify the collection state
 ///
+/// #### POLL_FIRST_THROWS_WHEN_EMPTY
+/// **Purpose**: Forces `pollFirst()` to throw `NoSuchElementException` for an empty set, where it returns null
+///
+/// #### POLL_LAST_THROWS_WHEN_EMPTY
+/// **Purpose**: Forces `pollLast()` to throw `NoSuchElementException` for an empty set, where it returns null
+///
+/// ### Range View Breaks
+///
+/// #### HEAD_SET_IGNORES_INCLUSIVE
+/// **Purpose**: Forces `headSet(to, inclusive)` to exclude `to` whatever `inclusive` says
+///
+/// #### TAIL_SET_IGNORES_INCLUSIVE
+/// **Purpose**: Forces `tailSet(from, inclusive)` to include `from` whatever `inclusive` says
+///
+/// #### SUBSET_IGNORES_INCLUSIVE
+/// **Purpose**: Forces `subSet(from, fromInclusive, to, toInclusive)` to be `[from, to)` whatever the flags say
+///
+/// The two-argument and four-argument views are the store's views, as the one-argument ones are, and
+/// [SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY][BreakableSortedSet#SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY],
+/// [SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION][BreakableSortedSet#SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION],
+/// [SUBSET_ACCEPTS_REVERSED_RANGE][BreakableSortedSet#SUBSET_ACCEPTS_REVERSED_RANGE],
+/// [SUBSET_OPERATIONS_RETURN_COPIES][BreakableSortedSet#SUBSET_OPERATIONS_RETURN_COPIES] and
+/// [SUBSET_OPERATIONS_IGNORE_OUT_OF_RANGE_ADD][BreakableSortedSet#SUBSET_OPERATIONS_IGNORE_OUT_OF_RANGE_ADD] reach
+/// them too.
+///
 /// ### Descendant View Breaks
+///
+/// #### DESCENDING_SET_RETURNS_COPY
+/// **Purpose**: Forces `descendingSet()` to return a copy in descending order, not a view backed by the set
 ///
 /// #### DESCENDING_SET_RETURNS_EMPTY
 /// **Purpose**: Forces `descendingSet()` method to always return an empty NavigableSet
@@ -433,7 +463,71 @@ public class BreakableNavigableSet<E> extends BreakableSortedSet<E> implements N
     public static final Break POLL_LAST_DOES_NOT_REMOVE =
             new Break("pollLast() method returns element but does not remove it");
 
+    /// **Purpose:** simulates a `pollFirst()` that treats an empty set as an error.
+    ///
+    /// **Effect:** `pollFirst()` throws [NoSuchElementException] for an empty set, where [NavigableSet#pollFirst()]
+    /// returns `null`. A set that is not empty is not changed.
+    ///
+    /// **Affected Methods:** [pollFirst()][#pollFirst()]
+    /// @see #pollFirst()
+    public static final Break POLL_FIRST_THROWS_WHEN_EMPTY =
+            new Break("pollFirst() throws NoSuchElementException for an empty set");
+
+    /// **Purpose:** simulates a `pollLast()` that treats an empty set as an error.
+    ///
+    /// **Effect:** `pollLast()` throws [NoSuchElementException] for an empty set, where [NavigableSet#pollLast()]
+    /// returns `null`. A set that is not empty is not changed.
+    ///
+    /// **Affected Methods:** [pollLast()][#pollLast()]
+    /// @see #pollLast()
+    public static final Break POLL_LAST_THROWS_WHEN_EMPTY =
+            new Break("pollLast() throws NoSuchElementException for an empty set");
+
+    // ========== Range View Breaks ==========
+
+    /// **Purpose:** simulates a head view that ignores its `inclusive` flag.
+    ///
+    /// **Effect:** `headSet(to, inclusive)` excludes `to` whatever `inclusive` says, where
+    /// [NavigableSet#headSet(Object, boolean)] includes it when `inclusive` is `true`.
+    ///
+    /// **Affected Methods:** [headSet(Object, boolean)][#headSet(Object,boolean)] only
+    /// @see #headSet(Object, boolean)
+    public static final Break HEAD_SET_IGNORES_INCLUSIVE =
+            new Break("headSet(to, inclusive) always excludes to");
+
+    /// **Purpose:** simulates a tail view that ignores its `inclusive` flag.
+    ///
+    /// **Effect:** `tailSet(from, inclusive)` includes `from` whatever `inclusive` says, where
+    /// [NavigableSet#tailSet(Object, boolean)] excludes it when `inclusive` is `false`.
+    ///
+    /// **Affected Methods:** [tailSet(Object, boolean)][#tailSet(Object,boolean)] only
+    /// @see #tailSet(Object, boolean)
+    public static final Break TAIL_SET_IGNORES_INCLUSIVE =
+            new Break("tailSet(from, inclusive) always includes from");
+
+    /// **Purpose:** simulates a range view that ignores its `inclusive` flags.
+    ///
+    /// **Effect:** `subSet(from, fromInclusive, to, toInclusive)` includes `from` and excludes `to` whatever the
+    /// flags say, as `subSet(from, to)` does, where [NavigableSet#subSet(Object, boolean, Object, boolean)] follows
+    /// them.
+    ///
+    /// **Affected Methods:** [subSet(Object, boolean, Object, boolean)][#subSet(Object,boolean,Object,boolean)] only
+    /// @see #subSet(Object, boolean, Object, boolean)
+    public static final Break SUBSET_IGNORES_INCLUSIVE =
+            new Break("subSet(from, fromInclusive, to, toInclusive) ignores the flags");
+
     // ========== Descendant View Breaks ==========
+
+    /// **Purpose:** simulates a descending view that is a snapshot, not a view.
+    ///
+    /// **Effect:** `descendingSet()` returns a copy of the set in descending order, so a change to the set does not
+    /// show in it, and a change to it does not reach the set ([NavigableSet#descendingSet()]: "The descending set is
+    /// backed by this set").
+    ///
+    /// **Affected Methods:** [descendingSet()][#descendingSet()] only
+    /// @see #descendingSet()
+    public static final Break DESCENDING_SET_RETURNS_COPY =
+            new Break("descendingSet() returns a copy, not a view");
 
     /// Break that causes descendingSet() method to always return an empty set.
     ///
@@ -610,7 +704,9 @@ public class BreakableNavigableSet<E> extends BreakableSortedSet<E> implements N
     /// {@inheritDoc}
     @Override
     public @Nullable E pollFirst() {
-        if (hasBreak(POLL_FIRST_ALWAYS_RETURNS_NULL)) {
+        if (navigableSet.isEmpty() && hasBreak(POLL_FIRST_THROWS_WHEN_EMPTY)) {
+            throw new NoSuchElementException("pollFirst() of an empty set is broken");
+        } else if (hasBreak(POLL_FIRST_ALWAYS_RETURNS_NULL)) {
             return null;
         } else if (hasBreak(POLL_FIRST_DOES_NOT_REMOVE)) {
             try {
@@ -626,7 +722,9 @@ public class BreakableNavigableSet<E> extends BreakableSortedSet<E> implements N
     /// {@inheritDoc}
     @Override
     public @Nullable E pollLast() {
-        if (hasBreak(POLL_LAST_ALWAYS_RETURNS_NULL)) {
+        if (navigableSet.isEmpty() && hasBreak(POLL_LAST_THROWS_WHEN_EMPTY)) {
+            throw new NoSuchElementException("pollLast() of an empty set is broken");
+        } else if (hasBreak(POLL_LAST_ALWAYS_RETURNS_NULL)) {
             return null;
         } else if (hasBreak(POLL_LAST_DOES_NOT_REMOVE)) {
             try {
@@ -654,6 +752,8 @@ public class BreakableNavigableSet<E> extends BreakableSortedSet<E> implements N
     public NavigableSet<E> descendingSet() {
         if (hasBreak(DESCENDING_SET_RETURNS_EMPTY)) {
             return new BreakableNavigableSet<>();
+        } else if (hasBreak(DESCENDING_SET_RETURNS_COPY)) {
+            return new TreeSet<>(navigableSet.descendingSet());
         } else {
             // Return a new BreakableNavigableSet wrapping the descending view
             // This ensures breaks are not inherited by the descending view
@@ -661,42 +761,240 @@ public class BreakableNavigableSet<E> extends BreakableSortedSet<E> implements N
         }
     }
 
-    /// {@inheritDoc}
+    /// Returns a view of the elements from `fromElement` to `toElement`, each bound included where its flag is
+    /// `true`: the store's view, as [NavigableSet#subSet(Object, boolean, Object, boolean)] says, without this set's
+    /// configuration (as the one-argument views are).
+    ///
+    /// # Breaks
+    /// - [SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION][#SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION]: throws
+    ///   [IllegalArgumentException]
+    /// - [SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY][#SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY]: an empty set
+    /// - [SUBSET_ACCEPTS_REVERSED_RANGE][#SUBSET_ACCEPTS_REVERSED_RANGE]: an empty set for `fromElement` after
+    ///   `toElement`
+    /// - [SUBSET_IGNORES_INCLUSIVE][#SUBSET_IGNORES_INCLUSIVE]: `[fromElement, toElement)` whatever the flags say
+    /// - [SUBSET_OPERATIONS_RETURN_COPIES][#SUBSET_OPERATIONS_RETURN_COPIES] and
+    ///   [SUBSET_OPERATIONS_IGNORE_OUT_OF_RANGE_ADD][#SUBSET_OPERATIONS_IGNORE_OUT_OF_RANGE_ADD]: as for
+    ///   [subSet(Object, Object)][#subSet(Object,Object)]
+    ///
+    /// @param fromElement low endpoint of the returned set
+    /// @param fromInclusive `true` if the low endpoint is to be included in the returned view
+    /// @param toElement high endpoint of the returned set
+    /// @param toInclusive `true` if the high endpoint is to be included in the returned view
+    /// @return a view of the range
+    /// @throws IllegalArgumentException if `fromElement` is after `toElement` (or a break says so)
     @Override
     public NavigableSet<E> subSet(final E fromElement, final boolean fromInclusive,
-                                           final E toElement, final boolean toInclusive) {
-        // Delegate to parent class for subset break handling, then wrap result
-        SortedSet<E> parentSubset = super.subSet(fromElement, toElement);
-        if (parentSubset.isEmpty()) {
-            return new BreakableNavigableSet<>();
-        } else {
-            return new BreakableNavigableSet<>(
-                navigableSet.subSet(fromElement, fromInclusive, toElement, toInclusive)
-            );
+                                  final E toElement, final boolean toInclusive) {
+        if (hasBreak(SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION)) {
+            throw new IllegalArgumentException("Subset operations are broken");
         }
+        if (hasBreak(SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY)) {
+            return new TreeSet<>(navigableSet.comparator());
+        }
+        // reverseOrder(comparator) is natural reverse order for a null comparator, so it compares with no cast.
+        if (hasBreak(SUBSET_ACCEPTS_REVERSED_RANGE)
+                && Collections.reverseOrder(navigableSet.comparator()).compare(fromElement, toElement) < 0) {
+            return new TreeSet<>(navigableSet.comparator());
+        }
+        if (hasBreak(SUBSET_IGNORES_INCLUSIVE)) {
+            return brokenView(navigableSet.subSet(fromElement, true, toElement, false));
+        }
+        return brokenView(navigableSet.subSet(fromElement, fromInclusive, toElement, toInclusive));
     }
 
-    /// {@inheritDoc}
+    /// Returns a view of the elements before `toElement`, and `toElement` itself where `inclusive` is `true`: the
+    /// store's view, as [NavigableSet#headSet(Object, boolean)] says, without this set's configuration.
+    ///
+    /// # Breaks
+    /// - [SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION][#SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION]: throws
+    ///   [IllegalArgumentException]
+    /// - [SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY][#SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY]: an empty set
+    /// - [HEAD_SET_IGNORES_INCLUSIVE][#HEAD_SET_IGNORES_INCLUSIVE]: excludes `toElement` whatever `inclusive` says
+    /// - [SUBSET_OPERATIONS_RETURN_COPIES][#SUBSET_OPERATIONS_RETURN_COPIES] and
+    ///   [SUBSET_OPERATIONS_IGNORE_OUT_OF_RANGE_ADD][#SUBSET_OPERATIONS_IGNORE_OUT_OF_RANGE_ADD]: as for
+    ///   [headSet(Object)][#headSet(Object)]
+    ///
+    /// @param toElement high endpoint of the returned set
+    /// @param inclusive `true` if the high endpoint is to be included in the returned view
+    /// @return a view of the range
     @Override
     public NavigableSet<E> headSet(final E toElement, final boolean inclusive) {
-        // Delegate to parent class for subset break handling, then wrap result
-        SortedSet<E> parentHeadSet = super.headSet(toElement);
-        if (parentHeadSet.isEmpty()) {
-            return new BreakableNavigableSet<>();
-        } else {
-            return new BreakableNavigableSet<>(navigableSet.headSet(toElement, inclusive));
+        if (hasBreak(SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION)) {
+            throw new IllegalArgumentException("Subset operations are broken");
         }
+        if (hasBreak(SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY)) {
+            return new TreeSet<>(navigableSet.comparator());
+        }
+        return brokenView(navigableSet.headSet(toElement, inclusive && !hasBreak(HEAD_SET_IGNORES_INCLUSIVE)));
     }
 
-    /// {@inheritDoc}
+    /// Returns a view of the elements after `fromElement`, and `fromElement` itself where `inclusive` is `true`: the
+    /// store's view, as [NavigableSet#tailSet(Object, boolean)] says, without this set's configuration.
+    ///
+    /// # Breaks
+    /// - [SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION][#SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION]: throws
+    ///   [IllegalArgumentException]
+    /// - [SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY][#SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY]: an empty set
+    /// - [TAIL_SET_IGNORES_INCLUSIVE][#TAIL_SET_IGNORES_INCLUSIVE]: includes `fromElement` whatever `inclusive` says
+    /// - [SUBSET_OPERATIONS_RETURN_COPIES][#SUBSET_OPERATIONS_RETURN_COPIES] and
+    ///   [SUBSET_OPERATIONS_IGNORE_OUT_OF_RANGE_ADD][#SUBSET_OPERATIONS_IGNORE_OUT_OF_RANGE_ADD]: as for
+    ///   [tailSet(Object)][#tailSet(Object)]
+    ///
+    /// @param fromElement low endpoint of the returned set
+    /// @param inclusive `true` if the low endpoint is to be included in the returned view
+    /// @return a view of the range
     @Override
     public NavigableSet<E> tailSet(final E fromElement, final boolean inclusive) {
-        // Delegate to parent class for subset break handling, then wrap result
-        SortedSet<E> parentTailSet = super.tailSet(fromElement);
-        if (parentTailSet.isEmpty()) {
-            return new BreakableNavigableSet<>();
-        } else {
-            return new BreakableNavigableSet<>(navigableSet.tailSet(fromElement, inclusive));
+        if (hasBreak(SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION)) {
+            throw new IllegalArgumentException("Subset operations are broken");
+        }
+        if (hasBreak(SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY)) {
+            return new TreeSet<>(navigableSet.comparator());
+        }
+        return brokenView(navigableSet.tailSet(fromElement, inclusive || hasBreak(TAIL_SET_IGNORES_INCLUSIVE)));
+    }
+
+    /// Applies the view breaks to a range view of the store.
+    private NavigableSet<E> brokenView(final NavigableSet<E> view) {
+        if (hasBreak(SUBSET_OPERATIONS_RETURN_COPIES)) {
+            return new TreeSet<>(view);
+        }
+        if (hasBreak(SUBSET_OPERATIONS_IGNORE_OUT_OF_RANGE_ADD)) {
+            return new RangeIgnoringView<>(view);
+        }
+        return view;
+    }
+
+    /// A range view whose `add(E)` returns `false` for an element outside the range instead of throwing
+    /// [IllegalArgumentException]; everything else is the view's. For
+    /// [SUBSET_OPERATIONS_IGNORE_OUT_OF_RANGE_ADD][#SUBSET_OPERATIONS_IGNORE_OUT_OF_RANGE_ADD].
+    ///
+    /// @param <E> the element type
+    private static final class RangeIgnoringView<E> extends AbstractSet<E> implements NavigableSet<E> {
+        private final NavigableSet<E> view;
+
+        RangeIgnoringView(final NavigableSet<E> viewArg) {
+            this.view = viewArg;
+        }
+
+        @Override
+        public boolean add(final E e) {
+            try {
+                return view.add(e);
+            } catch (final IllegalArgumentException ignored) {
+                return false;
+            }
+        }
+
+        @Override
+        public boolean addAll(final Collection<? extends E> c) {
+            return view.addAll(c);
+        }
+
+        @Override
+        public Iterator<E> iterator() {
+            return view.iterator();
+        }
+
+        @Override
+        public int size() {
+            return view.size();
+        }
+
+        @Override
+        public boolean contains(final @Nullable Object o) {
+            return view.contains(o);
+        }
+
+        @Override
+        public boolean remove(final @Nullable Object o) {
+            return view.remove(o);
+        }
+
+        @Override
+        public @Nullable Comparator<? super E> comparator() {
+            return view.comparator();
+        }
+
+        @Override
+        public E first() {
+            return view.first();
+        }
+
+        @Override
+        public E last() {
+            return view.last();
+        }
+
+        @Override
+        public @Nullable E lower(final E e) {
+            return view.lower(e);
+        }
+
+        @Override
+        public @Nullable E floor(final E e) {
+            return view.floor(e);
+        }
+
+        @Override
+        public @Nullable E ceiling(final E e) {
+            return view.ceiling(e);
+        }
+
+        @Override
+        public @Nullable E higher(final E e) {
+            return view.higher(e);
+        }
+
+        @Override
+        public @Nullable E pollFirst() {
+            return view.pollFirst();
+        }
+
+        @Override
+        public @Nullable E pollLast() {
+            return view.pollLast();
+        }
+
+        @Override
+        public NavigableSet<E> descendingSet() {
+            return view.descendingSet();
+        }
+
+        @Override
+        public Iterator<E> descendingIterator() {
+            return view.descendingIterator();
+        }
+
+        @Override
+        public NavigableSet<E> subSet(final E fromElement, final boolean fromInclusive,
+                                      final E toElement, final boolean toInclusive) {
+            return view.subSet(fromElement, fromInclusive, toElement, toInclusive);
+        }
+
+        @Override
+        public NavigableSet<E> headSet(final E toElement, final boolean inclusive) {
+            return view.headSet(toElement, inclusive);
+        }
+
+        @Override
+        public NavigableSet<E> tailSet(final E fromElement, final boolean inclusive) {
+            return view.tailSet(fromElement, inclusive);
+        }
+
+        @Override
+        public SortedSet<E> subSet(final E fromElement, final E toElement) {
+            return view.subSet(fromElement, toElement);
+        }
+
+        @Override
+        public SortedSet<E> headSet(final E toElement) {
+            return view.headSet(toElement);
+        }
+
+        @Override
+        public SortedSet<E> tailSet(final E fromElement) {
+            return view.tailSet(fromElement);
         }
     }
 

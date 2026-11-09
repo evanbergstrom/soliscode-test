@@ -68,6 +68,9 @@ public class BreakableSpliterator<E> extends AbstractBreakable implements Splite
 
     /// The 'trySplit' method on the spliterator always returns `null`.
     ///
+    /// This is not a fault under [Spliterator#trySplit()], which may return `null` for any reason, so no contract
+    /// fails for it; it is for testing code that assumes a spliterator splits.
+    ///
     /// **Affected Methods:** [trySplit()][#trySplit()]
     /// @see BreakableSpliterator#trySplit()
     public static final Break SPLITERATOR_TRY_SPLIT_ALWAYS_RETURNS_NULL =

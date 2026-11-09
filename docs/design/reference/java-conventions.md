@@ -13,7 +13,7 @@ Related: [build-and-test.md](build-and-test.md) for how the gates run, [dependen
 
 ## Packages
 
-Built (#9). Every package is under `com.soliscode.test` (moved from `org.soliscode.test` by #9). Package names are lowercase. Every main package has a `package-info.java` (32 today) that says what it holds and is `@NullMarked`; a new package gets one. Test packages have none, except `contract.coverage`.
+Built (#9). Every package is under `com.soliscode.test` (moved from `org.soliscode.test` by #9). Package names are lowercase. Every main package has a `package-info.java` (33 today) that says what it holds and is `@NullMarked`; a new package gets one. Test packages have none, except `contract.coverage`.
 
 ## Public API
 

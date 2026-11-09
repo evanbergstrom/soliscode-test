@@ -478,7 +478,7 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
     /// [tailSet(Object)][#tailSet(Object)]; in a [BreakableNavigableSet], also
     /// [subSet(Object, boolean, Object, boolean)][BreakableNavigableSet#subSet(Object,boolean,Object,boolean)],
     /// [headSet(Object, boolean)][BreakableNavigableSet#headSet(Object,boolean)] and
-    /// [tailSet(Object, boolean)][BreakableNavigableSet#tailSet(Object,boolean)], which call these
+    /// [tailSet(Object, boolean)][BreakableNavigableSet#tailSet(Object,boolean)]
     /// @see #subSet(Object, Object)
     public static final Break SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY =
         new Break("Subset operations always return empty sets");
@@ -490,7 +490,7 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
     /// [tailSet(Object)][#tailSet(Object)]; in a [BreakableNavigableSet], also
     /// [subSet(Object, boolean, Object, boolean)][BreakableNavigableSet#subSet(Object,boolean,Object,boolean)],
     /// [headSet(Object, boolean)][BreakableNavigableSet#headSet(Object,boolean)] and
-    /// [tailSet(Object, boolean)][BreakableNavigableSet#tailSet(Object,boolean)], which call these
+    /// [tailSet(Object, boolean)][BreakableNavigableSet#tailSet(Object,boolean)]
     /// @see #subSet(Object, Object)
     public static final Break SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION =
         new Break("Subset operations always throw IllegalArgumentException");
@@ -501,9 +501,8 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
     /// [NavigableSet] store (the builder's always is); with any other store it throws
     /// [UnsupportedOperationException].
     ///
-    /// **Affected Methods:** [headSet(Object)][#headSet(Object)]; in a [BreakableNavigableSet], also the emptiness
-    /// check [headSet(Object, boolean)][BreakableNavigableSet#headSet(Object,boolean)] makes through it, so that
-    /// view can come back live (holding `to`, when inclusive) where it would have been a detached empty set
+    /// **Affected Methods:** [headSet(Object)][#headSet(Object)] only; not
+    /// [headSet(Object, boolean)][BreakableNavigableSet#headSet(Object,boolean)] of a [BreakableNavigableSet]
     /// @see #headSet(Object)
     public static final Break HEAD_SET_INCLUDES_TO_ELEMENT =
         new Break("headSet(to) includes to");
@@ -514,9 +513,8 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
     /// [NavigableSet] store (the builder's always is); with any other store it throws
     /// [UnsupportedOperationException].
     ///
-    /// **Affected Methods:** [tailSet(Object)][#tailSet(Object)]; in a [BreakableNavigableSet], also the emptiness
-    /// check [tailSet(Object, boolean)][BreakableNavigableSet#tailSet(Object,boolean)] makes through it, so that
-    /// view can come back as a detached empty set where it should hold elements
+    /// **Affected Methods:** [tailSet(Object)][#tailSet(Object)] only; not
+    /// [tailSet(Object, boolean)][BreakableNavigableSet#tailSet(Object,boolean)] of a [BreakableNavigableSet]
     /// @see #tailSet(Object)
     public static final Break TAIL_SET_EXCLUDES_FROM_ELEMENT =
         new Break("tailSet(from) excludes from");
@@ -527,10 +525,9 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
     /// a [NavigableSet] store (the builder's always is); with any other store it throws
     /// [UnsupportedOperationException].
     ///
-    /// **Affected Methods:** [subSet(Object, Object)][#subSet(Object,Object)]; in a [BreakableNavigableSet], also
-    /// the emptiness check
-    /// [subSet(Object, boolean, Object, boolean)][BreakableNavigableSet#subSet(Object,boolean,Object,boolean)]
-    /// makes through it, so that view can come back live where it would have been a detached empty set
+    /// **Affected Methods:** [subSet(Object, Object)][#subSet(Object,Object)] only; not
+    /// [subSet(Object, boolean, Object, boolean)][BreakableNavigableSet#subSet(Object,boolean,Object,boolean)] of a
+    /// [BreakableNavigableSet]
     /// @see #subSet(Object, Object)
     public static final Break SUBSET_INCLUDES_TO_ELEMENT =
         new Break("subSet(from, to) includes to");
@@ -541,8 +538,7 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
     /// [SortedSet#subSet(Object, Object)] throws [IllegalArgumentException].
     ///
     /// **Affected Methods:** [subSet(Object, Object)][#subSet(Object,Object)]; in a [BreakableNavigableSet], also
-    /// [subSet(Object, boolean, Object, boolean)][BreakableNavigableSet#subSet(Object,boolean,Object,boolean)],
-    /// whose emptiness check goes through it, so a reversed range there returns an empty set too
+    /// [subSet(Object, boolean, Object, boolean)][BreakableNavigableSet#subSet(Object,boolean,Object,boolean)]
     /// @see #subSet(Object, Object)
     public static final Break SUBSET_ACCEPTS_REVERSED_RANGE =
         new Break("subSet(from, to) returns an empty set when from is after to");
@@ -554,7 +550,8 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
     /// is backed by this set").
     ///
     /// **Affected Methods:** [subSet(Object, Object)][#subSet(Object,Object)], [headSet(Object)][#headSet(Object)]
-    /// and [tailSet(Object)][#tailSet(Object)]; not the two-argument views of a [BreakableNavigableSet]
+    /// and [tailSet(Object)][#tailSet(Object)]; in a [BreakableNavigableSet], also its two-argument and
+    /// four-argument views
     /// @see #subSet(Object, Object)
     public static final Break SUBSET_OPERATIONS_RETURN_COPIES =
         new Break("Subset operations return copies, not views");
@@ -566,8 +563,8 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
     /// view's other methods, `addAll` included, are its store's.
     ///
     /// **Affected Methods:** the `add(E)` of the views from [subSet(Object, Object)][#subSet(Object,Object)],
-    /// [headSet(Object)][#headSet(Object)] and [tailSet(Object)][#tailSet(Object)]; not the two-argument views of a
-    /// [BreakableNavigableSet]
+    /// [headSet(Object)][#headSet(Object)] and [tailSet(Object)][#tailSet(Object)]; in a [BreakableNavigableSet],
+    /// also of its two-argument and four-argument views
     /// @see #subSet(Object, Object)
     public static final Break SUBSET_OPERATIONS_IGNORE_OUT_OF_RANGE_ADD =
         new Break("A subset view's add ignores an element outside its range");

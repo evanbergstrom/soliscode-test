@@ -57,9 +57,9 @@ The user's three goals for the library (2026-11-08, #29):
 ## 4. Scope
 
 ### 4.1 Built
-Contracts for `Object` (`equals`, `hashCode`, `toString`, `Serializable`), `Iterable`, `Collection`, `SequencedCollection`, `List`, `Set`, `SequencedSet`, `SortedSet` (#30), `Queue`, `Deque`, `Map`, `SequencedMap`, `SortedMap` and `NavigableMap`, and `ThreadSafeCollectionContract` for collections that claim thread safety; `IntegerContract` for integer `Number` types. Breakables for each of those collection and map interfaces but `SequencedMap` (its contract runs against `BreakableSortedMap`), and for `Object` (`BreakableObject`), `Iterator`, `Spliterator`, `NavigableSet`, `BlockingQueue`, `BlockingDeque`, `TransferQueue`, `ConcurrentMap` and `ConcurrentNavigableMap`, which have no contract yet. The providers, assertions, concurrency support, interface narrowing and test tags of section 2. By #1, #2, #4, #5 and #6.
+Contracts for `Object` (`equals`, `hashCode`, `toString`, `Serializable`), `Iterable`, `Collection`, `SequencedCollection`, `List`, `Set`, `SequencedSet`, `SortedSet` (#30), `NavigableSet` (#31), `Queue`, `Deque`, `Map`, `SequencedMap`, `SortedMap` and `NavigableMap`, and `ThreadSafeCollectionContract` for collections that claim thread safety; `IntegerContract` for integer `Number` types. Breakables for each of those collection and map interfaces but `SequencedMap` (its contract runs against `BreakableSortedMap`), and for `Object` (`BreakableObject`), `Iterator`, `Spliterator`, `BlockingQueue`, `BlockingDeque`, `TransferQueue`, `ConcurrentMap` and `ConcurrentNavigableMap`, which have no contract yet. The providers, assertions, concurrency support, interface narrowing and test tags of section 2. By #1, #2, #4, #5 and #6.
 
-`ContractCoverageTest` covers 15 contracts: `Iterable`, `Collection`, `SequencedCollection`, `List`, `Set`, `SequencedSet`, `SortedSet`, `Queue`, `Deque`, `Map`, `SequencedMap`, `SortedMap`, `NavigableMap`, `ThreadSafeCollection` and `Serializable`. `ObjectContract` and `IntegerContract` are not in it. `SerializableContract` is run against a chosen few breaks, not each.
+`ContractCoverageTest` covers 16 contracts: `Iterable`, `Collection`, `SequencedCollection`, `List`, `Set`, `SequencedSet`, `SortedSet`, `NavigableSet`, `Queue`, `Deque`, `Map`, `SequencedMap`, `SortedMap`, `NavigableMap`, `ThreadSafeCollection` and `Serializable`. `ObjectContract` and `IntegerContract` are not in it. `SerializableContract` is run against a chosen few breaks, not each.
 
 Built by #8 and #51: the `preventNulls` wrappers refuse `null` through their bulk methods, and the `List` wrapper through its queries, list iterators, sub-lists and `replaceAll`.
 
@@ -73,7 +73,7 @@ Built by #9: the `com.soliscode` coordinates and packages, the shared parent, JS
 The package `contract.concurrentmap` exists with only a `package-info.java`; `contract.blockingqueue`, `contract.blockingdeque` and `contract.transferqueue` hold only their method enums.
 
 Contracts for the interfaces chosen under goal 2 (the user's decision, 2026-11-08, #29), each with a task:
-- The collection interfaces without one: `NavigableSet` (#31), `BlockingQueue` (#32), `BlockingDeque` (#33), `TransferQueue` (#34), `ConcurrentMap` (#35), `ConcurrentNavigableMap` (#36); and the types they return, `Iterator` and `ListIterator` (#37), `Spliterator` (#38), `Map.Entry` (#39), `Stream` (#50).
+- The collection interfaces without one: `BlockingQueue` (#32), `BlockingDeque` (#33), `TransferQueue` (#34), `ConcurrentMap` (#35), `ConcurrentNavigableMap` (#36); and the types they return, `Iterator` and `ListIterator` (#37), `Spliterator` (#38), `Map.Entry` (#39), `Stream` (#50).
 - Other interfaces, in order of how commonly classes implement them: `Comparable` (#40), `AutoCloseable` and `Closeable` (#41), `Comparator` (#42), `CharSequence` (#43), `Future` (#44), `ExecutorService` (#45), `Lock` and `ReadWriteLock` (#46), `Collector` (#47), `Appendable` (#48).
 
 ### 4.3 Not goals
@@ -125,9 +125,9 @@ Gates fail the build like a compile error; "the tests pass" is no substitute. Th
 |-----------|-------|
 | Every test passes | Yes (#9) |
 | Goal 1: each assertion has tests that show it passing and failing, and check its message | Partly (#15, #16); the string and array assertions and `AssertContains`'s messages are #49 |
-| Goal 2: each chosen interface has a contract that `ContractCoverageTest` checks | 13 of the collection interfaces, with `Serializable` (#6, #30); the rest are #31–#48 and #50 |
+| Goal 2: each chosen interface has a contract that `ContractCoverageTest` checks | 14 of the collection interfaces, with `Serializable` (#6, #30, #31); the rest are #32–#48 and #50 |
 | Goal 3: the concurrency utilities have tests, and each chosen thread-safe interface a thread-safety contract that can fail | The utilities have tests (#12 fixes a fault); `ThreadSafeCollectionContract` (#6), `CLEAR_IS_NOT_THREAD_SAFE` waiting on #7; the rest are #32–#36 and #44–#46 |
-| Goal 4: each contract in `ContractCoverageTest` passes against a JDK class and its unbroken breakable, and fails for each break, an unchecked break having a reason | Yes for the 15 contracts it covers (#6, #30); `ObjectContract` and `IntegerContract` are not covered, and `CLEAR_IS_NOT_THREAD_SAFE` waits on #7 |
+| Goal 4: each contract in `ContractCoverageTest` passes against a JDK class and its unbroken breakable, and fails for each break, an unchecked break having a reason | Yes for the 16 contracts it covers (#6, #30, #31); `ObjectContract` and `IntegerContract` are not covered, and `CLEAR_IS_NOT_THREAD_SAFE` waits on #7 |
 | Goal 5: only JUnit 6, OpenTest4J and JSpecify at compile scope | Yes (#9) |
 | Goal 5: `0.1.1` installed into `~/.m2` from a tag | Yes (#3) |
 | Goal 6: every gate in section 7 passes | Yes (#10) |
