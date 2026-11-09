@@ -126,7 +126,8 @@ public interface ContainsContract<C extends Collection<E>, E> extends Collection
     ///    - Handles `null` as a valid input.
     ///    - Returns `true` for `null` if the collection contains it.
     /// 2. If the collection does not permit null elements, the method:
-    ///    - Throws a [NullPointerException] when invoked with `null` as an argument.
+    ///    - Throws a [NullPointerException] when invoked with `null` as an argument, or returns `false`:
+    ///      [Collection#contains(Object)] makes the exception optional.
     ///
     /// This test is only executed if [#supportsMethod(com.soliscode.test.InterfaceMethod)] returns `true`
     /// for `CollectionMethods.CONTAINS`, indicating that the collection supports the `contains` method.
@@ -134,11 +135,9 @@ public interface ContainsContract<C extends Collection<E>, E> extends Collection
     /// - A collection containing both elements and `null`, where the `contains()` method
     ///   correctly identifies `null` as an element.
     /// - A collection not supporting null values, where invoking `contains(null)`
-    ///   results in a [NullPointerException].
+    ///   throws a [NullPointerException] or returns `false`.
     ///
     /// @throws org.opentest4j.AssertionFailedError If any of the assertions fail.
-    /// @throws NullPointerException If `contains(null)` is called on a collection
-    ///         that does not allow `null` values.
     /// @see Collection#contains(Object)
     /// @see CollectionMethods#CONTAINS
     @DisplayName("contains(Object) works for a collection with null elements")
@@ -156,7 +155,7 @@ public interface ContainsContract<C extends Collection<E>, E> extends Collection
                 assertTrue(collection.contains(null));
             } else {
                 Collection<E> collection = provider().createInstance();
-                assertThrows(NullPointerException.class, () -> collection.contains(null));
+                assertResultOrNullPointer(false, () -> collection.contains(null), "contains(null)");
             }
         }
     }

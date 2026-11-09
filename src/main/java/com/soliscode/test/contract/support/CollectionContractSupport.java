@@ -43,6 +43,26 @@ public interface CollectionContractSupport<C extends Iterable<E>, E>
         }
     }
 
+    /// Asserts that a query with a `null` argument gives the expected result, or, for a collection that does not
+    /// permit `null`, throws [NullPointerException]: [java.util.Collection] makes that exception optional for
+    /// `contains`, `containsAll`, `remove`, `removeAll` and `retainAll` (`ArrayBlockingQueue.contains(null)`, for
+    /// one, returns `false`).
+    ///
+    /// @param expected the result expected when no exception is thrown
+    /// @param query the query
+    /// @param description what the query is, for the failure message
+    /// @since 0.1.2
+    default void assertResultOrNullPointer(final boolean expected, final java.util.function.BooleanSupplier query,
+                                           final String description) {
+        try {
+            org.junit.jupiter.api.Assertions.assertEquals(expected, query.getAsBoolean(), description);
+        } catch (final NullPointerException e) {
+            if (permitNulls()) {
+                throw e;
+            }
+        }
+    }
+
     /// Returns the elements in the order a sequenced collection holding them should encounter them: in the order of
     /// its comparator, for a [SortedSet], otherwise in the order they were given.
     ///

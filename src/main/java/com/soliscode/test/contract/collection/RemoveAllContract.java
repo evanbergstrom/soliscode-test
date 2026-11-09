@@ -108,10 +108,10 @@ public interface RemoveAllContract<C extends Collection<E>, E> extends Collectio
 
     /// Tests that the [removeAll][Collection#removeAll] method handles `null` values correctly.
     ///
-    /// This test verifies behavior when trying to remove `null` from a collection.
+    /// This test verifies behavior when trying to remove `null` from a collection: it returns `false`, or, where
+    /// nulls are not permitted, may throw [NullPointerException], which [Collection#removeAll] makes optional.
     ///
     /// @see Collection#removeAll
-    /// @throws NullPointerException if nulls are not permitted and the argument contains a null element
     /// @throws org.opentest4j.AssertionFailedError if any assertions failed
     /// @since 1.0.0
     @DisplayName("removeAll(Collection) handles null elements based on permission")
@@ -123,7 +123,7 @@ public interface RemoveAllContract<C extends Collection<E>, E> extends Collectio
             if (permitNulls()) {
                 assertFalse(collection.removeAll(argument));
             } else {
-                assertThrows(NullPointerException.class, () -> collection.removeAll(argument));
+                assertResultOrNullPointer(false, () -> collection.removeAll(argument), "removeAll([null])");
             }
         }
     }

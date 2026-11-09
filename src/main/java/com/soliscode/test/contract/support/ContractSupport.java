@@ -34,4 +34,18 @@ public interface ContractSupport<T> extends ProviderSupport<T>, SupportedMethods
     default int consistencyRepeats() {
         return 10;
     }
+
+    /// Returns whether the class under test compares its values for equality, so that a value and a copy of it are
+    /// equal and have the same hash code.
+    ///
+    /// The tests of `equals` and `hashCode` that compare a value with its copy run only where this returns `true`.
+    /// A class that keeps [Object]'s identity equality, as most queues do ([java.util.Queue]: implementations
+    /// "generally do not define element-based versions of methods equals and hashCode"), returns `false`; the tests
+    /// that hold for identity equality (reflexive, `null`, another type, a stable hash code) still run.
+    ///
+    /// @return `true` unless overridden
+    /// @since 0.1.2
+    default boolean equalsComparesValues() {
+        return true;
+    }
 }

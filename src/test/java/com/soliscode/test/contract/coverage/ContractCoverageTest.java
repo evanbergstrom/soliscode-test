@@ -16,7 +16,9 @@ import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -30,6 +32,7 @@ import com.soliscode.test.AbstractTest;
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.annotations.VerySlow;
 import com.soliscode.test.breakable.Break;
+import com.soliscode.test.breakable.BreakableBlockingQueue;
 import com.soliscode.test.breakable.BreakableCollection;
 import com.soliscode.test.breakable.BreakableDeque;
 import com.soliscode.test.breakable.BreakableIterable;
@@ -48,6 +51,8 @@ import com.soliscode.test.breakable.BreakableSpliterator;
 import com.soliscode.test.contract.CollectionContractConfig;
 import com.soliscode.test.contract.DynamicCollectionContract;
 import com.soliscode.test.contract.DynamicMapContract;
+import com.soliscode.test.contract.blockingqueue.BlockingQueueContract;
+import com.soliscode.test.contract.blockingqueue.ThreadSafeBlockingQueueContract;
 import com.soliscode.test.contract.collection.CollectionContract;
 import com.soliscode.test.contract.collection.CollectionMethods;
 import com.soliscode.test.contract.collection.ThreadSafeCollectionContract;
@@ -141,6 +146,16 @@ public class ContractCoverageTest {
         }
     };
 
+    /// The spliterator breaks that are faults only for a SIZED or ORDERED spliterator.
+    private static final java.util.Set<String> BLOCKING_QUEUE_SPLITERATOR_BREAKS = java.util.Set.of(
+            "SPLITERATOR_ESTIMATE_SIZE_ALWAYS_RETURNS_MAX_VALUE",
+            "SPLITERATOR_GET_EXACT_SIZE_IF_KNOWN_ALWAYS_RETURNS_NEGATIVE_ONE",
+            "SPLITERATOR_CHARACTERISTICS_ALWAYS_RETURNS_ZERO");
+
+    /// The capacity of the bounded blocking queues: room for what the inherited contracts add, small enough for the
+    /// blocking-queue contracts to fill.
+    private static final int QUEUE_CAPACITY = 100;
+
     private static final java.util.regex.Pattern SORTED_MAP_METHOD_BREAK =
             java.util.regex.Pattern.compile("(COMPARATOR|FIRST_KEY|LAST_KEY|HEAD_MAP|TAIL_MAP|SUB_MAP)_");
 
@@ -162,6 +177,15 @@ public class ContractCoverageTest {
     static String uncheckedReason(final Class<?> contract, final String key) {
         String field = key.substring(key.indexOf('.') + 1);
         boolean isSet = SetContract.class.isAssignableFrom(contract);
+        boolean blockingQueueBreak = key.startsWith(BreakableBlockingQueue.class.getSimpleName() + ".");
+        if (field.endsWith(THREAD_SAFETY_BREAK) && contract == ThreadSafeBlockingQueueContract.class) {
+            return blockingQueueBreak ? null : "not a fault for a BreakableBlockingQueue: its store is a JDK "
+                    + "BlockingQueue, thread safe without the breakable's lock, so running without the lock changes "
+                    + "nothing; ThreadSafeCollectionContract covers it on BreakableCollection, or gives its reason";
+        }
+        if (field.endsWith(THREAD_SAFETY_BREAK) && blockingQueueBreak) {
+            return "a thread-safety break: ThreadSafeBlockingQueueContract checks it";
+        }
         if (field.endsWith(THREAD_SAFETY_BREAK) && contract != ThreadSafeCollectionContract.class) {
             return "a thread-safety break: ThreadSafeCollectionContract checks it";
         }
@@ -173,9 +197,16 @@ public class ContractCoverageTest {
             return "not a fault: Spliterator#trySplit may return null for any reason, and the contracts accept it "
                     + "(a ConcurrentSkipListSet's spliterator does, where its random index levels allow no split)";
         }
-        if (field.equals("OFFER_ALWAYS_RETURNS_TRUE")) {
+        if (field.equals("OFFER_ALWAYS_RETURNS_TRUE") && !BlockingQueueContract.class.isAssignableFrom(contract)) {
             return "not a fault for BreakableQueue or BreakableDeque: they have no capacity, so offer(E) always "
-                    + "returns true (Queue#offer); no contract here covers a bounded queue";
+                    + "returns true (Queue#offer); BlockingQueueContract checks it on a bounded queue";
+        }
+        if (BLOCKING_QUEUE_SPLITERATOR_BREAKS.contains(field)
+                && BlockingQueueContract.class.isAssignableFrom(contract)) {
+            return "not a fault for a BlockingQueue: its spliterator need not be SIZED or ORDERED "
+                    + "(ArrayBlockingQueue's and LinkedBlockingQueue's report CONCURRENT, ORDERED and NONNULL, not "
+                    + "SIZED, and a BlockingQueue need not be FIFO), so an estimate of Long.MAX_VALUE, an exact size "
+                    + "of -1 and no characteristics are all allowed (Spliterator#estimateSize, #getExactSizeIfKnown)";
         }
         if (field.equals("CLEAR_IS_NOT_THREAD_SAFE")) {
             return "seen only by rare interleavings: ThreadSafeClearContract catches it in about 3 runs in 20 "
@@ -339,6 +370,24 @@ public class ContractCoverageTest {
     }
 
     @TestFactory
+    @DisplayName("BlockingQueueContract")
+    Stream<DynamicNode> blockingQueueContract() {
+        List<Method> methods = ContractRuns.testMethods(BlockingQueueContract.class, false);
+        return Stream.concat(
+                coverage(BlockingQueueContract.class, "ArrayBlockingQueue", JdkArrayBlockingQueue::new,
+                        collectionBreaks(BreakableBlockingQueue.class),
+                        (key, b) -> {
+                            var builder = boundedQueueBuilder();
+                            var config = configure(builder, key, b);
+                            return () -> new BrokenBlockingQueue(builder, noNulls(config));
+                        }),
+                Stream.of(passes("LinkedBlockingQueue", JdkLinkedBlockingQueue::new, methods),
+                        passes("unbroken BreakableBlockingQueue on a LinkedBlockingQueue",
+                                () -> new BrokenBlockingQueue(new BreakableBlockingQueue.Builder<Integer>()
+                                        .doesNotPermitNulls(), noNulls(STANDARD)), methods)));
+    }
+
+    @TestFactory
     @DisplayName("MapContract")
     Stream<DynamicNode> mapContract() {
         return coverage(MapContract.class, "HashMap", JdkMap::new,
@@ -396,6 +445,25 @@ public class ContractCoverageTest {
                                 () -> new BrokenThreadSafeCollection(threadSafeBuilder()), all)),
                 breaks.entrySet().stream().map(e -> fails(e.getKey(),
                         () -> new BrokenThreadSafeCollection(threadSafeBuilder().addBreak(e.getValue())), all)))));
+    }
+
+    @TestFactory
+    @VerySlow
+    @DisplayName("ThreadSafeBlockingQueueContract")
+    Stream<DynamicNode> threadSafeBlockingQueueContract() {
+        List<Method> all = ContractRuns.testMethods(ThreadSafeBlockingQueueContract.class, true);
+        Map<String, Break> breaks = new java.util.LinkedHashMap<>(
+                ContractRuns.breaks(collectionBreaks(BreakableBlockingQueue.class)));
+        breaks.keySet().removeIf(k -> !k.endsWith(THREAD_SAFETY_BREAK)
+                || uncheckedReason(ThreadSafeBlockingQueueContract.class, k) != null);
+        return Stream.of(dynamicContainer("ThreadSafeBlockingQueueContract", Stream.concat(
+                Stream.of(passes("ArrayBlockingQueue", JdkThreadSafeArrayBlockingQueue::new, all),
+                        passes("LinkedBlockingQueue", JdkThreadSafeLinkedBlockingQueue::new, all),
+                        passes("unbroken BreakableBlockingQueue",
+                                () -> new BrokenThreadSafeBlockingQueue(boundedQueueBuilder()), all)),
+                breaks.entrySet().stream().map(e -> fails(e.getKey(),
+                        () -> new BrokenThreadSafeBlockingQueue(boundedQueueBuilder().addBreak(e.getValue())),
+                        all)))));
     }
 
     @TestFactory
@@ -553,6 +621,12 @@ public class ContractCoverageTest {
                 .withComparator(REVERSE)
                 .doesNotPermitNulls()
                 .doesNotPermitIncompatibleTypes(Integer.class);
+    }
+
+    /// A blocking queue builder on an `ArrayBlockingQueue` of [#QUEUE_CAPACITY]. Like every `BlockingQueue`, it refuses
+    /// null.
+    private static BreakableBlockingQueue.Builder<Integer> boundedQueueBuilder() {
+        return new BreakableBlockingQueue.Builder<Integer>().setCapacity(QUEUE_CAPACITY).doesNotPermitNulls();
     }
 
     private static BreakableCollection.Builder<Integer> threadSafeBuilder() {
@@ -765,6 +839,40 @@ public class ContractCoverageTest {
         }
     }
 
+    static final class JdkArrayBlockingQueue extends AbstractTest
+            implements BlockingQueueContract<ArrayBlockingQueue<Integer>, Integer>, WithIntegerElement {
+        @Override
+        public CollectionProvider<ArrayBlockingQueue<Integer>, Integer> provider() {
+            return arrayBlockingQueues();
+        }
+    }
+
+    static final class JdkLinkedBlockingQueue extends AbstractTest
+            implements BlockingQueueContract<LinkedBlockingQueue<Integer>, Integer>, WithIntegerElement {
+        @Override
+        public CollectionProvider<LinkedBlockingQueue<Integer>, Integer> provider() {
+            return CollectionProviders.from(LinkedBlockingQueue::new, LinkedBlockingQueue::new,
+                    LinkedBlockingQueue::new, PROVIDER);
+        }
+    }
+
+    static final class JdkThreadSafeArrayBlockingQueue extends AbstractTest
+            implements ThreadSafeBlockingQueueContract<ArrayBlockingQueue<Integer>, Integer>, WithIntegerElement {
+        @Override
+        public CollectionProvider<ArrayBlockingQueue<Integer>, Integer> provider() {
+            return arrayBlockingQueues();
+        }
+    }
+
+    static final class JdkThreadSafeLinkedBlockingQueue extends AbstractTest
+            implements ThreadSafeBlockingQueueContract<LinkedBlockingQueue<Integer>, Integer>, WithIntegerElement {
+        @Override
+        public CollectionProvider<LinkedBlockingQueue<Integer>, Integer> provider() {
+            return CollectionProviders.from(LinkedBlockingQueue::new, LinkedBlockingQueue::new,
+                    LinkedBlockingQueue::new, PROVIDER);
+        }
+    }
+
     static final class JdkThreadSafeCollection extends AbstractTest
             implements ThreadSafeCollectionContract<List<Integer>, Integer>, WithIntegerElement {
         @Override
@@ -904,6 +1012,22 @@ public class ContractCoverageTest {
         }
     }
 
+    static final class BrokenBlockingQueue extends DynamicCollectionContract<BreakableBlockingQueue<Integer>, Integer>
+            implements BlockingQueueContract<BreakableBlockingQueue<Integer>, Integer> {
+        BrokenBlockingQueue(final BreakableBlockingQueue.Builder<Integer> builder,
+                            final CollectionContractConfig config) {
+            super(builder, WithIntegerElement.PROVIDER, config);
+        }
+    }
+
+    static final class BrokenThreadSafeBlockingQueue
+            extends DynamicCollectionContract<BreakableBlockingQueue<Integer>, Integer>
+            implements ThreadSafeBlockingQueueContract<BreakableBlockingQueue<Integer>, Integer> {
+        BrokenThreadSafeBlockingQueue(final BreakableBlockingQueue.Builder<Integer> builder) {
+            super(builder, WithIntegerElement.PROVIDER, noNulls(STANDARD));
+        }
+    }
+
     static final class BrokenThreadSafeCollection
             extends DynamicCollectionContract<BreakableCollection<Integer>, Integer>
             implements ThreadSafeCollectionContract<BreakableCollection<Integer>, Integer> {
@@ -950,6 +1074,13 @@ public class ContractCoverageTest {
         }
     }
 
+    /// Array blocking queues of [#QUEUE_CAPACITY], with elements from the usual provider.
+    private static CollectionProvider<ArrayBlockingQueue<Integer>, Integer> arrayBlockingQueues() {
+        return CollectionProviders.from(() -> new ArrayBlockingQueue<>(QUEUE_CAPACITY),
+                q -> new ArrayBlockingQueue<>(QUEUE_CAPACITY, false, q),
+                c -> new ArrayBlockingQueue<>(QUEUE_CAPACITY, false, c), WithIntegerElement.PROVIDER);
+    }
+
     /// Tree maps in reverse key order, with keys and values from the usual providers.
     private static MapProvider<Integer, String, TreeMap<Integer, String>> reverseTreeMaps() {
         return MapProviders.from(() -> new TreeMap<>(REVERSE),
@@ -960,6 +1091,25 @@ public class ContractCoverageTest {
                     return map;
                 },
                 WithIntegerKeyAndStringValue.KEY_PROVIDER, WithIntegerKeyAndStringValue.VALUE_PROVIDER);
+    }
+
+    private static CollectionContractConfig noNulls(final CollectionContractConfig config) {
+        return new CollectionContractConfig() {
+            @Override
+            public boolean permitNulls() {
+                return false;
+            }
+
+            @Override
+            public boolean permitDuplicates() {
+                return config.permitDuplicates();
+            }
+
+            @Override
+            public boolean permitIncompatibleTypes() {
+                return config.permitIncompatibleTypes();
+            }
+        };
     }
 
     private static CollectionContractConfig noDuplicates(final CollectionContractConfig config) {

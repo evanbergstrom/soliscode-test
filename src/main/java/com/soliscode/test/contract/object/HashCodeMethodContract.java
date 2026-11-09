@@ -89,13 +89,15 @@ public interface HashCodeMethodContract<T> extends ContractSupport<T> {
     }
 
     /// Tests that the `hashCode()` method returns the same integer value for objects that are equal.
+    /// It runs only where [com.soliscode.test.contract.support.ContractSupport#equalsComparesValues] is `true`, since
+    /// it compares a value with its copy.
     ///
     /// @throws org.opentest4j.AssertionFailedError if the test fails.
     /// @see Object#hashCode()
     @Test
     @DisplayName("hashCode() returns the same integer for equal values")
     default void hashCodeWithEqualValuesReturnsSameInteger() {
-       if (supportsMethod(ObjectMethods.HASH_CODE)) {
+       if (supportsMethod(ObjectMethods.HASH_CODE) && equalsComparesValues()) {
            T value = provider().createInstance();
            T other = provider().copyInstance(value);
            int hash = value.hashCode();

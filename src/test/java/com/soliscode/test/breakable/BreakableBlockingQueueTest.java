@@ -16,10 +16,14 @@ import com.soliscode.test.contract.blockingqueue.BlockingQueueMethods;
 
 import static com.soliscode.test.breakable.BreakableBlockingQueue.DRAIN_TO_ALWAYS_RETURNS_ZERO;
 import static com.soliscode.test.breakable.BreakableBlockingQueue.DRAIN_TO_DOES_NOT_REMOVE_ELEMENTS;
+import static com.soliscode.test.breakable.BreakableBlockingQueue.DRAIN_TO_IS_NOT_THREAD_SAFE;
 import static com.soliscode.test.breakable.BreakableBlockingQueue.DRAIN_TO_THROWS_EXCEPTION;
 import static com.soliscode.test.breakable.BreakableBlockingQueue.OFFER_WITH_TIMEOUT_ALWAYS_RETURNS_FALSE;
+import static com.soliscode.test.breakable.BreakableBlockingQueue.OFFER_WITH_TIMEOUT_DOES_NOT_WAIT;
 import static com.soliscode.test.breakable.BreakableBlockingQueue.OFFER_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION;
+import static com.soliscode.test.breakable.BreakableBlockingQueue.POLL_IS_NOT_THREAD_SAFE;
 import static com.soliscode.test.breakable.BreakableBlockingQueue.POLL_WITH_TIMEOUT_ALWAYS_RETURNS_NULL;
+import static com.soliscode.test.breakable.BreakableBlockingQueue.POLL_WITH_TIMEOUT_DOES_NOT_WAIT;
 import static com.soliscode.test.breakable.BreakableBlockingQueue.POLL_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION;
 import static com.soliscode.test.breakable.BreakableBlockingQueue.PUT_DOES_NOT_ADD_ELEMENT;
 import static com.soliscode.test.breakable.BreakableBlockingQueue.PUT_THROWS_EXCEPTION;
@@ -27,12 +31,14 @@ import static com.soliscode.test.breakable.BreakableBlockingQueue.PUT_THROWS_INT
 import static com.soliscode.test.breakable.BreakableBlockingQueue.REMAINING_CAPACITY_ALWAYS_RETURNS_ZERO;
 import static com.soliscode.test.breakable.BreakableBlockingQueue.TAKE_ALWAYS_RETURNS_NULL;
 import static com.soliscode.test.breakable.BreakableBlockingQueue.TAKE_DOES_NOT_REMOVE_ELEMENT;
+import static com.soliscode.test.breakable.BreakableBlockingQueue.TAKE_IS_NOT_THREAD_SAFE;
 import static com.soliscode.test.breakable.BreakableBlockingQueue.TAKE_THROWS_INTERRUPTED_EXCEPTION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -725,5 +731,100 @@ public class BreakableBlockingQueueTest extends AbstractTest {
         } catch (final InterruptedException e) {
             fail("An InterruptedException should not be thrown here.", e);
         }
+    }
+
+    // ========== drainTo into itself, and the breaks added by T-0032 ==========
+
+    /// A drain into the queue itself throws IllegalArgumentException and leaves it unchanged. Before T-0032 the
+    /// breakable passed the call to its store, which compared the collection with itself, not with the breakable,
+    /// and drained the queue into itself.
+    @Test
+    @DisplayName("drainTo(Collection) into the queue itself throws IllegalArgumentException")
+    public void drainToItselfThrowsIllegalArgumentException() {
+        BreakableBlockingQueue<String> queue = new BreakableBlockingQueue.Builder<>(List.of("a", "b")).build();
+        assertThrows(IllegalArgumentException.class, () -> queue.drainTo(queue));
+        assertEquals(List.of("a", "b"), new ArrayList<>(queue));
+    }
+
+    /// A drain of at most some elements into the queue itself throws IllegalArgumentException and leaves it
+    /// unchanged.
+    @Test
+    @DisplayName("drainTo(Collection, int) into the queue itself throws IllegalArgumentException")
+    public void drainToMaxElementsItselfThrowsIllegalArgumentException() {
+        BreakableBlockingQueue<String> queue = new BreakableBlockingQueue.Builder<>(List.of("a", "b")).build();
+        assertThrows(IllegalArgumentException.class, () -> queue.drainTo(queue, 1));
+        assertEquals(List.of("a", "b"), new ArrayList<>(queue));
+    }
+
+    /// With OFFER_WITH_TIMEOUT_DOES_NOT_WAIT, the timed offer on a full queue returns false at once, though the
+    /// timeout is an hour.
+    @Test
+    @DisplayName("offer(E, long, TimeUnit): does not wait on a full queue when OFFER_WITH_TIMEOUT_DOES_NOT_WAIT")
+    public void offerWithTimeoutWhenDoesNotWaitBreakActiveReturnsFalseAtOnce() {
+        BreakableBlockingQueue<String> queue = new BreakableBlockingQueue.Builder<>(List.of("a"))
+                .setCapacity(1)
+                .addBreak(OFFER_WITH_TIMEOUT_DOES_NOT_WAIT)
+                .build();
+        assertFalse(assertTimeoutPreemptively(java.time.Duration.ofSeconds(5),
+                () -> queue.offer("b", 1, TimeUnit.HOURS)));
+        assertEquals(List.of("a"), new ArrayList<>(queue));
+    }
+
+    /// With POLL_WITH_TIMEOUT_DOES_NOT_WAIT, the timed poll on an empty queue returns null at once, though the
+    /// timeout is an hour; on a non-empty queue it returns the head.
+    @Test
+    @DisplayName("poll(long, TimeUnit): does not wait on an empty queue when POLL_WITH_TIMEOUT_DOES_NOT_WAIT")
+    public void pollWithTimeoutWhenDoesNotWaitBreakActiveReturnsNullAtOnce() throws InterruptedException {
+        BreakableBlockingQueue<String> queue = new BreakableBlockingQueue.Builder<String>()
+                .addBreak(POLL_WITH_TIMEOUT_DOES_NOT_WAIT)
+                .build();
+        assertNull(assertTimeoutPreemptively(java.time.Duration.ofSeconds(5),
+                () -> queue.poll(1, TimeUnit.HOURS)));
+        queue.add("a");
+        assertEquals("a", queue.poll(1, TimeUnit.HOURS));
+    }
+
+    /// With TAKE_IS_NOT_THREAD_SAFE, take() on one thread still returns and removes the head: the break shows only
+    /// under contention.
+    @Test
+    @DisplayName("take(): still returns and removes the head on one thread when TAKE_IS_NOT_THREAD_SAFE")
+    public void takeWhenNotThreadSafeBreakActiveReturnsHeadOnOneThread() throws InterruptedException {
+        BreakableBlockingQueue<String> queue = new BreakableBlockingQueue.Builder<>(List.of("a", "b"))
+                .addBreak(TAKE_IS_NOT_THREAD_SAFE)
+                .build();
+        assertEquals("a", queue.take());
+        assertEquals("b", queue.take());
+        assertTrue(queue.isEmpty());
+    }
+
+    /// With POLL_IS_NOT_THREAD_SAFE, poll() on one thread still returns and removes the head, and returns null on an
+    /// empty queue.
+    @Test
+    @DisplayName("poll(): still returns and removes the head on one thread when POLL_IS_NOT_THREAD_SAFE")
+    public void pollWhenNotThreadSafeBreakActiveReturnsHeadOnOneThread() {
+        BreakableBlockingQueue<String> queue = new BreakableBlockingQueue.Builder<>(List.of("a", "b"))
+                .addBreak(POLL_IS_NOT_THREAD_SAFE)
+                .build();
+        assertEquals("a", queue.poll());
+        assertEquals("b", queue.poll());
+        assertNull(queue.poll());
+    }
+
+    /// With DRAIN_TO_IS_NOT_THREAD_SAFE, both drains on one thread still move the elements they should, and a drain
+    /// into the queue itself is still refused.
+    @Test
+    @DisplayName("drainTo: still moves the elements on one thread when DRAIN_TO_IS_NOT_THREAD_SAFE")
+    public void drainToWhenNotThreadSafeBreakActiveMovesElementsOnOneThread() {
+        BreakableBlockingQueue<String> queue = new BreakableBlockingQueue.Builder<>(List.of("a", "b", "c"))
+                .addBreak(DRAIN_TO_IS_NOT_THREAD_SAFE)
+                .build();
+        List<String> first = new ArrayList<>();
+        assertEquals(1, queue.drainTo(first, 1));
+        assertEquals(List.of("a"), first);
+        List<String> rest = new ArrayList<>();
+        assertEquals(2, queue.drainTo(rest));
+        assertEquals(List.of("b", "c"), rest);
+        assertTrue(queue.isEmpty());
+        assertThrows(IllegalArgumentException.class, () -> queue.drainTo(queue));
     }
 }

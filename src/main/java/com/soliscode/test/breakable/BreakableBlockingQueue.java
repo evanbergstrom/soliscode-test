@@ -19,6 +19,7 @@ import org.jspecify.annotations.Nullable;
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.MethodStatus;
 import com.soliscode.test.contract.blockingqueue.BlockingQueueMethods;
+import com.soliscode.test.contract.queue.QueueMethods;
 
 /// A `BlockingQueue` implementation that can be programmatically broken for testing purposes.
 ///
@@ -60,12 +61,20 @@ import com.soliscode.test.contract.blockingqueue.BlockingQueueMethods;
 /// - **OFFER_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION**: Forces `offer(timeout)` to throw `InterruptedException`
 /// - **POLL_WITH_TIMEOUT_ALWAYS_RETURNS_NULL**: Control `poll(timeout)` to always return `null`
 /// - **POLL_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION**: Forces `poll(timeout)` to throw `InterruptedException`
+/// - **OFFER_WITH_TIMEOUT_DOES_NOT_WAIT**, **POLL_WITH_TIMEOUT_DOES_NOT_WAIT**: the timed `offer` and `poll` try once,
+///   without waiting
 ///
 /// ### Capacity and Drain Operations
 /// - **REMAINING_CAPACITY_ALWAYS_RETURNS_ZERO**: Forces `remainingCapacity()` to always return 0
 /// - **DRAIN_TO_ALWAYS_RETURNS_ZERO**: Forces `drainTo()` to always return 0
 /// - **DRAIN_TO_THROWS_EXCEPTION**: Forces `drainTo()` to throw exceptions
 /// - **DRAIN_TO_DOES_NOT_REMOVE_ELEMENTS**: Forces `drainTo()` to return count but not remove elements
+///
+/// ### Thread Safety
+/// - **TAKE_IS_NOT_THREAD_SAFE**, **POLL_IS_NOT_THREAD_SAFE**, **DRAIN_TO_IS_NOT_THREAD_SAFE**: `take()`, `poll()`
+///   and `drainTo()` read the store and then remove from it in separate steps, so that two threads can both get one
+///   element. The store is a thread-safe JDK `BlockingQueue`, so the other operations stay atomic whether or not the
+///   breakable is built thread safe.
 ///
 /// ## Usage Examples
 ///
@@ -312,6 +321,22 @@ public class BreakableBlockingQueue<E> extends BreakableQueue<E> implements Bloc
     public static final Break OFFER_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION =
             new Break("OFFER_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION");
 
+    /// Break constant that causes `offer(timeout)` not to wait for space.
+    ///
+    /// **Purpose:** simulates a timed offer that gives up at once on a full queue, instead of "waiting up to the
+    /// specified wait time if necessary for space to become available" ([BlockingQueue#offer(Object, long, TimeUnit)]).
+    ///
+    /// **Effect:** the element is offered once, as [#offer(Object)] does, and the timeout is ignored; on a full queue
+    /// the call returns `false` at once, even with the thread's interrupt status set.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #offer(Object, long, TimeUnit)} - Does not wait
+    ///
+    /// @see #offer(Object, long, TimeUnit)
+    /// @since 0.1.2
+    public static final Break OFFER_WITH_TIMEOUT_DOES_NOT_WAIT =
+            new Break("OFFER_WITH_TIMEOUT_DOES_NOT_WAIT");
+
     // ========== Timeout Poll Method Breaks ==========
 
     /// Break constant that causes `poll(timeout)` to always return `null`.
@@ -347,6 +372,74 @@ public class BreakableBlockingQueue<E> extends BreakableQueue<E> implements Bloc
     /// @since 1.0
     public static final Break POLL_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION =
             new Break("POLL_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION");
+
+    /// Break constant that causes `poll(timeout)` not to wait for an element.
+    ///
+    /// **Purpose:** simulates a timed poll that gives up at once on an empty queue, instead of "waiting up to the
+    /// specified wait time if necessary for an element to become available" ([BlockingQueue#poll(long, TimeUnit)]).
+    ///
+    /// **Effect:** the queue is polled once, as [#poll()] does, and the timeout is ignored; on an empty queue the
+    /// call returns `null` at once, even with the thread's interrupt status set.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #poll(long, TimeUnit)} - Does not wait
+    ///
+    /// @see #poll(long, TimeUnit)
+    /// @since 0.1.2
+    public static final Break POLL_WITH_TIMEOUT_DOES_NOT_WAIT =
+            new Break("POLL_WITH_TIMEOUT_DOES_NOT_WAIT");
+
+    // ========== Thread-Safety Breaks ==========
+
+    /// Break constant that makes `take()` not atomic.
+    ///
+    /// **Purpose:** simulates a `take` that is not thread safe, though "All queuing methods achieve their effects
+    /// atomically" ([BlockingQueue]).
+    ///
+    /// **Effect:** on a non-empty queue, `take()` reads the head with `peek()` and then removes it with
+    /// `remove(Object)`, two steps another thread can come between, so two takers can both return one element. On an
+    /// empty queue it waits as normal.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #take()} - Not atomic
+    ///
+    /// @see #take()
+    /// @since 0.1.2
+    public static final Break TAKE_IS_NOT_THREAD_SAFE =
+            new Break("TAKE_IS_NOT_THREAD_SAFE");
+
+    /// Break constant that makes `poll()` not atomic.
+    ///
+    /// **Purpose:** simulates a `poll` that is not thread safe, though "All queuing methods achieve their effects
+    /// atomically" ([BlockingQueue]).
+    ///
+    /// **Effect:** `poll()` reads the head with `peek()` and then removes it with `remove(Object)`, two steps another
+    /// thread can come between, so two pollers can both return one element.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #poll()} - Not atomic
+    ///
+    /// @see #poll()
+    /// @since 0.1.2
+    public static final Break POLL_IS_NOT_THREAD_SAFE =
+            new Break("POLL_IS_NOT_THREAD_SAFE");
+
+    /// Break constant that makes `drainTo` not atomic.
+    ///
+    /// **Purpose:** simulates a `drainTo` that is not thread safe, though "All queuing methods achieve their effects
+    /// atomically" ([BlockingQueue]).
+    ///
+    /// **Effect:** `drainTo` copies the elements it would move, adds the copy to the collection, and then removes
+    /// each from the queue, steps another thread can come between, so two drainers can both move one element.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #drainTo(Collection)} - Not atomic
+    /// - {@link #drainTo(Collection, int)} - Not atomic
+    ///
+    /// @see #drainTo(Collection)
+    /// @since 0.1.2
+    public static final Break DRAIN_TO_IS_NOT_THREAD_SAFE =
+            new Break("DRAIN_TO_IS_NOT_THREAD_SAFE");
 
     // ========== Remaining Capacity Method Breaks ==========
 
@@ -613,6 +706,7 @@ public class BreakableBlockingQueue<E> extends BreakableQueue<E> implements Bloc
     /// - {@link #TAKE_THROWS_INTERRUPTED_EXCEPTION} - Throws InterruptedException
     /// - {@link #TAKE_ALWAYS_RETURNS_NULL} - Returns null instead of blocking
     /// - {@link #TAKE_DOES_NOT_REMOVE_ELEMENT} - Returns element but doesn't remove it
+    /// - {@link #TAKE_IS_NOT_THREAD_SAFE} - Reads and removes the head in two steps
     ///
     /// **Performance Characteristics:**
     /// Delegates to the underlying `BlockingQueue`. If `TAKE_ALWAYS_BLOCKS` is applied, this method
@@ -661,6 +755,14 @@ public class BreakableBlockingQueue<E> extends BreakableQueue<E> implements Bloc
             throw new InterruptedException("Thrown by " + TAKE_THROWS_INTERRUPTED_EXCEPTION.name() +  " break ");
         }
 
+        if (hasBreak(TAKE_IS_NOT_THREAD_SAFE)) {
+            E head = blockingQueue.peek();
+            if (head != null) {
+                blockingQueue.remove(head);
+                return head;
+            }
+        }
+
         return blockingQueue.take();
     }
 
@@ -689,6 +791,25 @@ public class BreakableBlockingQueue<E> extends BreakableQueue<E> implements Bloc
         return super.offer(e);
     }
 
+    /// Retrieves and removes the head of this queue, or returns `null` if it is empty, as [BreakableQueue#poll()]
+    /// does, unless [#POLL_IS_NOT_THREAD_SAFE] is set: then it reads the head and removes it in two steps.
+    ///
+    /// @return the head of this queue, or `null` if it is empty
+    /// @throws UnsupportedOperationException if `poll` is not supported
+    /// @since 0.1.2
+    @Override
+    public @Nullable E poll() {
+        if (hasBreak(POLL_IS_NOT_THREAD_SAFE)) {
+            checkMethodSupport(QueueMethods.POLL);
+            E head = blockingQueue.peek();
+            if (head != null) {
+                blockingQueue.remove(head);
+            }
+            return head;
+        }
+        return super.poll();
+    }
+
     /// Inserts the specified element into this queue, waiting up to the specified wait time
     /// if necessary for space to become available.
     /// The behavior can be modified by the following breaks:
@@ -696,6 +817,7 @@ public class BreakableBlockingQueue<E> extends BreakableQueue<E> implements Bloc
     /// **Supported Breaks:**
     /// - {@link #OFFER_WITH_TIMEOUT_ALWAYS_RETURNS_FALSE} - Returns false regardless of timeout
     /// - {@link #OFFER_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION} - Throws InterruptedException
+    /// - {@link #OFFER_WITH_TIMEOUT_DOES_NOT_WAIT} - Offers once, without waiting
     ///
     /// **Performance Characteristics:**
     /// Delegates to the underlying `BlockingQueue`.
@@ -726,7 +848,8 @@ public class BreakableBlockingQueue<E> extends BreakableQueue<E> implements Bloc
         }
 
         // Add the element first
-        boolean result = blockingQueue.offer(e, timeout, unit);
+        boolean result = hasBreak(OFFER_WITH_TIMEOUT_DOES_NOT_WAIT) ? blockingQueue.offer(e)
+                : blockingQueue.offer(e, timeout, unit);
 
         if (hasBreak(OFFER_WITH_TIMEOUT_ALWAYS_RETURNS_FALSE)) {
             return false;
@@ -742,6 +865,7 @@ public class BreakableBlockingQueue<E> extends BreakableQueue<E> implements Bloc
     /// **Supported Breaks:**
     /// - {@link #POLL_WITH_TIMEOUT_ALWAYS_RETURNS_NULL} - Returns null regardless of timeout
     /// - {@link #POLL_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION} - Throws InterruptedException
+    /// - {@link #POLL_WITH_TIMEOUT_DOES_NOT_WAIT} - Polls once, without waiting
     ///
     /// **Performance Characteristics:**
     /// Delegates to the underlying `BlockingQueue`.
@@ -767,6 +891,10 @@ public class BreakableBlockingQueue<E> extends BreakableQueue<E> implements Bloc
 
         if (hasBreak(POLL_WITH_TIMEOUT_ALWAYS_RETURNS_NULL)) {
             return null;
+        }
+
+        if (hasBreak(POLL_WITH_TIMEOUT_DOES_NOT_WAIT)) {
+            return blockingQueue.poll();
         }
 
         return blockingQueue.poll(timeout, unit);
@@ -806,6 +934,9 @@ public class BreakableBlockingQueue<E> extends BreakableQueue<E> implements Bloc
     /// - {@link #DRAIN_TO_ALWAYS_RETURNS_ZERO} - Returns 0 regardless of elements drained
     /// - {@link #DRAIN_TO_THROWS_EXCEPTION} - Throws IllegalStateException
     /// - {@link #DRAIN_TO_DOES_NOT_REMOVE_ELEMENTS} - Returns count but doesn't remove elements
+    /// - {@link #DRAIN_TO_IS_NOT_THREAD_SAFE} - Copies, adds and removes in separate steps
+    ///
+    /// Without a break, a drain into this queue throws [IllegalArgumentException].
     ///
     /// **Performance Characteristics:**
     /// Delegates to the underlying `BlockingQueue`. Typically O(N) where N is the number of elements in the queue.
@@ -836,6 +967,12 @@ public class BreakableBlockingQueue<E> extends BreakableQueue<E> implements Bloc
             return 0;
         }
 
+        checkNotThis(c);
+
+        if (hasBreak(DRAIN_TO_IS_NOT_THREAD_SAFE)) {
+            return drainInSteps(c, Integer.MAX_VALUE);
+        }
+
         if (hasBreak(DRAIN_TO_DOES_NOT_REMOVE_ELEMENTS)) {
             int size = blockingQueue.size();
             // Add elements to collection but don't remove them from queue
@@ -853,6 +990,9 @@ public class BreakableBlockingQueue<E> extends BreakableQueue<E> implements Bloc
     /// - {@link #DRAIN_TO_ALWAYS_RETURNS_ZERO} - Returns 0 regardless of elements drained
     /// - {@link #DRAIN_TO_THROWS_EXCEPTION} - Throws IllegalStateException
     /// - {@link #DRAIN_TO_DOES_NOT_REMOVE_ELEMENTS} - Returns count but doesn't remove elements
+    /// - {@link #DRAIN_TO_IS_NOT_THREAD_SAFE} - Copies, adds and removes in separate steps
+    ///
+    /// Without a break, a drain into this queue throws [IllegalArgumentException].
     ///
     /// **Performance Characteristics:**
     /// Delegates to the underlying `BlockingQueue`. Typically O(N) where N is the number of elements drained.
@@ -884,6 +1024,12 @@ public class BreakableBlockingQueue<E> extends BreakableQueue<E> implements Bloc
             return 0;
         }
 
+        checkNotThis(c);
+
+        if (hasBreak(DRAIN_TO_IS_NOT_THREAD_SAFE)) {
+            return drainInSteps(c, maxElements);
+        }
+
         if (hasBreak(DRAIN_TO_DOES_NOT_REMOVE_ELEMENTS)) {
             int count = Math.min(blockingQueue.size(), maxElements);
             int added = 0;
@@ -899,6 +1045,33 @@ public class BreakableBlockingQueue<E> extends BreakableQueue<E> implements Bloc
         }
 
         return blockingQueue.drainTo(c, maxElements);
+    }
+
+    /// Refuses a drain into this queue, as [BlockingQueue#drainTo(Collection)] says: the store would compare the
+    /// collection with itself, not with this queue, and drain into it.
+    // ReferenceEquality: the check is for this very queue, by identity, as the JDK's queues make it.
+    @SuppressWarnings("ReferenceEquality")
+    private void checkNotThis(final Collection<? super E> c) {
+        if (c == this) {
+            throw new IllegalArgumentException("drainTo: the collection is this queue");
+        }
+    }
+
+    /// Moves at most `maxElements` elements in steps that are not atomic, for [#DRAIN_TO_IS_NOT_THREAD_SAFE]: copies
+    /// them, adds the copy to `c`, then removes each from the store.
+    private int drainInSteps(final Collection<? super E> c, final int maxElements) {
+        List<E> copy = new ArrayList<>();
+        for (final E element : blockingQueue) {
+            if (copy.size() >= maxElements) {
+                break;
+            }
+            copy.add(element);
+        }
+        c.addAll(copy);
+        for (final E element : copy) {
+            blockingQueue.remove(element);
+        }
+        return copy.size();
     }
 
     // ========== Builder Class ==========

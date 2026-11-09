@@ -82,6 +82,8 @@ public interface EqualsMethodContract<T> extends ContractSupport<T> {
 
     /// Tests that the `equals()` method is symmetric: if `x.equals(y)`, then `y.equals(x)` should return `true`.
     /// It also verifies that if `x` and `y` are not equal, then both `x.equals(y)` and `y.equals(x)` return `false`.
+    /// The equal pair is a value and its copy, checked only where
+    /// [com.soliscode.test.contract.support.ContractSupport#equalsComparesValues] is `true`.
     ///
     /// @throws org.opentest4j.AssertionFailedError if the test fails.
     /// @see Object#equals(Object)
@@ -89,10 +91,12 @@ public interface EqualsMethodContract<T> extends ContractSupport<T> {
     @DisplayName("equals() is symmetric")
     default void equalsWhenCalledWithEqualAndUnequalValuesIsSymmetric() {
         if (supportsMethod(ObjectMethods.EQUALS)) {
-            T x = provider().createInstance();
-            T y = provider().copyInstance(x);
-            assertEquals(x, y);
-            assertEquals(y, x);
+            if (equalsComparesValues()) {
+                T x = provider().createInstance();
+                T y = provider().copyInstance(x);
+                assertEquals(x, y);
+                assertEquals(y, x);
+            }
 
             List<T> values = provider().createUniqueInstances(2);
             assertNotEquals(values.get(0), values.get(1));
@@ -102,13 +106,15 @@ public interface EqualsMethodContract<T> extends ContractSupport<T> {
 
     /// Tests that the `equals()` method is transitive: if `x.equals(y)` and `y.equals(z)`,
     /// then `x.equals(z)` should return `true`.
+    /// It runs only where [com.soliscode.test.contract.support.ContractSupport#equalsComparesValues] is `true`, since
+    /// it compares a value with its copy.
     ///
     /// @throws org.opentest4j.AssertionFailedError if the test fails.
     /// @see Object#equals(Object)
     @Test
     @DisplayName("equals() is transitive")
     default void equalsWhenChainedIsTransitive() {
-        if (supportsMethod(ObjectMethods.EQUALS)) {
+        if (supportsMethod(ObjectMethods.EQUALS) && equalsComparesValues()) {
             T x = provider().createInstance();
             T y = provider().copyInstance(x);
             T z = provider().copyInstance(y);
@@ -121,13 +127,15 @@ public interface EqualsMethodContract<T> extends ContractSupport<T> {
     /// Tests that the `equals()` method is consistent: multiple invocations of `x.equals(y)`
     /// consistently return the same result, provided no information used in `equals`
     /// comparisons on the objects is modified.
+    /// It runs only where [com.soliscode.test.contract.support.ContractSupport#equalsComparesValues] is `true`, since
+    /// it compares a value with its copy.
     ///
     /// @throws org.opentest4j.AssertionFailedError if the test fails.
     /// @see Object#equals(Object)
     @Test
     @DisplayName("equals() is consistent")
     default void equalsWhenRepeatedReturnsConsistentResult() {
-        if (supportsMethod(ObjectMethods.EQUALS)) {
+        if (supportsMethod(ObjectMethods.EQUALS) && equalsComparesValues()) {
             T x = provider().createInstance();
             T y = provider().copyInstance(x);
             for (int i = 0; i < consistencyRepeats(); i++) {
