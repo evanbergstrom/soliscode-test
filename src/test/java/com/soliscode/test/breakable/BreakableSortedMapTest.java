@@ -33,6 +33,7 @@ import static com.soliscode.test.breakable.BreakableSortedMap.TAIL_MAP_RETURNS_N
 import static com.soliscode.test.breakable.BreakableSortedMap.TAIL_MAP_THROWS_EXCEPTION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -1125,5 +1126,60 @@ public class BreakableSortedMapTest extends AbstractTest {
         // SortedMap-level functionality with break
         assertThrows(NoSuchElementException.class, map::firstKey); // Due to FIRST_KEY_THROWS_EXCEPTION break
         assertEquals("banana", map.lastKey()); // Should work normally
+    }
+
+    // ========== Clone ==========
+
+    /// Fills a map with `a`, `b` and `c`, and returns a clone of it.
+    ///
+    /// @param map the map to fill
+    /// @return the clone
+    private static BreakableSortedMap<String, Integer> filledClone(final BreakableSortedMap<String, Integer> map) {
+        map.put("a", 1);
+        map.put("b", 2);
+        map.put("c", 3);
+        return assertInstanceOf(BreakableSortedMap.class, map.clone());
+    }
+
+    /// Verifies that a clone keeps the order and comparator, and that a change through its `Map` methods does not
+    /// reach the original.
+    @Test
+    @DisplayName("clone() makes a sorted map, in the same order, that a put does not share")
+    public void cloneWhenPutKeepsOrderAndLeavesOriginal() {
+        BreakableSortedMap<String, Integer> map = new BreakableSortedMap.Builder<String, Integer>()
+                .setComparator(Comparator.reverseOrder()).build();
+        BreakableSortedMap<String, Integer> clone = filledClone(map);
+        clone.put("d", 4);
+        assertEquals(Comparator.<String>reverseOrder(), clone.comparator());
+        assertEquals(List.of("d", "c", "b", "a"), new ArrayList<>(clone.keySet()));
+        assertEquals("d", clone.firstKey());
+        assertFalse(map.containsKey("d"));
+        assertEquals("c", map.firstKey());
+    }
+
+    /// Verifies that a change through a clone's `SortedMap` methods does not reach the original.
+    @Test
+    @DisplayName("clone() makes a sorted map whose views do not share the original's store")
+    public void cloneWhenChangedThroughViewLeavesOriginal() {
+        BreakableSortedMap<String, Integer> map = new BreakableSortedMap<>();
+        BreakableSortedMap<String, Integer> clone = filledClone(map);
+        clone.headMap("c").clear();
+        assertEquals(List.of("c"), new ArrayList<>(clone.keySet()));
+        assertEquals("c", clone.firstKey());
+        assertEquals(List.of("a", "b", "c"), new ArrayList<>(map.keySet()));
+        assertEquals("a", map.firstKey());
+    }
+
+    /// Verifies that a change to the original does not reach a clone.
+    @Test
+    @DisplayName("clone() makes a sorted map that a change to the original does not reach")
+    public void cloneWhenOriginalChangedIsUnchanged() {
+        BreakableSortedMap<String, Integer> map = new BreakableSortedMap<>();
+        BreakableSortedMap<String, Integer> clone = filledClone(map);
+        map.put("0", 0);
+        map.remove("c");
+        assertEquals("a", clone.firstKey());
+        assertEquals("c", clone.lastKey());
+        assertEquals(List.of("a", "b", "c"), new ArrayList<>(clone.keySet()));
     }
 }

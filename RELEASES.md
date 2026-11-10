@@ -73,6 +73,7 @@ As a task merges, it adds what a user of the library will see differently under 
 - **Fix: `BreakableConcurrentMap.replaceAll` is atomic per entry (T-0035).** It wrote through each entry's `setValue`, an unconditional `put`, so it lost updates other threads made meanwhile; it now calls the store's `replaceAll`, unless one of `BreakableMap`'s `replaceAll` breaks is set.
 - **Fix: a clone of a `BreakableConcurrentMap` or `BreakableConcurrentNavigableMap` has a store of its own (T-0035).** `clone()` gave the clone a new `HashMap`, but the concurrent methods still acted on the original's store. A clone's store is now a copy of the same kind (a `ConcurrentHashMap`, or a `ConcurrentSkipListMap` with the same comparator). `BreakableMap` has two new protected methods for subclasses, `store()` and `copyOfStore(Map)`.
 - **Fix: `MapMethods.REPLACE_THREE_ARG.methodName()` is `"replace(Object, Object, Object)"` (T-0035).** It was `"clear()"`.
+- **Fix: a clone of a `BreakableSortedMap` or `BreakableNavigableMap` has a store of its own (T-0053).** `clone()` gave the clone a new `HashMap`, but the sorted and navigable methods still acted on the original's store, and the clone's `Map` methods lost the order. A clone's store is now a `TreeMap` with the original's comparator.
 
 ## 0.1.1 — 2026-11-08
 

@@ -356,12 +356,6 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
     @Serial
     private static final long serialVersionUID = 1L;
 
-    // ========== Instance Variables ==========
-
-    /// The underlying SortedMap that provides the actual functionality.
-    /// This map is wrapped and its behavior can be modified through breaks.
-    private final SortedMap<K, V> sortedMap;
-
     // ========== Constructors ==========
 
     /// Creates a BreakableSortedMap with no breaks applied using TreeMap as the underlying implementation.
@@ -390,13 +384,14 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
 
     /// Creates a BreakableSortedMap by copying another BreakableSortedMap.
     ///
-    /// This constructor creates a new instance that shares the underlying sorted map data
-    /// with the original but copies all break configuration and policies. The resulting
-    /// map is functionally identical but independent for future modifications.
+    /// This constructor copies the source map's entries into a new `TreeMap` with its comparator, and copies its
+    /// break configuration and policies. The resulting map is functionally identical but independent for future
+    /// modifications.
     ///
     /// **Copy Behavior:**
-    /// - Underlying sorted map data is shared (shallow copy)
-    /// - Break configuration is deep copied
+    /// - The entries are copied, not shared: changes to one map do not reach the other (keys and values are not
+    ///   cloned)
+    /// - Break configuration is copied
     /// - Null policies are copied
     /// - Independent modification after creation
     ///
@@ -411,7 +406,7 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
     /// @param other the BreakableSortedMap to copy; must not be null
     /// @throws NullPointerException if other is null
     public BreakableSortedMap(final BreakableSortedMap<K, V> other) {
-        this(new TreeMap<>(other.sortedMap), new HashSet<>(other.breaks()), new HashMap<>(other.methodStatuses()),
+        this(new TreeMap<>(other.sortedStore()), new HashSet<>(other.breaks()), new HashMap<>(other.methodStatuses()),
                 other.permits(), other.isSafe());
     }
 
@@ -449,7 +444,24 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
                               final int permits,
                               final boolean isSafe) {
         super(sortedMapArg, breaks, methodStatuses, permits, isSafe);
-        this.sortedMap = sortedMapArg;
+    }
+
+    /// Returns a copy of a store, for [#clone()]: a `TreeMap` with the store's comparator, so that a clone is sorted
+    /// as the original is.
+    ///
+    /// @param storeArg the store to copy
+    /// @return a new store holding the same mappings, in the same order
+    /// @since 0.1.2
+    @Override
+    protected Map<K, V> copyOfStore(final Map<K, V> storeArg) {
+        return new TreeMap<>((SortedMap<K, V>) storeArg);
+    }
+
+    /// Returns the store as the sorted map it is.
+    ///
+    /// @return the store
+    private SortedMap<K, V> sortedStore() {
+        return (SortedMap<K, V>) store();
     }
 
     // ========== SortedMap Interface Methods ==========
@@ -494,14 +506,14 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
         if (hasBreak(COMPARATOR_THROWS_EXCEPTION)) {
             throw new ClassCastException("Comparator access failed due to break");
         }
-        if (hasBreak(COMPARATOR_ALWAYS_RETURNS_NATURAL_COMPARATOR) && !sortedMap.isEmpty()) {
-            K key = sortedMap.firstKey();
+        if (hasBreak(COMPARATOR_ALWAYS_RETURNS_NATURAL_COMPARATOR) && !sortedStore().isEmpty()) {
+            K key = sortedStore().firstKey();
             if (key instanceof Comparable<?>) {
                 // unchecked cast
                 return (Comparator<? super K>) Comparator.naturalOrder();
             }
         }
-        return sortedMap.comparator();
+        return sortedStore().comparator();
     }
 
     /// {@inheritDoc}
@@ -538,12 +550,12 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
             throw new NoSuchElementException("First key access failed due to break");
         }
 
-        if (hasBreak(FIRST_KEY_RETURNS_RANDOM_KEY) && sortedMap.size() > 1) {
+        if (hasBreak(FIRST_KEY_RETURNS_RANDOM_KEY) && sortedStore().size() > 1) {
             // Return another key than the first: the last.
-            return sortedMap.lastKey();
+            return sortedStore().lastKey();
         }
 
-        return sortedMap.firstKey();
+        return sortedStore().firstKey();
     }
 
     /// {@inheritDoc}
@@ -580,12 +592,12 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
             throw new NoSuchElementException("Last key access failed due to break");
         }
 
-        if (hasBreak(LAST_KEY_RETURNS_RANDOM_KEY) && !sortedMap.isEmpty()) {
+        if (hasBreak(LAST_KEY_RETURNS_RANDOM_KEY) && !sortedStore().isEmpty()) {
             // Return an arbitrary key instead of the last
-            return sortedMap.keySet().iterator().next();
+            return sortedStore().keySet().iterator().next();
         }
 
-        return sortedMap.lastKey();
+        return sortedStore().lastKey();
     }
 
     /// {@inheritDoc}
@@ -638,7 +650,7 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
             throw new IllegalArgumentException("HeadMap creation failed due to break");
         }
 
-        return sortedMap.headMap(toKey);
+        return sortedStore().headMap(toKey);
     }
 
     /// {@inheritDoc}
@@ -691,7 +703,7 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
             throw new IllegalArgumentException("TailMap creation failed due to break");
         }
 
-        return sortedMap.tailMap(fromKey);
+        return sortedStore().tailMap(fromKey);
     }
 
     /// {@inheritDoc}
@@ -747,7 +759,7 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
             throw new IllegalArgumentException("SubMap creation failed due to break");
         }
 
-        return sortedMap.subMap(fromKey, toKey);
+        return sortedStore().subMap(fromKey, toKey);
     }
 
     // ========== Builder Pattern ==========

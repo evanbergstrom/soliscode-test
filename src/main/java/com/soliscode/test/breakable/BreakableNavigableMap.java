@@ -573,12 +573,6 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     @Serial
     private static final long serialVersionUID = 1L;
 
-    // ========== Instance Fields ==========
-
-    /// The underlying NavigableMap that this BreakableNavigableMap wraps.
-    /// All operations delegate to this map unless breaks are applied.
-    private final NavigableMap<K, V> navigableMap;
-
     // ========== Constructors ==========
 
     /// Creates an empty BreakableNavigableMap with natural ordering.
@@ -624,8 +618,8 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     /// @param other the BreakableNavigableMap to copy configuration from
     /// @throws NullPointerException if other is null
     public BreakableNavigableMap(final BreakableNavigableMap<K, V> other) {
-        this(new TreeMap<>(other.navigableMap), new HashSet<>(other.breaks()), new HashMap<>(other.methodStatuses()),
-                other.permits(), other.isSafe());
+        this(new TreeMap<>(other.navigableStore()), new HashSet<>(other.breaks()),
+                new HashMap<>(other.methodStatuses()), other.permits(), other.isSafe());
     }
 
     /// Constructs a `BreakableNavigableMap` instance for managing a navigable map with
@@ -652,7 +646,14 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
             final int permits,
             final boolean isSafe) {
         super(navigableMapArg, breaks, methodStatuses, permits, isSafe);
-        this.navigableMap = navigableMapArg;
+    }
+
+    /// Returns the store as the navigable map it is. A clone's store is a `TreeMap`, from
+    /// [BreakableSortedMap#copyOfStore(Map)], so it is navigable too.
+    ///
+    /// @return the store
+    private NavigableMap<K, V> navigableStore() {
+        return (NavigableMap<K, V>) store();
     }
 
     // ========== NavigableMap Interface Implementation ==========
@@ -681,11 +682,11 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
         if (hasBreak(LOWER_ENTRY_THROWS_EXCEPTION)) {
             throw new NoSuchElementException("LowerEntry access failed due to break");
         }
-        if (hasBreak(LOWER_ENTRY_RETURNS_RANDOM_ENTRY) && !navigableMap.isEmpty()) {
-            K randomKey = navigableMap.keySet().iterator().next();
-            return Map.entry(randomKey, navigableMap.get(randomKey));
+        if (hasBreak(LOWER_ENTRY_RETURNS_RANDOM_ENTRY) && !navigableStore().isEmpty()) {
+            K randomKey = navigableStore().keySet().iterator().next();
+            return Map.entry(randomKey, navigableStore().get(randomKey));
         }
-        return navigableMap.lowerEntry(key);
+        return navigableStore().lowerEntry(key);
     }
 
     /// {@inheritDoc}
@@ -717,10 +718,10 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
         if (hasBreak(LOWER_KEY_THROWS_EXCEPTION)) {
             throw new NoSuchElementException("LowerKey access failed due to break");
         }
-        if (hasBreak(LOWER_KEY_RETURNS_RANDOM_KEY) && !navigableMap.isEmpty()) {
-            return navigableMap.keySet().iterator().next();
+        if (hasBreak(LOWER_KEY_RETURNS_RANDOM_KEY) && !navigableStore().isEmpty()) {
+            return navigableStore().keySet().iterator().next();
         }
-        return navigableMap.lowerKey(key);
+        return navigableStore().lowerKey(key);
     }
 
     /// {@inheritDoc}
@@ -752,11 +753,11 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
         if (hasBreak(FLOOR_ENTRY_THROWS_EXCEPTION)) {
             throw new NoSuchElementException("FloorEntry access failed due to break");
         }
-        if (hasBreak(FLOOR_ENTRY_RETURNS_RANDOM_ENTRY) && !navigableMap.isEmpty()) {
-            K randomKey = navigableMap.keySet().iterator().next();
-            return Map.entry(randomKey, navigableMap.get(randomKey));
+        if (hasBreak(FLOOR_ENTRY_RETURNS_RANDOM_ENTRY) && !navigableStore().isEmpty()) {
+            K randomKey = navigableStore().keySet().iterator().next();
+            return Map.entry(randomKey, navigableStore().get(randomKey));
         }
-        return navigableMap.floorEntry(key);
+        return navigableStore().floorEntry(key);
     }
 
     /// {@inheritDoc}
@@ -788,10 +789,10 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
         if (hasBreak(FLOOR_KEY_THROWS_EXCEPTION)) {
             throw new NoSuchElementException("FloorKey access failed due to break");
         }
-        if (hasBreak(FLOOR_KEY_RETURNS_RANDOM_KEY) && !navigableMap.isEmpty()) {
-            return navigableMap.keySet().iterator().next();
+        if (hasBreak(FLOOR_KEY_RETURNS_RANDOM_KEY) && !navigableStore().isEmpty()) {
+            return navigableStore().keySet().iterator().next();
         }
-        return navigableMap.floorKey(key);
+        return navigableStore().floorKey(key);
     }
 
     /// {@inheritDoc}
@@ -823,11 +824,11 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
         if (hasBreak(CEILING_ENTRY_THROWS_EXCEPTION)) {
             throw new NoSuchElementException("CeilingEntry access failed due to break");
         }
-        if (hasBreak(CEILING_ENTRY_RETURNS_RANDOM_ENTRY) && !navigableMap.isEmpty()) {
-            K randomKey = navigableMap.keySet().iterator().next();
-            return Map.entry(randomKey, navigableMap.get(randomKey));
+        if (hasBreak(CEILING_ENTRY_RETURNS_RANDOM_ENTRY) && !navigableStore().isEmpty()) {
+            K randomKey = navigableStore().keySet().iterator().next();
+            return Map.entry(randomKey, navigableStore().get(randomKey));
         }
-        return navigableMap.ceilingEntry(key);
+        return navigableStore().ceilingEntry(key);
     }
 
     /// {@inheritDoc}
@@ -859,10 +860,10 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
         if (hasBreak(CEILING_KEY_THROWS_EXCEPTION)) {
             throw new NoSuchElementException("CeilingKey access failed due to break");
         }
-        if (hasBreak(CEILING_KEY_RETURNS_RANDOM_KEY) && !navigableMap.isEmpty()) {
-            return navigableMap.keySet().iterator().next();
+        if (hasBreak(CEILING_KEY_RETURNS_RANDOM_KEY) && !navigableStore().isEmpty()) {
+            return navigableStore().keySet().iterator().next();
         }
-        return navigableMap.ceilingKey(key);
+        return navigableStore().ceilingKey(key);
     }
 
     /// {@inheritDoc}
@@ -894,11 +895,11 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
         if (hasBreak(HIGHER_ENTRY_THROWS_EXCEPTION)) {
             throw new NoSuchElementException("HigherEntry access failed due to break");
         }
-        if (hasBreak(HIGHER_ENTRY_RETURNS_RANDOM_ENTRY) && !navigableMap.isEmpty()) {
-            K randomKey = navigableMap.keySet().iterator().next();
-            return Map.entry(randomKey, navigableMap.get(randomKey));
+        if (hasBreak(HIGHER_ENTRY_RETURNS_RANDOM_ENTRY) && !navigableStore().isEmpty()) {
+            K randomKey = navigableStore().keySet().iterator().next();
+            return Map.entry(randomKey, navigableStore().get(randomKey));
         }
-        return navigableMap.higherEntry(key);
+        return navigableStore().higherEntry(key);
     }
 
     /// {@inheritDoc}
@@ -930,10 +931,10 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
         if (hasBreak(HIGHER_KEY_THROWS_EXCEPTION)) {
             throw new NoSuchElementException("HigherKey access failed due to break");
         }
-        if (hasBreak(HIGHER_KEY_RETURNS_RANDOM_KEY) && !navigableMap.isEmpty()) {
-            return navigableMap.keySet().iterator().next();
+        if (hasBreak(HIGHER_KEY_RETURNS_RANDOM_KEY) && !navigableStore().isEmpty()) {
+            return navigableStore().keySet().iterator().next();
         }
-        return navigableMap.higherKey(key);
+        return navigableStore().higherKey(key);
     }
 
     /// {@inheritDoc}
@@ -964,11 +965,11 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
         if (hasBreak(FIRST_ENTRY_THROWS_EXCEPTION)) {
             throw new NoSuchElementException("FirstEntry access failed due to break");
         }
-        if (hasBreak(FIRST_ENTRY_RETURNS_RANDOM_ENTRY) && navigableMap.size() > 1) {
+        if (hasBreak(FIRST_ENTRY_RETURNS_RANDOM_ENTRY) && navigableStore().size() > 1) {
             // Return another entry than the first: the last.
-            return navigableMap.lastEntry();
+            return navigableStore().lastEntry();
         }
-        return navigableMap.firstEntry();
+        return navigableStore().firstEntry();
     }
 
     /// {@inheritDoc}
@@ -999,11 +1000,11 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
         if (hasBreak(LAST_ENTRY_THROWS_EXCEPTION)) {
             throw new NoSuchElementException("LastEntry access failed due to break");
         }
-        if (hasBreak(LAST_ENTRY_RETURNS_RANDOM_ENTRY) && !navigableMap.isEmpty()) {
-            K randomKey = navigableMap.keySet().iterator().next();
-            return Map.entry(randomKey, navigableMap.get(randomKey));
+        if (hasBreak(LAST_ENTRY_RETURNS_RANDOM_ENTRY) && !navigableStore().isEmpty()) {
+            K randomKey = navigableStore().keySet().iterator().next();
+            return Map.entry(randomKey, navigableStore().get(randomKey));
         }
-        return navigableMap.lastEntry();
+        return navigableStore().lastEntry();
     }
 
     /// {@inheritDoc}
@@ -1035,9 +1036,9 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
             throw new NoSuchElementException("PollFirstEntry access failed due to break");
         }
         if (hasBreak(POLL_FIRST_ENTRY_DOES_NOT_REMOVE)) {
-            return navigableMap.firstEntry(); // Return but don't remove
+            return navigableStore().firstEntry(); // Return but don't remove
         }
-        return navigableMap.pollFirstEntry();
+        return navigableStore().pollFirstEntry();
     }
 
     /// {@inheritDoc}
@@ -1069,9 +1070,9 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
             throw new NoSuchElementException("PollLastEntry access failed due to break");
         }
         if (hasBreak(POLL_LAST_ENTRY_DOES_NOT_REMOVE)) {
-            return navigableMap.lastEntry(); // Return but don't remove
+            return navigableStore().lastEntry(); // Return but don't remove
         }
-        return navigableMap.pollLastEntry();
+        return navigableStore().pollLastEntry();
     }
 
     /// {@inheritDoc}
@@ -1105,7 +1106,7 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
         if (hasBreak(DESCENDING_MAP_THROWS_EXCEPTION)) {
             throw new UnsupportedOperationException("DescendingMap access failed due to break");
         }
-        return navigableMap.descendingMap();
+        return navigableStore().descendingMap();
     }
 
     /// {@inheritDoc}
@@ -1139,7 +1140,7 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
         if (hasBreak(NAVIGABLE_KEY_SET_THROWS_EXCEPTION)) {
             throw new UnsupportedOperationException("NavigableKeySet access failed due to break");
         }
-        return navigableMap.navigableKeySet();
+        return navigableStore().navigableKeySet();
     }
 
     /// {@inheritDoc}
@@ -1173,7 +1174,7 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
         if (hasBreak(DESCENDING_KEY_SET_THROWS_EXCEPTION)) {
             throw new UnsupportedOperationException("DescendingKeySet access failed due to break");
         }
-        return navigableMap.descendingKeySet();
+        return navigableStore().descendingKeySet();
     }
 
     /// {@inheritDoc}
@@ -1213,7 +1214,7 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
         if (hasBreak(SUB_MAP_FOUR_ARG_THROWS_EXCEPTION)) {
             throw new IllegalArgumentException("SubMap creation failed due to break");
         }
-        return navigableMap.subMap(fromKey, fromInclusive, toKey, toInclusive);
+        return navigableStore().subMap(fromKey, fromInclusive, toKey, toInclusive);
     }
 
     /// {@inheritDoc}
@@ -1250,7 +1251,7 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
         if (hasBreak(HEAD_MAP_TWO_ARG_THROWS_EXCEPTION)) {
             throw new IllegalArgumentException("HeadMap creation failed due to break");
         }
-        return navigableMap.headMap(toKey, inclusive);
+        return navigableStore().headMap(toKey, inclusive);
     }
 
     /// {@inheritDoc}
@@ -1288,7 +1289,7 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
         if (hasBreak(TAIL_MAP_TWO_ARG_THROWS_EXCEPTION)) {
             throw new IllegalArgumentException("TailMap creation failed due to break");
         }
-        return navigableMap.tailMap(fromKey, inclusive);
+        return navigableStore().tailMap(fromKey, inclusive);
     }
 
     // ========== Builder Class ==========

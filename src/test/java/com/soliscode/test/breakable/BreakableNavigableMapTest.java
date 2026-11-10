@@ -2,6 +2,7 @@ package com.soliscode.test.breakable;
 
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.NavigableSet;
@@ -48,6 +49,7 @@ import static com.soliscode.test.breakable.BreakableNavigableMap.SUB_MAP_FOUR_AR
 import static com.soliscode.test.breakable.BreakableNavigableMap.TAIL_MAP_TWO_ARG_RETURNS_EMPTY_MAP;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -829,5 +831,39 @@ public class BreakableNavigableMapTest extends AbstractTest {
         // NavigableMap-level functionality with break
         assertNull(map.higherKey("apple")); // Due to HIGHER_KEY_ALWAYS_RETURNS_NULL break
         assertEquals("apple", map.lowerKey("banana")); // Should work normally
+    }
+
+    // ========== Clone ==========
+
+    /// Verifies that a change through a clone's `NavigableMap` methods does not reach the original, and that a clone
+    /// keeps its order.
+    @Test
+    @DisplayName("clone() makes a navigable map, in the same order, that a poll or put does not share")
+    public void cloneWhenPolledOrPutLeavesOriginal() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap.Builder<String, Integer>()
+                .setComparator(Comparator.reverseOrder()).build();
+        map.put("a", 1);
+        map.put("b", 2);
+        map.put("c", 3);
+        BreakableNavigableMap<String, Integer> clone = assertInstanceOf(BreakableNavigableMap.class, map.clone());
+        assertEquals("c", clone.pollFirstEntry().getKey());
+        clone.put("d", 4);
+        assertEquals(List.of("d", "b", "a"), List.copyOf(clone.navigableKeySet()));
+        assertEquals("b", clone.higherKey("d"));
+        assertEquals(List.of("c", "b", "a"), List.copyOf(map.navigableKeySet()));
+        assertEquals("b", map.higherKey("c"));
+    }
+
+    /// Verifies that a change to the original does not reach a clone.
+    @Test
+    @DisplayName("clone() makes a navigable map that a change to the original does not reach")
+    public void cloneWhenOriginalPolledIsUnchanged() {
+        BreakableNavigableMap<String, Integer> map = new BreakableNavigableMap<>();
+        map.put("a", 1);
+        map.put("b", 2);
+        BreakableNavigableMap<String, Integer> clone = assertInstanceOf(BreakableNavigableMap.class, map.clone());
+        map.pollFirstEntry();
+        assertEquals("a", clone.firstEntry().getKey());
+        assertEquals(List.of("a", "b"), List.copyOf(clone.navigableKeySet()));
     }
 }
