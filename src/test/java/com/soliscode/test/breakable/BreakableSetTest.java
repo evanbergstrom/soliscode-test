@@ -13,6 +13,8 @@ import com.soliscode.test.provider.FunctionalCollectionProvider;
 import com.soliscode.test.util.UsesCollections;
 
 import static com.soliscode.test.assertions.collection.CollectionAssertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /// **Test Suite for BreakableSet Implementation**
 ///
@@ -398,5 +400,29 @@ public class BreakableSetTest extends AbstractTest
 
         BreakableSet<Integer> set = copy.build();
         assertEquals(setOf(1, 2, 3), set); // Configuration inherited correctly
+    }
+
+    // ========== addAll with elements already present (#19) ==========
+
+    /// Tests that `addAll` adds the new elements of a batch that also holds elements already in the set, and returns
+    /// `true`, as [java.util.Set#addAll] does: the present ones leave the set unchanged.
+    @Test
+    @DisplayName("addAll(Collection) adds the new elements of a batch that holds present ones, and returns true")
+    public void addAllWithPresentAndNewElementsAddsTheNewOnes() {
+        BreakableSet<Integer> set = new BreakableSet.Builder<Integer>().addElements(1).build();
+
+        assertTrue(set.addAll(List.of(2, 3, 1)));
+        assertEquals(setOf(1, 2, 3), set);
+    }
+
+    /// Tests that `addAll` returns `false`, and leaves the set unchanged, when every element of the batch is already
+    /// in the set.
+    @Test
+    @DisplayName("addAll(Collection) returns false when every element of the batch is present")
+    public void addAllWithOnlyPresentElementsReturnsFalse() {
+        BreakableSet<Integer> set = new BreakableSet.Builder<Integer>().addElements(1, 2).build();
+
+        assertFalse(set.addAll(List.of(2, 1)));
+        assertEquals(setOf(1, 2), set);
     }
 }

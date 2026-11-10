@@ -32,6 +32,9 @@ As a task merges, it adds what a user of the library will see differently under 
 
 ## Unreleased
 
+- Fixed: `addAll` on a breakable that does not permit duplicates (`BreakableSet`, `BreakableSortedSet`, `BreakableNavigableSet`, and a collection built with `doesNotPermitDuplicates()`) now adds the new elements of a batch that also holds present ones, and returns `true`, as `Set.addAll` does. It used to add nothing and return `false`. It also checks every element of the batch for `null` and type now, so a batch that holds a present element and a refused `null` throws instead of returning `false` (#19).
+- New contract test: `AddAllContract.addAllWhenBatchHoldsPresentElementsAddsTheNewOnes` adds a batch of new elements and copies of present ones; every contract that runs `CollectionContract` runs it (#19).
+
 ## 0.1.2 — 2026-11-10
 
 Commit `7e716d0`. Full verify: Tests run: 7823, Failures: 0, Errors: 0.

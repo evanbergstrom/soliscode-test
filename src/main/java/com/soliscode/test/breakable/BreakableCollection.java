@@ -1185,8 +1185,10 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     ///         .doesNotSupportMethod(CollectionMethods.ADD_ALL)
     ///         .build();
     /// ```
-    /// @return 'true' if all of the elements are added, 'false' otherwise, or possibly a different value if the
-    ///          collection has been broken.
+    /// If this collection does not permit duplicates, an element it already holds is not added, and the others still
+    /// are, as [java.util.Set#addAll] says.
+    /// @return 'true' if this collection changed as a result of the call, 'false' otherwise, or possibly a different
+    ///          value if the collection has been broken.
     /// @throws NullPointerException if the argument contains any `null` values and collection does not support `null`
     ///                              values.
     /// @throws ClassCastException if the argument contains any elements an incompatible type and the collection does
@@ -1198,23 +1200,23 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     public boolean addAll(final Collection<? extends E> c) {
         checkOptionalMethodSupport(CollectionMethods.ADD_ALL, ADD_ALL_THROWS_WRONG_UNSUPPORTED_EXCEPTION);
 
+        // Every element is checked for null and type; one already present is skipped, not refused (#19).
+        checkArgumentElements(c);
         boolean result = false;
-        if (checkNewArgumentElements(c)) {
-            if (hasBreak(ADD_ALL_SKIPS_FIRST_ELEMENT)) {
-                List<E> l = new ArrayList<>(c);
-                result = getWithBreakableSafety(ADD_ALL_IS_NOT_THREAD_SAFE, () ->
-                        collection.addAll(l.subList(1, l.size()))
-                );
-            } else if (hasBreak(ADD_ALL_SKIPS_LAST_ELEMENT)) {
-                List<E> l = new ArrayList<>(c);
-                result = getWithBreakableSafety(ADD_ALL_IS_NOT_THREAD_SAFE, () ->
-                        collection.addAll(l.subList(0, l.size() - 1))
-                );
-            } else if (!hasBreak(ADD_ALL_DOES_NOT_ADD_ANY_ELEMENTS)) {
-                result = getWithBreakableSafety(ADD_ALL_IS_NOT_THREAD_SAFE, () ->
-                        collection.addAll(c)
-                );
-            }
+        if (hasBreak(ADD_ALL_SKIPS_FIRST_ELEMENT)) {
+            List<E> l = new ArrayList<>(c);
+            result = getWithBreakableSafety(ADD_ALL_IS_NOT_THREAD_SAFE, () ->
+                    addAllToStore(l.subList(1, l.size()))
+            );
+        } else if (hasBreak(ADD_ALL_SKIPS_LAST_ELEMENT)) {
+            List<E> l = new ArrayList<>(c);
+            result = getWithBreakableSafety(ADD_ALL_IS_NOT_THREAD_SAFE, () ->
+                    addAllToStore(l.subList(0, l.size() - 1))
+            );
+        } else if (!hasBreak(ADD_ALL_DOES_NOT_ADD_ANY_ELEMENTS)) {
+            result = getWithBreakableSafety(ADD_ALL_IS_NOT_THREAD_SAFE, () ->
+                    addAllToStore(c)
+            );
         }
         if (hasBreak(ADD_ALL_ALWAYS_RETURNS_TRUE)) {
             return true;
@@ -1226,6 +1228,23 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
             return !result;
         }
         return result;
+    }
+
+    /// Adds the elements to the store: all of them if this collection permits duplicates or the store is a set (which
+    /// keeps one copy of each itself), and otherwise each one the store does not already hold, once.
+    /// @param elements the elements to add.
+    /// @return 'true' if the store changed.
+    private boolean addAllToStore(final Collection<? extends E> elements) {
+        if (permitsDuplicates() || collection instanceof Set) {
+            return collection.addAll(elements);
+        }
+        boolean changed = false;
+        for (final E e : elements) {
+            if (!collection.contains(e)) {
+                changed |= collection.add(e);
+            }
+        }
+        return changed;
     }
 
     /// Implements the [removeAll][Collection#removeAll] method from the [Collection] interface. This method can be

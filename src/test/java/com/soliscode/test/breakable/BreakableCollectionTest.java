@@ -528,6 +528,24 @@ public class BreakableCollectionTest extends AbstractTest
 
     // ========== addAll Tests ==========
 
+    /// Test that `addAll(Collection)`, on a collection that does not permit duplicates, adds each element of the batch
+    /// that is not already in it once, and returns `true` (#19): the present elements, and the second copy of one the
+    /// batch holds twice, are not added.
+    /// @see BreakableCollection#addAll(Collection)
+    @DisplayName("addAll(Collection) adds only the new elements when the collection does not permit duplicates")
+    @Test
+    public void addAllWhenDuplicatesAreNotPermittedAddsOnlyTheNewElements() {
+        Collection<Integer> collection = Breakables.buildCollection(Integer.class)
+                .doesNotPermitDuplicates()
+                .addElements(1)
+                .build();
+
+        assertTrue(collection.addAll(Arrays.asList(2, 1, 3, 2)));
+        assertEquals(List.of(1, 2, 3), List.copyOf(collection));
+        assertFalse(collection.addAll(Arrays.asList(3, 1)));
+        assertEquals(3, collection.size());
+    }
+
     /// Test that the `ADD_ALL_DOES_NOT_ADD_ANY_ELEMENTS` break causes the `addAll(Collection)` method to not
     /// add any elements.
     /// @see BreakableCollection#addAll(Collection)

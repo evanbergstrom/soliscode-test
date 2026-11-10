@@ -3,7 +3,9 @@ package com.soliscode.test.breakable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.SortedSet;
 
 import org.junit.jupiter.api.DisplayName;
@@ -633,5 +635,29 @@ public class BreakableSortedSetTest {
 
         // Invalid range (from > to) should throw exception
         assertThrows(IllegalArgumentException.class, () -> populatedSet.subSet("d", "a"));
+    }
+
+    // ========== addAll with elements already present (#19) ==========
+
+    /// Tests that `addAll` adds the new elements of a batch that also holds elements already in the set, and returns
+    /// `true`, as [java.util.Set#addAll] does: the present ones leave the set unchanged.
+    @Test
+    @DisplayName("addAll(Collection) adds the new elements of a batch that holds present ones, and returns true")
+    public void addAllWithPresentAndNewElementsAddsTheNewOnes() {
+        BreakableSortedSet<Integer> set = new BreakableSortedSet.Builder<Integer>().addElements(1).build();
+
+        assertTrue(set.addAll(List.of(2, 3, 1)));
+        assertEquals(Set.of(1, 2, 3), set);
+    }
+
+    /// Tests that `addAll` returns `false`, and leaves the set unchanged, when every element of the batch is already
+    /// in the set.
+    @Test
+    @DisplayName("addAll(Collection) returns false when every element of the batch is present")
+    public void addAllWithOnlyPresentElementsReturnsFalse() {
+        BreakableSortedSet<Integer> set = new BreakableSortedSet.Builder<Integer>().addElements(1, 2).build();
+
+        assertFalse(set.addAll(List.of(2, 1)));
+        assertEquals(Set.of(1, 2), set);
     }
 }

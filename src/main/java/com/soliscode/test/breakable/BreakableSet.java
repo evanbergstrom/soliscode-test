@@ -451,7 +451,7 @@ public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
     /// BreakableSet<Integer> set = new BreakableSet<>();
     /// set.add(1);
     ///
-    /// boolean changed = set.addAll(Arrays.asList(2, 3)); // true - added 2 and 3
+    /// boolean changed = set.addAll(Arrays.asList(2, 3, 1)); // true - added 2 and 3; 1 was already present
     /// assertEquals(3, set.size());
     ///
     /// // With breaks active

@@ -1,5 +1,6 @@
 package com.soliscode.test.contract.collection;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -186,6 +187,38 @@ public interface AddAllContract<C extends Collection<E>, E> extends CollectionCo
                 E otherValue = elementProvider().copyInstance(value);
                 assertFalse(collection.addAll(Collections.singleton(otherValue)));
                 assertEquals(1, collection.size());
+            }
+        }
+    }
+
+    /// Tests that the [addAll][Collection#addAll] method adds the new elements of a batch that also holds elements
+    /// already in the collection.
+    ///
+    /// This test verifies the behavior based on [CollectionContractSupport#permitDuplicates()]:
+    /// - If duplicates are permitted: every element of the batch is added.
+    /// - If duplicates are not permitted: the new elements are added, the present ones leave the collection unchanged
+    ///   (so it keeps the instances it had, as [java.util.Set#add] says), and the method returns `true`, since the
+    ///   collection changed ([Collection#addAll]: "true if this collection changed as a result of the call").
+    ///
+    /// @since 0.1.3
+    @DisplayName("addAll(Collection) adds the new elements of a batch that holds elements already present")
+    @Test
+    default void addAllWhenBatchHoldsPresentElementsAddsTheNewOnes() {
+        if (supportsMethod(CollectionMethods.ADD_ALL)) {
+            List<E> values = elementProvider().createUniqueInstances(DEFAULT_SIZE);
+            List<E> present = values.subList(0, DEFAULT_SIZE / 2);
+            Collection<E> collection = provider().createInstance(present);
+            List<E> batch = new ArrayList<>(values.subList(DEFAULT_SIZE / 2, DEFAULT_SIZE));
+            for (final E e : present) {
+                batch.add(elementProvider().copyInstance(e));
+            }
+
+            assertTrue(collection.addAll(unmodifiableCollection(batch)));
+            if (permitDuplicates()) {
+                assertEquals(present.size() + batch.size(), collection.size());
+                assertContainsAll(batch, collection);
+            } else {
+                assertContainsSameByIdentity(values, collection);
             }
         }
     }
