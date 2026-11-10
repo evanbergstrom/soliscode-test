@@ -230,7 +230,12 @@ public interface BlockingQueueContractSupport<Q extends BlockingQueue<E>, E> ext
         assertEquals(counts(expected), counts(actual), description);
     }
 
-    private static boolean isWaiting(final @Nullable Thread thread) {
+    /// Returns whether a thread is waiting: in the state [Thread.State#WAITING] or [Thread.State#TIMED_WAITING].
+    /// A thread that is waiting may be waiting for the queue, or for something else, such as a lock.
+    ///
+    /// @param thread the thread, or `null` for none yet
+    /// @return `true` if the thread is waiting
+    default boolean isWaiting(final @Nullable Thread thread) {
         if (thread == null) {
             return false;
         }

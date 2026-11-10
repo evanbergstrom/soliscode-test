@@ -2,9 +2,11 @@ package com.soliscode.test.breakable;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.LinkedTransferQueue;
@@ -61,6 +63,19 @@ import com.soliscode.test.contract.transferqueue.TransferQueueMethods;
 /// - **HAS_WAITING_CONSUMER_ALWAYS_RETURNS_TRUE**: Forces hasWaitingConsumer() to always return true
 /// - **GET_WAITING_CONSUMER_COUNT_ALWAYS_RETURNS_ZERO**: Forces getWaitingConsumerCount() to always return 0
 /// - **GET_WAITING_CONSUMER_COUNT_RETURNS_RANDOM**: Forces getWaitingConsumerCount() to return arbitrary values
+///
+/// ### Breaks the TransferQueue contract checks (0.1.2)
+/// - **TRANSFER_DOES_NOT_WAIT**, **TRANSFER_DOES_NOT_WAIT_FOR_SPACE**, **TRY_TRANSFER_WITH_TIMEOUT_DOES_NOT_WAIT**:
+///   a call that should wait, for a consumer or for room, does not
+/// - **TRANSFER_ENQUEUES_ELEMENT_WHEN_INTERRUPTED**, **TRY_TRANSFER_ENQUEUES_ELEMENT**,
+///   **TRY_TRANSFER_WITH_TIMEOUT_ENQUEUES_ELEMENT**: an element that was not transferred is left enqueued
+/// - **TRANSFER_IS_NOT_THREAD_SAFE**, **TRY_TRANSFER_IS_NOT_THREAD_SAFE**: check-then-act on the store
+///
+/// ## Capacity and fairness
+///
+/// Built with a capacity or fairness ([Builder#build(Iterable)]), the queue's store is a bounded `TransferQueue` of
+/// this package's own, on one `ReentrantLock`, fair when asked; otherwise it is a `LinkedTransferQueue`. The JDK has
+/// no bounded `TransferQueue`.
 ///
 /// ## Usage Examples
 ///
@@ -340,10 +355,10 @@ public class BreakableTransferQueue<E> extends BreakableBlockingQueue<E> impleme
     /// Break constant that causes getWaitingConsumerCount() to return arbitrary values.
     ///
     /// When this break is applied, the getWaitingConsumerCount() method will return
-    /// a random value instead of the actual count of waiting consumers.
+    /// a value that is not the count of waiting consumers: the count, plus one, plus an arbitrary value from 0 to 999.
     ///
     /// **Affected Methods:**
-    /// - {@link #getWaitingConsumerCount()} - Returns arbitrary value
+    /// - {@link #getWaitingConsumerCount()} - Returns a value that is not the count
     ///
     /// **Use Cases:**
     /// - Testing robustness against incorrect consumer counts
@@ -351,6 +366,129 @@ public class BreakableTransferQueue<E> extends BreakableBlockingQueue<E> impleme
     /// - Testing consumer count validation logic
     public static final Break GET_WAITING_CONSUMER_COUNT_RETURNS_RANDOM =
             new Break("GET_WAITING_CONSUMER_COUNT_RETURNS_RANDOM");
+
+    // ========== Breaks the TransferQueue contract checks (0.1.2) ==========
+
+    /// Break constant that makes `transfer` return without waiting for a consumer.
+    ///
+    /// **Purpose:** simulates a `transfer` that acts as `put`, though it "waits until the element is received by a
+    /// consumer" ([TransferQueue#transfer]).
+    ///
+    /// **Effect:** `transfer(e)` offers the element to the store and returns at once.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #transfer(Object)} - Does not wait for reception
+    ///
+    /// @since 0.1.2
+    public static final Break TRANSFER_DOES_NOT_WAIT =
+            new Break("TRANSFER_DOES_NOT_WAIT");
+
+    /// Break constant that makes `transfer` on a full queue return at once, without adding the element.
+    ///
+    /// **Purpose:** simulates a `transfer` that does not wait for room on a bounded queue, though "an attempted
+    /// transfer operation may initially block waiting for available space" ([TransferQueue]).
+    ///
+    /// **Effect:** when the store has no room left (`remainingCapacity() == 0`), `transfer(e)` returns without adding
+    /// or transferring the element. With room, it transfers as normal.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #transfer(Object)} - Does not wait for room
+    ///
+    /// @since 0.1.2
+    public static final Break TRANSFER_DOES_NOT_WAIT_FOR_SPACE =
+            new Break("TRANSFER_DOES_NOT_WAIT_FOR_SPACE");
+
+    /// Break constant that makes an interrupted `transfer` leave its element enqueued.
+    ///
+    /// **Purpose:** `transfer` throws `InterruptedException` "if interrupted while waiting, in which case the element
+    /// is not left enqueued" ([TransferQueue#transfer]); this break leaves it enqueued.
+    ///
+    /// **Effect:** when the store's `transfer` throws `InterruptedException`, the element is offered to the store
+    /// before the exception is thrown again.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #transfer(Object)} - Leaves the element enqueued when interrupted
+    ///
+    /// @since 0.1.2
+    public static final Break TRANSFER_ENQUEUES_ELEMENT_WHEN_INTERRUPTED =
+            new Break("TRANSFER_ENQUEUES_ELEMENT_WHEN_INTERRUPTED");
+
+    /// Break constant that makes `tryTransfer` enqueue an element no consumer was waiting for.
+    ///
+    /// **Purpose:** `tryTransfer` returns `false` "without enqueuing the element" when no consumer is waiting
+    /// ([TransferQueue#tryTransfer(Object)]); this break enqueues it.
+    ///
+    /// **Effect:** when the store's `tryTransfer(e)` returns `false`, the element is offered to the store, and
+    /// `false` is returned.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #tryTransfer(Object)} - Enqueues the element it did not transfer
+    ///
+    /// @since 0.1.2
+    public static final Break TRY_TRANSFER_ENQUEUES_ELEMENT =
+            new Break("TRY_TRANSFER_ENQUEUES_ELEMENT");
+
+    /// Break constant that makes the timed `tryTransfer` try once, without waiting.
+    ///
+    /// **Purpose:** the timed `tryTransfer` "waits until the element is received by a consumer, returning false if
+    /// the specified wait time elapses" ([TransferQueue#tryTransfer(Object, long, TimeUnit)]); this break does not
+    /// wait.
+    ///
+    /// **Effect:** `tryTransfer(e, timeout, unit)` returns the store's untimed `tryTransfer(e)`.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #tryTransfer(Object, long, TimeUnit)} - Does not wait
+    ///
+    /// @since 0.1.2
+    public static final Break TRY_TRANSFER_WITH_TIMEOUT_DOES_NOT_WAIT =
+            new Break("TRY_TRANSFER_WITH_TIMEOUT_DOES_NOT_WAIT");
+
+    /// Break constant that makes the timed `tryTransfer` leave its element enqueued when it gives up.
+    ///
+    /// **Purpose:** when the timed `tryTransfer` times out or is interrupted, the element "is not left enqueued"
+    /// ([TransferQueue#tryTransfer(Object, long, TimeUnit)]); this break leaves it enqueued.
+    ///
+    /// **Effect:** when the store's timed `tryTransfer` returns `false` or throws `InterruptedException`, the element
+    /// is offered to the store before `false` is returned or the exception thrown again.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #tryTransfer(Object, long, TimeUnit)} - Leaves the element enqueued when it gives up
+    ///
+    /// @since 0.1.2
+    public static final Break TRY_TRANSFER_WITH_TIMEOUT_ENQUEUES_ELEMENT =
+            new Break("TRY_TRANSFER_WITH_TIMEOUT_ENQUEUES_ELEMENT");
+
+    /// Break constant that makes `transfer` not atomic.
+    ///
+    /// **Purpose:** simulates a `transfer` that is not thread safe, though a `BlockingQueue`'s "queuing methods
+    /// achieve their effects atomically" ([java.util.concurrent.BlockingQueue]).
+    ///
+    /// **Effect:** check-then-act on the store: if the store `hasWaitingConsumer()`, `transfer(e)` offers the element
+    /// and returns; otherwise it calls the store's `transfer(e)`. Two producers that see one waiting consumer both
+    /// offer, and one element is left enqueued after its `transfer` returned.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #transfer(Object)} - Not atomic
+    ///
+    /// @since 0.1.2
+    public static final Break TRANSFER_IS_NOT_THREAD_SAFE =
+            new Break("TRANSFER_IS_NOT_THREAD_SAFE");
+
+    /// Break constant that makes `tryTransfer` not atomic.
+    ///
+    /// **Purpose:** simulates a `tryTransfer` that is not thread safe, though a `BlockingQueue`'s "queuing methods
+    /// achieve their effects atomically" ([java.util.concurrent.BlockingQueue]).
+    ///
+    /// **Effect:** check-then-act on the store: if the store `hasWaitingConsumer()`, `tryTransfer(e)` offers the
+    /// element and returns `true`; otherwise it returns the store's `tryTransfer(e)`. Two producers that see one
+    /// waiting consumer both return `true`, and one element is left enqueued.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #tryTransfer(Object)} - Not atomic
+    ///
+    /// @since 0.1.2
+    public static final Break TRY_TRANSFER_IS_NOT_THREAD_SAFE =
+            new Break("TRY_TRANSFER_IS_NOT_THREAD_SAFE");
 
     private static final int PSEUDO_RANDOMIZER_CONSTANT = 1000;
 
@@ -388,14 +526,14 @@ public class BreakableTransferQueue<E> extends BreakableBlockingQueue<E> impleme
 
     /// Creates a BreakableTransferQueue by copying another BreakableTransferQueue.
     ///
-    /// This constructor creates a new instance that shares the underlying transfer queue data
-    /// and inherits all configuration from the source queue.
+    /// This constructor creates a new instance with a copy of the source queue's elements, in a store of
+    /// the same kind (a bounded store keeps its capacity and fairness), and all of its configuration.
     ///
     /// **Inherited Configuration:**
     /// - All break settings from source
     /// - Null element policies
     /// - Method support configuration
-    /// - Underlying TransferQueue reference (shared, not copied)
+    /// - The elements, copied into a new store: the copy shares no state with the source
     ///
     /// **Usage:**
     /// ```java
@@ -407,7 +545,7 @@ public class BreakableTransferQueue<E> extends BreakableBlockingQueue<E> impleme
     /// @throws NullPointerException if other is null
     /// @since 1.0.0
     public BreakableTransferQueue(final BreakableTransferQueue<E> other) {
-        this(new LinkedTransferQueue<>(other.transferQueue), new HashSet<>(other.breaks()),
+        this(copyOf(other.transferQueue), new HashSet<>(other.breaks()),
                 new HashMap<>(other.methodStatuses()), other.characteristics(), other.permits(),
                 other.isSafe(), other.compatibleType());
     }
@@ -459,6 +597,10 @@ public class BreakableTransferQueue<E> extends BreakableBlockingQueue<E> impleme
     /// - {@link #TRANSFER_THROWS_INTERRUPTED_EXCEPTION} - Throws InterruptedException
     /// - {@link #TRANSFER_DOES_NOT_ADD_ELEMENT} - Returns normally but doesn't transfer element
     /// - {@link #TRANSFER_THROWS_EXCEPTION} - Throws IllegalStateException
+    /// - {@link #TRANSFER_DOES_NOT_WAIT} - Offers the element and returns without waiting
+    /// - {@link #TRANSFER_DOES_NOT_WAIT_FOR_SPACE} - On a full queue, returns without adding the element
+    /// - {@link #TRANSFER_IS_NOT_THREAD_SAFE} - Checks for a waiting consumer, then offers, in two steps
+    /// - {@link #TRANSFER_ENQUEUES_ELEMENT_WHEN_INTERRUPTED} - Interrupted, leaves the element enqueued
     ///
     /// **Exception Handling:**
     /// - Throws UnsupportedOperationException if the method is not supported
@@ -466,9 +608,7 @@ public class BreakableTransferQueue<E> extends BreakableBlockingQueue<E> impleme
     /// - May throw IllegalStateException due to TRANSFER_THROWS_EXCEPTION break
     @Override
     public void transfer(final E e) throws InterruptedException {
-        if (!supportsMethod(TransferQueueMethods.TRANSFER)) {
-            throw new UnsupportedOperationException("transfer() method is not supported");
-        }
+        checkMethodSupport(TransferQueueMethods.TRANSFER);
 
         if (hasBreak(TRANSFER_THROWS_INTERRUPTED_EXCEPTION)) {
             throw new InterruptedException("Transfer operation interrupted due to break");
@@ -497,7 +637,28 @@ public class BreakableTransferQueue<E> extends BreakableBlockingQueue<E> impleme
             }
         }
 
-        transferQueue.transfer(e);
+        if (hasBreak(TRANSFER_DOES_NOT_WAIT)) {
+            transferQueue.offer(e);
+            return;
+        }
+
+        if (hasBreak(TRANSFER_DOES_NOT_WAIT_FOR_SPACE) && transferQueue.remainingCapacity() == 0) {
+            return;
+        }
+
+        if (hasBreak(TRANSFER_IS_NOT_THREAD_SAFE) && transferQueue.hasWaitingConsumer()) {
+            transferQueue.offer(e);
+            return;
+        }
+
+        try {
+            transferQueue.transfer(e);
+        } catch (final InterruptedException ie) {
+            if (hasBreak(TRANSFER_ENQUEUES_ELEMENT_WHEN_INTERRUPTED)) {
+                transferQueue.offer(e);
+            }
+            throw ie;
+        }
     }
 
     /// {@inheritDoc}
@@ -509,15 +670,15 @@ public class BreakableTransferQueue<E> extends BreakableBlockingQueue<E> impleme
     /// - {@link #TRY_TRANSFER_ALWAYS_RETURNS_FALSE} - Returns false regardless of transfer success
     /// - {@link #TRY_TRANSFER_THROWS_EXCEPTION} - Throws IllegalStateException
     /// - {@link #TRY_TRANSFER_DOES_NOT_ADD_ELEMENT} - Returns normally but doesn't transfer element
+    /// - {@link #TRY_TRANSFER_IS_NOT_THREAD_SAFE} - Checks for a waiting consumer, then offers, in two steps
+    /// - {@link #TRY_TRANSFER_ENQUEUES_ELEMENT} - Enqueues the element it did not transfer
     ///
     /// **Exception Handling:**
     /// - Throws UnsupportedOperationException if the method is not supported
     /// - May throw IllegalStateException due to TRY_TRANSFER_THROWS_EXCEPTION break
     @Override
     public boolean tryTransfer(final E e) {
-        if (!supportsMethod(TransferQueueMethods.TRY_TRANSFER)) {
-            throw new UnsupportedOperationException("tryTransfer() method is not supported");
-        }
+        checkMethodSupport(TransferQueueMethods.TRY_TRANSFER);
 
         if (hasBreak(TRY_TRANSFER_THROWS_EXCEPTION)) {
             throw new IllegalStateException("TryTransfer operation failed due to break");
@@ -528,7 +689,16 @@ public class BreakableTransferQueue<E> extends BreakableBlockingQueue<E> impleme
         }
 
         // Perform the transfer first
-        boolean result = transferQueue.tryTransfer(e);
+        boolean result;
+        if (hasBreak(TRY_TRANSFER_IS_NOT_THREAD_SAFE) && transferQueue.hasWaitingConsumer()) {
+            result = transferQueue.offer(e);
+        } else {
+            result = transferQueue.tryTransfer(e);
+        }
+
+        if (!result && hasBreak(TRY_TRANSFER_ENQUEUES_ELEMENT)) {
+            transferQueue.offer(e);
+        }
 
         if (hasBreak(TRY_TRANSFER_ALWAYS_RETURNS_FALSE)) {
             return false;
@@ -546,6 +716,8 @@ public class BreakableTransferQueue<E> extends BreakableBlockingQueue<E> impleme
     /// - {@link #TRY_TRANSFER_WITH_TIMEOUT_ALWAYS_RETURNS_FALSE} - Returns false regardless of timeout
     /// - {@link #TRY_TRANSFER_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION} - Throws InterruptedException
     /// - {@link #TRY_TRANSFER_WITH_TIMEOUT_DOES_NOT_ADD_ELEMENT} - Returns normally but doesn't transfer element
+    /// - {@link #TRY_TRANSFER_WITH_TIMEOUT_DOES_NOT_WAIT} - Tries once, without waiting
+    /// - {@link #TRY_TRANSFER_WITH_TIMEOUT_ENQUEUES_ELEMENT} - Leaves the element enqueued when it gives up
     ///
     /// **Exception Handling:**
     /// - Throws UnsupportedOperationException if the method is not supported
@@ -553,9 +725,7 @@ public class BreakableTransferQueue<E> extends BreakableBlockingQueue<E> impleme
     @Override
     public boolean tryTransfer(final E e, final long timeout, final TimeUnit unit)
             throws InterruptedException {
-        if (!supportsMethod(TransferQueueMethods.TRY_TRANSFER_TIMEOUT)) {
-            throw new UnsupportedOperationException("tryTransfer(timeout) method is not supported");
-        }
+        checkMethodSupport(TransferQueueMethods.TRY_TRANSFER_TIMEOUT);
 
         if (hasBreak(TRY_TRANSFER_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION)) {
             throw new InterruptedException("TryTransfer with timeout operation interrupted due to break");
@@ -566,7 +736,23 @@ public class BreakableTransferQueue<E> extends BreakableBlockingQueue<E> impleme
         }
 
         // Perform the transfer first
-        boolean result = transferQueue.tryTransfer(e, timeout, unit);
+        boolean result;
+        if (hasBreak(TRY_TRANSFER_WITH_TIMEOUT_DOES_NOT_WAIT)) {
+            result = transferQueue.tryTransfer(e);
+        } else {
+            try {
+                result = transferQueue.tryTransfer(e, timeout, unit);
+            } catch (final InterruptedException ie) {
+                if (hasBreak(TRY_TRANSFER_WITH_TIMEOUT_ENQUEUES_ELEMENT)) {
+                    transferQueue.offer(e);
+                }
+                throw ie;
+            }
+        }
+
+        if (!result && hasBreak(TRY_TRANSFER_WITH_TIMEOUT_ENQUEUES_ELEMENT)) {
+            transferQueue.offer(e);
+        }
 
         if (hasBreak(TRY_TRANSFER_WITH_TIMEOUT_ALWAYS_RETURNS_FALSE)) {
             return false;
@@ -589,9 +775,7 @@ public class BreakableTransferQueue<E> extends BreakableBlockingQueue<E> impleme
     /// - Throws UnsupportedOperationException if the method is not supported
     @Override
     public boolean hasWaitingConsumer() {
-        if (!supportsMethod(TransferQueueMethods.HAS_WAITING_CONSUMER)) {
-            throw new UnsupportedOperationException("hasWaitingConsumer() method is not supported");
-        }
+        checkMethodSupport(TransferQueueMethods.HAS_WAITING_CONSUMER);
 
         if (hasBreak(HAS_WAITING_CONSUMER_ALWAYS_RETURNS_FALSE)) {
             return false;
@@ -618,19 +802,26 @@ public class BreakableTransferQueue<E> extends BreakableBlockingQueue<E> impleme
     /// - Throws UnsupportedOperationException if the method is not supported
     @Override
     public int getWaitingConsumerCount() {
-        if (!supportsMethod(TransferQueueMethods.GET_WAITING_CONSUMER_COUNT)) {
-            throw new UnsupportedOperationException("getWaitingConsumerCount() method is not supported");
-        }
+        checkMethodSupport(TransferQueueMethods.GET_WAITING_CONSUMER_COUNT);
 
         if (hasBreak(GET_WAITING_CONSUMER_COUNT_ALWAYS_RETURNS_ZERO)) {
             return 0;
         }
 
         if (hasBreak(GET_WAITING_CONSUMER_COUNT_RETURNS_RANDOM)) {
-            return Math.abs(hashCode() % PSEUDO_RANDOMIZER_CONSTANT); // Return deterministic "random" value
+            // Never the count: a deterministic "random" value above it.
+            return transferQueue.getWaitingConsumerCount() + 1 + Math.floorMod(hashCode(), PSEUDO_RANDOMIZER_CONSTANT);
         }
 
         return transferQueue.getWaitingConsumerCount();
+    }
+
+    /// A copy of a store: a bounded store keeps its capacity and fairness.
+    private static <E> TransferQueue<E> copyOf(final TransferQueue<E> store) {
+        if (store instanceof BoundedTransferQueue<E> bounded) {
+            return bounded.copy();
+        }
+        return new LinkedTransferQueue<>(store);
     }
 
     // ========== Builder Class ==========
@@ -693,11 +884,28 @@ public class BreakableTransferQueue<E> extends BreakableBlockingQueue<E> impleme
 
         /// Builds a new BreakableTransferQueue instance with the configured settings.
         ///
+        /// The store is a `LinkedTransferQueue`, unbounded and not fair, unless a capacity or fairness is set:
+        /// - **A capacity** ([#setCapacity(int)], 1 or more) gives a bounded store of that capacity. A negative
+        ///   capacity, the default, means no capacity, as for [BreakableBlockingQueue]; a capacity of 0 is refused,
+        ///   since a `TransferQueue` with no room would be a `SynchronousQueue`.
+        /// - **Fairness** ([#setFair(boolean)] with `true`) gives a store whose lock is fair, unbounded unless a
+        ///   capacity is set too. The builder cannot tell `setFair(false)` from no call; both mean not fair.
+        ///
+        /// The JDK has no bounded `TransferQueue`, so the bounded and fair store is this package's own, on one
+        /// `ReentrantLock`.
+        ///
         /// @return a new BreakableTransferQueue
+        /// @throws IllegalArgumentException if the capacity is 0, or there are more elements than the capacity
         @Override
         public BreakableTransferQueue<E> build(final Iterable<E> elements) {
-            LinkedTransferQueue<E> storage = new LinkedTransferQueue<>(elements());
-            elements.forEach(storage::add);
+            List<E> all = new ArrayList<>(elements());
+            elements.forEach(all::add);
+            TransferQueue<E> storage;
+            if (capacity() >= 0 || fair()) {
+                storage = new BoundedTransferQueue<>(capacity() >= 0 ? capacity() : Integer.MAX_VALUE, fair(), all);
+            } else {
+                storage = new LinkedTransferQueue<>(all);
+            }
             return new BreakableTransferQueue<>(storage, new HashSet<>(breaks()), new HashMap<>(methodStatuses()),
                     characteristics(), permits(), isSafe(), compatibleType());
         }

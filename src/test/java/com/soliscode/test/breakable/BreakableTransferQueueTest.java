@@ -400,6 +400,51 @@ public class BreakableTransferQueueTest extends AbstractTest {
         assertEquals(0, queue.getWaitingConsumerCount());
     }
 
+    /// Verifies that a capacity set on the builder bounds the queue.
+    @Test
+    @DisplayName("build() with a capacity makes a bounded queue")
+    public void buildWithCapacityMakesBoundedQueue() {
+        BreakableTransferQueue<String> queue = new BreakableTransferQueue.Builder<String>()
+                .setCapacity(2).build(java.util.List.of("a"));
+        assertEquals(1, queue.remainingCapacity());
+        assertTrue(queue.offer("b"));
+        assertFalse(queue.offer("c"), "offer(E) on a full bounded queue returned true");
+        assertEquals(2, queue.size());
+    }
+
+    /// Verifies that a copy keeps the capacity of a bounded queue.
+    @Test
+    @DisplayName("The copy constructor keeps the capacity of a bounded queue")
+    public void copyConstructorWithBoundedQueueKeepsCapacity() {
+        BreakableTransferQueue<String> queue = new BreakableTransferQueue.Builder<String>()
+                .setCapacity(3).build(java.util.List.of("a"));
+        BreakableTransferQueue<String> copy = new BreakableTransferQueue<>(queue);
+        assertEquals(2, copy.remainingCapacity());
+        assertEquals(1, copy.size());
+        assertTrue(copy.offer("b"));
+        assertEquals(1, queue.size(), "the copy shares the store");
+    }
+
+    /// Verifies that fairness alone makes an unbounded queue, and no capacity a `LinkedTransferQueue`'s.
+    @Test
+    @DisplayName("build() with fairness alone, or a negative capacity, makes an unbounded queue")
+    public void buildWithFairnessOrNegativeCapacityMakesUnboundedQueue() {
+        assertEquals(Integer.MAX_VALUE, new BreakableTransferQueue.Builder<String>().setFair(true).build()
+                .remainingCapacity());
+        assertEquals(Integer.MAX_VALUE, new BreakableTransferQueue.Builder<String>().setCapacity(-5).build()
+                .remainingCapacity());
+    }
+
+    /// Verifies that the builder refuses a capacity of 0, and more elements than the capacity.
+    @Test
+    @DisplayName("build() refuses a capacity of 0, and more elements than the capacity")
+    public void buildWithZeroCapacityOrTooManyElementsThrowsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new BreakableTransferQueue.Builder<String>().setCapacity(0).build());
+        assertThrows(IllegalArgumentException.class,
+                () -> new BreakableTransferQueue.Builder<String>().setCapacity(1).build(java.util.List.of("a", "b")));
+    }
+
     /// Verifies the `GET_WAITING_CONSUMER_COUNT_RETURNS_RANDOM` break constant.
     @Test
     @DisplayName("Test GET_WAITING_CONSUMER_COUNT_RETURNS_RANDOM break")
@@ -409,7 +454,7 @@ public class BreakableTransferQueueTest extends AbstractTest {
                 .build();
 
         int count = queue.getWaitingConsumerCount();
-        assertNotEquals(-1, count); // Should return some deterministic "random" value
+        assertNotEquals(0, count, "the break returned the count, 0"); // Never the count
         assertTrue(count >= 0); // Should be non-negative
 
         // Should return the same value consistently (deterministic)

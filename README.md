@@ -41,13 +41,14 @@ This library provides support for:\
 >       - `Deque`
 >       - `BlockingQueue`, and thread-safe blocking queues
 >       - `BlockingDeque`, and thread-safe blocking deques
+>       - `TransferQueue`, and thread-safe transfer queues
 > - `Map`
 >   - `SortedMap`
 >     - `NavigableMap`
 >   - `SequencedMap`
 >
-> It has breakable implementations, but no contracts yet, for `ConcurrentMap`,
-> `ConcurrentNavigableMap` and `TransferQueue`.
+> It has breakable implementations, but no contracts yet, for `ConcurrentMap` and
+> `ConcurrentNavigableMap`.
 
 **Docs:** https://evanbergstrom.github.io/soliscode-test/
 

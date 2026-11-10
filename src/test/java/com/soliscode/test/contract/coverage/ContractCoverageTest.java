@@ -20,6 +20,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.LinkedTransferQueue;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -50,6 +51,7 @@ import com.soliscode.test.breakable.BreakableSet;
 import com.soliscode.test.breakable.BreakableSortedMap;
 import com.soliscode.test.breakable.BreakableSortedSet;
 import com.soliscode.test.breakable.BreakableSpliterator;
+import com.soliscode.test.breakable.BreakableTransferQueue;
 import com.soliscode.test.contract.CollectionContractConfig;
 import com.soliscode.test.contract.DynamicCollectionContract;
 import com.soliscode.test.contract.DynamicMapContract;
@@ -82,6 +84,8 @@ import com.soliscode.test.contract.sortedmap.SortedMapContract;
 import com.soliscode.test.contract.sortedset.SortedSetContract;
 import com.soliscode.test.contract.support.WithIntegerElement;
 import com.soliscode.test.contract.support.WithIntegerKeyAndStringValue;
+import com.soliscode.test.contract.transferqueue.ThreadSafeTransferQueueContract;
+import com.soliscode.test.contract.transferqueue.TransferQueueContract;
 import com.soliscode.test.provider.CollectionProvider;
 import com.soliscode.test.provider.CollectionProviders;
 import com.soliscode.test.provider.MapProvider;
@@ -183,6 +187,17 @@ public class ContractCoverageTest {
         boolean isSet = SetContract.class.isAssignableFrom(contract);
         boolean blockingQueueBreak = key.startsWith(BreakableBlockingQueue.class.getSimpleName() + ".");
         boolean blockingDequeBreak = key.startsWith(BreakableBlockingDeque.class.getSimpleName() + ".");
+        boolean transferQueueBreak = key.startsWith(BreakableTransferQueue.class.getSimpleName() + ".");
+        if (field.endsWith(THREAD_SAFETY_BREAK) && contract == ThreadSafeTransferQueueContract.class) {
+            // BreakableBlockingQueue's take, poll and drainTo run on the transfer queue's store: faults for it too.
+            return transferQueueBreak || blockingQueueBreak ? null : "not a fault for a BreakableTransferQueue: its "
+                    + "store (a LinkedTransferQueue, or its own bounded store on one lock) is thread safe without the "
+                    + "breakable's lock, so running without the lock changes nothing; ThreadSafeCollectionContract "
+                    + "covers it on BreakableCollection, or gives its reason";
+        }
+        if (field.endsWith(THREAD_SAFETY_BREAK) && transferQueueBreak) {
+            return "a thread-safety break: ThreadSafeTransferQueueContract checks it";
+        }
         if (field.endsWith(THREAD_SAFETY_BREAK) && contract == ThreadSafeBlockingDequeContract.class) {
             return blockingDequeBreak ? null : "not a fault for a BreakableBlockingDeque: its store is a JDK "
                     + "BlockingDeque, thread safe without the breakable's lock, so running without the lock changes "
@@ -401,6 +416,26 @@ public class ContractCoverageTest {
     }
 
     @TestFactory
+    @DisplayName("TransferQueueContract")
+    Stream<DynamicNode> transferQueueContract() {
+        List<Method> methods = ContractRuns.testMethods(TransferQueueContract.class, false);
+        return Stream.concat(
+                coverage(TransferQueueContract.class, "LinkedTransferQueue", JdkTransferQueue::new,
+                        collectionBreaks(BreakableTransferQueue.class),
+                        (key, b) -> {
+                            var builder = boundedTransferQueueBuilder();
+                            var config = configure(builder, key, b);
+                            return () -> new BrokenTransferQueue(builder, noNulls(config));
+                        }),
+                Stream.of(passes("unbroken BreakableTransferQueue on a LinkedTransferQueue",
+                                () -> new BrokenTransferQueue(new BreakableTransferQueue.Builder<Integer>()
+                                        .doesNotPermitNulls(), noNulls(STANDARD)), methods),
+                        passes("unbroken fair BreakableTransferQueue of " + QUEUE_CAPACITY,
+                                () -> new BrokenTransferQueue(boundedTransferQueueBuilder().setFair(true),
+                                        noNulls(STANDARD)), methods)));
+    }
+
+    @TestFactory
     @DisplayName("BlockingDequeContract")
     Stream<DynamicNode> blockingDequeContract() {
         List<Method> methods = ContractRuns.testMethods(BlockingDequeContract.class, false);
@@ -514,6 +549,30 @@ public class ContractCoverageTest {
                                 () -> new BrokenThreadSafeBlockingDeque(boundedDequeBuilder()), all)),
                 breaks.entrySet().stream().map(e -> fails(e.getKey(),
                         () -> new BrokenThreadSafeBlockingDeque(boundedDequeBuilder().addBreak(e.getValue())),
+                        all)))));
+    }
+
+    @TestFactory
+    @VerySlow
+    @DisplayName("ThreadSafeTransferQueueContract")
+    Stream<DynamicNode> threadSafeTransferQueueContract() {
+        List<Method> all = ContractRuns.testMethods(ThreadSafeTransferQueueContract.class, true);
+        Map<String, Break> breaks = new java.util.LinkedHashMap<>(
+                ContractRuns.breaks(collectionBreaks(BreakableTransferQueue.class)));
+        breaks.keySet().removeIf(k -> !k.endsWith(THREAD_SAFETY_BREAK)
+                || uncheckedReason(ThreadSafeTransferQueueContract.class, k) != null);
+        return Stream.of(dynamicContainer("ThreadSafeTransferQueueContract", Stream.concat(
+                Stream.of(passes("LinkedTransferQueue", JdkThreadSafeTransferQueue::new, all),
+                        passes("unbroken BreakableTransferQueue on a LinkedTransferQueue",
+                                () -> new BrokenThreadSafeTransferQueue(new BreakableTransferQueue.Builder<Integer>()
+                                        .doesNotPermitNulls()), all),
+                        passes("unbroken BreakableTransferQueue of " + QUEUE_CAPACITY,
+                                () -> new BrokenThreadSafeTransferQueue(boundedTransferQueueBuilder()), all),
+                        passes("unbroken fair BreakableTransferQueue of " + QUEUE_CAPACITY,
+                                () -> new BrokenThreadSafeTransferQueue(boundedTransferQueueBuilder().setFair(true)),
+                                all)),
+                breaks.entrySet().stream().map(e -> fails(e.getKey(),
+                        () -> new BrokenThreadSafeTransferQueue(boundedTransferQueueBuilder().addBreak(e.getValue())),
                         all)))));
     }
 
@@ -678,6 +737,12 @@ public class ContractCoverageTest {
     /// null.
     private static BreakableBlockingQueue.Builder<Integer> boundedQueueBuilder() {
         return new BreakableBlockingQueue.Builder<Integer>().setCapacity(QUEUE_CAPACITY).doesNotPermitNulls();
+    }
+
+    /// A transfer queue builder on the breakable's bounded store of [#QUEUE_CAPACITY]. Like every `BlockingQueue`, it
+    /// refuses `null`.
+    private static BreakableTransferQueue.Builder<Integer> boundedTransferQueueBuilder() {
+        return new BreakableTransferQueue.Builder<Integer>().setCapacity(QUEUE_CAPACITY).doesNotPermitNulls();
     }
 
     /// A blocking deque builder on a `LinkedBlockingDeque` of [#QUEUE_CAPACITY]. Like every `BlockingDeque`, it
@@ -913,6 +978,24 @@ public class ContractCoverageTest {
         }
     }
 
+    static final class JdkTransferQueue extends AbstractTest
+            implements TransferQueueContract<LinkedTransferQueue<Integer>, Integer>, WithIntegerElement {
+        @Override
+        public CollectionProvider<LinkedTransferQueue<Integer>, Integer> provider() {
+            return CollectionProviders.from(LinkedTransferQueue::new, LinkedTransferQueue::new,
+                    LinkedTransferQueue::new, PROVIDER);
+        }
+    }
+
+    static final class JdkThreadSafeTransferQueue extends AbstractTest
+            implements ThreadSafeTransferQueueContract<LinkedTransferQueue<Integer>, Integer>, WithIntegerElement {
+        @Override
+        public CollectionProvider<LinkedTransferQueue<Integer>, Integer> provider() {
+            return CollectionProviders.from(LinkedTransferQueue::new, LinkedTransferQueue::new,
+                    LinkedTransferQueue::new, PROVIDER);
+        }
+    }
+
     static final class JdkThreadSafeArrayBlockingQueue extends AbstractTest
             implements ThreadSafeBlockingQueueContract<ArrayBlockingQueue<Integer>, Integer>, WithIntegerElement {
         @Override
@@ -1108,6 +1191,23 @@ public class ContractCoverageTest {
         BrokenBlockingQueue(final BreakableBlockingQueue.Builder<Integer> builder,
                             final CollectionContractConfig config) {
             super(builder, WithIntegerElement.PROVIDER, config);
+        }
+    }
+
+    static final class BrokenTransferQueue
+            extends DynamicCollectionContract<BreakableTransferQueue<Integer>, Integer>
+            implements TransferQueueContract<BreakableTransferQueue<Integer>, Integer> {
+        BrokenTransferQueue(final BreakableTransferQueue.Builder<Integer> builder,
+                            final CollectionContractConfig config) {
+            super(builder, WithIntegerElement.PROVIDER, config);
+        }
+    }
+
+    static final class BrokenThreadSafeTransferQueue
+            extends DynamicCollectionContract<BreakableTransferQueue<Integer>, Integer>
+            implements ThreadSafeTransferQueueContract<BreakableTransferQueue<Integer>, Integer> {
+        BrokenThreadSafeTransferQueue(final BreakableTransferQueue.Builder<Integer> builder) {
+            super(builder, WithIntegerElement.PROVIDER, noNulls(STANDARD));
         }
     }
 
