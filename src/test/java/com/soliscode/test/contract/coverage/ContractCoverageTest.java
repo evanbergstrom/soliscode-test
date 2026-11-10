@@ -18,6 +18,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -40,6 +41,7 @@ import com.soliscode.test.breakable.BreakableBlockingDeque;
 import com.soliscode.test.breakable.BreakableBlockingQueue;
 import com.soliscode.test.breakable.BreakableCollection;
 import com.soliscode.test.breakable.BreakableConcurrentMap;
+import com.soliscode.test.breakable.BreakableConcurrentNavigableMap;
 import com.soliscode.test.breakable.BreakableDeque;
 import com.soliscode.test.breakable.BreakableIterable;
 import com.soliscode.test.breakable.BreakableIterator;
@@ -67,6 +69,7 @@ import com.soliscode.test.contract.collection.CollectionMethods;
 import com.soliscode.test.contract.collection.ThreadSafeCollectionContract;
 import com.soliscode.test.contract.concurrentmap.ConcurrentMapContract;
 import com.soliscode.test.contract.concurrentmap.ThreadSafeConcurrentMapContract;
+import com.soliscode.test.contract.concurrentnavigablemap.ConcurrentNavigableMapContract;
 import com.soliscode.test.contract.deque.DequeContract;
 import com.soliscode.test.contract.deque.DequeMethods;
 import com.soliscode.test.contract.iterable.IterableContract;
@@ -536,6 +539,42 @@ public class ContractCoverageTest {
     }
 
     @TestFactory
+    @DisplayName("ConcurrentNavigableMapContract")
+    Stream<DynamicNode> concurrentNavigableMapContract() {
+        List<Method> methods = ContractRuns.testMethods(ConcurrentNavigableMapContract.class, false);
+        Map<String, Break> breaks = ContractRuns.breaks(
+                ContractRuns.withSuperclasses(BreakableConcurrentNavigableMap.class));
+        // In reverse order, so that a map or view that ignores the comparator shows. The views' bounds hold every
+        // Integer key in that order.
+        Stream<DynamicNode> passes = Stream.of(
+                passes("ConcurrentSkipListMap(reverseOrder())",
+                        () -> new JdkConcurrentNavigableMap(skipListViews(REVERSE, m -> m)), methods),
+                passes("its descendingMap()", () -> new JdkConcurrentNavigableMap(
+                        skipListViews(REVERSE, ConcurrentNavigableMap::descendingMap)), methods),
+                passes("its subMap(MAX_VALUE, true, MIN_VALUE, true)", () -> new JdkConcurrentNavigableMap(
+                        skipListViews(REVERSE, m -> m.subMap(Integer.MAX_VALUE, true, Integer.MIN_VALUE, true))),
+                        methods),
+                passes("its headMap(MIN_VALUE, true)", () -> new JdkConcurrentNavigableMap(
+                        skipListViews(REVERSE, m -> m.headMap(Integer.MIN_VALUE, true))), methods),
+                passes("its tailMap(MAX_VALUE, true)", () -> new JdkConcurrentNavigableMap(
+                        skipListViews(REVERSE, m -> m.tailMap(Integer.MAX_VALUE, true))), methods),
+                passes("unbroken breakable", () -> new BrokenConcurrentNavigableMap(navigableMapBuilder(null)),
+                        methods));
+        // As for ConcurrentMapContract: a thread-safety break gives the method's results on one thread.
+        Stream<DynamicNode> singleThreaded = breaks.entrySet().stream()
+                .filter(e -> e.getKey().startsWith(BreakableConcurrentMap.class.getSimpleName() + ".")
+                        && e.getKey().endsWith(THREAD_SAFETY_BREAK))
+                .map(e -> passes("the breakable on one thread, with " + e.getKey(),
+                        () -> new BrokenConcurrentNavigableMap(navigableMapBuilder(e.getValue())), methods));
+        Stream<DynamicNode> fails = breaks.entrySet().stream()
+                .filter(e -> uncheckedReason(ConcurrentNavigableMapContract.class, e.getKey()) == null)
+                .map(e -> fails(e.getKey(),
+                        () -> new BrokenConcurrentNavigableMap(navigableMapBuilder(e.getValue())), methods));
+        return Stream.of(dynamicContainer("ConcurrentNavigableMapContract",
+                Stream.of(passes, singleThreaded, fails).flatMap(n -> n)));
+    }
+
+    @TestFactory
     @VerySlow
     @DisplayName("ThreadSafeConcurrentMapContract")
     Stream<DynamicNode> threadSafeConcurrentMapContract() {
@@ -551,6 +590,39 @@ public class ContractCoverageTest {
                                 () -> new BrokenThreadSafeConcurrentMap(new BreakableConcurrentMap.Builder<>()), all)),
                 breaks.entrySet().stream().map(e -> fails(e.getKey(), () -> new BrokenThreadSafeConcurrentMap(
                         new BreakableConcurrentMap.Builder<Integer, String>().addBreak(e.getValue())), all)))));
+    }
+
+    @TestFactory
+    @VerySlow
+    @DisplayName("ThreadSafeConcurrentMapContract on concurrent navigable maps")
+    Stream<DynamicNode> threadSafeConcurrentNavigableMap() {
+        List<Method> all = ContractRuns.testMethods(ThreadSafeConcurrentMapContract.class, true);
+        Map<String, Break> breaks = new java.util.LinkedHashMap<>(
+                ContractRuns.breaks(ContractRuns.withSuperclasses(BreakableConcurrentNavigableMap.class)));
+        breaks.keySet().removeIf(k -> !k.endsWith(THREAD_SAFETY_BREAK)
+                || uncheckedReason(ThreadSafeConcurrentMapContract.class, k) != null);
+        // In natural order; the views' bounds hold every Integer key.
+        java.util.Comparator<Integer> natural = java.util.Comparator.naturalOrder();
+        return Stream.of(dynamicContainer("ThreadSafeConcurrentMapContract on concurrent navigable maps",
+                Stream.concat(Stream.of(
+                        passes("ConcurrentSkipListMap's descendingMap()", () -> new JdkThreadSafeConcurrentNavigableMap(
+                                skipListViews(natural, ConcurrentNavigableMap::descendingMap)), all),
+                        passes("ConcurrentSkipListMap's subMap(MIN_VALUE, true, MAX_VALUE, true)",
+                                () -> new JdkThreadSafeConcurrentNavigableMap(skipListViews(natural,
+                                        m -> m.subMap(Integer.MIN_VALUE, true, Integer.MAX_VALUE, true))), all),
+                        passes("ConcurrentSkipListMap's headMap(MAX_VALUE, true)",
+                                () -> new JdkThreadSafeConcurrentNavigableMap(skipListViews(natural,
+                                        m -> m.headMap(Integer.MAX_VALUE, true))), all),
+                        passes("ConcurrentSkipListMap's tailMap(MIN_VALUE, true)",
+                                () -> new JdkThreadSafeConcurrentNavigableMap(skipListViews(natural,
+                                        m -> m.tailMap(Integer.MIN_VALUE, true))), all),
+                        passes("unbroken BreakableConcurrentNavigableMap",
+                                () -> new BrokenThreadSafeConcurrentNavigableMap(
+                                        new BreakableConcurrentNavigableMap.Builder<>()), all)),
+                        breaks.entrySet().stream().map(e -> fails("BreakableConcurrentNavigableMap with " + e.getKey(),
+                                () -> new BrokenThreadSafeConcurrentNavigableMap(
+                                        new BreakableConcurrentNavigableMap.Builder<Integer, String>()
+                                                .addBreak(e.getValue())), all)))));
     }
 
     @TestFactory
@@ -1359,6 +1431,57 @@ public class ContractCoverageTest {
         }
     }
 
+    static final class JdkConcurrentNavigableMap extends AbstractTest
+            implements ConcurrentNavigableMapContract<ConcurrentNavigableMap<Integer, String>, Integer, String>,
+            WithIntegerKeyAndStringValue<ConcurrentNavigableMap<Integer, String>> {
+        private final MapProvider<Integer, String, ConcurrentNavigableMap<Integer, String>> maps;
+
+        JdkConcurrentNavigableMap(final MapProvider<Integer, String, ConcurrentNavigableMap<Integer, String>> mapsArg) {
+            this.maps = mapsArg;
+            doesNotSupportMethod(SequencedMapMethods.PUT_FIRST);
+            doesNotSupportMethod(SequencedMapMethods.PUT_LAST);
+        }
+
+        @Override
+        public MapProvider<Integer, String, ConcurrentNavigableMap<Integer, String>> provider() {
+            return maps;
+        }
+    }
+
+    static final class JdkThreadSafeConcurrentNavigableMap extends AbstractTest
+            implements ThreadSafeConcurrentMapContract<ConcurrentNavigableMap<Integer, String>, Integer, String>,
+            WithIntegerKeyAndStringValue<ConcurrentNavigableMap<Integer, String>> {
+        private final MapProvider<Integer, String, ConcurrentNavigableMap<Integer, String>> maps;
+
+        JdkThreadSafeConcurrentNavigableMap(
+                final MapProvider<Integer, String, ConcurrentNavigableMap<Integer, String>> mapsArg) {
+            this.maps = mapsArg;
+        }
+
+        @Override
+        public MapProvider<Integer, String, ConcurrentNavigableMap<Integer, String>> provider() {
+            return maps;
+        }
+    }
+
+    static final class BrokenConcurrentNavigableMap
+            extends DynamicMapContract<BreakableConcurrentNavigableMap<Integer, String>, Integer, String>
+            implements ConcurrentNavigableMapContract<BreakableConcurrentNavigableMap<Integer, String>, Integer,
+            String> {
+        BrokenConcurrentNavigableMap(final BreakableConcurrentNavigableMap.Builder<Integer, String> builder) {
+            super(builder, WithIntegerKeyAndStringValue.KEY_PROVIDER, WithIntegerKeyAndStringValue.VALUE_PROVIDER);
+        }
+    }
+
+    static final class BrokenThreadSafeConcurrentNavigableMap
+            extends DynamicMapContract<BreakableConcurrentNavigableMap<Integer, String>, Integer, String>
+            implements ThreadSafeConcurrentMapContract<BreakableConcurrentNavigableMap<Integer, String>, Integer,
+            String> {
+        BrokenThreadSafeConcurrentNavigableMap(final BreakableConcurrentNavigableMap.Builder<Integer, String> builder) {
+            super(builder, WithIntegerKeyAndStringValue.KEY_PROVIDER, WithIntegerKeyAndStringValue.VALUE_PROVIDER);
+        }
+    }
+
     static final class BrokenMap extends DynamicMapContract<BreakableMap<Integer, String>, Integer, String>
             implements MapContract<BreakableMap<Integer, String>, Integer, String> {
         BrokenMap(final BreakableMap.Builder<Integer, String> builder) {
@@ -1422,6 +1545,30 @@ public class ContractCoverageTest {
         return MapProviders.from(ConcurrentSkipListMap::new, (m) -> new ConcurrentSkipListMap<>(m),
                 (m) -> new ConcurrentSkipListMap<>(m),
                 WithIntegerKeyAndStringValue.KEY_PROVIDER, WithIntegerKeyAndStringValue.VALUE_PROVIDER);
+    }
+
+    /// A view of a new `ConcurrentSkipListMap` in the given order, for each create, copy and from-map: the map is
+    /// filled, and the same view of it is returned.
+    private static MapProvider<Integer, String, ConcurrentNavigableMap<Integer, String>> skipListViews(
+            final java.util.Comparator<Integer> order,
+            final java.util.function.UnaryOperator<ConcurrentNavigableMap<Integer, String>> view) {
+        java.util.function.Function<Map<Integer, String>, ConcurrentNavigableMap<Integer, String>> from = m -> {
+            ConcurrentSkipListMap<Integer, String> backing = new ConcurrentSkipListMap<>(order);
+            backing.putAll(m);
+            return view.apply(backing);
+        };
+        return MapProviders.from(() -> from.apply(Map.of()), m -> from.apply(m), from,
+                WithIntegerKeyAndStringValue.KEY_PROVIDER, WithIntegerKeyAndStringValue.VALUE_PROVIDER);
+    }
+
+    /// A concurrent navigable map builder in reverse order, `putFirst` and `putLast` unsupported, as for
+    /// `ConcurrentSkipListMap`, with a break or none.
+    private static BreakableConcurrentNavigableMap.Builder<Integer, String> navigableMapBuilder(final Break b) {
+        var builder = new BreakableConcurrentNavigableMap.Builder<Integer, String>()
+                .setComparator(REVERSE)
+                .doesNotSupport(SequencedMapMethods.PUT_FIRST)
+                .doesNotSupport(SequencedMapMethods.PUT_LAST);
+        return b == null ? builder : builder.addBreak(b);
     }
 
     /// Tree maps in reverse key order, with keys and values from the usual providers.

@@ -1,6 +1,7 @@
 package com.soliscode.test.breakable;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,6 +11,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import org.jspecify.annotations.Nullable;
 
@@ -66,8 +68,14 @@ import com.soliscode.test.contract.sortedmap.SortedMapMethods;
 /// - `HEAD_MAP_IGNORES_INCLUSIVE`: Forces headMap to ignore inclusive parameter
 /// - `TAIL_MAP_IGNORES_INCLUSIVE`: Forces tailMap to ignore inclusive parameter
 ///
-/// **Concurrency Breaks**: Simulate race conditions and concurrent access issues
-/// - `NAVIGATION_RACE_CONDITION`: Simulates race conditions in navigation operations
+/// **View faults** (`ConcurrentNavigableMapContract` checks them): a view that is a copy, not backed by the map
+/// (`DESCENDING_MAP_IS_A_COPY`, `SUB_MAP_FOUR_ARG_IS_A_COPY`, `KEY_SET_IS_A_COPY` and the others named `*_IS_A_COPY`),
+/// a descending map in ascending order (`DESCENDING_MAP_IS_IN_ASCENDING_ORDER`), and a range view whose `null` bound
+/// throws `IllegalArgumentException`, not `NullPointerException`
+/// (`SUB_MAP_FOUR_ARG_NULL_BOUND_THROWS_WRONG_NULL_EXCEPTION` and the others named
+/// `*_NULL_BOUND_THROWS_WRONG_NULL_EXCEPTION`).
+///
+/// **Thread-safety faults**: those of [BreakableConcurrentMap], which this class inherits.
 ///
 /// ## Usage Examples
 ///
@@ -88,7 +96,7 @@ import com.soliscode.test.contract.sortedmap.SortedMapMethods;
 /// BreakableConcurrentNavigableMap<String, Integer> map =
 ///     BreakableConcurrentNavigableMap.<String, Integer>builder()
 ///         .addBreak(LOWER_ENTRY_RETURNS_NULL)
-///         .addBreak(NAVIGATION_RACE_CONDITION)
+///         .addBreak(SUB_MAP_FOUR_ARG_IS_A_COPY)
 ///         .doesNotSupport(NavigableMapMethods.DESCENDING_MAP)
 ///         .build();
 /// ```
@@ -242,7 +250,6 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
     ///
     /// **Affected Methods:**
     /// - {@link #navigableKeySet()} - Returns null
-    /// - {@link #keySet()} - Returns null (it returns `navigableKeySet()`)
     public static final Break NAVIGABLE_KEY_SET_RETURNS_NULL =
             new Break("CONCURRENT_NAVIGABLE_MAP_NAVIGABLE_KEY_SET_RETURNS_NULL");
 
@@ -303,20 +310,127 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
     /// - {@link #tailMap(Object, boolean)} - Treats `inclusive` as true
     public static final Break TAIL_MAP_IGNORES_INCLUSIVE = new Break("TAIL_MAP_IGNORES_INCLUSIVE");
 
-    /// Break that simulates race conditions in navigation operations by calling the underlying method twice and
-    /// returning the second result, which differs from the first only if another thread changed the map between.
-    /// This tests handling of concurrent access patterns and potential race conditions.
+    /// `descendingMap()` returns a copy: a new [ConcurrentSkipListMap] holding the view's mappings, in its order, that
+    /// is not backed by the map.
     ///
     /// **Affected Methods:**
-    /// - {@link #lowerEntry(Object)} - Calls the underlying method twice
-    /// - {@link #lowerKey(Object)} - Calls the underlying method twice
-    /// - {@link #floorEntry(Object)} - Calls the underlying method twice
-    /// - {@link #floorKey(Object)} - Calls the underlying method twice
-    /// - {@link #ceilingEntry(Object)} - Calls the underlying method twice
-    /// - {@link #ceilingKey(Object)} - Calls the underlying method twice
-    /// - {@link #higherEntry(Object)} - Calls the underlying method twice
-    /// - {@link #higherKey(Object)} - Calls the underlying method twice
-    public static final Break NAVIGATION_RACE_CONDITION = new Break("NAVIGATION_RACE_CONDITION");
+    /// - {@link #descendingMap()} - Returns a copy
+    /// - `reversed()` - Returns a copy, through `NavigableMap`'s default, which returns `descendingMap()`
+    public static final Break DESCENDING_MAP_IS_A_COPY = new Break("DESCENDING_MAP_IS_A_COPY");
+
+    /// `subMap(K, boolean, K, boolean)` returns a copy: a new [ConcurrentSkipListMap] holding the view's mappings, in
+    /// its order, that is not backed by the map, and does not refuse a key outside the view's range.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #subMap(Object, boolean, Object, boolean)} - Returns a copy
+    public static final Break SUB_MAP_FOUR_ARG_IS_A_COPY = new Break("SUB_MAP_FOUR_ARG_IS_A_COPY");
+
+    /// `subMap(K, K)` returns a copy: a new [ConcurrentSkipListMap] holding the view's mappings, in its order, that is
+    /// not backed by the map, and does not refuse a key outside the view's range.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #subMap(Object, Object)} - Returns a copy
+    public static final Break SUB_MAP_IS_A_COPY = new Break("SUB_MAP_IS_A_COPY");
+
+    /// `headMap(K, boolean)` returns a copy: a new [ConcurrentSkipListMap] holding the view's mappings, in its order,
+    /// that is not backed by the map, and does not refuse a key outside the view's range.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #headMap(Object, boolean)} - Returns a copy
+    public static final Break HEAD_MAP_TWO_ARG_IS_A_COPY = new Break("HEAD_MAP_TWO_ARG_IS_A_COPY");
+
+    /// `headMap(K)` returns a copy: a new [ConcurrentSkipListMap] holding the view's mappings, in its order, that is
+    /// not backed by the map, and does not refuse a key outside the view's range.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #headMap(Object)} - Returns a copy
+    public static final Break HEAD_MAP_IS_A_COPY = new Break("HEAD_MAP_IS_A_COPY");
+
+    /// `tailMap(K, boolean)` returns a copy: a new [ConcurrentSkipListMap] holding the view's mappings, in its order,
+    /// that is not backed by the map, and does not refuse a key outside the view's range.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #tailMap(Object, boolean)} - Returns a copy
+    public static final Break TAIL_MAP_TWO_ARG_IS_A_COPY = new Break("TAIL_MAP_TWO_ARG_IS_A_COPY");
+
+    /// `tailMap(K)` returns a copy: a new [ConcurrentSkipListMap] holding the view's mappings, in its order, that is
+    /// not backed by the map, and does not refuse a key outside the view's range.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #tailMap(Object)} - Returns a copy
+    public static final Break TAIL_MAP_IS_A_COPY = new Break("TAIL_MAP_IS_A_COPY");
+
+    /// `navigableKeySet()` returns a copy: a new [ConcurrentSkipListSet] of the keys, in the view's order, that is not
+    /// backed by the map and supports `add`.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #navigableKeySet()} - Returns a copy
+    public static final Break NAVIGABLE_KEY_SET_IS_A_COPY = new Break("NAVIGABLE_KEY_SET_IS_A_COPY");
+
+    /// `keySet()` returns a copy: a new [ConcurrentSkipListSet] of the keys, in the view's order, that is not backed
+    /// by the map and supports `add`.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #keySet()} - Returns a copy
+    public static final Break KEY_SET_IS_A_COPY = new Break("KEY_SET_IS_A_COPY");
+
+    /// `descendingKeySet()` returns a copy: a new [ConcurrentSkipListSet] of the keys, in the view's order, that is not
+    /// backed by the map and supports `add`.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #descendingKeySet()} - Returns a copy
+    public static final Break DESCENDING_KEY_SET_IS_A_COPY = new Break("DESCENDING_KEY_SET_IS_A_COPY");
+
+    /// `descendingMap()` returns the store itself: backed by the map, but in the map's own order, not the reverse.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #descendingMap()} - Returns a view in ascending order
+    /// - `reversed()` - Returns a view in ascending order, through `NavigableMap`'s default, which returns
+    ///   `descendingMap()`
+    public static final Break DESCENDING_MAP_IS_IN_ASCENDING_ORDER = new Break("DESCENDING_MAP_IS_IN_ASCENDING_ORDER");
+
+    /// `subMap(K, boolean, K, boolean)` throws `IllegalArgumentException`, not `NullPointerException`, for a `null`
+    /// bound.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #subMap(Object, boolean, Object, boolean)} - Throws `IllegalArgumentException` for a `null` bound
+    public static final Break SUB_MAP_FOUR_ARG_NULL_BOUND_THROWS_WRONG_NULL_EXCEPTION =
+            new Break("SUB_MAP_FOUR_ARG_NULL_BOUND_THROWS_WRONG_NULL_EXCEPTION");
+
+    /// `subMap(K, K)` throws `IllegalArgumentException`, not `NullPointerException`, for a `null` bound.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #subMap(Object, Object)} - Throws `IllegalArgumentException` for a `null` bound
+    public static final Break SUB_MAP_NULL_BOUND_THROWS_WRONG_NULL_EXCEPTION =
+            new Break("SUB_MAP_NULL_BOUND_THROWS_WRONG_NULL_EXCEPTION");
+
+    /// `headMap(K, boolean)` throws `IllegalArgumentException`, not `NullPointerException`, for a `null` bound.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #headMap(Object, boolean)} - Throws `IllegalArgumentException` for a `null` bound
+    public static final Break HEAD_MAP_TWO_ARG_NULL_BOUND_THROWS_WRONG_NULL_EXCEPTION =
+            new Break("HEAD_MAP_TWO_ARG_NULL_BOUND_THROWS_WRONG_NULL_EXCEPTION");
+
+    /// `headMap(K)` throws `IllegalArgumentException`, not `NullPointerException`, for a `null` bound.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #headMap(Object)} - Throws `IllegalArgumentException` for a `null` bound
+    public static final Break HEAD_MAP_NULL_BOUND_THROWS_WRONG_NULL_EXCEPTION =
+            new Break("HEAD_MAP_NULL_BOUND_THROWS_WRONG_NULL_EXCEPTION");
+
+    /// `tailMap(K, boolean)` throws `IllegalArgumentException`, not `NullPointerException`, for a `null` bound.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #tailMap(Object, boolean)} - Throws `IllegalArgumentException` for a `null` bound
+    public static final Break TAIL_MAP_TWO_ARG_NULL_BOUND_THROWS_WRONG_NULL_EXCEPTION =
+            new Break("TAIL_MAP_TWO_ARG_NULL_BOUND_THROWS_WRONG_NULL_EXCEPTION");
+
+    /// `tailMap(K)` throws `IllegalArgumentException`, not `NullPointerException`, for a `null` bound.
+    ///
+    /// **Affected Methods:**
+    /// - {@link #tailMap(Object)} - Throws `IllegalArgumentException` for a `null` bound
+    public static final Break TAIL_MAP_NULL_BOUND_THROWS_WRONG_NULL_EXCEPTION =
+            new Break("TAIL_MAP_NULL_BOUND_THROWS_WRONG_NULL_EXCEPTION");
 
 
     /// Creates a new BreakableConcurrentNavigableMap with no breaks, wrapping a new ConcurrentSkipListMap.
@@ -462,27 +576,17 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
     @Override
     public Map.@Nullable Entry<K, V> lowerEntry(final K key) {
         checkMethodSupport(NavigableMapMethods.LOWER_ENTRY);
-
         if (hasBreak(LOWER_ENTRY_RETURNS_NULL)) {
             return null;
-        }
-        if (hasBreak(NAVIGATION_RACE_CONDITION)) {
-            navigableStore().lowerEntry(key);
-            return navigableStore().lowerEntry(key);
         }
         return navigableStore().lowerEntry(key);
     }
 
     @Override
     public @Nullable K lowerKey(final K key) {
-        checkMethodSupport(NavigableMapMethods.LOWER_ENTRY);
-
+        checkMethodSupport(NavigableMapMethods.LOWER_KEY);
         if (hasBreak(LOWER_KEY_RETURNS_NULL)) {
             return null;
-        }
-        if (hasBreak(NAVIGATION_RACE_CONDITION)) {
-            navigableStore().lowerKey(key);
-            return navigableStore().lowerKey(key);
         }
         return navigableStore().lowerKey(key);
     }
@@ -490,13 +594,8 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
     @Override
     public Map.@Nullable Entry<K, V> floorEntry(final K key) {
         checkMethodSupport(NavigableMapMethods.FLOOR_ENTRY);
-
         if (hasBreak(FLOOR_ENTRY_RETURNS_NULL)) {
             return null;
-        }
-        if (hasBreak(NAVIGATION_RACE_CONDITION)) {
-            navigableStore().floorEntry(key);
-            return navigableStore().floorEntry(key);
         }
         return navigableStore().floorEntry(key);
     }
@@ -504,13 +603,8 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
     @Override
     public @Nullable K floorKey(final K key) {
         checkMethodSupport(NavigableMapMethods.FLOOR_KEY);
-
         if (hasBreak(FLOOR_KEY_RETURNS_NULL)) {
             return null;
-        }
-        if (hasBreak(NAVIGATION_RACE_CONDITION)) {
-            navigableStore().floorKey(key);
-            return navigableStore().floorKey(key);
         }
         return navigableStore().floorKey(key);
     }
@@ -518,13 +612,8 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
     @Override
     public Map.@Nullable Entry<K, V> ceilingEntry(final K key) {
         checkMethodSupport(NavigableMapMethods.CEILING_ENTRY);
-
         if (hasBreak(CEILING_ENTRY_RETURNS_NULL)) {
             return null;
-        }
-        if (hasBreak(NAVIGATION_RACE_CONDITION)) {
-            navigableStore().ceilingEntry(key);
-            return navigableStore().ceilingEntry(key);
         }
         return navigableStore().ceilingEntry(key);
     }
@@ -532,13 +621,8 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
     @Override
     public @Nullable K ceilingKey(final K key) {
         checkMethodSupport(NavigableMapMethods.CEILING_KEY);
-
         if (hasBreak(CEILING_KEY_RETURNS_NULL)) {
             return null;
-        }
-        if (hasBreak(NAVIGATION_RACE_CONDITION)) {
-            navigableStore().ceilingKey(key);
-            return navigableStore().ceilingKey(key);
         }
         return navigableStore().ceilingKey(key);
     }
@@ -546,13 +630,8 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
     @Override
     public Map.@Nullable Entry<K, V> higherEntry(final K key) {
         checkMethodSupport(NavigableMapMethods.HIGHER_ENTRY);
-
         if (hasBreak(HIGHER_ENTRY_RETURNS_NULL)) {
             return null;
-        }
-        if (hasBreak(NAVIGATION_RACE_CONDITION)) {
-            navigableStore().higherEntry(key);
-            return navigableStore().higherEntry(key);
         }
         return navigableStore().higherEntry(key);
     }
@@ -560,16 +639,8 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
     @Override
     public @Nullable K higherKey(final K key) {
         checkMethodSupport(NavigableMapMethods.HIGHER_KEY);
-
-        if (!supportsMethod(NavigableMapMethods.HIGHER_KEY)) {
-            throw new UnsupportedOperationException("higherKey() method is not supported");
-        }
         if (hasBreak(HIGHER_KEY_RETURNS_NULL)) {
             return null;
-        }
-        if (hasBreak(NAVIGATION_RACE_CONDITION)) {
-            navigableStore().higherKey(key);
-            return navigableStore().higherKey(key);
         }
         return navigableStore().higherKey(key);
     }
@@ -577,7 +648,6 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
     @Override
     public Map.@Nullable Entry<K, V> firstEntry() {
         checkMethodSupport(NavigableMapMethods.FIRST_ENTRY);
-
         if (hasBreak(FIRST_ENTRY_RETURNS_NULL)) {
             return null;
         }
@@ -587,7 +657,6 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
     @Override
     public Map.@Nullable Entry<K, V> lastEntry() {
         checkMethodSupport(NavigableMapMethods.LAST_ENTRY);
-
         if (hasBreak(LAST_ENTRY_RETURNS_NULL)) {
             return null;
         }
@@ -597,7 +666,6 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
     @Override
     public Map.@Nullable Entry<K, V> pollFirstEntry() {
         checkMethodSupport(NavigableMapMethods.POLL_FIRST_ENTRY);
-
         if (hasBreak(POLL_FIRST_ENTRY_RETURNS_NULL)) {
             return null;
         }
@@ -607,7 +675,6 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
     @Override
     public Map.@Nullable Entry<K, V> pollLastEntry() {
         checkMethodSupport(NavigableMapMethods.POLL_LAST_ENTRY);
-
         if (hasBreak(POLL_LAST_ENTRY_RETURNS_NULL)) {
             return null;
         }
@@ -620,7 +687,10 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
         if (hasBreak(DESCENDING_MAP_RETURNS_NULL)) {
             return null;
         }
-        return navigableStore().descendingMap();
+        if (hasBreak(DESCENDING_MAP_IS_IN_ASCENDING_ORDER)) {
+            return navigableStore();
+        }
+        return copyIf(DESCENDING_MAP_IS_A_COPY, navigableStore().descendingMap());
     }
 
     @Override
@@ -629,13 +699,26 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
         if (hasBreak(NAVIGABLE_KEY_SET_RETURNS_NULL)) {
             return null;
         }
-        return navigableStore().navigableKeySet();
+        return copyIf(NAVIGABLE_KEY_SET_IS_A_COPY, navigableStore().navigableKeySet());
     }
 
+    /// Returns a [NavigableSet] view of the keys, as `navigableKeySet()` does.
+    ///
+    /// Breaks: [#KEY_SET_IS_A_COPY], and [BreakableMap#KEY_SET_RETURNS_EMPTY_SET] (an empty set) and
+    /// [BreakableMap#KEY_SET_RETURNS_NULL_WHEN_EMPTY] (`null` when the map is empty). `navigableKeySet()`'s breaks
+    /// do not affect it.
+    ///
+    /// @return the keys
     @Override
     public @Nullable NavigableSet<K> keySet() {
         checkMethodSupport(MapMethods.KEY_SET);
-        return navigableKeySet();
+        if (hasBreak(KEY_SET_RETURNS_EMPTY_SET)) {
+            return Collections.emptyNavigableSet();
+        }
+        if (hasBreak(KEY_SET_RETURNS_NULL_WHEN_EMPTY) && navigableStore().isEmpty()) {
+            return null;
+        }
+        return copyIf(KEY_SET_IS_A_COPY, navigableStore().keySet());
     }
 
     @Override
@@ -644,85 +727,107 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
         if (hasBreak(DESCENDING_KEY_SET_RETURNS_NULL)) {
             return null;
         }
-        return navigableStore().descendingKeySet();
+        return copyIf(DESCENDING_KEY_SET_IS_A_COPY, navigableStore().descendingKeySet());
     }
 
     @Override
     public @Nullable ConcurrentNavigableMap<K, V> subMap(final K fromKey, final boolean fromInclusive,
-                                               final K toKey, final boolean toInclusive) {
-        checkMethodSupport(NavigableMapMethods.NAVIGABLE_KEY_SET);
+                                                         final K toKey, final boolean toInclusive) {
+        checkMethodSupport(NavigableMapMethods.SUB_MAP_FOUR_ARG);
+        checkBounds(SUB_MAP_FOUR_ARG_NULL_BOUND_THROWS_WRONG_NULL_EXCEPTION, fromKey, toKey);
         if (hasBreak(SUB_MAP_RETURNS_NULL)) {
             return null;
         }
         if (hasBreak(SUB_MAP_IGNORES_BOUNDS)) {
-            // Return the entire map by using the first and last keys with inclusive bounds
-            K firstKey = navigableStore().firstKey();
-            K lastKey = navigableStore().lastKey();
-            if (firstKey != null && lastKey != null) {
-                return navigableStore().subMap(firstKey, true, lastKey, true);
-            }
-            return navigableStore().subMap(fromKey, true, toKey, true);
+            // The whole map, from its first key to its last; firstKey() throws on an empty map.
+            return navigableStore().subMap(navigableStore().firstKey(), true, navigableStore().lastKey(), true);
         }
-        return navigableStore().subMap(fromKey, fromInclusive, toKey, toInclusive);
+        return copyIf(SUB_MAP_FOUR_ARG_IS_A_COPY,
+                navigableStore().subMap(fromKey, fromInclusive, toKey, toInclusive));
     }
 
     @Override
     public @Nullable ConcurrentNavigableMap<K, V> headMap(final K toKey, final boolean inclusive) {
         checkMethodSupport(NavigableMapMethods.HEAD_MAP_TWO_ARG);
-
+        checkBounds(HEAD_MAP_TWO_ARG_NULL_BOUND_THROWS_WRONG_NULL_EXCEPTION, toKey);
         if (hasBreak(HEAD_MAP_RETURNS_NULL)) {
             return null;
         }
-        if (hasBreak(HEAD_MAP_IGNORES_INCLUSIVE)) {
-            return navigableStore().headMap(toKey, true);
-        }
-        return navigableStore().headMap(toKey, inclusive);
+        return copyIf(HEAD_MAP_TWO_ARG_IS_A_COPY,
+                navigableStore().headMap(toKey, inclusive || hasBreak(HEAD_MAP_IGNORES_INCLUSIVE)));
     }
 
     @Override
     public @Nullable ConcurrentNavigableMap<K, V> tailMap(final K fromKey, final boolean inclusive) {
         checkMethodSupport(NavigableMapMethods.TAIL_MAP_TWO_ARG);
-
+        checkBounds(TAIL_MAP_TWO_ARG_NULL_BOUND_THROWS_WRONG_NULL_EXCEPTION, fromKey);
         if (hasBreak(TAIL_MAP_RETURNS_NULL)) {
             return null;
         }
-        if (hasBreak(TAIL_MAP_IGNORES_INCLUSIVE)) {
-            return navigableStore().tailMap(fromKey, true);
-        }
-        return navigableStore().tailMap(fromKey, inclusive);
+        return copyIf(TAIL_MAP_TWO_ARG_IS_A_COPY,
+                navigableStore().tailMap(fromKey, inclusive || hasBreak(TAIL_MAP_IGNORES_INCLUSIVE)));
     }
 
     @Override
     public @Nullable ConcurrentNavigableMap<K, V> subMap(final K fromKey, final K toKey) {
         checkMethodSupport(SortedMapMethods.SUB_MAP);
-
+        checkBounds(SUB_MAP_NULL_BOUND_THROWS_WRONG_NULL_EXCEPTION, fromKey, toKey);
         if (hasBreak(SUB_MAP_RETURNS_NULL)) {
             return null;
         }
-        return navigableStore().subMap(fromKey, toKey);
+        return copyIf(SUB_MAP_IS_A_COPY, navigableStore().subMap(fromKey, toKey));
     }
 
     @Override
     public @Nullable ConcurrentNavigableMap<K, V> headMap(final K toKey) {
         checkMethodSupport(SortedMapMethods.HEAD_MAP);
-
-        if (!supportsMethod(SortedMapMethods.HEAD_MAP)) {
-            throw new UnsupportedOperationException("headMap(K) method is not supported");
-        }
+        checkBounds(HEAD_MAP_NULL_BOUND_THROWS_WRONG_NULL_EXCEPTION, toKey);
         if (hasBreak(HEAD_MAP_RETURNS_NULL)) {
             return null;
         }
-        return navigableStore().headMap(toKey);
+        return copyIf(HEAD_MAP_IS_A_COPY, navigableStore().headMap(toKey));
     }
 
     @Override
     public @Nullable ConcurrentNavigableMap<K, V> tailMap(final K fromKey) {
         checkMethodSupport(SortedMapMethods.TAIL_MAP);
-
+        checkBounds(TAIL_MAP_NULL_BOUND_THROWS_WRONG_NULL_EXCEPTION, fromKey);
         if (hasBreak(TAIL_MAP_RETURNS_NULL)) {
             return null;
         }
-        return navigableStore().tailMap(fromKey);
+        return copyIf(TAIL_MAP_IS_A_COPY, navigableStore().tailMap(fromKey));
+    }
+
+    /// Returns a view, or, with a copy break set, a copy of it that is not backed by the map.
+    ///
+    /// @param copyBreak the break that makes it a copy
+    /// @param view the view
+    /// @return the view, or a copy of it
+    private ConcurrentNavigableMap<K, V> copyIf(final Break copyBreak, final ConcurrentNavigableMap<K, V> view) {
+        return hasBreak(copyBreak) ? new ConcurrentSkipListMap<>(view) : view;
+    }
+
+    /// Returns a key set, or, with a copy break set, a copy of it that is not backed by the map.
+    ///
+    /// @param copyBreak the break that makes it a copy
+    /// @param view the key set
+    /// @return the key set, or a copy of it
+    private NavigableSet<K> copyIf(final Break copyBreak, final NavigableSet<K> view) {
+        return hasBreak(copyBreak) ? new ConcurrentSkipListSet<>(view) : view;
+    }
+
+    /// Throws for a `null` bound, where the map refuses null keys: `NullPointerException`, or, with the break set,
+    /// `IllegalArgumentException`.
+    ///
+    /// @param wrongNull the break that throws the wrong exception
+    /// @param bounds the bounds
+    private void checkBounds(final Break wrongNull, final @Nullable Object... bounds) {
+        for (final Object bound : bounds) {
+            if (bound == null && !permitsNullKeys()) {
+                throw hasBreak(wrongNull)
+                        ? new IllegalArgumentException("bound is null") : new NullPointerException("bound is null");
+            }
+        }
     }
 
     /// Builder for creating BreakableConcurrentNavigableMap instances with fluent configuration.
@@ -734,16 +839,20 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
     public static class Builder<K, V>
             extends BreakableConcurrentMap.AbstractBuilder<Builder<K, V>, BreakableConcurrentNavigableMap<K, V>, K, V> {
 
+        /// The comparator of the built map's store, or `null` for natural order.
+        private @Nullable Comparator<? super K> comparator;
+
         /// Creates a builder with no entries.
         public Builder() {
             super();
         }
 
-        /// Creates a copy of another builder.
+        /// Creates a copy of another builder, with its comparator.
         ///
         /// @param other the builder to copy
         public Builder(final Builder<K, V> other) {
             super(other);
+            this.comparator = other.comparator;
         }
 
         /// Creates a builder that starts with the entries of a map.
@@ -751,6 +860,15 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
         /// @param map the entries to start with
         public Builder(final Map<K, V> map) {
             super(map);
+        }
+
+        /// Sets the comparator that orders the built map's keys.
+        ///
+        /// @param comparatorArg the comparator
+        /// @return this builder
+        public Builder<K, V> setComparator(final Comparator<? super K> comparatorArg) {
+            this.comparator = comparatorArg;
+            return self();
         }
 
         @Override
@@ -772,7 +890,8 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
         @SuppressWarnings("SortedCollectionWithNonComparableKeys")
         @Override
         public BreakableConcurrentNavigableMap<K, V> build(final Map<K, V> entries) {
-            ConcurrentNavigableMap<K, V> map = new ConcurrentSkipListMap<>(elements());
+            ConcurrentNavigableMap<K, V> map = new ConcurrentSkipListMap<>(comparator);
+            map.putAll(elements());
             map.putAll(entries);
             return new BreakableConcurrentNavigableMap<>(map, new HashSet<>(breaks()),
                     new HashMap<>(methodStatuses()), permits());

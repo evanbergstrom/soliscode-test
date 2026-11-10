@@ -1,9 +1,11 @@
 package com.soliscode.test.breakable;
 
 import java.util.AbstractMap;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
@@ -32,7 +34,6 @@ import static com.soliscode.test.breakable.BreakableConcurrentNavigableMap.LAST_
 import static com.soliscode.test.breakable.BreakableConcurrentNavigableMap.LOWER_ENTRY_RETURNS_NULL;
 import static com.soliscode.test.breakable.BreakableConcurrentNavigableMap.LOWER_KEY_RETURNS_NULL;
 import static com.soliscode.test.breakable.BreakableConcurrentNavigableMap.NAVIGABLE_KEY_SET_RETURNS_NULL;
-import static com.soliscode.test.breakable.BreakableConcurrentNavigableMap.NAVIGATION_RACE_CONDITION;
 import static com.soliscode.test.breakable.BreakableConcurrentNavigableMap.POLL_FIRST_ENTRY_RETURNS_NULL;
 import static com.soliscode.test.breakable.BreakableConcurrentNavigableMap.POLL_LAST_ENTRY_RETURNS_NULL;
 import static com.soliscode.test.breakable.BreakableConcurrentNavigableMap.SUB_MAP_IGNORES_BOUNDS;
@@ -76,8 +77,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /// ## Thread Safety
 /// While the underlying implementation (`ConcurrentSkipListMap`) is thread-safe, these tests are
 /// generally executed in a single-threaded environment to verify the deterministic effects of the
-/// injected breaks. The `NAVIGATION_RACE_CONDITION` break specifically simulates a "lost update"
-/// or race condition during navigation.
+/// injected breaks. The inherited thread-safety breaks are tested under contention by
+/// `ThreadSafeConcurrentMapContract`, in `ContractCoverageTest`.
 ///
 /// @author Evan Bergstrom
 /// @since 1.0.0
@@ -500,22 +501,6 @@ public class BreakableConcurrentNavigableMapTest extends AbstractTest {
         assertTrue(tailMap.containsKey("a"));
     }
 
-    /// Verifies that the NAVIGATION_RACE_CONDITION break simulates a race condition during navigation operations.
-    @Test
-    @DisplayName("lowerEntry: simulates race condition when NAVIGATION_RACE_CONDITION break is added")
-    public void lowerEntryWhenNavigationRaceConditionBreakAddedSimulatesRaceCondition() {
-        final BreakableConcurrentNavigableMap.Builder<String, Integer> builder =
-                new BreakableConcurrentNavigableMap.Builder<>();
-        builder.addBreak(NAVIGATION_RACE_CONDITION);
-        final BreakableConcurrentNavigableMap<String, Integer> map = builder.build();
-        map.put("a", 1);
-        map.put("c", 3);
-
-        final Map.Entry<String, Integer> result = map.lowerEntry("b");
-        assertNotNull(result);
-        assertEquals("a", result.getKey());
-    }
-
     /// Verifies that normal concurrent navigable map operations function correctly when no breaks are present.
     @Test
     @DisplayName("concurrentNavigableMap: executes normal operations when no breaks are present")
@@ -651,15 +636,143 @@ public class BreakableConcurrentNavigableMapTest extends AbstractTest {
         assertNull(map.subMap("a", true, "z", true));
     }
 
-    /// Verifies that keySet() correctly delegates to navigableKeySet(), inheriting its breaks.
+    /// Verifies that keySet() has breaks of its own: navigableKeySet()'s do not affect it (#21).
     @Test
-    @DisplayName("keySet: correctly delegates to navigableKeySet and inherits its breaks")
-    public void keySetWhenNavigableKeySetBrokenAlsoReturnsNull() {
-        final BreakableConcurrentNavigableMap.Builder<String, Integer> builder =
-                new BreakableConcurrentNavigableMap.Builder<>();
-        builder.addBreak(NAVIGABLE_KEY_SET_RETURNS_NULL);
-        final BreakableConcurrentNavigableMap<String, Integer> map = builder.build();
+    @DisplayName("keySet() is not affected by NAVIGABLE_KEY_SET_RETURNS_NULL")
+    public void keySetWhenNavigableKeySetReturnsNullBreakAddedReturnsKeys() {
+        final BreakableConcurrentNavigableMap<String, Integer> map = new BreakableConcurrentNavigableMap.Builder<
+                String, Integer>().addBreak(NAVIGABLE_KEY_SET_RETURNS_NULL).build(Map.of("a", 1));
+        assertNull(map.navigableKeySet());
+        assertEquals(Set.of("a"), map.keySet());
+    }
 
+    /// Verifies that a copy break gives a view that is not backed by the map.
+    @Test
+    @DisplayName("subMap(K, boolean, K, boolean) with SUB_MAP_FOUR_ARG_IS_A_COPY is not backed by the map")
+    public void subMapFourArgWhenIsACopyBreakAddedIsNotBacked() {
+        final BreakableConcurrentNavigableMap<String, Integer> map = new BreakableConcurrentNavigableMap.Builder<
+                String, Integer>().addBreak(BreakableConcurrentNavigableMap.SUB_MAP_FOUR_ARG_IS_A_COPY)
+                .build(Map.of("a", 1, "c", 3));
+        final ConcurrentNavigableMap<String, Integer> view = map.subMap("a", true, "c", true);
+        assertNotNull(view);
+        assertEquals(Map.of("a", 1, "c", 3), view);
+        view.put("b", 2);
+        assertFalse(map.containsKey("b"));
+    }
+
+    /// Verifies that a key-set copy break gives a set that is not backed and accepts `add`.
+    @Test
+    @DisplayName("keySet() with KEY_SET_IS_A_COPY is not backed by the map")
+    public void keySetWhenIsACopyBreakAddedIsNotBacked() {
+        final BreakableConcurrentNavigableMap<String, Integer> map = new BreakableConcurrentNavigableMap.Builder<
+                String, Integer>().addBreak(BreakableConcurrentNavigableMap.KEY_SET_IS_A_COPY)
+                .build(Map.of("a", 1));
+        final NavigableSet<String> keys = map.keySet();
+        assertNotNull(keys);
+        assertTrue(keys.add("b"));
+        assertFalse(map.containsKey("b"));
+        assertTrue(keys.remove("a"));
+        assertTrue(map.containsKey("a"));
+    }
+
+    /// Verifies that `DESCENDING_MAP_IS_IN_ASCENDING_ORDER` gives a backed view in ascending order.
+    @Test
+    @DisplayName("descendingMap() with DESCENDING_MAP_IS_IN_ASCENDING_ORDER is backed, in ascending order")
+    public void descendingMapWhenAscendingOrderBreakAddedIsBackedInAscendingOrder() {
+        final BreakableConcurrentNavigableMap<String, Integer> map = new BreakableConcurrentNavigableMap.Builder<
+                String, Integer>().addBreak(BreakableConcurrentNavigableMap.DESCENDING_MAP_IS_IN_ASCENDING_ORDER)
+                .build(Map.of("a", 1, "b", 2));
+        final ConcurrentNavigableMap<String, Integer> view = map.descendingMap();
+        assertNotNull(view);
+        assertEquals("a", view.firstKey());
+        view.put("c", 3);
+        assertTrue(map.containsKey("c"));
+    }
+
+    /// Verifies that a null-bound break throws `IllegalArgumentException` from its own method only: the
+    /// two-argument `tailMap` still throws `NullPointerException`.
+    @Test
+    @DisplayName("tailMap(null) throws IllegalArgumentException with TAIL_MAP_NULL_BOUND_THROWS_WRONG_NULL_EXCEPTION")
+    // NullAway: the test passes null on purpose, to check what the map throws.
+    @SuppressWarnings("NullAway")
+    public void tailMapWhenNullBoundBreakAddedThrowsIllegalArgumentException() {
+        final BreakableConcurrentNavigableMap<String, Integer> broken = new BreakableConcurrentNavigableMap.Builder<
+                String, Integer>()
+                .addBreak(BreakableConcurrentNavigableMap.TAIL_MAP_NULL_BOUND_THROWS_WRONG_NULL_EXCEPTION)
+                .build(Map.of("a", 1));
+        assertThrows(IllegalArgumentException.class, () -> broken.tailMap(null));
+        assertThrows(NullPointerException.class, () -> broken.tailMap(null, true));
+    }
+
+    /// Verifies that the builder's comparator orders the built map and its copies.
+    @Test
+    @DisplayName("Builder.setComparator(Comparator) orders the built map and its copies")
+    public void builderWhenComparatorSetOrdersMapAndCopies() {
+        final BreakableConcurrentNavigableMap.Builder<String, Integer> builder =
+                new BreakableConcurrentNavigableMap.Builder<String, Integer>()
+                        .setComparator(Comparator.reverseOrder());
+        final BreakableConcurrentNavigableMap<String, Integer> map = builder.copy().build(Map.of("a", 1, "b", 2));
+        assertEquals("b", map.firstKey());
+        assertEquals(Comparator.reverseOrder(), map.comparator());
+        assertEquals("b", new BreakableConcurrentNavigableMap<>(map).firstKey());
+    }
+
+    /// Verifies that `lowerKey` checks its own support: refused where `LOWER_KEY` is not supported (#21).
+    @Test
+    @DisplayName("lowerKey(K) throws UnsupportedOperationException where LOWER_KEY is not supported")
+    public void lowerKeyWhenLowerKeyNotSupportedThrowsUnsupportedOperationException() {
+        final BreakableConcurrentNavigableMap<String, Integer> map = new BreakableConcurrentNavigableMap.Builder<
+                String, Integer>().doesNotSupport(NavigableMapMethods.LOWER_KEY).build(Map.of("a", 1, "b", 2));
+        assertThrows(UnsupportedOperationException.class, () -> map.lowerKey("b"));
+    }
+
+    /// Verifies that `lowerKey` does not check `lowerEntry`'s support (#21).
+    @Test
+    @DisplayName("lowerKey(K) answers where only LOWER_ENTRY is not supported")
+    public void lowerKeyWhenLowerEntryNotSupportedReturnsLowerKey() {
+        final BreakableConcurrentNavigableMap<String, Integer> map = new BreakableConcurrentNavigableMap.Builder<
+                String, Integer>().doesNotSupport(NavigableMapMethods.LOWER_ENTRY).build(Map.of("a", 1, "b", 2));
+        assertEquals("a", map.lowerKey("b"));
+    }
+
+    /// Verifies that the four-argument `subMap` checks its own support (#21).
+    @Test
+    @DisplayName("subMap(K, boolean, K, boolean) throws UnsupportedOperationException where SUB_MAP_FOUR_ARG is "
+            + "not supported")
+    public void subMapFourArgWhenSubMapFourArgNotSupportedThrowsUnsupportedOperationException() {
+        final BreakableConcurrentNavigableMap<String, Integer> map = new BreakableConcurrentNavigableMap.Builder<
+                String, Integer>().doesNotSupport(NavigableMapMethods.SUB_MAP_FOUR_ARG)
+                .build(Map.of("a", 1, "b", 2));
+        assertThrows(UnsupportedOperationException.class, () -> map.subMap("a", true, "b", true));
+    }
+
+    /// Verifies that the four-argument `subMap` does not check `navigableKeySet`'s support (#21).
+    @Test
+    @DisplayName("subMap(K, boolean, K, boolean) answers where only NAVIGABLE_KEY_SET is not supported")
+    public void subMapFourArgWhenNavigableKeySetNotSupportedReturnsSubMap() {
+        final BreakableConcurrentNavigableMap<String, Integer> map = new BreakableConcurrentNavigableMap.Builder<
+                String, Integer>().doesNotSupport(NavigableMapMethods.NAVIGABLE_KEY_SET)
+                .build(Map.of("a", 1, "b", 2));
+        assertEquals(Map.of("a", 1, "b", 2), map.subMap("a", true, "b", true));
+    }
+
+    /// Verifies that `keySet()` honours `BreakableMap.KEY_SET_RETURNS_EMPTY_SET` (#21).
+    @Test
+    @DisplayName("keySet() returns an empty set with KEY_SET_RETURNS_EMPTY_SET")
+    public void keySetWhenKeySetReturnsEmptySetBreakAddedReturnsEmptySet() {
+        final BreakableConcurrentNavigableMap<String, Integer> map = new BreakableConcurrentNavigableMap.Builder<
+                String, Integer>().addBreak(BreakableMap.KEY_SET_RETURNS_EMPTY_SET).build(Map.of("a", 1));
+        final NavigableSet<String> keys = map.keySet();
+        assertNotNull(keys);
+        assertTrue(keys.isEmpty());
+    }
+
+    /// Verifies that `keySet()` honours `BreakableMap.KEY_SET_RETURNS_NULL_WHEN_EMPTY` (#21).
+    @Test
+    @DisplayName("keySet() returns null on an empty map with KEY_SET_RETURNS_NULL_WHEN_EMPTY")
+    public void keySetWhenKeySetReturnsNullWhenEmptyBreakAddedAndEmptyReturnsNull() {
+        final BreakableConcurrentNavigableMap<String, Integer> map = new BreakableConcurrentNavigableMap.Builder<
+                String, Integer>().addBreak(BreakableMap.KEY_SET_RETURNS_NULL_WHEN_EMPTY).build();
         assertNull(map.keySet());
     }
 }
