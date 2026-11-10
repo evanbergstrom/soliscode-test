@@ -46,9 +46,9 @@ This library provides support for:\
 >   - `SortedMap`
 >     - `NavigableMap`
 >   - `SequencedMap`
+>   - `ConcurrentMap`, and thread-safe concurrent maps
 >
-> It has breakable implementations, but no contracts yet, for `ConcurrentMap` and
-> `ConcurrentNavigableMap`.
+> It has a breakable implementation, but no contract yet, for `ConcurrentNavigableMap`.
 
 **Docs:** https://evanbergstrom.github.io/soliscode-test/
 

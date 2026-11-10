@@ -17,6 +17,8 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -37,6 +39,7 @@ import com.soliscode.test.breakable.Break;
 import com.soliscode.test.breakable.BreakableBlockingDeque;
 import com.soliscode.test.breakable.BreakableBlockingQueue;
 import com.soliscode.test.breakable.BreakableCollection;
+import com.soliscode.test.breakable.BreakableConcurrentMap;
 import com.soliscode.test.breakable.BreakableDeque;
 import com.soliscode.test.breakable.BreakableIterable;
 import com.soliscode.test.breakable.BreakableIterator;
@@ -62,6 +65,8 @@ import com.soliscode.test.contract.blockingqueue.ThreadSafeBlockingQueueContract
 import com.soliscode.test.contract.collection.CollectionContract;
 import com.soliscode.test.contract.collection.CollectionMethods;
 import com.soliscode.test.contract.collection.ThreadSafeCollectionContract;
+import com.soliscode.test.contract.concurrentmap.ConcurrentMapContract;
+import com.soliscode.test.contract.concurrentmap.ThreadSafeConcurrentMapContract;
 import com.soliscode.test.contract.deque.DequeContract;
 import com.soliscode.test.contract.deque.DequeMethods;
 import com.soliscode.test.contract.iterable.IterableContract;
@@ -188,6 +193,15 @@ public class ContractCoverageTest {
         boolean blockingQueueBreak = key.startsWith(BreakableBlockingQueue.class.getSimpleName() + ".");
         boolean blockingDequeBreak = key.startsWith(BreakableBlockingDeque.class.getSimpleName() + ".");
         boolean transferQueueBreak = key.startsWith(BreakableTransferQueue.class.getSimpleName() + ".");
+        boolean concurrentMapBreak = key.startsWith(BreakableConcurrentMap.class.getSimpleName() + ".");
+        if (field.endsWith(THREAD_SAFETY_BREAK) && contract == ThreadSafeConcurrentMapContract.class) {
+            return concurrentMapBreak ? null : "not a fault for a BreakableConcurrentMap: its store is a concurrent "
+                    + "map, and the breakable takes no lock of its own, so the break changes nothing there";
+        }
+        if (field.endsWith(THREAD_SAFETY_BREAK) && concurrentMapBreak) {
+            return "a thread-safety break: ThreadSafeConcurrentMapContract checks it, and ConcurrentMapContract checks "
+                    + "that it is correct on one thread";
+        }
         if (field.endsWith(THREAD_SAFETY_BREAK) && contract == ThreadSafeTransferQueueContract.class) {
             // BreakableBlockingQueue's take, poll and drainTo run on the transfer queue's store: faults for it too.
             return transferQueueBreak || blockingQueueBreak ? null : "not a fault for a BreakableTransferQueue: its "
@@ -494,6 +508,49 @@ public class ContractCoverageTest {
                     }
                     return () -> new BrokenNavigableMap(builder);
                 });
+    }
+
+    @TestFactory
+    @DisplayName("ConcurrentMapContract")
+    Stream<DynamicNode> concurrentMapContract() {
+        List<Method> methods = ContractRuns.testMethods(ConcurrentMapContract.class, false);
+        Map<String, Break> breaks = ContractRuns.breaks(ContractRuns.withSuperclasses(BreakableConcurrentMap.class));
+        Stream<DynamicNode> passes = Stream.of(
+                passes("ConcurrentHashMap", JdkConcurrentMap::new, methods),
+                passes("ConcurrentSkipListMap", JdkConcurrentSkipListMap::new, methods),
+                passes("unbroken breakable", () -> new BrokenConcurrentMap(new BreakableConcurrentMap.Builder<>()),
+                        methods));
+        // A thread-safety break must give the method's results on one thread, so that only the thread-safety
+        // contract, under contention, can see it.
+        Stream<DynamicNode> singleThreaded = breaks.entrySet().stream()
+                .filter(e -> e.getKey().startsWith(BreakableConcurrentMap.class.getSimpleName() + ".")
+                        && e.getKey().endsWith(THREAD_SAFETY_BREAK))
+                .map(e -> passes("the breakable on one thread, with " + e.getKey(), () -> new BrokenConcurrentMap(
+                        new BreakableConcurrentMap.Builder<Integer, String>().addBreak(e.getValue())), methods));
+        Stream<DynamicNode> fails = breaks.entrySet().stream()
+                .filter(e -> uncheckedReason(ConcurrentMapContract.class, e.getKey()) == null)
+                .map(e -> fails(e.getKey(), () -> new BrokenConcurrentMap(
+                        new BreakableConcurrentMap.Builder<Integer, String>().addBreak(e.getValue())), methods));
+        return Stream.of(dynamicContainer("ConcurrentMapContract",
+                Stream.of(passes, singleThreaded, fails).flatMap(n -> n)));
+    }
+
+    @TestFactory
+    @VerySlow
+    @DisplayName("ThreadSafeConcurrentMapContract")
+    Stream<DynamicNode> threadSafeConcurrentMapContract() {
+        List<Method> all = ContractRuns.testMethods(ThreadSafeConcurrentMapContract.class, true);
+        Map<String, Break> breaks = new java.util.LinkedHashMap<>(
+                ContractRuns.breaks(ContractRuns.withSuperclasses(BreakableConcurrentMap.class)));
+        breaks.keySet().removeIf(k -> !k.endsWith(THREAD_SAFETY_BREAK)
+                || uncheckedReason(ThreadSafeConcurrentMapContract.class, k) != null);
+        return Stream.of(dynamicContainer("ThreadSafeConcurrentMapContract", Stream.concat(
+                Stream.of(passes("ConcurrentHashMap", JdkThreadSafeConcurrentMap::new, all),
+                        passes("ConcurrentSkipListMap", JdkThreadSafeConcurrentSkipListMap::new, all),
+                        passes("unbroken BreakableConcurrentMap",
+                                () -> new BrokenThreadSafeConcurrentMap(new BreakableConcurrentMap.Builder<>()), all)),
+                breaks.entrySet().stream().map(e -> fails(e.getKey(), () -> new BrokenThreadSafeConcurrentMap(
+                        new BreakableConcurrentMap.Builder<Integer, String>().addBreak(e.getValue())), all)))));
     }
 
     @TestFactory
@@ -1250,6 +1307,58 @@ public class ContractCoverageTest {
         }
     }
 
+    static final class JdkConcurrentMap extends AbstractTest
+            implements ConcurrentMapContract<ConcurrentHashMap<Integer, String>, Integer, String>,
+            WithIntegerKeyAndStringValue<ConcurrentHashMap<Integer, String>> {
+        @Override
+        public MapProvider<Integer, String, ConcurrentHashMap<Integer, String>> provider() {
+            return concurrentHashMaps();
+        }
+    }
+
+    static final class JdkConcurrentSkipListMap extends AbstractTest
+            implements ConcurrentMapContract<ConcurrentSkipListMap<Integer, String>, Integer, String>,
+            WithIntegerKeyAndStringValue<ConcurrentSkipListMap<Integer, String>> {
+        @Override
+        public MapProvider<Integer, String, ConcurrentSkipListMap<Integer, String>> provider() {
+            return concurrentSkipListMaps();
+        }
+    }
+
+    static final class JdkThreadSafeConcurrentMap extends AbstractTest
+            implements ThreadSafeConcurrentMapContract<ConcurrentHashMap<Integer, String>, Integer, String>,
+            WithIntegerKeyAndStringValue<ConcurrentHashMap<Integer, String>> {
+        @Override
+        public MapProvider<Integer, String, ConcurrentHashMap<Integer, String>> provider() {
+            return concurrentHashMaps();
+        }
+    }
+
+    static final class JdkThreadSafeConcurrentSkipListMap extends AbstractTest
+            implements ThreadSafeConcurrentMapContract<ConcurrentSkipListMap<Integer, String>, Integer, String>,
+            WithIntegerKeyAndStringValue<ConcurrentSkipListMap<Integer, String>> {
+        @Override
+        public MapProvider<Integer, String, ConcurrentSkipListMap<Integer, String>> provider() {
+            return concurrentSkipListMaps();
+        }
+    }
+
+    static final class BrokenConcurrentMap
+            extends DynamicMapContract<BreakableConcurrentMap<Integer, String>, Integer, String>
+            implements ConcurrentMapContract<BreakableConcurrentMap<Integer, String>, Integer, String> {
+        BrokenConcurrentMap(final BreakableConcurrentMap.Builder<Integer, String> builder) {
+            super(builder, WithIntegerKeyAndStringValue.KEY_PROVIDER, WithIntegerKeyAndStringValue.VALUE_PROVIDER);
+        }
+    }
+
+    static final class BrokenThreadSafeConcurrentMap
+            extends DynamicMapContract<BreakableConcurrentMap<Integer, String>, Integer, String>
+            implements ThreadSafeConcurrentMapContract<BreakableConcurrentMap<Integer, String>, Integer, String> {
+        BrokenThreadSafeConcurrentMap(final BreakableConcurrentMap.Builder<Integer, String> builder) {
+            super(builder, WithIntegerKeyAndStringValue.KEY_PROVIDER, WithIntegerKeyAndStringValue.VALUE_PROVIDER);
+        }
+    }
+
     static final class BrokenMap extends DynamicMapContract<BreakableMap<Integer, String>, Integer, String>
             implements MapContract<BreakableMap<Integer, String>, Integer, String> {
         BrokenMap(final BreakableMap.Builder<Integer, String> builder) {
@@ -1301,6 +1410,18 @@ public class ContractCoverageTest {
                     deque.addAll(c);
                     return deque;
                 }, WithIntegerElement.PROVIDER);
+    }
+
+    private static MapProvider<Integer, String, ConcurrentHashMap<Integer, String>> concurrentHashMaps() {
+        return MapProviders.from(ConcurrentHashMap::new, (m) -> new ConcurrentHashMap<>(m),
+                (m) -> new ConcurrentHashMap<>(m),
+                WithIntegerKeyAndStringValue.KEY_PROVIDER, WithIntegerKeyAndStringValue.VALUE_PROVIDER);
+    }
+
+    private static MapProvider<Integer, String, ConcurrentSkipListMap<Integer, String>> concurrentSkipListMaps() {
+        return MapProviders.from(ConcurrentSkipListMap::new, (m) -> new ConcurrentSkipListMap<>(m),
+                (m) -> new ConcurrentSkipListMap<>(m),
+                WithIntegerKeyAndStringValue.KEY_PROVIDER, WithIntegerKeyAndStringValue.VALUE_PROVIDER);
     }
 
     /// Tree maps in reverse key order, with keys and values from the usual providers.

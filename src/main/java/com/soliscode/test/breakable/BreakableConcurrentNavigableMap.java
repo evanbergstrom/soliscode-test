@@ -318,14 +318,12 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
     /// - {@link #higherKey(Object)} - Calls the underlying method twice
     public static final Break NAVIGATION_RACE_CONDITION = new Break("NAVIGATION_RACE_CONDITION");
 
-    /// Underlying map storage
-    private final ConcurrentNavigableMap<K, V> concurrentNavigableMap;
 
     /// Creates a new BreakableConcurrentNavigableMap with no breaks, wrapping a new ConcurrentSkipListMap.
     /// This constructor provides a default implementation suitable for most testing scenarios.
     @SuppressWarnings("SortedCollectionWithNonComparableKeys")
     public BreakableConcurrentNavigableMap() {
-        this(new ConcurrentSkipListMap<>(), new HashSet<>(), new HashMap<>(), DEFAULT_PERMITS);
+        this(new ConcurrentSkipListMap<>(), new HashSet<>(), new HashMap<>(), NO_NULL_PERMITS);
     }
 
     /// Creates a new BreakableConcurrentNavigableMap with no breaks, wrapping the specified ConcurrentNavigableMap.
@@ -333,7 +331,7 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
     ///
     /// @param concurrentNavigableMapArg the ConcurrentNavigableMap to wrap and delegate operations to
     public BreakableConcurrentNavigableMap(final ConcurrentNavigableMap<K, V> concurrentNavigableMapArg) {
-        this(concurrentNavigableMapArg, new HashSet<>(), new HashMap<>(), DEFAULT_PERMITS);
+        this(concurrentNavigableMapArg, new HashSet<>(), new HashMap<>(), NO_NULL_PERMITS);
     }
 
     /// Creates a new BreakableConcurrentNavigableMap with the specified breaks, wrapping the specified
@@ -349,7 +347,6 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
                                               final Map<InterfaceMethod, MethodStatus> methodStatuses,
                                               final int permits) {
         super(concurrentNavigableMapArg, breaks, methodStatuses, permits);
-        this.concurrentNavigableMap = concurrentNavigableMapArg;
     }
 
     /// Creates a new BreakableConcurrentNavigableMap as a copy of another BreakableConcurrentNavigableMap.
@@ -358,8 +355,25 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
     ///
     /// @param other the BreakableConcurrentNavigableMap to copy
     public BreakableConcurrentNavigableMap(final BreakableConcurrentNavigableMap<K, V> other) {
-        this(new ConcurrentSkipListMap<>(other.concurrentNavigableMap), new HashSet<>(other.breaks()),
+        this(new ConcurrentSkipListMap<>(other.navigableStore()), new HashSet<>(other.breaks()),
                 new HashMap<>(other.methodStatuses()), other.permits());
+    }
+
+    /// Returns the store, which is always a [ConcurrentNavigableMap] for this class.
+    ///
+    /// @return the store
+    private ConcurrentNavigableMap<K, V> navigableStore() {
+        return (ConcurrentNavigableMap<K, V>) store();
+    }
+
+    /// Copies the store into a [ConcurrentSkipListMap] with the same comparator, so that a clone has a store of
+    /// its own.
+    ///
+    /// @param storeArg the store to copy
+    /// @return a new store holding the same mappings, in the same order
+    @Override
+    protected Map<K, V> copyOfStore(final Map<K, V> storeArg) {
+        return new ConcurrentSkipListMap<>((ConcurrentNavigableMap<K, V>) storeArg);
     }
 
     /// Creates a new BreakableConcurrentNavigableMap that wraps the specified ConcurrentNavigableMap.
@@ -423,7 +437,7 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
         if (hasBreak(COMPARATOR_RETURNS_NULL)) {
             return null;
         }
-        return concurrentNavigableMap.comparator();
+        return navigableStore().comparator();
     }
 
     @Override
@@ -432,7 +446,7 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
         if (hasBreak(FIRST_KEY_THROWS_EXCEPTION)) {
             throw new NoSuchElementException("Break: firstKey() throws exception");
         }
-        return concurrentNavigableMap.firstKey();
+        return navigableStore().firstKey();
     }
 
     @Override
@@ -442,7 +456,7 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
         if (hasBreak(LAST_KEY_THROWS_EXCEPTION)) {
             throw new NoSuchElementException("Break: lastKey() throws exception");
         }
-        return concurrentNavigableMap.lastKey();
+        return navigableStore().lastKey();
     }
 
     @Override
@@ -453,10 +467,10 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
             return null;
         }
         if (hasBreak(NAVIGATION_RACE_CONDITION)) {
-            concurrentNavigableMap.lowerEntry(key);
-            return concurrentNavigableMap.lowerEntry(key);
+            navigableStore().lowerEntry(key);
+            return navigableStore().lowerEntry(key);
         }
-        return concurrentNavigableMap.lowerEntry(key);
+        return navigableStore().lowerEntry(key);
     }
 
     @Override
@@ -467,10 +481,10 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
             return null;
         }
         if (hasBreak(NAVIGATION_RACE_CONDITION)) {
-            concurrentNavigableMap.lowerKey(key);
-            return concurrentNavigableMap.lowerKey(key);
+            navigableStore().lowerKey(key);
+            return navigableStore().lowerKey(key);
         }
-        return concurrentNavigableMap.lowerKey(key);
+        return navigableStore().lowerKey(key);
     }
 
     @Override
@@ -481,10 +495,10 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
             return null;
         }
         if (hasBreak(NAVIGATION_RACE_CONDITION)) {
-            concurrentNavigableMap.floorEntry(key);
-            return concurrentNavigableMap.floorEntry(key);
+            navigableStore().floorEntry(key);
+            return navigableStore().floorEntry(key);
         }
-        return concurrentNavigableMap.floorEntry(key);
+        return navigableStore().floorEntry(key);
     }
 
     @Override
@@ -495,10 +509,10 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
             return null;
         }
         if (hasBreak(NAVIGATION_RACE_CONDITION)) {
-            concurrentNavigableMap.floorKey(key);
-            return concurrentNavigableMap.floorKey(key);
+            navigableStore().floorKey(key);
+            return navigableStore().floorKey(key);
         }
-        return concurrentNavigableMap.floorKey(key);
+        return navigableStore().floorKey(key);
     }
 
     @Override
@@ -509,10 +523,10 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
             return null;
         }
         if (hasBreak(NAVIGATION_RACE_CONDITION)) {
-            concurrentNavigableMap.ceilingEntry(key);
-            return concurrentNavigableMap.ceilingEntry(key);
+            navigableStore().ceilingEntry(key);
+            return navigableStore().ceilingEntry(key);
         }
-        return concurrentNavigableMap.ceilingEntry(key);
+        return navigableStore().ceilingEntry(key);
     }
 
     @Override
@@ -523,10 +537,10 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
             return null;
         }
         if (hasBreak(NAVIGATION_RACE_CONDITION)) {
-            concurrentNavigableMap.ceilingKey(key);
-            return concurrentNavigableMap.ceilingKey(key);
+            navigableStore().ceilingKey(key);
+            return navigableStore().ceilingKey(key);
         }
-        return concurrentNavigableMap.ceilingKey(key);
+        return navigableStore().ceilingKey(key);
     }
 
     @Override
@@ -537,10 +551,10 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
             return null;
         }
         if (hasBreak(NAVIGATION_RACE_CONDITION)) {
-            concurrentNavigableMap.higherEntry(key);
-            return concurrentNavigableMap.higherEntry(key);
+            navigableStore().higherEntry(key);
+            return navigableStore().higherEntry(key);
         }
-        return concurrentNavigableMap.higherEntry(key);
+        return navigableStore().higherEntry(key);
     }
 
     @Override
@@ -554,10 +568,10 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
             return null;
         }
         if (hasBreak(NAVIGATION_RACE_CONDITION)) {
-            concurrentNavigableMap.higherKey(key);
-            return concurrentNavigableMap.higherKey(key);
+            navigableStore().higherKey(key);
+            return navigableStore().higherKey(key);
         }
-        return concurrentNavigableMap.higherKey(key);
+        return navigableStore().higherKey(key);
     }
 
     @Override
@@ -567,7 +581,7 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
         if (hasBreak(FIRST_ENTRY_RETURNS_NULL)) {
             return null;
         }
-        return concurrentNavigableMap.firstEntry();
+        return navigableStore().firstEntry();
     }
 
     @Override
@@ -577,7 +591,7 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
         if (hasBreak(LAST_ENTRY_RETURNS_NULL)) {
             return null;
         }
-        return concurrentNavigableMap.lastEntry();
+        return navigableStore().lastEntry();
     }
 
     @Override
@@ -587,7 +601,7 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
         if (hasBreak(POLL_FIRST_ENTRY_RETURNS_NULL)) {
             return null;
         }
-        return concurrentNavigableMap.pollFirstEntry();
+        return navigableStore().pollFirstEntry();
     }
 
     @Override
@@ -597,7 +611,7 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
         if (hasBreak(POLL_LAST_ENTRY_RETURNS_NULL)) {
             return null;
         }
-        return concurrentNavigableMap.pollLastEntry();
+        return navigableStore().pollLastEntry();
     }
 
     @Override
@@ -606,7 +620,7 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
         if (hasBreak(DESCENDING_MAP_RETURNS_NULL)) {
             return null;
         }
-        return concurrentNavigableMap.descendingMap();
+        return navigableStore().descendingMap();
     }
 
     @Override
@@ -615,7 +629,7 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
         if (hasBreak(NAVIGABLE_KEY_SET_RETURNS_NULL)) {
             return null;
         }
-        return concurrentNavigableMap.navigableKeySet();
+        return navigableStore().navigableKeySet();
     }
 
     @Override
@@ -630,7 +644,7 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
         if (hasBreak(DESCENDING_KEY_SET_RETURNS_NULL)) {
             return null;
         }
-        return concurrentNavigableMap.descendingKeySet();
+        return navigableStore().descendingKeySet();
     }
 
     @Override
@@ -642,14 +656,14 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
         }
         if (hasBreak(SUB_MAP_IGNORES_BOUNDS)) {
             // Return the entire map by using the first and last keys with inclusive bounds
-            K firstKey = concurrentNavigableMap.firstKey();
-            K lastKey = concurrentNavigableMap.lastKey();
+            K firstKey = navigableStore().firstKey();
+            K lastKey = navigableStore().lastKey();
             if (firstKey != null && lastKey != null) {
-                return concurrentNavigableMap.subMap(firstKey, true, lastKey, true);
+                return navigableStore().subMap(firstKey, true, lastKey, true);
             }
-            return concurrentNavigableMap.subMap(fromKey, true, toKey, true);
+            return navigableStore().subMap(fromKey, true, toKey, true);
         }
-        return concurrentNavigableMap.subMap(fromKey, fromInclusive, toKey, toInclusive);
+        return navigableStore().subMap(fromKey, fromInclusive, toKey, toInclusive);
     }
 
     @Override
@@ -660,9 +674,9 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
             return null;
         }
         if (hasBreak(HEAD_MAP_IGNORES_INCLUSIVE)) {
-            return concurrentNavigableMap.headMap(toKey, true);
+            return navigableStore().headMap(toKey, true);
         }
-        return concurrentNavigableMap.headMap(toKey, inclusive);
+        return navigableStore().headMap(toKey, inclusive);
     }
 
     @Override
@@ -673,9 +687,9 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
             return null;
         }
         if (hasBreak(TAIL_MAP_IGNORES_INCLUSIVE)) {
-            return concurrentNavigableMap.tailMap(fromKey, true);
+            return navigableStore().tailMap(fromKey, true);
         }
-        return concurrentNavigableMap.tailMap(fromKey, inclusive);
+        return navigableStore().tailMap(fromKey, inclusive);
     }
 
     @Override
@@ -685,7 +699,7 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
         if (hasBreak(SUB_MAP_RETURNS_NULL)) {
             return null;
         }
-        return concurrentNavigableMap.subMap(fromKey, toKey);
+        return navigableStore().subMap(fromKey, toKey);
     }
 
     @Override
@@ -698,7 +712,7 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
         if (hasBreak(HEAD_MAP_RETURNS_NULL)) {
             return null;
         }
-        return concurrentNavigableMap.headMap(toKey);
+        return navigableStore().headMap(toKey);
     }
 
     @Override
@@ -708,7 +722,7 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
         if (hasBreak(TAIL_MAP_RETURNS_NULL)) {
             return null;
         }
-        return concurrentNavigableMap.tailMap(fromKey);
+        return navigableStore().tailMap(fromKey);
     }
 
     /// Builder for creating BreakableConcurrentNavigableMap instances with fluent configuration.

@@ -22,4 +22,22 @@ public interface MapContractSupport<M extends Map<K, V>, K, V>
     default int defaultSize() {
         return 10;
     }
+
+    /// Says whether the map under test permits a `null` key. Where it does not, the contracts that test nulls expect
+    /// a `null` key to be refused with `NullPointerException`; where it does, they do not run those tests.
+    ///
+    /// @return `true` unless overridden; `ConcurrentMapContractSupport` returns `false`
+    /// @since 0.1.2
+    default boolean permitNullKeys() {
+        return true;
+    }
+
+    /// Says whether the map under test permits a `null` value. Where it does not, the contracts that test nulls
+    /// expect a `null` value to be refused with `NullPointerException`; where it does, they do not run those tests.
+    ///
+    /// @return `true` unless overridden; `ConcurrentMapContractSupport` returns `false`
+    /// @since 0.1.2
+    default boolean permitNullValues() {
+        return true;
+    }
 }

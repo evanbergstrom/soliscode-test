@@ -66,14 +66,14 @@ The user's decision (2026-11-08, on #9): where the code does on purpose what an 
 - with a one-line comment directly above it, `// Check: reason`;
 - no disguised workaround (a cast, a helper or a narrowed type whose only purpose is to quiet the check). An agent once narrowed the providers' return types to interfaces to avoid `NonApiType`; that removed providers users had (`provideLinkedList` could no longer back a `Queue` or `Deque` contract), and was reverted.
 
-A finding that points at a fault is fixed, not suppressed. Built (#9, #30, #32, #33): main code has 47 such suppressions, of these kinds:
+A finding that points at a fault is fixed, not suppressed. Built (#9, #30, #32, #33, #34, #35): main code has 73 such suppressions, of these kinds:
 
 | Check | Count | Where, and why |
 |-------|-------|----------------|
 | `JdkObsolete` | 10 | `LinkedList` in `BreakableDeque`, `BreakableQueue` and `CollectionProviders.provideLinkedList` (8): it is the one JDK `Deque` that permits null elements, which these types must allow. `BreakableSortedMap` and `BreakableSortedSet` (2): they are breakable `SortedMap` and `SortedSet` classes, and the finding is on the `implements` clause, so the class carries it |
 | `NonApiType` | 8 | The providers of `ArrayList`, `LinkedList`, `HashSet`, `HashMap`, `TreeMap` and `LinkedHashMap`, and `WithArrayList` and `WithLinkedList`: they provide those concrete classes, to test them |
 | `UndefinedEquals` | 4 | Wrappers whose equality is the wrapped collection's (`CollectionOnly`, `IterableOnly`, `BreakableIterable`, `BreakableQueue`) |
-| `NullAway` | 15 | Contract tests that pass null to a JDK method on purpose (`ToArrayContract`, `PushContract`, `OfferFirstContract`, `OfferLastContract`; by #32, `PutContract`, `OfferWithTimeoutContract`, `DrainToContract`, `DrainToMaxElementsContract`; by #33, `PutFirstContract`, `PutLastContract`, `OfferFirstWithTimeoutContract`, `OfferLastWithTimeoutContract`; and, by #34, `TransferContract`, `TryTransferContract`, `TryTransferWithTimeoutContract`) |
+| `NullAway` | 37 | Code that passes null on purpose: contract tests that pass it to a JDK method (`ToArrayContract`, `PushContract`, `OfferFirstContract`, `OfferLastContract`; by #32, `PutContract`, `OfferWithTimeoutContract`, `DrainToContract`, `DrainToMaxElementsContract`; by #33, `PutFirstContract`, `PutLastContract`, `OfferFirstWithTimeoutContract`, `OfferLastWithTimeoutContract`; by #34, `TransferContract`, `TryTransferContract`, `TryTransferWithTimeoutContract`; and, by #35, 21 in `contract.concurrentmap`'s method contracts, one per null argument tested, and `BreakableConcurrentMap.forEach`, whose `FOR_EACH_IS_NOT_THREAD_SAFE` passes `null` for a key removed meanwhile, on purpose) |
 | `ReferenceEquality` | 6 | Identity comparisons: `AssertEqualsByIdentity`, `AssertEquals` (the same iterable is equal to itself without being iterated), `IterableTestUtils`' `containsByIdentity`, and `BreakableBlockingQueue`'s, `BreakableBlockingDeque`'s and `BoundedTransferQueue`'s refusals to drain into themselves (#32, #33, #34) |
 | `DoNotCall` | 6 | Contract tests that call `addFirst` or `addLast` on a `SortedSet` on purpose, to check that they throw (`SortedAddFirstContract`, `SortedAddLastContract`; the user's decision on #30) |
 | `EqualsGetClass` | 1 | `BreakableObject`'s exact-class equality, which keeps `equals` symmetric |
@@ -92,7 +92,7 @@ Not covered by the decision, and left from before #9: javac's own `unchecked`, `
 - Habit: a `Break` constant's comment gives its **Purpose** (the fault it simulates), **Effect** (how the method's behaviour changes), and **Affected Methods**, with a `@see` to the method (`BreakableCollection`, `BreakableList`, `BreakableSequencedCollection` follow it; not every breakable does yet).
 - Habit: a contract's comment names the JDK method it tests, with a `@see`, and what its provider must supply.
 - Inline comments say why, not what. Built (#10): `FIXME:`, `HACK:` and `XXX:` fail Checkstyle; empty blocks need a comment.
-- 155 of the 484 Java files carry the Apache 2.0 licence header (`LICENSE.txt`). Put it on new files.
+- 183 of the 512 Java files carry the Apache 2.0 licence header (`LICENSE.txt`). Put it on new files.
 
 ## Imports
 

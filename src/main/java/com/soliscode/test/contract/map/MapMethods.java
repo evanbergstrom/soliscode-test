@@ -63,7 +63,7 @@ public enum MapMethods implements InterfaceMethod {
     REMOVE_TWO_ARG("remove(Object, Object)"),
 
     /// The method [replace][java.util.Map#replace(Object, Object, Object)] (three-argument version)
-    REPLACE_THREE_ARG("clear()"),
+    REPLACE_THREE_ARG("replace(Object, Object, Object)"),
 
     /// The method [replace][java.util.Map#replace(Object, Object)] (two-argument version)
     REPLACE_TWO_ARG("replace(Object, Object)"),

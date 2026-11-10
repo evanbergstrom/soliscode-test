@@ -831,11 +831,29 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     public BreakableMap<K, V> clone() {
         try {
             BreakableMap<K, V> copy = (BreakableMap<K, V>) super.clone();
-            copy.map = new HashMap<>(map);
+            copy.map = copyOfStore(map);
             return copy;
         } catch (final CloneNotSupportedException e) {
             throw new RuntimeException("Cloning BreakableMap failed", e);
         }
+    }
+
+    /// Returns the map this breakable wraps, its store.
+    ///
+    /// @return the store
+    /// @since 0.1.2
+    protected Map<K, V> store() {
+        return map;
+    }
+
+    /// Returns a copy of a store, for [#clone()]: a `HashMap` here. A subclass whose store must be of another kind
+    /// (a concurrent map, say) overrides it.
+    ///
+    /// @param storeArg the store to copy
+    /// @return a new store holding the same mappings
+    /// @since 0.1.2
+    protected Map<K, V> copyOfStore(final Map<K, V> storeArg) {
+        return new HashMap<>(storeArg);
     }
 
     /// Returns the bitwise combination of permitted features for this map.
@@ -1082,11 +1100,12 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     @Override
     public void putAll(final Map<? extends K, ? extends V> m) {
         if (supportsMethod(MapMethods.PUT_ALL)) {
-            if (!permitsNullKeys() && m.containsKey(null)) {
-                throw new NullPointerException();
-            }
-            if (!permitsNullValues() && m.containsValue(null)) {
-                throw new NullPointerException();
+            // Found by iterating: asking a map that refuses nulls whether it contains one may throw.
+            for (final Entry<? extends K, ? extends V> entry : m.entrySet()) {
+                if ((entry.getKey() == null && !permitsNullKeys())
+                        || (entry.getValue() == null && !permitsNullValues())) {
+                    throw new NullPointerException("the map holds a null key or value, which this map does not permit");
+                }
             }
             if (hasBreak(PUT_ALL_DOES_NOT_ADD_ANY_PAIRS)) {
                 return;
@@ -1516,6 +1535,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     public @Nullable V computeIfAbsent(final K key, final Function<? super K, ? extends V> mappingFunction) {
         if (supportsMethod(MapMethods.COMPUTE_IF_ABSENT)) {
             validateKey(key);
+            Objects.requireNonNull(mappingFunction);
             V computed;
             if (hasBreak(COMPUTE_IF_ABSENT_NEVER_COMPUTES_VALUE)) {
                 computed = null;
@@ -1524,7 +1544,8 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
                 map.put(key, computed);
             } else {
 
-                computed = map.computeIfAbsent(key, (k) -> validateValue(mappingFunction.apply(k)));
+                // A null result records no mapping (Map#computeIfAbsent), so it is not validated.
+                computed = map.computeIfAbsent(key, mappingFunction);
             }
 
             if (hasBreak(COMPUTE_IF_ABSENT_ALWAYS_RETURNS_NULL)) {
@@ -1556,9 +1577,9 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     @Override
     public @Nullable V computeIfPresent(final K key,
                               final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
-        validateKey(key);
         if (supportsMethod(MapMethods.COMPUTE_IF_PRESENT)) {
             validateKey(key);
+            Objects.requireNonNull(remappingFunction);
             V computed;
             if (hasBreak(COMPUTE_IF_PRESENT_NEVER_COMPUTES_VALUE)) {
                 computed = null;
@@ -1567,7 +1588,8 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
                 computed = validateValue(remappingFunction.apply(key, map.get(key)));
                 map.put(key, computed);
             } else {
-                computed = map.computeIfPresent(key, (k, v) -> validateValue(remappingFunction.apply(k, v)));
+                // A null result removes the mapping (Map#computeIfPresent), so it is not validated.
+                computed = map.computeIfPresent(key, remappingFunction);
             }
             if (hasBreak(COMPUTE_IF_PRESENT_ALWAYS_RETURNS_NULL)) {
                 return null;
@@ -1599,11 +1621,13 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
                      final BiFunction<? super K, ? super @Nullable V, ? extends V> remappingFunction) {
         if (supportsMethod(MapMethods.COMPUTE)) {
             validateKey(key);
+            Objects.requireNonNull(remappingFunction);
             V computed;
             if (hasBreak(COMPUTE_DOES_NOT_COMPUTE_VALUE)) {
                 computed = map.get(key);
             } else {
-                computed = map.compute(key, (k, v) -> validateValue(remappingFunction.apply(k, v)));
+                // A null result removes the mapping (Map#compute), so it is not validated.
+                computed = map.compute(key, remappingFunction);
             }
             if (hasBreak(COMPUTE_ALWAYS_RETURNS_NULL)) {
                 return null;
@@ -1639,11 +1663,13 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
         if (supportsMethod(MapMethods.MERGE)) {
             validateKey(key);
             validateValue(value);
+            Objects.requireNonNull(remappingFunction);
             V merged;
             if (hasBreak(MERGE_DOES_NOT_MERGE_THE_VALUES)) {
                 merged = map.get(key);
             } else {
-                merged = map.merge(key, value, (k, v) -> validateValue(remappingFunction.apply(k, v)));
+                // A null result removes the mapping (Map#merge), so it is not validated.
+                merged = map.merge(key, value, remappingFunction);
             }
 
             if (hasBreak(MERGE_ALWAYS_RETURNS_NULL)) {

@@ -8,10 +8,10 @@ import org.junit.jupiter.api.Test;
 import com.soliscode.test.AbstractTest;
 import com.soliscode.test.contract.map.MapMethods;
 
-import static com.soliscode.test.breakable.BreakableConcurrentMap.COMPUTE_IF_ABSENT_RACE_CONDITION;
-import static com.soliscode.test.breakable.BreakableConcurrentMap.COMPUTE_IF_PRESENT_RACE_CONDITION;
-import static com.soliscode.test.breakable.BreakableConcurrentMap.COMPUTE_RACE_CONDITION;
-import static com.soliscode.test.breakable.BreakableConcurrentMap.MERGE_RACE_CONDITION;
+import static com.soliscode.test.breakable.BreakableConcurrentMap.COMPUTE_IF_ABSENT_IS_NOT_THREAD_SAFE;
+import static com.soliscode.test.breakable.BreakableConcurrentMap.COMPUTE_IF_PRESENT_IS_NOT_THREAD_SAFE;
+import static com.soliscode.test.breakable.BreakableConcurrentMap.COMPUTE_IS_NOT_THREAD_SAFE;
+import static com.soliscode.test.breakable.BreakableConcurrentMap.MERGE_IS_NOT_THREAD_SAFE;
 import static com.soliscode.test.breakable.BreakableConcurrentMap.PUT_IF_ABSENT_ALWAYS_RETURNS_NULL;
 import static com.soliscode.test.breakable.BreakableConcurrentMap.PUT_IF_ABSENT_DOES_NOT_ADD_PAIR;
 import static com.soliscode.test.breakable.BreakableConcurrentMap.PUT_IF_ABSENT_IGNORES_EXISTING;
@@ -25,6 +25,7 @@ import static com.soliscode.test.breakable.BreakableConcurrentMap.REPLACE_TWO_AR
 import static com.soliscode.test.breakable.BreakableConcurrentMap.REPLACE_TWO_ARG_DOES_NOT_REPLACE_VALUE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -263,71 +264,139 @@ public class BreakableConcurrentMapTest extends AbstractTest {
         assertNull(map.get("key2")); // Non-existent key should remain absent
     }
 
-    // ========== Break Testing: Race Condition Simulation ==========
+    // ========== Break Testing: Thread-safety Breaks, on One Thread ==========
 
-    /// Verifies the `COMPUTE_IF_ABSENT_RACE_CONDITION` break constant.
+    /// Verifies that `COMPUTE_IF_ABSENT_IS_NOT_THREAD_SAFE` gives `computeIfAbsent`'s results on one thread.
     @Test
-    @DisplayName("computeIfAbsent(K, Function) with COMPUTE_IF_ABSENT_RACE_CONDITION runs without an exception")
-    public void computeIfAbsentWhenRaceConditionBreakAddedExecutesWithoutException() {
-        BreakableConcurrentMap.Builder<String, Integer> builder = new BreakableConcurrentMap.Builder<>();
-        builder.addBreak(COMPUTE_IF_ABSENT_RACE_CONDITION);
-        BreakableConcurrentMap<String, Integer> map = builder.build();
+    @DisplayName("computeIfAbsent(K, Function) with COMPUTE_IF_ABSENT_IS_NOT_THREAD_SAFE is correct on one thread")
+    public void computeIfAbsentWhenNotThreadSafeBreakAddedIsCorrectOnOneThread() {
+        BreakableConcurrentMap<String, Integer> map = new BreakableConcurrentMap.Builder<String, Integer>()
+                .addBreak(COMPUTE_IF_ABSENT_IS_NOT_THREAD_SAFE).build();
 
-        // This test verifies the race condition simulation doesn't crash
-        Integer result = map.computeIfAbsent("key1", k -> 100);
-
-        // The exact result depends on the race condition simulation
-        // but the operation should complete without throwing exceptions
-        assertNotNull(result);
-        assertTrue(map.containsKey("key1"));
+        assertEquals(Integer.valueOf(100), map.computeIfAbsent("key1", k -> 100));
+        assertEquals(Integer.valueOf(100), map.computeIfAbsent("key1", k -> 200));
+        assertNull(map.computeIfAbsent("key2", k -> null));
+        assertFalse(map.containsKey("key2"));
     }
 
-    /// Verifies the `COMPUTE_IF_PRESENT_RACE_CONDITION` break constant.
+    /// Verifies that `COMPUTE_IF_PRESENT_IS_NOT_THREAD_SAFE` gives `computeIfPresent`'s results on one thread.
     @Test
-    @DisplayName("computeIfPresent(K, BiFunction) with COMPUTE_IF_PRESENT_RACE_CONDITION runs without an exception")
-    public void computeIfPresentWhenRaceConditionBreakAddedExecutesWithoutException() {
-        BreakableConcurrentMap.Builder<String, Integer> builder = new BreakableConcurrentMap.Builder<>();
-        builder.addBreak(COMPUTE_IF_PRESENT_RACE_CONDITION);
-        BreakableConcurrentMap<String, Integer> map = builder.build();
-
+    @DisplayName("computeIfPresent(K, BiFunction) with COMPUTE_IF_PRESENT_IS_NOT_THREAD_SAFE is correct on one "
+            + "thread")
+    public void computeIfPresentWhenNotThreadSafeBreakAddedIsCorrectOnOneThread() {
+        BreakableConcurrentMap<String, Integer> map = new BreakableConcurrentMap.Builder<String, Integer>()
+                .addBreak(COMPUTE_IF_PRESENT_IS_NOT_THREAD_SAFE).build();
         map.put("key1", 100);
-        Integer result = map.computeIfPresent("key1", (k, v) -> v * 2);
 
-        // The exact result depends on the race condition simulation
-        // but the operation should complete without throwing exceptions
-        assertNotNull(result);
+        assertEquals(Integer.valueOf(200), map.computeIfPresent("key1", (k, v) -> v * 2));
+        assertEquals(Integer.valueOf(200), map.get("key1"));
+        assertNull(map.computeIfPresent("key2", (k, v) -> 1));
+        assertNull(map.computeIfPresent("key1", (k, v) -> null));
+        assertFalse(map.containsKey("key1"));
     }
 
-    /// Verifies the `COMPUTE_RACE_CONDITION` break constant.
+    /// Verifies that `COMPUTE_IS_NOT_THREAD_SAFE` gives `compute`'s results on one thread: the function is applied
+    /// once.
     @Test
-    @DisplayName("compute(K, BiFunction) with COMPUTE_RACE_CONDITION runs without an exception")
-    public void computeWhenRaceConditionBreakAddedExecutesWithoutException() {
-        BreakableConcurrentMap.Builder<String, Integer> builder = new BreakableConcurrentMap.Builder<>();
-        builder.addBreak(COMPUTE_RACE_CONDITION);
-        BreakableConcurrentMap<String, Integer> map = builder.build();
-
+    @DisplayName("compute(K, BiFunction) with COMPUTE_IS_NOT_THREAD_SAFE is correct on one thread")
+    public void computeWhenNotThreadSafeBreakAddedIsCorrectOnOneThread() {
+        BreakableConcurrentMap<String, Integer> map = new BreakableConcurrentMap.Builder<String, Integer>()
+                .addBreak(COMPUTE_IS_NOT_THREAD_SAFE).build();
         map.put("key1", 100);
-        Integer result = map.compute("key1", (k, v) -> v != null ? v * 2 : 50);
 
-        // The race condition simulation performs the operation twice
-        // The exact result may vary but should not throw exceptions
-        assertNotNull(result);
+        assertEquals(Integer.valueOf(200), map.compute("key1", (k, v) -> v != null ? v * 2 : 50));
+        assertEquals(Integer.valueOf(200), map.get("key1"));
+        assertEquals(Integer.valueOf(50), map.compute("key2", (k, v) -> v != null ? v * 2 : 50));
+        assertNull(map.compute("key1", (k, v) -> null));
+        assertFalse(map.containsKey("key1"));
     }
 
-    /// Verifies the `MERGE_RACE_CONDITION` break constant.
+    /// Verifies that `MERGE_IS_NOT_THREAD_SAFE` gives `merge`'s results on one thread.
     @Test
-    @DisplayName("merge(K, V, BiFunction) with MERGE_RACE_CONDITION runs without an exception")
-    public void mergeWhenRaceConditionBreakAddedExecutesWithoutException() {
-        BreakableConcurrentMap.Builder<String, Integer> builder = new BreakableConcurrentMap.Builder<>();
-        builder.addBreak(MERGE_RACE_CONDITION);
-        BreakableConcurrentMap<String, Integer> map = builder.build();
+    @DisplayName("merge(K, V, BiFunction) with MERGE_IS_NOT_THREAD_SAFE is correct on one thread")
+    public void mergeWhenNotThreadSafeBreakAddedIsCorrectOnOneThread() {
+        BreakableConcurrentMap<String, Integer> map = new BreakableConcurrentMap.Builder<String, Integer>()
+                .addBreak(MERGE_IS_NOT_THREAD_SAFE).build();
 
-        map.put("key1", 100);
-        Integer result = map.merge("key1", 50, Integer::sum);
+        assertEquals(Integer.valueOf(50), map.merge("key1", 50, Integer::sum));
+        assertEquals(Integer.valueOf(150), map.merge("key1", 100, Integer::sum));
+        assertEquals(Integer.valueOf(150), map.get("key1"));
+        assertNull(map.merge("key1", 1, (a, b) -> null));
+        assertFalse(map.containsKey("key1"));
+    }
 
-        // The exact result depends on the race condition simulation
-        // but the operation should complete without throwing exceptions
-        assertNotNull(result);
+    /// Verifies that `REPLACE_ALL_IS_NOT_THREAD_SAFE` gives `replaceAll`'s results on one thread, on a skip-list store
+    /// too, whose entries do not support `setValue`.
+    @Test
+    @DisplayName("replaceAll(BiFunction) with REPLACE_ALL_IS_NOT_THREAD_SAFE is correct on one thread, on both stores")
+    public void replaceAllWhenNotThreadSafeBreakAddedIsCorrectOnOneThread() {
+        java.util.List<BreakableConcurrentMap<String, Integer>> maps = java.util.List.of(
+                new BreakableConcurrentMap.Builder<String, Integer>()
+                        .addBreak(BreakableConcurrentMap.REPLACE_ALL_IS_NOT_THREAD_SAFE).build(),
+                new BreakableConcurrentNavigableMap.Builder<String, Integer>()
+                        .addBreak(BreakableConcurrentMap.REPLACE_ALL_IS_NOT_THREAD_SAFE).build());
+        for (final BreakableConcurrentMap<String, Integer> map : maps) {
+            map.put("key1", 1);
+            map.put("key2", 2);
+            map.replaceAll((k, v) -> v * 10);
+            assertEquals(Integer.valueOf(10), map.get("key1"));
+            assertEquals(Integer.valueOf(20), map.get("key2"));
+        }
+    }
+
+    // ========== Fixes ==========
+
+    /// Verifies that a map refuses null keys and values, as its store does, however it is made.
+    @Test
+    @DisplayName("a BreakableConcurrentMap refuses null keys and values however it is made")
+    public void permitsWhenMadeAnyWayRefuseNulls() {
+        java.util.List<BreakableConcurrentMap<String, Integer>> maps = java.util.List.of(
+                new BreakableConcurrentMap<>(), new BreakableConcurrentMap.Builder<String, Integer>().build(),
+                BreakableConcurrentMap.wrap(new ConcurrentHashMap<>(), java.util.Set.of()));
+        for (final BreakableConcurrentMap<String, Integer> map : maps) {
+            assertFalse(map.permitsNullKeys());
+            assertFalse(map.permitsNullValues());
+        }
+    }
+
+    /// Verifies that a `null` function result removes the mapping, or records none, on a map that refuses nulls.
+    @Test
+    @DisplayName("a null function result removes the mapping or records none")
+    public void computeWhenFunctionReturnsNullRemovesOrRecordsNoMapping() {
+        BreakableConcurrentMap<String, Integer> map = new BreakableConcurrentMap.Builder<String, Integer>().build();
+        assertNull(map.computeIfAbsent("key1", k -> null));
+        map.put("key1", 1);
+        assertNull(map.computeIfPresent("key1", (k, v) -> null));
+        map.put("key1", 1);
+        assertNull(map.compute("key1", (k, v) -> null));
+        map.put("key1", 1);
+        assertNull(map.merge("key1", 2, (a, b) -> null));
+        assertTrue(map.isEmpty());
+    }
+
+    /// Verifies that a `null` function is refused where the function would not be called.
+    @Test
+    @DisplayName("a null function throws NullPointerException where it would not be called")
+    @SuppressWarnings("NullAway") // passes null on purpose
+    public void computeWhenFunctionIsNullThrowsNullPointerException() {
+        BreakableConcurrentMap<String, Integer> map = new BreakableConcurrentMap.Builder<String, Integer>().build();
+        map.put("present", 1);
+        assertThrows(NullPointerException.class, () -> map.computeIfAbsent("present", null));
+        assertThrows(NullPointerException.class, () -> map.computeIfPresent("absent", null));
+        assertThrows(NullPointerException.class, () -> map.merge("absent", 1, null));
+    }
+
+    /// Verifies that a clone has a store of its own.
+    @Test
+    @DisplayName("clone() makes a map with a store of its own")
+    public void cloneWhenChangedDoesNotChangeOriginal() {
+        BreakableConcurrentMap<String, Integer> map = new BreakableConcurrentMap.Builder<String, Integer>().build();
+        map.put("key1", 1);
+        BreakableMap<String, Integer> clone = map.clone();
+        assertInstanceOf(BreakableConcurrentMap.class, clone);
+        assertNull(clone.putIfAbsent("key2", 2));
+        assertEquals(Integer.valueOf(2), clone.get("key2"));
+        assertFalse(map.containsKey("key2"));
     }
 
     // ========== Normal Operations Testing ==========
@@ -465,7 +534,7 @@ public class BreakableConcurrentMapTest extends AbstractTest {
     public void wrapWhenUsedCreatesMapWithSpecifiedBreaks() {
         ConcurrentHashMap<String, Integer> hashMap = new ConcurrentHashMap<>();
         BreakableConcurrentMap<String, Integer> map = BreakableConcurrentMap.wrap(
-            hashMap, java.util.Set.of(COMPUTE_IF_ABSENT_RACE_CONDITION));
+            hashMap, java.util.Set.of(COMPUTE_IF_ABSENT_IS_NOT_THREAD_SAFE));
 
         // Test that the wrap method works and applies breaks
         Integer result = map.computeIfAbsent("key1", k -> 100);
