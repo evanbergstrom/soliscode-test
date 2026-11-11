@@ -170,10 +170,21 @@
 /// **Key Breaks**: hasNext/next inconsistencies, removal failures, forEachRemaining failures
 /// **Use Case**: Testing iterator-dependent code and traversal algorithms
 ///
+/// #### BreakableListIterator
+/// **Purpose**: ListIterator implementation, on BreakableIterator, with cursor and modification violations
+/// **Key Breaks**: hasPrevious/previous failures, wrong indexes, set and add failures
+/// **Use Case**: Testing list-iterator-dependent code, and `ListIteratorContract` (#37)
+///
 /// #### BreakableSpliterator
 /// **Purpose**: Spliterator implementation with parallel processing violations
-/// **Key Breaks**: Splitting failures, characteristic misrepresentation, estimation errors
-/// **Use Case**: Testing parallel stream operations and fork-join algorithms
+/// **Key Breaks**: Splitting failures, characteristic misrepresentation, estimation errors, traversal and null-action
+/// faults
+/// **Use Case**: Testing parallel stream operations and fork-join algorithms, and `SpliteratorContract` (#38)
+///
+/// #### BreakableSpliteratorOfInt, BreakableSpliteratorOfLong, BreakableSpliteratorOfDouble
+/// **Purpose**: Primitive spliterators, on BreakableSpliterator, whose primitive methods take its breaks
+/// **Key Breaks**: BreakableSpliterator's; none of their own
+/// **Use Case**: The primitive spliterator contracts (#38)
 ///
 /// ## Break Categories
 ///

@@ -59,6 +59,9 @@ import com.soliscode.test.breakable.BreakableSet;
 import com.soliscode.test.breakable.BreakableSortedMap;
 import com.soliscode.test.breakable.BreakableSortedSet;
 import com.soliscode.test.breakable.BreakableSpliterator;
+import com.soliscode.test.breakable.BreakableSpliteratorOfDouble;
+import com.soliscode.test.breakable.BreakableSpliteratorOfInt;
+import com.soliscode.test.breakable.BreakableSpliteratorOfLong;
 import com.soliscode.test.breakable.BreakableTransferQueue;
 import com.soliscode.test.contract.CollectionContractConfig;
 import com.soliscode.test.contract.DynamicCollectionContract;
@@ -96,6 +99,10 @@ import com.soliscode.test.contract.sequencedset.SequencedSetContract;
 import com.soliscode.test.contract.set.SetContract;
 import com.soliscode.test.contract.sortedmap.SortedMapContract;
 import com.soliscode.test.contract.sortedset.SortedSetContract;
+import com.soliscode.test.contract.spliterator.SpliteratorContract;
+import com.soliscode.test.contract.spliterator.SpliteratorOfDoubleContract;
+import com.soliscode.test.contract.spliterator.SpliteratorOfIntContract;
+import com.soliscode.test.contract.spliterator.SpliteratorOfLongContract;
 import com.soliscode.test.contract.support.WithIntegerElement;
 import com.soliscode.test.contract.support.WithIntegerKeyAndStringValue;
 import com.soliscode.test.contract.transferqueue.ThreadSafeTransferQueueContract;
@@ -105,7 +112,9 @@ import com.soliscode.test.provider.CollectionProviders;
 import com.soliscode.test.provider.IteratorProviders;
 import com.soliscode.test.provider.MapProvider;
 import com.soliscode.test.provider.MapProviders;
+import com.soliscode.test.provider.SpliteratorProviders;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.DynamicContainer.dynamicContainer;
@@ -175,6 +184,29 @@ public class ContractCoverageTest {
             "SPLITERATOR_GET_EXACT_SIZE_IF_KNOWN_ALWAYS_RETURNS_NEGATIVE_ONE",
             "SPLITERATOR_CHARACTERISTICS_ALWAYS_RETURNS_ZERO");
 
+    /// The breaks of `BreakableSpliterator` added for the spliterator contracts (#38). The Iterable and collection
+    /// contracts, whose break sources include `BreakableSpliterator`, are not run with them.
+    private static final java.util.Set<String> SPLITERATOR_CONTRACT_BREAKS = java.util.Set.of(
+            "SPLITERATOR_TRY_ADVANCE_IGNORES_NULL_ACTION", "SPLITERATOR_TRY_ADVANCE_SWALLOWS_ACTION_EXCEPTION",
+            "SPLITERATOR_FOR_EACH_REMAINING_IGNORES_NULL_ACTION",
+            "SPLITERATOR_FOR_EACH_REMAINING_SWALLOWS_ACTION_EXCEPTION", "SPLITERATOR_RETURNS_FIRST_ELEMENT_TWICE",
+            "SPLITERATOR_FIRST_ELEMENT_IS_NULL", "SPLITERATOR_TRY_SPLIT_RETURNS_SUFFIX",
+            "SPLITERATOR_TRY_SPLIT_LOSES_PART", "SPLITERATOR_TRY_SPLIT_NEVER_RETURNS_NULL",
+            "SPLITERATOR_TRY_SPLIT_PART_IS_NOT_SIZED", "SPLITERATOR_ESTIMATE_SIZE_GROWS_AFTER_SPLIT",
+            "SPLITERATOR_CHARACTERISTICS_CHANGE_AFTER_TRAVERSAL", "SPLITERATOR_REPORTS_IMMUTABLE",
+            "SPLITERATOR_REPORTS_CONCURRENT", "SPLITERATOR_GET_COMPARATOR_RETURNS_NATURAL_ORDER",
+            "SPLITERATOR_CHARACTERISTICS_LEAVE_OUT_ORDERED", "SPLITERATOR_CHARACTERISTICS_LEAVE_OUT_SIZED",
+            "SPLITERATOR_GET_COMPARATOR_ALWAYS_THROWS");
+
+    /// The breaks each primitive spliterator contract's own tests are shown to fail for (#38).
+    private static final List<String> PRIMITIVE_SPLITERATOR_BREAKS = List.of(
+            "SPLITERATOR_TRY_ADVANCE_DOES_NOT_CALL_ACTION", "SPLITERATOR_TRY_ADVANCE_ALWAYS_RETURNS_TRUE",
+            "SPLITERATOR_SKIPS_FIRST_ELEMENT", "SPLITERATOR_TRY_ADVANCE_IGNORES_NULL_ACTION",
+            "SPLITERATOR_TRY_ADVANCE_SWALLOWS_ACTION_EXCEPTION", "SPLITERATOR_FOR_EACH_REMAINING_DOES_NOT_CALL_ACTION",
+            "SPLITERATOR_FOR_EACH_REMAINING_IGNORES_NULL_ACTION",
+            "SPLITERATOR_FOR_EACH_REMAINING_SWALLOWS_ACTION_EXCEPTION", "SPLITERATOR_TRY_SPLIT_LOSES_PART",
+            "SPLITERATOR_TRY_SPLIT_RETURNS_SUFFIX");
+
     /// The capacity of the bounded blocking queues: room for what the inherited contracts add, small enough for the
     /// blocking-queue contracts to fill.
     private static final int QUEUE_CAPACITY = 100;
@@ -192,7 +224,8 @@ public class ContractCoverageTest {
     }
 
     /// Why a break is not checked against a contract, or `null` if it is. A break is left out only where it is not a
-    /// fault for the contract's type, or no test could ever see it; each reason says which.
+    /// fault for the contract's type, where no test could ever see it, or where another contract, named in the
+    /// reason, checks it; each reason says which.
     ///
     /// @param contract the contract
     /// @param key the break, as `SimpleClassName.FIELD`
@@ -246,6 +279,29 @@ public class ContractCoverageTest {
             return "not a fault for IteratorContract: forEachRemaining is not optional (Iterator#forEachRemaining), so "
                     + "the setup this break needs, forEachRemaining unsupported, fails the contract without the break; "
                     + "IterableContract checks it";
+        }
+        boolean spliteratorContract = SpliteratorContract.class.isAssignableFrom(contract);
+        if (SPLITERATOR_CONTRACT_BREAKS.contains(field) && !spliteratorContract) {
+            return "a spliterator break added for SpliteratorContract (#38), which checks it; the Iterable and "
+                    + "collection contracts are not run with it";
+        }
+        boolean primitiveSpliteratorContract = SpliteratorOfIntContract.class.isAssignableFrom(contract)
+                || SpliteratorOfLongContract.class.isAssignableFrom(contract)
+                || SpliteratorOfDoubleContract.class.isAssignableFrom(contract);
+        if (field.equals("SPLITERATOR_REPORTS_IMMUTABLE") && primitiveSpliteratorContract) {
+            return "no test can see it here: an array's spliterator already reports IMMUTABLE (Arrays#spliterator), "
+                    + "so the break changes nothing on these subjects; SpliteratorContract checks it";
+        }
+        if (field.equals("SPLITERATOR_GET_COMPARATOR_ALWAYS_THROWS") && spliteratorContract) {
+            return "no test can see it on these subjects: their spliterators (an ArrayList's, an array's) are not "
+                    + "SORTED, so getComparator must throw IllegalStateException, as the break makes it; "
+                    + "SpliteratorContract's run on a natural-order TreeSet checks it in sortedCharacteristicHolds";
+        }
+        if (field.equals("SPLITERATOR_GET_COMPARATOR_RETURNS_NATURAL_ORDER") && spliteratorContract) {
+            return "no test can see it on these subjects: their spliterators (an ArrayList's, an array's) are not "
+                    + "SORTED, so getComparator throws and the break, which changes only a null comparator, changes "
+                    + "nothing; SpliteratorContract's run on a natural-order TreeSet checks it in "
+                    + "sortedCharacteristicHolds";
         }
         if (field.equals("ADD_ALWAYS_RETURNS_TRUE") && !isSet) {
             return "not a fault here: add(E) always returns true for a collection that permits duplicates "
@@ -357,6 +413,91 @@ public class ContractCoverageTest {
                                         l -> Arrays.asList(l.toArray(Integer[]::new))),
                                         IterableMethods.ITERATOR_REMOVE, ListIteratorMethods.LIST_ITERATOR_ADD),
                                 methods)));
+    }
+
+    @TestFactory
+    @DisplayName("SpliteratorContract")
+    Stream<DynamicNode> spliteratorContract() {
+        List<Method> methods = ContractRuns.testMethods(SpliteratorContract.class, false);
+        Stream<DynamicNode> jdk = SpliteratorSubjects.jdkProviders().entrySet().stream()
+                .map(e -> passes(e.getKey(), () -> new SpliteratorSubjects.Plain<>(e.getValue()), methods));
+        Stream<DynamicNode> bases = Stream.of(SpliteratorSubjects.Base.values())
+                .filter(base -> base != SpliteratorSubjects.Base.ARRAY_LIST)
+                .map(base -> passes("unbroken breakable over " + base,
+                        () -> SpliteratorSubjects.broken(base, null), methods));
+        Stream<DynamicNode> named = Stream.of(
+                failsIn(SpliteratorSubjects.Base.TREE_SET_REVERSED,
+                        BreakableSpliterator.SPLITERATOR_GET_COMPARATOR_ALWAYS_RETURNS_NULL,
+                        "sortedCharacteristicHolds"),
+                failsIn(SpliteratorSubjects.Base.TREE_SET_NATURAL,
+                        BreakableSpliterator.SPLITERATOR_GET_COMPARATOR_RETURNS_NATURAL_ORDER,
+                        "sortedCharacteristicHolds"),
+                failsIn(SpliteratorSubjects.Base.TREE_SET_REVERSED,
+                        BreakableSpliterator.SPLITERATOR_RETURNS_FIRST_ELEMENT_TWICE, "distinctCharacteristicHolds"),
+                failsIn(SpliteratorSubjects.Base.INT_RANGE,
+                        BreakableSpliterator.SPLITERATOR_FIRST_ELEMENT_IS_NULL, "nonNullCharacteristicHolds"),
+                failsIn(SpliteratorSubjects.Base.UNKNOWN_SIZE,
+                        BreakableSpliterator.SPLITERATOR_REPORTS_CONCURRENT, "concurrentCharacteristicHolds"),
+                failsIn(SpliteratorSubjects.Base.TREE_SET_REVERSED,
+                        BreakableSpliterator.SPLITERATOR_CHARACTERISTICS_LEAVE_OUT_ORDERED,
+                        "sortedCharacteristicHolds"),
+                failsIn(SpliteratorSubjects.Base.TREE_SET_NATURAL,
+                        BreakableSpliterator.SPLITERATOR_GET_COMPARATOR_ALWAYS_THROWS, "sortedCharacteristicHolds"),
+                failsIn(SpliteratorSubjects.Base.ARRAY_LIST,
+                        BreakableSpliterator.SPLITERATOR_CHARACTERISTICS_LEAVE_OUT_SIZED,
+                        "subsizedCharacteristicHolds"));
+        // Not shown to fail by any break: sizedCharacteristicHolds's check that a SIZED part estimates its own count,
+        // and subsizedCharacteristicHolds's checks below the first split. A part is the delegate's own, so no break
+        // of the breakable reaches it; the first split's checks are shown, by the breaks above and in coverage.
+        return Stream.concat(
+                coverage(SpliteratorContract.class, "ArrayList's spliterator",
+                        () -> new SpliteratorSubjects.Plain<>(SpliteratorProviders.arrayList()),
+                        ContractRuns.withSuperclasses(BreakableSpliterator.class),
+                        (key, b) -> () -> SpliteratorSubjects.broken(SpliteratorSubjects.Base.ARRAY_LIST, b)),
+                Stream.of(jdk, bases, named).flatMap(n -> n));
+    }
+
+    @TestFactory
+    @DisplayName("SpliteratorOfIntContract")
+    Stream<DynamicNode> spliteratorOfIntContract() {
+        List<Method> methods = ContractRuns.testMethods(SpliteratorOfIntContract.class, false);
+        return Stream.concat(
+                coverage(SpliteratorOfIntContract.class, "IntStream.range's spliterator",
+                        () -> new SpliteratorSubjects.OfInt<>(SpliteratorProviders.intRange()),
+                        ContractRuns.withSuperclasses(BreakableSpliteratorOfInt.class),
+                        (key, b) -> () -> SpliteratorSubjects.brokenInt(b)),
+                Stream.concat(Stream.of(passes("an int[]'s spliterator",
+                                () -> new SpliteratorSubjects.OfInt<>(SpliteratorProviders.intArray()), methods)),
+                        ownTestsFail(SpliteratorOfIntContract.class, SpliteratorSubjects::brokenInt)));
+    }
+
+    @TestFactory
+    @DisplayName("SpliteratorOfLongContract")
+    Stream<DynamicNode> spliteratorOfLongContract() {
+        List<Method> methods = ContractRuns.testMethods(SpliteratorOfLongContract.class, false);
+        return Stream.concat(
+                coverage(SpliteratorOfLongContract.class, "LongStream.range's spliterator",
+                        () -> new SpliteratorSubjects.OfLong<>(SpliteratorProviders.longRange()),
+                        ContractRuns.withSuperclasses(BreakableSpliteratorOfLong.class),
+                        (key, b) -> () -> SpliteratorSubjects.brokenLong(b)),
+                Stream.concat(Stream.of(passes("a long[]'s spliterator",
+                                () -> new SpliteratorSubjects.OfLong<>(SpliteratorProviders.longArray()), methods)),
+                        ownTestsFail(SpliteratorOfLongContract.class, SpliteratorSubjects::brokenLong)));
+    }
+
+    @TestFactory
+    @DisplayName("SpliteratorOfDoubleContract")
+    Stream<DynamicNode> spliteratorOfDoubleContract() {
+        List<Method> methods = ContractRuns.testMethods(SpliteratorOfDoubleContract.class, false);
+        return Stream.concat(
+                coverage(SpliteratorOfDoubleContract.class, "a double[]'s spliterator",
+                        () -> new SpliteratorSubjects.OfDouble<>(SpliteratorProviders.doubleArray()),
+                        ContractRuns.withSuperclasses(BreakableSpliteratorOfDouble.class),
+                        (key, b) -> () -> SpliteratorSubjects.brokenDouble(b)),
+                Stream.concat(Stream.of(passes("a filtered DoubleStream's spliterator, not SIZED",
+                                () -> new SpliteratorSubjects.OfDouble<>(SpliteratorSubjects.filteredDoubles()),
+                                methods)),
+                        ownTestsFail(SpliteratorOfDoubleContract.class, SpliteratorSubjects::brokenDouble)));
     }
 
     @TestFactory
@@ -833,6 +974,36 @@ public class ContractCoverageTest {
                     () -> "no test method of the contract fails with " + breakKey + ": the contract cannot see it");
             assertFalse(ContractRuns.anyHang(failures),
                     () -> "the contract hangs with " + breakKey + ":\n  " + String.join("\n  ", failures));
+        });
+    }
+
+    /// A check that one named test method of `SpliteratorContract` fails, on a breakable over a base, with a break:
+    /// for the tests that the `ArrayList` subject cannot fail, since it does not report their characteristic.
+    private static DynamicNode failsIn(final SpliteratorSubjects.Base base, final Break b, final String method) {
+        List<Method> named = ContractRuns.testMethods(SpliteratorContract.class, false).stream()
+                .filter(m -> m.getName().equals(method)).toList();
+        assertEquals(1, named.size(), () -> "no test method " + method);
+        return dynamicTest(method + " fails with " + b.description() + " over " + base, () -> assertFalse(
+                ContractRuns.failures(() -> SpliteratorSubjects.broken(base, b), named).isEmpty(),
+                () -> method + " passes with the break: it cannot see it"));
+    }
+
+    /// Checks that a primitive spliterator contract's own test methods, not those it inherits, fail for each break of
+    /// its table: an inherited test would otherwise fail first, and hide one of its own that cannot.
+    private static Stream<DynamicNode> ownTestsFail(final Class<?> contract,
+                                                    final java.util.function.Function<Break, ?> broken) {
+        List<Method> own = ContractRuns.testMethods(contract, false).stream()
+                .filter(m -> m.getDeclaringClass() == contract).toList();
+        Map<String, Break> breaks = ContractRuns.breaks(List.of(BreakableSpliterator.class));
+        return PRIMITIVE_SPLITERATOR_BREAKS.stream().map(field -> {
+            Break b = breaks.get(BreakableSpliterator.class.getSimpleName() + "." + field);
+            return dynamicTest("its own tests fail with " + field, () -> {
+                assertTrue(b != null, () -> "no break " + field);
+                List<String> failures = ContractRuns.failures(() -> broken.apply(b), own, true);
+                assertFalse(failures.isEmpty(), () -> "no test method of " + contract.getSimpleName()
+                        + "'s own fails with " + field);
+                assertFalse(ContractRuns.anyHang(failures), () -> "they hang with " + field);
+            });
         });
     }
 

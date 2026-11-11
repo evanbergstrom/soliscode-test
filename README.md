@@ -44,6 +44,7 @@ This library provides support for:\
 >       - `TransferQueue`, and thread-safe transfer queues
 > - `Iterator`
 >   - `ListIterator`
+> - `Spliterator`, and `Spliterator.OfInt`, `OfLong` and `OfDouble`
 > - `Map`
 >   - `SortedMap`
 >     - `NavigableMap`

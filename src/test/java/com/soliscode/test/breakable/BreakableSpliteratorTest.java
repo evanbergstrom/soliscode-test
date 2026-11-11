@@ -1,8 +1,14 @@
 package com.soliscode.test.breakable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.Spliterator;
+import java.util.TreeSet;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,6 +18,7 @@ import static com.soliscode.test.breakable.BreakableSpliterator.CONCURRENT;
 import static com.soliscode.test.breakable.BreakableSpliterator.DISTINCT;
 import static com.soliscode.test.breakable.BreakableSpliterator.IMMUTABLE;
 import static com.soliscode.test.breakable.BreakableSpliterator.NONNULL;
+import static com.soliscode.test.breakable.BreakableSpliterator.ORDERED;
 import static com.soliscode.test.breakable.BreakableSpliterator.SIZED;
 import static com.soliscode.test.breakable.BreakableSpliterator.SORTED;
 import static com.soliscode.test.breakable.BreakableSpliterator.SPLITERATOR_CHARACTERISTICS_ALWAYS_RETURNS_ZERO;
@@ -472,4 +479,243 @@ public class BreakableSpliteratorTest {
         });
     }
 
+
+    // ========== The breaks added by #38 ==========
+
+    private static BreakableSpliterator<Integer> over(final List<Integer> elements, final Break b) {
+        Set<Break> breaks = b == null ? Set.of() : Set.of(b);
+        Spliterator<Integer> delegate = new ArrayList<>(elements).spliterator();
+        return new BreakableSpliterator<>(delegate, breaks, Map.of(), delegate.characteristics(), false);
+    }
+
+    private static List<Integer> drain(final Spliterator<Integer> spliterator) {
+        List<Integer> elements = new ArrayList<>();
+        spliterator.forEachRemaining(elements::add);
+        return elements;
+    }
+
+    @Test
+    @DisplayName("tryAdvance(null) with SPLITERATOR_TRY_ADVANCE_IGNORES_NULL_ACTION returns false; without, throws")
+    public void tryAdvanceIgnoresNullActionBreak() {
+        assertFalse(over(List.of(1, 2), BreakableSpliterator.SPLITERATOR_TRY_ADVANCE_IGNORES_NULL_ACTION)
+                .tryAdvance(null));
+        assertThrows(NullPointerException.class, () -> over(List.of(1, 2), null).tryAdvance(null));
+    }
+
+    @Test
+    @DisplayName("tryAdvance() with SPLITERATOR_TRY_ADVANCE_SWALLOWS_ACTION_EXCEPTION returns true and relays nothing")
+    public void tryAdvanceSwallowsActionExceptionBreak() {
+        Spliterator<Integer> spliterator = over(List.of(1, 2),
+                BreakableSpliterator.SPLITERATOR_TRY_ADVANCE_SWALLOWS_ACTION_EXCEPTION);
+        assertTrue(spliterator.tryAdvance(e -> {
+            throw new IllegalStateException("thrown by the action");
+        }));
+        assertEquals(List.of(2), drain(spliterator));
+        assertThrows(NullPointerException.class, () -> over(List.of(1),
+                BreakableSpliterator.SPLITERATOR_TRY_ADVANCE_SWALLOWS_ACTION_EXCEPTION).tryAdvance(null));
+    }
+
+    @Test
+    @DisplayName("forEachRemaining(null) with SPLITERATOR_FOR_EACH_REMAINING_IGNORES_NULL_ACTION returns")
+    public void forEachRemainingIgnoresNullActionBreak() {
+        over(List.of(1, 2), BreakableSpliterator.SPLITERATOR_FOR_EACH_REMAINING_IGNORES_NULL_ACTION)
+                .forEachRemaining(null);
+        assertThrows(NullPointerException.class, () -> over(List.of(1, 2), null).forEachRemaining(null));
+    }
+
+    @Test
+    @DisplayName("forEachRemaining() with SPLITERATOR_FOR_EACH_REMAINING_SWALLOWS_ACTION_EXCEPTION stops and relays "
+            + "nothing")
+    public void forEachRemainingSwallowsActionExceptionBreak() {
+        Break b = BreakableSpliterator.SPLITERATOR_FOR_EACH_REMAINING_SWALLOWS_ACTION_EXCEPTION;
+        List<Integer> visited = new ArrayList<>();
+        over(List.of(1, 2, 3), b).forEachRemaining(e -> {
+            visited.add(e);
+            throw new IllegalStateException("thrown by the action");
+        });
+        assertEquals(List.of(1), visited);
+        assertThrows(NullPointerException.class, () -> over(List.of(1), b).forEachRemaining(null));
+    }
+
+    @Test
+    @DisplayName("SPLITERATOR_RETURNS_FIRST_ELEMENT_TWICE passes the first element again at the next step")
+    public void returnsFirstElementTwiceBreak() {
+        Break b = BreakableSpliterator.SPLITERATOR_RETURNS_FIRST_ELEMENT_TWICE;
+        assertEquals(List.of(1, 1, 2, 3), drain(over(List.of(1, 2, 3), b)));
+        Spliterator<Integer> stepping = over(List.of(1, 2, 3), b);
+        List<Integer> passed = new ArrayList<>();
+        while (stepping.tryAdvance(passed::add)) {
+            assertTrue(passed.size() <= 4);
+        }
+        assertEquals(List.of(1, 1, 2, 3), passed);
+        Spliterator<Integer> mixed = over(List.of(1, 2, 3), b);
+        List<Integer> both = new ArrayList<>();
+        mixed.tryAdvance(both::add);
+        mixed.forEachRemaining(both::add);
+        assertEquals(List.of(1, 1, 2, 3), both);
+    }
+
+    @Test
+    @DisplayName("SPLITERATOR_FIRST_ELEMENT_IS_NULL passes null in place of the first element only")
+    public void firstElementIsNullBreak() {
+        Break b = BreakableSpliterator.SPLITERATOR_FIRST_ELEMENT_IS_NULL;
+        assertEquals(Arrays.asList(null, 2, 3), drain(over(List.of(1, 2, 3), b)));
+        Spliterator<Integer> stepping = over(List.of(1, 2, 3), b);
+        List<Integer> passed = new ArrayList<>();
+        stepping.tryAdvance(passed::add);
+        stepping.forEachRemaining(passed::add);
+        assertEquals(Arrays.asList(null, 2, 3), passed);
+    }
+
+    @Test
+    @DisplayName("trySplit() with SPLITERATOR_TRY_SPLIT_RETURNS_SUFFIX returns the rest and keeps the prefix")
+    public void trySplitReturnsSuffixBreak() {
+        Spliterator<Integer> spliterator = over(List.of(1, 2, 3, 4),
+                BreakableSpliterator.SPLITERATOR_TRY_SPLIT_RETURNS_SUFFIX);
+        Spliterator<Integer> part = spliterator.trySplit();
+        assertNotNull(part);
+        assertEquals(List.of(3, 4), drain(part));
+        assertEquals(List.of(1, 2), drain(spliterator));
+    }
+
+    @Test
+    @DisplayName("trySplit() with SPLITERATOR_TRY_SPLIT_LOSES_PART returns null and loses the part")
+    public void trySplitLosesPartBreak() {
+        Spliterator<Integer> spliterator = over(List.of(1, 2, 3, 4),
+                BreakableSpliterator.SPLITERATOR_TRY_SPLIT_LOSES_PART);
+        assertNull(spliterator.trySplit());
+        assertEquals(List.of(3, 4), drain(spliterator));
+    }
+
+    @Test
+    @DisplayName("trySplit() with SPLITERATOR_TRY_SPLIT_NEVER_RETURNS_NULL returns empty parts where it would be null")
+    public void trySplitNeverReturnsNullBreak() {
+        Spliterator<Integer> spliterator = over(List.of(1),
+                BreakableSpliterator.SPLITERATOR_TRY_SPLIT_NEVER_RETURNS_NULL);
+        for (int i = 0; i < 3; i++) {
+            Spliterator<Integer> part = spliterator.trySplit();
+            assertNotNull(part);
+            assertEquals(List.of(), drain(part));
+        }
+        assertEquals(List.of(1), drain(spliterator));
+    }
+
+    @Test
+    @DisplayName("trySplit() with SPLITERATOR_TRY_SPLIT_PART_IS_NOT_SIZED returns a part that is not SIZED")
+    public void trySplitPartIsNotSizedBreak() {
+        Spliterator<Integer> spliterator = over(List.of(1, 2, 3, 4),
+                BreakableSpliterator.SPLITERATOR_TRY_SPLIT_PART_IS_NOT_SIZED);
+        Spliterator<Integer> part = spliterator.trySplit();
+        assertNotNull(part);
+        assertFalse(part.hasCharacteristics(SIZED));
+        assertFalse(part.hasCharacteristics(SUBSIZED));
+        assertEquals(-1, part.getExactSizeIfKnown());
+        assertEquals(List.of(1, 2), drain(part));
+        assertTrue(spliterator.hasCharacteristics(SIZED | SUBSIZED));
+    }
+
+    @Test
+    @DisplayName("estimateSize() with SPLITERATOR_ESTIMATE_SIZE_GROWS_AFTER_SPLIT is one more than before the split")
+    public void estimateSizeGrowsAfterSplitBreak() {
+        Spliterator<Integer> spliterator = over(List.of(1, 2, 3, 4),
+                BreakableSpliterator.SPLITERATOR_ESTIMATE_SIZE_GROWS_AFTER_SPLIT);
+        assertEquals(4, spliterator.estimateSize());
+        assertNotNull(spliterator.trySplit());
+        assertEquals(5, spliterator.estimateSize());
+        assertEquals(4, over(List.of(1, 2, 3, 4), null).estimateSize());
+    }
+
+    @Test
+    @DisplayName("characteristics() with SPLITERATOR_CHARACTERISTICS_CHANGE_AFTER_TRAVERSAL is 0 once traversal begins")
+    public void characteristicsChangeAfterTraversalBreak() {
+        Spliterator<Integer> spliterator = over(List.of(1, 2),
+                BreakableSpliterator.SPLITERATOR_CHARACTERISTICS_CHANGE_AFTER_TRAVERSAL);
+        int before = spliterator.characteristics();
+        assertTrue(before != 0);
+        spliterator.tryAdvance(e -> { });
+        assertEquals(0, spliterator.characteristics());
+        // getExactSizeIfKnown() reads the characteristics as they follow the delegate's, which the break leaves alone.
+        assertEquals(1, spliterator.getExactSizeIfKnown());
+    }
+
+    @Test
+    @DisplayName("characteristics() with SPLITERATOR_REPORTS_IMMUTABLE or _CONCURRENT adds that characteristic")
+    public void reportsImmutableAndConcurrentBreaks() {
+        int plain = over(List.of(1), null).characteristics();
+        assertEquals(plain | IMMUTABLE,
+                over(List.of(1), BreakableSpliterator.SPLITERATOR_REPORTS_IMMUTABLE).characteristics());
+        assertEquals(plain | CONCURRENT,
+                over(List.of(1), BreakableSpliterator.SPLITERATOR_REPORTS_CONCURRENT).characteristics());
+    }
+
+    @Test
+    @DisplayName("characteristics() follow the delegate's: over a TreeSet, SIZED goes after a split")
+    public void characteristicsFollowTheDelegateAfterSplit() {
+        TreeSet<Integer> set = new TreeSet<>(List.of(1, 2, 3, 4, 5, 6, 7, 8));
+        Spliterator<Integer> delegate = set.spliterator();
+        Spliterator<Integer> spliterator = new BreakableSpliterator<>(delegate, Set.of(), Map.of(),
+                delegate.characteristics() | NONNULL, false);
+        assertTrue(spliterator.hasCharacteristics(SIZED | NONNULL));
+        assertEquals(8, spliterator.getExactSizeIfKnown());
+        assertNotNull(spliterator.trySplit());
+        assertFalse(delegate.hasCharacteristics(SIZED));
+        assertFalse(spliterator.hasCharacteristics(SIZED), "SIZED is dropped with the delegate's");
+        assertTrue(spliterator.hasCharacteristics(NONNULL), "an added characteristic stays");
+        assertEquals(-1, spliterator.getExactSizeIfKnown());
+    }
+
+    @Test
+    @DisplayName("characteristics() keep a characteristic taken away from the delegate's away")
+    public void characteristicsKeepARemovedOneAway() {
+        Spliterator<Integer> delegate = new ArrayList<>(List.of(1, 2, 3, 4)).spliterator();
+        Spliterator<Integer> spliterator = new BreakableSpliterator<>(delegate, Set.of(), Map.of(),
+                delegate.characteristics() & ~SIZED, false);
+        assertFalse(spliterator.hasCharacteristics(SIZED));
+        assertEquals(-1, spliterator.getExactSizeIfKnown());
+        assertNotNull(spliterator.trySplit());
+        assertFalse(spliterator.hasCharacteristics(SIZED));
+    }
+
+    @Test
+    @DisplayName("getComparator() with SPLITERATOR_GET_COMPARATOR_RETURNS_NATURAL_ORDER returns natural order for null")
+    public void getComparatorReturnsNaturalOrderBreak() {
+        Spliterator<Integer> delegate = new TreeSet<>(List.of(1, 2)).spliterator();
+        Spliterator<Integer> broken = new BreakableSpliterator<>(delegate,
+                Set.of(BreakableSpliterator.SPLITERATOR_GET_COMPARATOR_RETURNS_NATURAL_ORDER), Map.of(),
+                delegate.characteristics(), false);
+        Comparator<? super Integer> comparator = broken.getComparator();
+        assertNotNull(comparator);
+        assertTrue(comparator.compare(1, 2) < 0);
+        Comparator<Integer> reverse = Comparator.reverseOrder();
+        TreeSet<Integer> reversed = new TreeSet<>(reverse);
+        reversed.addAll(List.of(1, 2));
+        Spliterator<Integer> reversedDelegate = reversed.spliterator();
+        assertEquals(reverse, new BreakableSpliterator<>(reversedDelegate,
+                Set.of(BreakableSpliterator.SPLITERATOR_GET_COMPARATOR_RETURNS_NATURAL_ORDER), Map.of(),
+                reversedDelegate.characteristics(), false).getComparator());
+    }
+
+    @Test
+    @DisplayName("characteristics() with the LEAVE_OUT breaks leaves out ORDERED or SIZED, and nothing else")
+    public void leaveOutBreaks() {
+        int plain = over(List.of(1, 2), null).characteristics();
+        Spliterator<Integer> noOrder = over(List.of(1, 2),
+                BreakableSpliterator.SPLITERATOR_CHARACTERISTICS_LEAVE_OUT_ORDERED);
+        assertEquals(plain & ~ORDERED, noOrder.characteristics());
+        Spliterator<Integer> noSize = over(List.of(1, 2),
+                BreakableSpliterator.SPLITERATOR_CHARACTERISTICS_LEAVE_OUT_SIZED);
+        assertEquals(plain & ~SIZED, noSize.characteristics());
+        assertEquals(2, noSize.getExactSizeIfKnown(), "getExactSizeIfKnown() is not changed");
+    }
+
+    @Test
+    @DisplayName("getComparator() with SPLITERATOR_GET_COMPARATOR_ALWAYS_THROWS throws, even where SORTED")
+    public void getComparatorAlwaysThrowsBreak() {
+        Spliterator<Integer> delegate = new TreeSet<>(List.of(1, 2)).spliterator();
+        Spliterator<Integer> broken = new BreakableSpliterator<>(delegate,
+                Set.of(BreakableSpliterator.SPLITERATOR_GET_COMPARATOR_ALWAYS_THROWS), Map.of(),
+                delegate.characteristics(), false);
+        assertTrue(broken.hasCharacteristics(SORTED));
+        assertThrows(IllegalStateException.class, broken::getComparator);
+    }
 }
