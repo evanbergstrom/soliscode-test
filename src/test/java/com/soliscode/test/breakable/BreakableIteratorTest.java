@@ -16,14 +16,18 @@ import static com.soliscode.test.assertions.Assertions.assertThrowsDifferent;
 import static com.soliscode.test.assertions.collection.CollectionAssertions.assertContainsSame;
 import static com.soliscode.test.assertions.collection.CollectionAssertions.assertEquals;
 import static com.soliscode.test.breakable.BreakableIterator.ITERATOR_FOR_EACH_REMAINING_DOES_NOT_CALL_ACTION;
+import static com.soliscode.test.breakable.BreakableIterator.ITERATOR_FOR_EACH_REMAINING_SWALLOWS_ACTION_EXCEPTION;
 import static com.soliscode.test.breakable.BreakableIterator.ITERATOR_FOR_EACH_REMAINING_THROWS_WRONG_EXCEPTION_FOR_NULL_ARGUMENT;
+import static com.soliscode.test.breakable.BreakableIterator.ITERATOR_HAS_NEXT_ADVANCES;
 import static com.soliscode.test.breakable.BreakableIterator.ITERATOR_HAS_NEXT_ALWAYS_RETURNS_FALSE;
 import static com.soliscode.test.breakable.BreakableIterator.ITERATOR_HAS_NEXT_ALWAYS_RETURNS_TRUE;
 import static com.soliscode.test.breakable.BreakableIterator.ITERATOR_HAS_NEXT_RETURNS_OPPOSITE_VALUE;
 import static com.soliscode.test.breakable.BreakableIterator.ITERATOR_IS_ALWAYS_EMPTY;
 import static com.soliscode.test.breakable.BreakableIterator.ITERATOR_NEXT_ALWAYS_RETURNS_NULL;
+import static com.soliscode.test.breakable.BreakableIterator.ITERATOR_NEXT_REQUIRES_HAS_NEXT;
 import static com.soliscode.test.breakable.BreakableIterator.ITERATOR_NEXT_THROWS_WRONG_EXCEPTION;
 import static com.soliscode.test.breakable.BreakableIterator.ITERATOR_REMOVE_DOES_NOT_REMOVE_ELEMENT;
+import static com.soliscode.test.breakable.BreakableIterator.ITERATOR_REMOVE_IGNORES_ILLEGAL_STATE;
 import static com.soliscode.test.breakable.BreakableIterator.ITERATOR_REMOVE_THROWS_WRONG_EXCEPTION_FOR_ILLEGAL_STATE;
 import static com.soliscode.test.breakable.BreakableIterator.ITERATOR_REMOVE_THROWS_WRONG_EXCEPTION_IF_NOT_SUPPORTED;
 import static com.soliscode.test.breakable.BreakableIterator.ITERATOR_SKIPS_FIRST_ELEMENT;
@@ -387,5 +391,100 @@ public class BreakableIteratorTest {
                 .build();
 
         assertThrows(UnsupportedOperationException.class, () -> iterable.iterator().forEachRemaining((c) -> {}));
+    }
+
+    /// Test that the `ITERATOR_HAS_NEXT_ADVANCES` break makes `hasNext` take and discard the next element.
+    ///
+    /// @see BreakableIterator#hasNext()
+    @Test
+    @DisplayName("hasNext() with ITERATOR_HAS_NEXT_ADVANCES discards the next element")
+    public void hasNextWithAdvancesBreakDiscardsTheNextElement() {
+        Iterator<Integer> working = Breakables.buildIterable(1, 2, 3).build().iterator();
+        assertTrue(working.hasNext());
+        assertTrue(working.hasNext());
+        assertEquals(1, working.next());
+
+        Iterator<Integer> broken = Breakables.buildIterable(1, 2, 3)
+                .addBreak(ITERATOR_HAS_NEXT_ADVANCES)
+                .build().iterator();
+        assertTrue(broken.hasNext());
+        assertEquals(2, broken.next());
+        assertTrue(broken.hasNext());
+        assertThrows(NoSuchElementException.class, broken::next);
+        assertFalse(broken.hasNext());
+    }
+
+    /// Test that the `ITERATOR_REMOVE_IGNORES_ILLEGAL_STATE` break makes `remove` return in an illegal state.
+    ///
+    /// @see BreakableIterator#remove()
+    @Test
+    @DisplayName("remove() with ITERATOR_REMOVE_IGNORES_ILLEGAL_STATE returns instead of throwing")
+    public void removeWithIgnoresIllegalStateBreakReturns() {
+        List<Integer> list = new ArrayList<>(List.of(1, 2, 3));
+        Iterator<Integer> broken = new BreakableIterator<>(list.iterator(),
+                java.util.Set.of(ITERATOR_REMOVE_IGNORES_ILLEGAL_STATE), java.util.Map.of(), 0, false);
+        broken.remove();
+        broken.next();
+        broken.remove();
+        broken.remove();
+        assertEquals(List.of(2, 3), list);
+
+        Iterator<Integer> working = new ArrayList<>(List.of(1, 2, 3)).iterator();
+        assertThrows(IllegalStateException.class, working::remove);
+    }
+
+    /// Test that the `ITERATOR_FOR_EACH_REMAINING_SWALLOWS_ACTION_EXCEPTION` break swallows the action's exception and
+    /// carries on.
+    ///
+    /// @see BreakableIterator#forEachRemaining(Consumer)
+    @Test
+    @DisplayName("forEachRemaining() with ITERATOR_FOR_EACH_REMAINING_SWALLOWS_ACTION_EXCEPTION does not relay it")
+    public void forEachRemainingWithSwallowsBreakDoesNotRelay() {
+        Iterator<Integer> working = Breakables.buildIterable(1, 2, 3).build().iterator();
+        assertThrows(IllegalStateException.class, () -> working.forEachRemaining(e -> {
+            throw new IllegalStateException();
+        }));
+
+        Iterator<Integer> broken = Breakables.buildIterable(1, 2, 3)
+                .addBreak(ITERATOR_FOR_EACH_REMAINING_SWALLOWS_ACTION_EXCEPTION)
+                .build().iterator();
+        AtomicInteger calls = new AtomicInteger();
+        broken.forEachRemaining(e -> {
+            calls.incrementAndGet();
+            throw new IllegalStateException();
+        });
+        assertEquals(3, calls.get());
+        assertFalse(broken.hasNext());
+    }
+
+    /// Test that the `ITERATOR_IS_ALWAYS_EMPTY` break keeps a list iterator a list iterator.
+    @Test
+    @DisplayName("ITERATOR_IS_ALWAYS_EMPTY on a list iterator gives an empty list iterator")
+    public void alwaysEmptyOnListIteratorGivesEmptyListIterator() {
+        BreakableListIterator<Integer> broken = new BreakableListIterator<>(
+                new ArrayList<>(List.of(1, 2)).listIterator(),
+                java.util.Set.of(ITERATOR_IS_ALWAYS_EMPTY), java.util.Map.of());
+        assertFalse(broken.hasNext());
+        assertFalse(broken.hasPrevious());
+        assertEquals(0, broken.nextIndex());
+    }
+
+    /// Test that the `ITERATOR_NEXT_REQUIRES_HAS_NEXT` break makes `next` throw unless `hasNext` came first.
+    ///
+    /// @see BreakableIterator#next()
+    @Test
+    @DisplayName("next() with ITERATOR_NEXT_REQUIRES_HAS_NEXT throws unless hasNext() was called first")
+    public void nextWithRequiresHasNextBreakThrowsWithoutHasNext() {
+        Iterator<Integer> working = Breakables.buildIterable(1, 2, 3).build().iterator();
+        assertEquals(1, working.next());
+        assertEquals(2, working.next());
+
+        Iterator<Integer> broken = Breakables.buildIterable(1, 2, 3)
+                .addBreak(ITERATOR_NEXT_REQUIRES_HAS_NEXT)
+                .build().iterator();
+        assertThrows(NoSuchElementException.class, broken::next);
+        assertTrue(broken.hasNext());
+        assertEquals(1, broken.next());
+        assertThrows(NoSuchElementException.class, broken::next);
     }
 }

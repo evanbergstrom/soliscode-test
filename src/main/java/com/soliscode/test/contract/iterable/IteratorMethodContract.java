@@ -31,6 +31,7 @@ import static com.soliscode.test.util.IterableTestUtils.contains;
 import static com.soliscode.test.util.IterableTestUtils.size;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -219,5 +220,22 @@ public interface IteratorMethodContract<I extends Iterable<E>, E> extends Collec
         final Iterator<E> iterator = provider().createInstanceWithUniqueElements().iterator();
 
         assertThrows(NullPointerException.class, () -> iterator.forEachRemaining(null));
+    }
+
+    /// Tests that the [Iterator#forEachRemaining] method relays an exception its action throws to the caller.
+    ///
+    /// @since 0.1.3
+    @Test
+    @DisplayName("Iterator.forEachRemaining() relays an exception the action throws")
+    default void forEachRemainingRelaysExceptionFromAction() {
+        if (!supportsMethod(IterableMethods.ITERATOR_FOR_EACH_REMAINING)) {
+            return;
+        }
+        final Iterator<E> iterator = provider().createInstanceWithUniqueElements().iterator();
+        final RuntimeException thrown = new IllegalStateException("thrown by the action");
+        RuntimeException caught = assertThrows(RuntimeException.class, () -> iterator.forEachRemaining((e) -> {
+            throw thrown;
+        }));
+        assertSame(thrown, caught);
     }
 }

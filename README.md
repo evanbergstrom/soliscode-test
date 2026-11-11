@@ -42,6 +42,8 @@ This library provides support for:\
 >       - `BlockingQueue`, and thread-safe blocking queues
 >       - `BlockingDeque`, and thread-safe blocking deques
 >       - `TransferQueue`, and thread-safe transfer queues
+> - `Iterator`
+>   - `ListIterator`
 > - `Map`
 >   - `SortedMap`
 >     - `NavigableMap`

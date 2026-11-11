@@ -17,6 +17,7 @@ package com.soliscode.test.breakable;
 
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -72,6 +73,27 @@ public class BreakableIterator<E> extends AbstractBreakable implements Iterator<
     public static final Break ITERATOR_HAS_NEXT_RETURNS_OPPOSITE_VALUE =
             new Break("iterator hasNext always returns opposite value");
 
+    /// **Purpose:** `hasNext` advances the iterator, which [Iterator#hasNext] must not do.
+    ///
+    /// **Effect:** `hasNext` takes the next element and discards it, and returns whether there was one; so a `next`
+    /// after it returns the element after that, or throws.
+    ///
+    /// **Affected Methods:** [hasNext()][#hasNext()]
+    /// @since 0.1.3
+    public static final Break ITERATOR_HAS_NEXT_ADVANCES =
+            new Break("iterator hasNext advances the iterator");
+
+    /// **Purpose:** `next` works only after `hasNext`, a fault of iterators that compute the next element in
+    /// `hasNext`; [Iterator#next] needs no call to `hasNext` first.
+    ///
+    /// **Effect:** `next` throws [NoSuchElementException] unless `hasNext` has been called since the last `next`
+    /// (or since the iterator was made).
+    ///
+    /// **Affected Methods:** [next()][#next()]
+    /// @since 0.1.3
+    public static final Break ITERATOR_NEXT_REQUIRES_HAS_NEXT =
+            new Break("iterator next requires a call to hasNext first");
+
     /// The iterator `next` method will always return `null`
     /// **Affected Methods:** [next()][#next()]
     /// @see BreakableIterator#next
@@ -103,6 +125,28 @@ public class BreakableIterator<E> extends AbstractBreakable implements Iterator<
     public static final Break ITERATOR_REMOVE_THROWS_WRONG_EXCEPTION_IF_NOT_SUPPORTED =
             new Break("iterator remove method throws wrong exception if not supported.");
 
+    /// **Purpose:** `remove` called in an illegal state does nothing, where [Iterator#remove] throws
+    /// [IllegalStateException].
+    ///
+    /// **Effect:** `remove` before `next`, or a second `remove` after one `next`, returns without removing anything
+    /// or throwing.
+    ///
+    /// **Affected Methods:** [remove()][#remove()]
+    /// @since 0.1.3
+    public static final Break ITERATOR_REMOVE_IGNORES_ILLEGAL_STATE =
+            new Break("iterator remove ignores an illegal state");
+
+    /// **Purpose:** `forEachRemaining` swallows an exception from its action, where [Iterator#forEachRemaining]
+    /// relays it to the caller.
+    ///
+    /// **Effect:** a [RuntimeException] the action throws for an element is caught, and the iteration goes on with
+    /// the next element.
+    ///
+    /// **Affected Methods:** [forEachRemaining(Consumer)][#forEachRemaining(Consumer)]
+    /// @since 0.1.3
+    public static final Break ITERATOR_FOR_EACH_REMAINING_SWALLOWS_ACTION_EXCEPTION =
+            new Break("iterator forEachRemaining swallows an exception from its action");
+
     /// The iterator 'forEachRemaining' does not call the action
     /// **Affected Methods:** [forEachRemaining(Consumer)][#forEachRemaining(Consumer)]
     /// @see BreakableIterator#forEachRemaining(Consumer)
@@ -124,8 +168,14 @@ public class BreakableIterator<E> extends AbstractBreakable implements Iterator<
     /// The underlying iterator.
     private final Iterator<E> iterator;
 
+    /// Whether `hasNext` has been called since the last `next`, for [#ITERATOR_NEXT_REQUIRES_HAS_NEXT] only.
+    private boolean hasNextCalled;
+
 
     /// Creates a `BreakableIterator` from an existing iterator and specifying the breaks and method statuses.
+    ///
+    /// Under [#ITERATOR_IS_ALWAYS_EMPTY], a [ListIterator] is replaced by an empty list iterator, so that a
+    /// [BreakableListIterator] still has one.
     ///
     /// # Breaks
     /// This constructor is affected by the following breaks:
@@ -142,7 +192,8 @@ public class BreakableIterator<E> extends AbstractBreakable implements Iterator<
                              final int characteristics, final boolean isSafe) {
         super(breaks, methodStatuses, isSafe);
         if (hasBreak(ITERATOR_IS_ALWAYS_EMPTY)) {
-            this.iterator = Collections.emptyIterator();
+            this.iterator = iteratorArg instanceof ListIterator<E>
+                    ? Collections.emptyListIterator() : Collections.emptyIterator();
         } else {
             this.iterator = iteratorArg;
             if (hasBreak(ITERATOR_SKIPS_FIRST_ELEMENT) && this.iterator.hasNext()) {
@@ -159,6 +210,7 @@ public class BreakableIterator<E> extends AbstractBreakable implements Iterator<
     /// - [ITERATOR_HAS_NEXT_ALWAYS_RETURNS_TRUE][BreakableIterator#ITERATOR_HAS_NEXT_ALWAYS_RETURNS_TRUE]
     /// - [ITERATOR_HAS_NEXT_ALWAYS_RETURNS_FALSE][BreakableIterator#ITERATOR_HAS_NEXT_ALWAYS_RETURNS_FALSE]
     /// - [ITERATOR_HAS_NEXT_RETURNS_OPPOSITE_VALUE][BreakableIterator#ITERATOR_HAS_NEXT_RETURNS_OPPOSITE_VALUE]
+    /// - [#ITERATOR_HAS_NEXT_ADVANCES]
     ///
     /// # Example
     /// An iterator that has any of these breaks can be obtained from a `BreakableIterable` built with them:
@@ -171,7 +223,14 @@ public class BreakableIterator<E> extends AbstractBreakable implements Iterator<
     /// @see Iterator#hasNext
     @Override
     public boolean hasNext() {
+        hasNextCalled = true;
         if (hasBreak(ITERATOR_HAS_NEXT_ALWAYS_RETURNS_TRUE)) {
+            return true;
+        } else if (hasBreak(ITERATOR_HAS_NEXT_ADVANCES)) {
+            if (!iterator.hasNext()) {
+                return false;
+            }
+            iterator.next();
             return true;
         } else if (hasBreak(ITERATOR_HAS_NEXT_ALWAYS_RETURNS_FALSE)) {
             return false;
@@ -188,6 +247,7 @@ public class BreakableIterator<E> extends AbstractBreakable implements Iterator<
     /// This method can be broken using the following collection breaks:
     /// - [ITERATOR_NEXT_ALWAYS_RETURNS_NULL][BreakableIterator#ITERATOR_NEXT_ALWAYS_RETURNS_NULL]
     /// - [ITERATOR_NEXT_THROWS_WRONG_EXCEPTION][BreakableIterator#ITERATOR_NEXT_THROWS_WRONG_EXCEPTION]
+    /// - [#ITERATOR_NEXT_REQUIRES_HAS_NEXT]
     ///
     /// An iterator that has any of these breaks can be obtained from a `BreakableIterable` built with them:
     /// ```java
@@ -200,6 +260,11 @@ public class BreakableIterator<E> extends AbstractBreakable implements Iterator<
     /// @see Iterator#next
     @Override
     public @Nullable E next() {
+        boolean afterHasNext = hasNextCalled;
+        hasNextCalled = false;
+        if (hasBreak(ITERATOR_NEXT_REQUIRES_HAS_NEXT) && !afterHasNext) {
+            throw new NoSuchElementException("hasNext() was not called first");
+        }
         try {
             E element = iterator.next();
             if (hasBreak(ITERATOR_NEXT_ALWAYS_RETURNS_NULL)) {
@@ -223,6 +288,7 @@ public class BreakableIterator<E> extends AbstractBreakable implements Iterator<
     /// - [ITERATOR_REMOVE_DOES_NOT_REMOVE_ELEMENT][BreakableIterator#ITERATOR_REMOVE_DOES_NOT_REMOVE_ELEMENT]
     /// - [#ITERATOR_REMOVE_THROWS_WRONG_EXCEPTION_IF_NOT_SUPPORTED]
     /// - [#ITERATOR_REMOVE_THROWS_WRONG_EXCEPTION_FOR_ILLEGAL_STATE]
+    /// - [#ITERATOR_REMOVE_IGNORES_ILLEGAL_STATE]
     ///
     /// An iterator that has any of these breaks can be obtained from a `BreakableIterable` built with them:
     /// ```java
@@ -248,7 +314,7 @@ public class BreakableIterator<E> extends AbstractBreakable implements Iterator<
         } catch (final IllegalStateException e) {
             if (hasBreak(ITERATOR_REMOVE_THROWS_WRONG_EXCEPTION_FOR_ILLEGAL_STATE)) {
                 throw wrongException(e);
-            } else {
+            } else if (!hasBreak(ITERATOR_REMOVE_IGNORES_ILLEGAL_STATE)) {
                 throw e;
             }
         }
@@ -261,6 +327,7 @@ public class BreakableIterator<E> extends AbstractBreakable implements Iterator<
     /// - [#ITERATOR_FOR_EACH_REMAINING_DOES_NOT_CALL_ACTION]
     /// - [#ITERATOR_FOR_EACH_REMAINING_THROWS_WRONG_EXCEPTION_FOR_NULL_ARGUMENT]
     /// - [#ITERATOR_FOR_EACH_REMAINING_THROWS_WRONG_EXCEPTION_IF_NOT_SUPPORTED]
+    /// - [#ITERATOR_FOR_EACH_REMAINING_SWALLOWS_ACTION_EXCEPTION]
     ///
     /// An iterator that has any of these breaks can be obtained from a `BreakableIterable` built with them:
     /// ```java
@@ -284,6 +351,25 @@ public class BreakableIterator<E> extends AbstractBreakable implements Iterator<
         if (hasBreak(ITERATOR_FOR_EACH_REMAINING_DOES_NOT_CALL_ACTION)) {
             return;
         }
+        if (hasBreak(ITERATOR_FOR_EACH_REMAINING_SWALLOWS_ACTION_EXCEPTION)) {
+            iterator.forEachRemaining(e -> {
+                try {
+                    action.accept(e);
+                } catch (final RuntimeException ignored) {
+                    // The break: the exception is not relayed.
+                }
+            });
+            return;
+        }
         iterator.forEachRemaining(action);
+    }
+
+    /// Returns the iterator this one delegates to: the one it was made with, or the empty one
+    /// [#ITERATOR_IS_ALWAYS_EMPTY] puts in its place.
+    ///
+    /// @return the underlying iterator
+    /// @since 0.1.3
+    protected Iterator<E> delegate() {
+        return iterator;
     }
 }

@@ -2,6 +2,7 @@ package com.soliscode.test.contract.coverage;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.Optional;
+import java.util.PriorityQueue;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -46,6 +48,7 @@ import com.soliscode.test.breakable.BreakableDeque;
 import com.soliscode.test.breakable.BreakableIterable;
 import com.soliscode.test.breakable.BreakableIterator;
 import com.soliscode.test.breakable.BreakableList;
+import com.soliscode.test.breakable.BreakableListIterator;
 import com.soliscode.test.breakable.BreakableMap;
 import com.soliscode.test.breakable.BreakableNavigableMap;
 import com.soliscode.test.breakable.BreakableNavigableSet;
@@ -74,8 +77,11 @@ import com.soliscode.test.contract.deque.DequeContract;
 import com.soliscode.test.contract.deque.DequeMethods;
 import com.soliscode.test.contract.iterable.IterableContract;
 import com.soliscode.test.contract.iterable.IterableMethods;
+import com.soliscode.test.contract.iterator.IteratorContract;
 import com.soliscode.test.contract.list.ListContract;
 import com.soliscode.test.contract.list.ListMethods;
+import com.soliscode.test.contract.listiterator.ListIteratorContract;
+import com.soliscode.test.contract.listiterator.ListIteratorMethods;
 import com.soliscode.test.contract.map.MapContract;
 import com.soliscode.test.contract.navigablemap.NavigableMapContract;
 import com.soliscode.test.contract.navigableset.NavigableSetContract;
@@ -96,6 +102,7 @@ import com.soliscode.test.contract.transferqueue.ThreadSafeTransferQueueContract
 import com.soliscode.test.contract.transferqueue.TransferQueueContract;
 import com.soliscode.test.provider.CollectionProvider;
 import com.soliscode.test.provider.CollectionProviders;
+import com.soliscode.test.provider.IteratorProviders;
 import com.soliscode.test.provider.MapProvider;
 import com.soliscode.test.provider.MapProviders;
 
@@ -125,7 +132,7 @@ public class ContractCoverageTest {
     /// The method enums searched for the method a wrong-exception-when-unsupported break names.
     private static final List<Class<? extends Enum<?>>> METHOD_ENUMS = List.of(CollectionMethods.class,
             IterableMethods.class, ListMethods.class, SequencedCollectionMethods.class, QueueMethods.class,
-            DequeMethods.class);
+            DequeMethods.class, ListIteratorMethods.class);
 
     private static final CollectionContractConfig NO_NULLS = new CollectionContractConfig() {
         @Override
@@ -234,6 +241,12 @@ public class ContractCoverageTest {
         if (field.endsWith(THREAD_SAFETY_BREAK) && contract != ThreadSafeCollectionContract.class) {
             return "a thread-safety break: ThreadSafeCollectionContract checks it";
         }
+        if (field.equals("ITERATOR_FOR_EACH_REMAINING_THROWS_WRONG_EXCEPTION_IF_NOT_SUPPORTED")
+                && IteratorContract.class.isAssignableFrom(contract)) {
+            return "not a fault for IteratorContract: forEachRemaining is not optional (Iterator#forEachRemaining), so "
+                    + "the setup this break needs, forEachRemaining unsupported, fails the contract without the break; "
+                    + "IterableContract checks it";
+        }
         if (field.equals("ADD_ALWAYS_RETURNS_TRUE") && !isSet) {
             return "not a fault here: add(E) always returns true for a collection that permits duplicates "
                     + "(Collection#add); SetContract checks it";
@@ -289,6 +302,61 @@ public class ContractCoverageTest {
                     unsupportedMethod(key.substring(key.indexOf('.') + 1)).ifPresent(builder::doesNotSupport);
                     return () -> new BrokenIterable(builder);
                 });
+    }
+
+    @TestFactory
+    @DisplayName("IteratorContract")
+    Stream<DynamicNode> iteratorContract() {
+        List<Method> methods = ContractRuns.testMethods(IteratorContract.class, false);
+        return Stream.concat(
+                coverage(IteratorContract.class, "ArrayList's iterator",
+                        () -> new IteratorSubjects.JdkIterator(IteratorProviders.arrayList()),
+                        ContractRuns.withSuperclasses(BreakableIterator.class),
+                        (key, b) -> {
+                            Optional<InterfaceMethod> unsupported =
+                                    unsupportedMethod(key.substring(key.indexOf('.') + 1));
+                            return () -> new IteratorSubjects.BrokenIterator(b, unsupported);
+                        }),
+                Stream.of(passes("LinkedList's iterator",
+                                () -> new IteratorSubjects.JdkIterator(IteratorProviders.linkedList()), methods),
+                        passes("List.of's iterator, remove() unsupported",
+                                () -> new IteratorSubjects.JdkIterator(IteratorProviders.fromList(List::copyOf),
+                                        IterableMethods.ITERATOR_REMOVE), methods),
+                        passes("Arrays.asList's iterator, remove() unsupported",
+                                () -> new IteratorSubjects.JdkIterator(IteratorProviders.fromList(
+                                        l -> Arrays.asList(l.toArray(Integer[]::new))),
+                                        IterableMethods.ITERATOR_REMOVE), methods),
+                        passes("PriorityQueue's iterator, unordered",
+                                () -> new IteratorSubjects.JdkIterator(
+                                        IteratorProviders.fromCollection(PriorityQueue::new)), methods)));
+    }
+
+    @TestFactory
+    @DisplayName("ListIteratorContract")
+    Stream<DynamicNode> listIteratorContract() {
+        List<Method> methods = ContractRuns.testMethods(ListIteratorContract.class, false);
+        return Stream.concat(
+                coverage(ListIteratorContract.class, "ArrayList's list iterator",
+                        () -> new IteratorSubjects.JdkListIterator(IteratorProviders.arrayListListIterator()),
+                        ContractRuns.withSuperclasses(BreakableListIterator.class),
+                        (key, b) -> {
+                            Optional<InterfaceMethod> unsupported =
+                                    unsupportedMethod(key.substring(key.indexOf('.') + 1));
+                            return () -> new IteratorSubjects.BrokenListIterator(b, unsupported);
+                        }),
+                Stream.of(passes("LinkedList's list iterator",
+                                () -> new IteratorSubjects.JdkListIterator(IteratorProviders.linkedListListIterator()),
+                                methods),
+                        passes("List.of's list iterator, nothing supported",
+                                () -> new IteratorSubjects.JdkListIterator(
+                                        IteratorProviders.listIteratorsOf(List::copyOf),
+                                        IterableMethods.ITERATOR_REMOVE, ListIteratorMethods.LIST_ITERATOR_SET,
+                                        ListIteratorMethods.LIST_ITERATOR_ADD), methods),
+                        passes("Arrays.asList's list iterator, set() only",
+                                () -> new IteratorSubjects.JdkListIterator(IteratorProviders.listIteratorsOf(
+                                        l -> Arrays.asList(l.toArray(Integer[]::new))),
+                                        IterableMethods.ITERATOR_REMOVE, ListIteratorMethods.LIST_ITERATOR_ADD),
+                                methods)));
     }
 
     @TestFactory
