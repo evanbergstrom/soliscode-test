@@ -45,6 +45,7 @@ This library provides support for:\
 > - `Iterator`
 >   - `ListIterator`
 > - `Spliterator`, and `Spliterator.OfInt`, `OfLong` and `OfDouble`
+> - `Map.Entry`
 > - `Map`
 >   - `SortedMap`
 >     - `NavigableMap`

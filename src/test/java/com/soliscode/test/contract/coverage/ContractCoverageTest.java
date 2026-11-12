@@ -12,13 +12,10 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.NavigableSet;
 import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.Set;
-import java.util.SortedSet;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -53,6 +50,7 @@ import com.soliscode.test.breakable.BreakableIterator;
 import com.soliscode.test.breakable.BreakableList;
 import com.soliscode.test.breakable.BreakableListIterator;
 import com.soliscode.test.breakable.BreakableMap;
+import com.soliscode.test.breakable.BreakableMapEntry;
 import com.soliscode.test.breakable.BreakableNavigableMap;
 import com.soliscode.test.breakable.BreakableNavigableSet;
 import com.soliscode.test.breakable.BreakableQueue;
@@ -90,6 +88,8 @@ import com.soliscode.test.contract.list.ListMethods;
 import com.soliscode.test.contract.listiterator.ListIteratorContract;
 import com.soliscode.test.contract.listiterator.ListIteratorMethods;
 import com.soliscode.test.contract.map.MapContract;
+import com.soliscode.test.contract.mapentry.MapEntryContract;
+import com.soliscode.test.contract.mapentry.MapEntryMethods;
 import com.soliscode.test.contract.navigablemap.NavigableMapContract;
 import com.soliscode.test.contract.navigableset.NavigableSetContract;
 import com.soliscode.test.contract.object.SerializableContract;
@@ -114,6 +114,7 @@ import com.soliscode.test.contract.transferqueue.TransferQueueContract;
 import com.soliscode.test.provider.CollectionProvider;
 import com.soliscode.test.provider.CollectionProviders;
 import com.soliscode.test.provider.IteratorProviders;
+import com.soliscode.test.provider.MapEntryProviders;
 import com.soliscode.test.provider.MapProvider;
 import com.soliscode.test.provider.MapProviders;
 import com.soliscode.test.provider.SpliteratorProviders;
@@ -148,7 +149,7 @@ public class ContractCoverageTest {
     /// The method enums searched for the method a wrong-exception-when-unsupported break names.
     private static final List<Class<? extends Enum<?>>> METHOD_ENUMS = List.of(CollectionMethods.class,
             IterableMethods.class, ListMethods.class, SequencedCollectionMethods.class, QueueMethods.class,
-            DequeMethods.class, ListIteratorMethods.class);
+            DequeMethods.class, ListIteratorMethods.class, MapEntryMethods.class);
 
     private static final CollectionContractConfig NO_NULLS = new CollectionContractConfig() {
         @Override
@@ -399,6 +400,32 @@ public class ContractCoverageTest {
                         passes("PriorityQueue's iterator, unordered",
                                 () -> new IteratorSubjects.JdkIterator(
                                         IteratorProviders.fromCollection(PriorityQueue::new)), methods)));
+    }
+
+    @TestFactory
+    @DisplayName("MapEntryContract")
+    Stream<DynamicNode> mapEntryContract() {
+        List<Method> methods = ContractRuns.testMethods(MapEntryContract.class, false);
+        return Stream.concat(
+                coverage(MapEntryContract.class, "AbstractMap.SimpleEntry",
+                        () -> new MapEntrySubjects.JdkEntry(MapEntryProviders.simpleEntry()),
+                        ContractRuns.withSuperclasses(BreakableMapEntry.class),
+                        (key, b) -> {
+                            Optional<InterfaceMethod> unsupported =
+                                    unsupportedMethod(key.substring(key.indexOf('.') + 1));
+                            return () -> new MapEntrySubjects.BrokenEntry(b, unsupported);
+                        }),
+                Stream.of(passes("AbstractMap.SimpleImmutableEntry, setValue unsupported",
+                                () -> new MapEntrySubjects.JdkEntry(MapEntryProviders.simpleImmutableEntry(),
+                                        MapEntryMethods.MAP_ENTRY_SET_VALUE), methods),
+                        passes("Map.entry, setValue unsupported",
+                                () -> new MapEntrySubjects.JdkEntry(MapEntryProviders.mapEntry(),
+                                        MapEntryMethods.MAP_ENTRY_SET_VALUE), methods),
+                        passes("HashMap's entry",
+                                () -> new MapEntrySubjects.JdkEntry(MapEntryProviders.fromMap(HashMap::new)), methods),
+                        passes("TreeMap's entry",
+                                () -> new MapEntrySubjects.JdkEntry(MapEntryProviders.fromMap(TreeMap::new)),
+                                methods)));
     }
 
     @TestFactory
@@ -662,7 +689,8 @@ public class ContractCoverageTest {
     Stream<DynamicNode> sortedSetContract() {
         List<Method> sortedSetMethods = ContractRuns.testMethods(SortedSetContract.class, false);
         return Stream.concat(
-                coverage(SortedSetContract.class, "TreeSet(reverseOrder())", JdkSortedSet::new,
+                coverage(SortedSetContract.class, "TreeSet(reverseOrder())",
+                        SortedSetSubjects.JdkSortedSet::new,
                         collectionBreaks(BreakableSortedSet.class, BreakableSequencedSet.class,
                                 BreakableSequencedCollection.class),
                         (key, b) -> {
@@ -670,11 +698,12 @@ public class ContractCoverageTest {
                             configure(builder, key, b);
                             return () -> new BrokenSortedSet(builder);
                         }),
-                Stream.of(passes("ConcurrentSkipListSet(reverseOrder())", JdkConcurrentSortedSet::new,
+                Stream.of(passes("ConcurrentSkipListSet(reverseOrder())",
+                                SortedSetSubjects.JdkConcurrentSortedSet::new, sortedSetMethods),
+                        passes("TreeSet() in natural order", SortedSetSubjects.JdkNaturalSortedSet::new,
                                 sortedSetMethods),
-                        passes("TreeSet() in natural order", JdkNaturalSortedSet::new, sortedSetMethods),
-                        passes("unmodifiableSortedSet(TreeSet(reverseOrder()))", JdkUnmodifiableSortedSet::new,
-                                sortedSetMethods)));
+                        passes("unmodifiableSortedSet(TreeSet(reverseOrder()))",
+                                SortedSetSubjects.JdkUnmodifiableSortedSet::new, sortedSetMethods)));
     }
 
     @TestFactory
@@ -682,7 +711,8 @@ public class ContractCoverageTest {
     Stream<DynamicNode> navigableSetContract() {
         List<Method> methods = ContractRuns.testMethods(NavigableSetContract.class, false);
         return Stream.concat(
-                coverage(NavigableSetContract.class, "TreeSet(reverseOrder())", JdkNavigableSet::new,
+                coverage(NavigableSetContract.class, "TreeSet(reverseOrder())",
+                        SortedSetSubjects.JdkNavigableSet::new,
                         collectionBreaks(BreakableNavigableSet.class, BreakableSequencedSet.class,
                                 BreakableSequencedCollection.class),
                         (key, b) -> {
@@ -690,10 +720,11 @@ public class ContractCoverageTest {
                             configure(builder, key, b);
                             return () -> new BrokenNavigableSet(builder);
                         }),
-                Stream.of(passes("ConcurrentSkipListSet(reverseOrder())", JdkConcurrentNavigableSet::new, methods),
-                        passes("TreeSet() in natural order", JdkNaturalNavigableSet::new, methods),
+                Stream.of(passes("ConcurrentSkipListSet(reverseOrder())",
+                                SortedSetSubjects.JdkConcurrentNavigableSet::new, methods),
+                        passes("TreeSet() in natural order", SortedSetSubjects.JdkNaturalNavigableSet::new, methods),
                         passes("unmodifiableNavigableSet(TreeSet(reverseOrder()))",
-                                JdkUnmodifiableNavigableSet::new, methods)));
+                                SortedSetSubjects.JdkUnmodifiableNavigableSet::new, methods)));
     }
 
     @TestFactory
@@ -1290,136 +1321,6 @@ public class ContractCoverageTest {
         @Override
         public boolean permitDuplicates() {
             return false;
-        }
-    }
-
-    /// A sorted set's contract: no nulls, duplicates or elements of other types.
-    abstract static class SortedSetTest<S extends SortedSet<Integer>> extends AbstractTest
-            implements SortedSetContract<S, Integer>, WithIntegerElement {
-        @Override
-        public boolean permitNulls() {
-            return false;
-        }
-
-        @Override
-        public boolean permitDuplicates() {
-            return false;
-        }
-
-        @Override
-        public boolean permitIncompatibleTypes() {
-            return false;
-        }
-    }
-
-    static final class JdkSortedSet extends SortedSetTest<TreeSet<Integer>> {
-        @Override
-        public CollectionProvider<TreeSet<Integer>, Integer> provider() {
-            return CollectionProviders.from(() -> new TreeSet<>(REVERSE), TreeSet::new, c -> {
-                TreeSet<Integer> set = new TreeSet<>(REVERSE);
-                set.addAll(c);
-                return set;
-            }, PROVIDER);
-        }
-    }
-
-    static final class JdkConcurrentSortedSet extends SortedSetTest<ConcurrentSkipListSet<Integer>> {
-        @Override
-        public CollectionProvider<ConcurrentSkipListSet<Integer>, Integer> provider() {
-            return CollectionProviders.from(() -> new ConcurrentSkipListSet<>(REVERSE),
-                    s -> new ConcurrentSkipListSet<>(s), c -> {
-                        ConcurrentSkipListSet<Integer> set = new ConcurrentSkipListSet<>(REVERSE);
-                        set.addAll(c);
-                        return set;
-                    }, PROVIDER);
-        }
-    }
-
-    static final class JdkNaturalSortedSet extends SortedSetTest<TreeSet<Integer>> {
-        @Override
-        public CollectionProvider<TreeSet<Integer>, Integer> provider() {
-            return CollectionProviders.from(TreeSet::new, TreeSet::new, TreeSet::new, PROVIDER);
-        }
-    }
-
-    static final class JdkUnmodifiableSortedSet extends SortedSetTest<SortedSet<Integer>> {
-        JdkUnmodifiableSortedSet() {
-            doesNotSupportModification();
-        }
-
-        @Override
-        public CollectionProvider<SortedSet<Integer>, Integer> provider() {
-            return CollectionProviders.from(() -> Collections.unmodifiableSortedSet(new TreeSet<>(REVERSE)),
-                    s -> Collections.unmodifiableSortedSet(new TreeSet<>(s)), c -> {
-                        TreeSet<Integer> set = new TreeSet<>(REVERSE);
-                        set.addAll(c);
-                        return Collections.unmodifiableSortedSet(set);
-                    }, PROVIDER);
-        }
-    }
-
-    /// A navigable set's contract: no nulls, duplicates or elements of other types.
-    abstract static class NavigableSetTest<S extends NavigableSet<Integer>> extends AbstractTest
-            implements NavigableSetContract<S, Integer>, WithIntegerElement {
-        @Override
-        public boolean permitNulls() {
-            return false;
-        }
-
-        @Override
-        public boolean permitDuplicates() {
-            return false;
-        }
-
-        @Override
-        public boolean permitIncompatibleTypes() {
-            return false;
-        }
-    }
-
-    static final class JdkNavigableSet extends NavigableSetTest<TreeSet<Integer>> {
-        @Override
-        public CollectionProvider<TreeSet<Integer>, Integer> provider() {
-            return CollectionProviders.from(() -> new TreeSet<>(REVERSE), TreeSet::new, c -> {
-                TreeSet<Integer> set = new TreeSet<>(REVERSE);
-                set.addAll(c);
-                return set;
-            }, PROVIDER);
-        }
-    }
-
-    static final class JdkConcurrentNavigableSet extends NavigableSetTest<ConcurrentSkipListSet<Integer>> {
-        @Override
-        public CollectionProvider<ConcurrentSkipListSet<Integer>, Integer> provider() {
-            return CollectionProviders.from(() -> new ConcurrentSkipListSet<>(REVERSE),
-                    s -> new ConcurrentSkipListSet<>(s), c -> {
-                        ConcurrentSkipListSet<Integer> set = new ConcurrentSkipListSet<>(REVERSE);
-                        set.addAll(c);
-                        return set;
-                    }, PROVIDER);
-        }
-    }
-
-    static final class JdkNaturalNavigableSet extends NavigableSetTest<TreeSet<Integer>> {
-        @Override
-        public CollectionProvider<TreeSet<Integer>, Integer> provider() {
-            return CollectionProviders.from(TreeSet::new, TreeSet::new, TreeSet::new, PROVIDER);
-        }
-    }
-
-    static final class JdkUnmodifiableNavigableSet extends NavigableSetTest<NavigableSet<Integer>> {
-        JdkUnmodifiableNavigableSet() {
-            doesNotSupportModification();
-        }
-
-        @Override
-        public CollectionProvider<NavigableSet<Integer>, Integer> provider() {
-            return CollectionProviders.from(() -> Collections.unmodifiableNavigableSet(new TreeSet<>(REVERSE)),
-                    s -> Collections.unmodifiableNavigableSet(new TreeSet<>(s)), c -> {
-                        TreeSet<Integer> set = new TreeSet<>(REVERSE);
-                        set.addAll(c);
-                        return Collections.unmodifiableNavigableSet(set);
-                    }, PROVIDER);
         }
     }
 
