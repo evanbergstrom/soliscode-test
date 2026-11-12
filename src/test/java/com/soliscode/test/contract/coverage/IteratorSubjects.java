@@ -23,6 +23,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Function;
 
 import org.jspecify.annotations.Nullable;
@@ -34,6 +35,7 @@ import com.soliscode.test.breakable.Break;
 import com.soliscode.test.breakable.BreakableIterator;
 import com.soliscode.test.breakable.BreakableListIterator;
 import com.soliscode.test.contract.iterator.IteratorContract;
+import com.soliscode.test.contract.iterator.WeaklyConsistentIteratorContract;
 import com.soliscode.test.contract.listiterator.ListIteratorContract;
 import com.soliscode.test.contract.support.WithIntegerElement;
 import com.soliscode.test.provider.IteratorProvider;
@@ -65,6 +67,51 @@ final class IteratorSubjects {
         JdkIterator(final IteratorProvider<Iterator<Integer>, Integer> iterators,
                     final InterfaceMethod... unsupported) {
             super(iterators, List.of(unsupported));
+        }
+    }
+
+    /// `WeaklyConsistentIteratorContract` on a JDK iterator.
+    static final class JdkWeakIterator extends Subject<Iterator<Integer>>
+            implements WeaklyConsistentIteratorContract<Iterator<Integer>, Integer> {
+        JdkWeakIterator(final IteratorProvider<Iterator<Integer>, Integer> iterators,
+                        final InterfaceMethod... unsupported) {
+            super(iterators, List.of(unsupported));
+        }
+    }
+
+    /// `WeaklyConsistentIteratorContract` on a `BreakableIterator` over a `ConcurrentLinkedQueue`'s iterator, with a
+    /// break or none, and the queue's size as its probe: an ordered source of its own, so that the breaks
+    /// `IteratorContract` sees on an `ArrayList` show here too.
+    static final class BrokenWeakIterator extends Subject<BreakableIterator<Integer>>
+            implements WeaklyConsistentIteratorContract<BreakableIterator<Integer>, Integer> {
+        BrokenWeakIterator(final @Nullable Break b, final Optional<InterfaceMethod> unsupported) {
+            super(elements -> new QueueSource(new ConcurrentLinkedQueue<>(elements), b, unsupported),
+                    unsupported.stream().toList());
+        }
+    }
+
+    /// A `ConcurrentLinkedQueue`, in its FIFO order, with breakable iterators over its own.
+    private record QueueSource(ConcurrentLinkedQueue<Integer> queue, @Nullable Break b,
+                               Optional<InterfaceMethod> unsupported)
+            implements IteratorSource<BreakableIterator<Integer>, Integer> {
+        @Override
+        public BreakableIterator<Integer> iterator() {
+            return new BreakableIterator<>(queue.iterator(), breaks(b), statuses(unsupported), 0, false, queue::size);
+        }
+
+        @Override
+        public List<Integer> elements() {
+            return new ArrayList<>(queue);
+        }
+
+        @Override
+        public boolean removeFromSource(final Integer element) {
+            return queue.remove(element);
+        }
+
+        @Override
+        public boolean addToSource(final Integer element) {
+            return queue.add(element);
         }
     }
 

@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
+import java.util.function.IntSupplier;
 
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.MethodStatus;
@@ -397,8 +398,11 @@ public class BreakableIterable<E> extends BreakableObject<Iterable<E>> implement
     public Iterator<E> iterator() {
         checkMethodSupport(IterableMethods.ITERATOR);
 
+        // A probe of the source's size, only where a weak-consistency break needs one.
+        final IntSupplier sourceSize = iterable instanceof Collection<E> c
+                && BreakableIterator.hasWeakConsistencyBreak(breaks()) ? c::size : null;
         final BreakableIterator<E> iterator = new BreakableIterator<>(iterable.iterator(), breaks(), methodStatuses(),
-                characteristics, isSafe());
+                characteristics, isSafe(), sourceSize);
         unsupportedMethods().forEach(iterator::doesNotSupportMethod);
         return iterator;
     }

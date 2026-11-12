@@ -30,6 +30,10 @@ import java.util.function.Function;
 /// `contains` and `size`. Neither uses an iterator, unless the class's own `get` or `contains` does
 /// ([java.util.AbstractSequentialList], [java.util.AbstractCollection]).
 ///
+/// Both change their source with its own `remove(Object)` and `add` ([IteratorSource#removeFromSource],
+/// [IteratorSource#addToSource]), and return `false` where it throws [UnsupportedOperationException] (`List.of`,
+/// `Arrays.asList`). A bounded collection that is full refuses `add` with its own exception.
+///
 /// @since 0.1.3
 public final class IteratorProviders {
 
@@ -94,9 +98,9 @@ public final class IteratorProviders {
 
     /// The iterators of a collection: unordered, its elements read with `contains` and `size`.
     ///
-    /// [IteratorSource#elements()] gives the given elements the collection still contains, in their given order, and
-    /// throws [AssertionError] if its size is not their number. It is meant for unique elements, which the contracts
-    /// use.
+    /// [IteratorSource#elements()] gives the given elements the collection still contains, in their given order (with
+    /// those [added][IteratorSource#addToSource] after them), and throws [AssertionError] if its size is not their
+    /// number. It is meant for unique elements, which the contracts use.
     ///
     /// @param factory makes the collection from the elements it is to hold
     /// @param <E> the element type
@@ -114,6 +118,24 @@ public final class IteratorProviders {
         @Override
         public I iterator() {
             return iterators.apply(list);
+        }
+
+        @Override
+        public boolean removeFromSource(final E element) {
+            try {
+                return list.remove(element);
+            } catch (final UnsupportedOperationException ignored) {
+                return false;
+            }
+        }
+
+        @Override
+        public boolean addToSource(final E element) {
+            try {
+                return list.add(element);
+            } catch (final UnsupportedOperationException ignored) {
+                return false;
+            }
         }
 
         @Override
@@ -153,6 +175,28 @@ public final class IteratorProviders {
         @Override
         public boolean ordered() {
             return false;
+        }
+
+        @Override
+        public boolean removeFromSource(final E element) {
+            try {
+                return collection.remove(element);
+            } catch (final UnsupportedOperationException ignored) {
+                return false;
+            }
+        }
+
+        @Override
+        public boolean addToSource(final E element) {
+            try {
+                if (!collection.add(element)) {
+                    return false;
+                }
+            } catch (final UnsupportedOperationException ignored) {
+                return false;
+            }
+            given.add(element);
+            return true;
         }
     }
 }

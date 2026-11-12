@@ -1172,6 +1172,10 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// **Exception Handling:**
     /// - Throws UnsupportedOperationException if the method is not supported
     /// - May throw IllegalStateException due to DESCENDING_ITERATOR_THROWS_EXCEPTION break
+    ///
+    /// Of [BreakableIterator]'s breaks, only [BreakableIterator#ITERATOR_IS_FAIL_FAST],
+    /// [BreakableIterator#ITERATOR_RETURNS_AN_ELEMENT_TWICE_AFTER_A_CHANGE] and
+    /// [BreakableIterator#ITERATOR_SKIPS_AN_ELEMENT_AFTER_A_CHANGE] reach the descending iterator.
     @Override
     public Iterator<E> descendingIterator() {
         if (!supportsMethod(DequeMethods.DESCENDING_ITERATOR)) {
@@ -1186,7 +1190,7 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
             return Collections.emptyIterator(); // Return empty iterator
         }
 
-        return deque.descendingIterator();
+        return BreakableIterator.withWeakConsistencyBreaks(deque.descendingIterator(), breaks(), deque::size);
     }
 
     /// {@inheritDoc}

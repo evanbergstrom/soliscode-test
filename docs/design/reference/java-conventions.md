@@ -92,7 +92,7 @@ Not covered by the decision, and left from before #9: javac's own `unchecked`, `
 - Habit: a `Break` constant's comment gives its **Purpose** (the fault it simulates), **Effect** (how the method's behaviour changes), and **Affected Methods**, with a `@see` to the method (`BreakableCollection`, `BreakableList`, `BreakableSequencedCollection` follow it; not every breakable does yet).
 - Habit: a contract's comment names the JDK method it tests, with a `@see`, and what its provider must supply.
 - Inline comments say why, not what. Built (#10): `FIXME:`, `HACK:` and `XXX:` fail Checkstyle; empty blocks need a comment.
-- 248 of the 577 Java files carry the Apache 2.0 licence header (`LICENSE.txt`). Put it on new files.
+- 256 of the 585 Java files carry the Apache 2.0 licence header (`LICENSE.txt`). Put it on new files.
 
 ## Imports
 

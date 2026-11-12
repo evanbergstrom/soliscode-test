@@ -2,9 +2,15 @@ package com.soliscode.test.breakable;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.NavigableSet;
 import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.DisplayName;
@@ -23,6 +29,7 @@ import static com.soliscode.test.breakable.BreakableIterator.ITERATOR_HAS_NEXT_A
 import static com.soliscode.test.breakable.BreakableIterator.ITERATOR_HAS_NEXT_ALWAYS_RETURNS_TRUE;
 import static com.soliscode.test.breakable.BreakableIterator.ITERATOR_HAS_NEXT_RETURNS_OPPOSITE_VALUE;
 import static com.soliscode.test.breakable.BreakableIterator.ITERATOR_IS_ALWAYS_EMPTY;
+import static com.soliscode.test.breakable.BreakableIterator.ITERATOR_IS_FAIL_FAST;
 import static com.soliscode.test.breakable.BreakableIterator.ITERATOR_NEXT_ALWAYS_RETURNS_NULL;
 import static com.soliscode.test.breakable.BreakableIterator.ITERATOR_NEXT_REQUIRES_HAS_NEXT;
 import static com.soliscode.test.breakable.BreakableIterator.ITERATOR_NEXT_THROWS_WRONG_EXCEPTION;
@@ -30,10 +37,13 @@ import static com.soliscode.test.breakable.BreakableIterator.ITERATOR_REMOVE_DOE
 import static com.soliscode.test.breakable.BreakableIterator.ITERATOR_REMOVE_IGNORES_ILLEGAL_STATE;
 import static com.soliscode.test.breakable.BreakableIterator.ITERATOR_REMOVE_THROWS_WRONG_EXCEPTION_FOR_ILLEGAL_STATE;
 import static com.soliscode.test.breakable.BreakableIterator.ITERATOR_REMOVE_THROWS_WRONG_EXCEPTION_IF_NOT_SUPPORTED;
+import static com.soliscode.test.breakable.BreakableIterator.ITERATOR_RETURNS_AN_ELEMENT_TWICE_AFTER_A_CHANGE;
+import static com.soliscode.test.breakable.BreakableIterator.ITERATOR_SKIPS_AN_ELEMENT_AFTER_A_CHANGE;
 import static com.soliscode.test.breakable.BreakableIterator.ITERATOR_SKIPS_FIRST_ELEMENT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -486,5 +496,103 @@ public class BreakableIteratorTest {
         assertTrue(broken.hasNext());
         assertEquals(1, broken.next());
         assertThrows(NoSuchElementException.class, broken::next);
+    }
+
+    // ========== Weak-consistency breaks (#55) ==========
+
+    private static BreakableIterator<Integer> overQueue(final ConcurrentLinkedQueue<Integer> queue, final Break b) {
+        return new BreakableIterator<>(queue.iterator(), Set.of(b), Map.of(), 0, false, queue::size);
+    }
+
+    /// `ITERATOR_IS_FAIL_FAST`: after a change to the source, `next()` throws, and `hasNext()` does not.
+    @Test
+    @DisplayName("ITERATOR_IS_FAIL_FAST: next() throws ConcurrentModificationException after a change to the source")
+    void failFastBreakThrowsAfterChange() {
+        ConcurrentLinkedQueue<Integer> queue = new ConcurrentLinkedQueue<>(List.of(1, 2, 3, 4));
+        BreakableIterator<Integer> iterator = overQueue(queue, ITERATOR_IS_FAIL_FAST);
+        assertEquals(1, iterator.next());
+        queue.remove(1);
+        assertTrue(iterator.hasNext());
+        assertThrows(ConcurrentModificationException.class, iterator::next);
+        assertThrows(ConcurrentModificationException.class, iterator::remove);
+    }
+
+    /// `ITERATOR_IS_FAIL_FAST`: a removal through the iterator is not a change.
+    @Test
+    @DisplayName("ITERATOR_IS_FAIL_FAST: a removal through the iterator itself is not a change")
+    void failFastBreakIgnoresRemovalThroughIterator() {
+        ConcurrentLinkedQueue<Integer> queue = new ConcurrentLinkedQueue<>(List.of(1, 2, 3));
+        BreakableIterator<Integer> iterator = overQueue(queue, ITERATOR_IS_FAIL_FAST);
+        assertEquals(1, iterator.next());
+        iterator.remove();
+        List<Integer> rest = new ArrayList<>();
+        iterator.forEachRemaining(rest::add);
+        assertEquals(List.of(2, 3), rest);
+    }
+
+    /// `ITERATOR_RETURNS_AN_ELEMENT_TWICE_AFTER_A_CHANGE`: the element before the change is returned again, once.
+    @Test
+    @DisplayName("ITERATOR_RETURNS_AN_ELEMENT_TWICE_AFTER_A_CHANGE: the last element is returned again after a change")
+    void twiceBreakRepeatsLastElementAfterChange() {
+        ConcurrentLinkedQueue<Integer> queue = new ConcurrentLinkedQueue<>(List.of(1, 2, 3, 4));
+        BreakableIterator<Integer> iterator = overQueue(queue, ITERATOR_RETURNS_AN_ELEMENT_TWICE_AFTER_A_CHANGE);
+        List<Integer> returned = new ArrayList<>(List.of(iterator.next(), iterator.next()));
+        queue.remove(1);
+        iterator.forEachRemaining(returned::add);
+        assertEquals(List.of(1, 2, 2, 3, 4), returned);
+    }
+
+    /// `ITERATOR_SKIPS_AN_ELEMENT_AFTER_A_CHANGE`: the element after the change is skipped, once.
+    @Test
+    @DisplayName("ITERATOR_SKIPS_AN_ELEMENT_AFTER_A_CHANGE: the next element is skipped after a change")
+    void skipBreakSkipsNextElementAfterChange() {
+        ConcurrentLinkedQueue<Integer> queue = new ConcurrentLinkedQueue<>(List.of(1, 2, 3, 4, 5));
+        BreakableIterator<Integer> iterator = overQueue(queue, ITERATOR_SKIPS_AN_ELEMENT_AFTER_A_CHANGE);
+        List<Integer> returned = new ArrayList<>(List.of(iterator.next(), iterator.next()));
+        queue.remove(1);
+        while (iterator.hasNext()) {
+            returned.add(iterator.next());
+        }
+        assertEquals(List.of(1, 2, 4, 5), returned);
+    }
+
+    /// Without a probe, or with no change, the weak-consistency breaks change nothing.
+    @Test
+    @DisplayName("The weak-consistency breaks change nothing without a probe or without a change")
+    void weakConsistencyBreaksNeedProbeAndChange() {
+        for (final Break b : List.of(ITERATOR_IS_FAIL_FAST, ITERATOR_RETURNS_AN_ELEMENT_TWICE_AFTER_A_CHANGE,
+                ITERATOR_SKIPS_AN_ELEMENT_AFTER_A_CHANGE)) {
+            ConcurrentLinkedQueue<Integer> queue = new ConcurrentLinkedQueue<>(List.of(1, 2, 3));
+            BreakableIterator<Integer> noProbe = new BreakableIterator<>(queue.iterator(), Set.of(b), Map.of(), 0,
+                    false);
+            assertEquals(1, noProbe.next());
+            queue.remove(3);
+            List<Integer> rest = new ArrayList<>();
+            noProbe.forEachRemaining(rest::add);
+            assertEquals(List.of(2), rest, b.toString());
+
+            List<Integer> unchanged = new ArrayList<>();
+            overQueue(new ConcurrentLinkedQueue<>(List.of(1, 2, 3)), b).forEachRemaining(unchanged::add);
+            assertEquals(List.of(1, 2, 3), unchanged, b.toString());
+        }
+    }
+
+    /// `WeakConsistencyViews` wraps a view only where a weak-consistency break is set, and its wrapper's iterators
+    /// apply it.
+    @Test
+    @DisplayName("WeakConsistencyViews wraps a view only with a weak-consistency break, and then applies it")
+    void weakConsistencyViewsWrapOnlyWithBreak() {
+        ConcurrentSkipListSet<Integer> set = new ConcurrentSkipListSet<>(List.of(1, 2, 3));
+        assertSame(set, WeakConsistencyViews.navigableSet(set, Set.of(ITERATOR_SKIPS_FIRST_ELEMENT)));
+        NavigableSet<Integer> wrapped = WeakConsistencyViews.navigableSet(set, Set.of(ITERATOR_IS_FAIL_FAST));
+        assertEquals(set, wrapped);
+        Iterator<Integer> descending = wrapped.descendingIterator();
+        assertEquals(3, descending.next());
+        set.remove(3);
+        assertThrows(ConcurrentModificationException.class, descending::next);
+        Iterator<Integer> ascending = wrapped.headSet(3, false).iterator();
+        assertEquals(1, ascending.next());
+        set.add(0);
+        assertThrows(ConcurrentModificationException.class, ascending::next);
     }
 }

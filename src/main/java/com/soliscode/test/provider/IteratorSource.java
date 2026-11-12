@@ -57,4 +57,31 @@ public interface IteratorSource<I extends Iterator<E>, E> {
     default boolean ordered() {
         return true;
     }
+
+    /// Removes the element from the source other than through any iterator of it, and returns `true`; or returns
+    /// `false`, changing nothing, if the source cannot be changed so.
+    ///
+    /// [com.soliscode.test.contract.iterator.WeaklyConsistentIteratorContract] calls it during a traversal, to see
+    /// what the iterator does after its source changes.
+    ///
+    /// @param element an element the source holds
+    /// @return whether it was removed; `false` unless overridden
+    /// @since 0.1.3
+    default boolean removeFromSource(final E element) {
+        return false;
+    }
+
+    /// Adds the element to the source other than through any iterator of it, and returns `true`; or returns `false`,
+    /// changing nothing, if the source cannot be changed so.
+    ///
+    /// [com.soliscode.test.contract.iterator.WeaklyConsistentIteratorContract] calls it during a traversal, to see
+    /// what the iterator does after its source changes. Where the source is [#ordered()], [#elements()] afterwards
+    /// holds the element where the source put it.
+    ///
+    /// @param element an element the source does not hold
+    /// @return whether it was added; `false` unless overridden
+    /// @since 0.1.3
+    default boolean addToSource(final E element) {
+        return false;
+    }
 }

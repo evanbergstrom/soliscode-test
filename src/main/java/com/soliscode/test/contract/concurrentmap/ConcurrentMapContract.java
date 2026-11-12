@@ -41,6 +41,11 @@ import com.soliscode.test.contract.map.MapContract;
 /// - **`replaceAll`'s `null` result, stricter.** `Map#replaceAll` makes its `NullPointerException` for a `null`
 ///   result optional; on a map that refuses null values the only other outcome is to store one, so the contract
 ///   requires the exception.
+/// - **Weakly consistent views, stricter.** `ConcurrentMap` does not promise them; the `java.util.concurrent` package
+///   summary says "most" concurrent collections have them, and `ConcurrentHashMap` and `ConcurrentSkipListMap` do.
+///   [ViewIteratorsWeakConsistencyContract] tests the iterators of `keySet()`, `values()` and `entrySet()` after a
+///   change to the map during a traversal, by default; a test of a map whose views' iterators are fail-fast overrides
+///   `iteratorsAreWeaklyConsistent()` to return `false`.
 ///
 /// ## Usage Examples
 ///
@@ -74,5 +79,6 @@ public interface ConcurrentMapContract<M extends ConcurrentMap<K, V>, K, V> exte
         ComputeIfAbsentContract<M, K, V>,
         ComputeIfPresentContract<M, K, V>,
         ComputeContract<M, K, V>,
-        MergeContract<M, K, V> {
+        MergeContract<M, K, V>,
+        ViewIteratorsWeakConsistencyContract<M, K, V> {
 }

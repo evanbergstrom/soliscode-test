@@ -699,7 +699,8 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
         if (hasBreak(NAVIGABLE_KEY_SET_RETURNS_NULL)) {
             return null;
         }
-        return copyIf(NAVIGABLE_KEY_SET_IS_A_COPY, navigableStore().navigableKeySet());
+        return WeakConsistencyViews.navigableSet(
+                copyIf(NAVIGABLE_KEY_SET_IS_A_COPY, navigableStore().navigableKeySet()), breaks());
     }
 
     /// Returns a [NavigableSet] view of the keys, as `navigableKeySet()` does.
@@ -718,7 +719,7 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
         if (hasBreak(KEY_SET_RETURNS_NULL_WHEN_EMPTY) && navigableStore().isEmpty()) {
             return null;
         }
-        return copyIf(KEY_SET_IS_A_COPY, navigableStore().keySet());
+        return WeakConsistencyViews.navigableSet(copyIf(KEY_SET_IS_A_COPY, navigableStore().keySet()), breaks());
     }
 
     @Override
@@ -727,7 +728,8 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
         if (hasBreak(DESCENDING_KEY_SET_RETURNS_NULL)) {
             return null;
         }
-        return copyIf(DESCENDING_KEY_SET_IS_A_COPY, navigableStore().descendingKeySet());
+        return WeakConsistencyViews.navigableSet(
+                copyIf(DESCENDING_KEY_SET_IS_A_COPY, navigableStore().descendingKeySet()), breaks());
     }
 
     @Override

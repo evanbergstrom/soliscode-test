@@ -34,7 +34,8 @@ import com.soliscode.test.contract.blockingqueue.BlockingQueueContract;
 ///   operation may initially block waiting for available space, and/or subsequently block waiting for reception by a
 ///   consumer." The tests of a full queue run only on a bounded queue, as [BlockingQueueContract]'s do; the JDK's
 ///   only `TransferQueue`, `LinkedTransferQueue`, is unbounded.
-/// - **The rest** is [BlockingQueueContract]'s: nulls refused, identity equality, and the interrupt reading.
+/// - **The rest** is [BlockingQueueContract]'s: nulls refused, identity equality, the interrupt reading, and weakly
+///   consistent iterators, read more strictly than `TransferQueue` states them.
 /// - **Thread safety.** [ThreadSafeTransferQueueContract] tests it.
 ///
 /// `TransferQueue`'s methods are not optional operations, but a test reads [TransferQueueMethods] as

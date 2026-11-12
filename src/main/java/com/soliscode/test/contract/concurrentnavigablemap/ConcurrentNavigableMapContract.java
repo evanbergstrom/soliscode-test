@@ -42,7 +42,10 @@ import com.soliscode.test.contract.navigablemap.NavigableMapContract;
 ///   of a map that permits null keys overrides `permitNullKeys()`, and the null-bound tests do not run.
 /// - **Removal through a key set, looser.** The JDK lists `Iterator.remove`, `Set.remove`, `removeAll`, `retainAll`
 ///   and `clear`; the contract tests the first two.
-/// - **Weak consistency is not tested.** The views' iterators are "weakly consistent"; no test here checks it.
+/// - **Weak consistency.** The key sets' "iterators and spliterators are weakly consistent".
+///   [KeySetViewsWeakConsistencyContract] tests both iterators of each key set, after a change to the map during a
+///   traversal, as [com.soliscode.test.contract.support.WeakConsistencyChecks] reads the term; their spliterators are
+///   not tested. The other views' iterators are tested as [ConcurrentMapContract] tests them.
 ///
 /// Thread safety is [com.soliscode.test.contract.concurrentmap.ThreadSafeConcurrentMapContract]'s:
 /// `ConcurrentNavigableMap` adds no atomicity guarantee of its own. Run it against the map and its views.
@@ -83,7 +86,8 @@ public interface ConcurrentNavigableMapContract<M extends ConcurrentNavigableMap
         TailMapContract<M, K, V>,
         KeySetContract<M, K, V>,
         NavigableKeySetContract<M, K, V>,
-        DescendingKeySetContract<M, K, V> {
+        DescendingKeySetContract<M, K, V>,
+        KeySetViewsWeakConsistencyContract<M, K, V> {
 
     @Override
     boolean supportsMethod(InterfaceMethod method);

@@ -15,14 +15,17 @@ import java.util.Map;
 import java.util.NavigableSet;
 import java.util.Optional;
 import java.util.PriorityQueue;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.LinkedTransferQueue;
@@ -81,6 +84,7 @@ import com.soliscode.test.contract.deque.DequeMethods;
 import com.soliscode.test.contract.iterable.IterableContract;
 import com.soliscode.test.contract.iterable.IterableMethods;
 import com.soliscode.test.contract.iterator.IteratorContract;
+import com.soliscode.test.contract.iterator.WeaklyConsistentIteratorContract;
 import com.soliscode.test.contract.list.ListContract;
 import com.soliscode.test.contract.list.ListMethods;
 import com.soliscode.test.contract.listiterator.ListIteratorContract;
@@ -133,6 +137,9 @@ import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 public class ContractCoverageTest {
 
     private static final String THREAD_SAFETY_BREAK = "_IS_NOT_THREAD_SAFE";
+    /// The breaks that act only on a change to an iterator's source other than through it (#55).
+    private static final Set<String> WEAK_CONSISTENCY_BREAKS = Set.of("ITERATOR_IS_FAIL_FAST",
+            "ITERATOR_RETURNS_AN_ELEMENT_TWICE_AFTER_A_CHANGE", "ITERATOR_SKIPS_AN_ELEMENT_AFTER_A_CHANGE");
     private static final String WRONG_UNSUPPORTED_BREAK = "_THROWS_WRONG_UNSUPPORTED_EXCEPTION";
     private static final String WRONG_INCOMPATIBLE_BREAK = "_THROWS_WRONG_INCOMPATIBLE_TYPE_EXCEPTION";
     private static final String WRONG_NULL_BREAK = "_THROWS_WRONG_NULL_EXCEPTION";
@@ -274,6 +281,13 @@ public class ContractCoverageTest {
         if (field.endsWith(THREAD_SAFETY_BREAK) && contract != ThreadSafeCollectionContract.class) {
             return "a thread-safety break: ThreadSafeCollectionContract checks it";
         }
+        if (WEAK_CONSISTENCY_BREAKS.contains(field)) {
+            boolean testsWeakConsistency = WeaklyConsistentIteratorContract.class.isAssignableFrom(contract)
+                    || BlockingQueueContract.class.isAssignableFrom(contract)
+                    || ConcurrentMapContract.class.isAssignableFrom(contract);
+            return testsWeakConsistency ? null : "a weak-consistency break: the weakly consistent iterator tests check "
+                    + "it, and no other contract's run changes the source during a traversal on one thread";
+        }
         if (field.equals("ITERATOR_FOR_EACH_REMAINING_THROWS_WRONG_EXCEPTION_IF_NOT_SUPPORTED")
                 && IteratorContract.class.isAssignableFrom(contract)) {
             return "not a fault for IteratorContract: forEachRemaining is not optional (Iterator#forEachRemaining), so "
@@ -385,6 +399,89 @@ public class ContractCoverageTest {
                         passes("PriorityQueue's iterator, unordered",
                                 () -> new IteratorSubjects.JdkIterator(
                                         IteratorProviders.fromCollection(PriorityQueue::new)), methods)));
+    }
+
+    @TestFactory
+    @DisplayName("WeaklyConsistentIteratorContract")
+    Stream<DynamicNode> weaklyConsistentIteratorContract() {
+        List<Method> methods = ContractRuns.testMethods(WeaklyConsistentIteratorContract.class, false);
+        return Stream.concat(
+                coverage(WeaklyConsistentIteratorContract.class, "ConcurrentLinkedQueue's iterator",
+                        () -> new IteratorSubjects.JdkWeakIterator(
+                                IteratorProviders.fromCollection(ConcurrentLinkedQueue::new)),
+                        ContractRuns.withSuperclasses(BreakableIterator.class),
+                        (key, b) -> {
+                            Optional<InterfaceMethod> unsupported =
+                                    unsupportedMethod(key.substring(key.indexOf('.') + 1));
+                            return () -> new IteratorSubjects.BrokenWeakIterator(b, unsupported);
+                        }),
+                Stream.of(passes("ConcurrentHashMap.newKeySet()'s iterator",
+                                () -> new IteratorSubjects.JdkWeakIterator(IteratorProviders.fromCollection(l -> {
+                                    Set<Integer> set = ConcurrentHashMap.newKeySet();
+                                    set.addAll(l);
+                                    return set;
+                                })), methods),
+                        passes("ConcurrentSkipListSet's iterator", () -> new IteratorSubjects.JdkWeakIterator(
+                                IteratorProviders.fromCollection(ConcurrentSkipListSet::new)), methods),
+                        passes("CopyOnWriteArrayList's iterator (a snapshot), remove() unsupported",
+                                () -> new IteratorSubjects.JdkWeakIterator(
+                                        IteratorProviders.fromList(CopyOnWriteArrayList::new),
+                                        IterableMethods.ITERATOR_REMOVE), methods),
+                        passes("LinkedBlockingQueue's iterator", () -> new IteratorSubjects.JdkWeakIterator(
+                                IteratorProviders.fromCollection(LinkedBlockingQueue::new)), methods),
+                        passes("ArrayBlockingQueue's iterator, the queue full when made",
+                                () -> new IteratorSubjects.JdkWeakIterator(IteratorProviders.fromCollection(
+                                        l -> new ArrayBlockingQueue<>(Math.max(1, l.size()), false, l))), methods),
+                        fails("ArrayList's iterator, which is fail-fast",
+                                () -> new IteratorSubjects.JdkWeakIterator(IteratorProviders.arrayList()), methods)));
+    }
+
+    /// Each weak-consistency test of the concurrent contracts, by name, fails for each weak-consistency break, and
+    /// passes when the test class opts out: another test of the contract fails first for each break (the breaks reach
+    /// `iterator()` too), and would otherwise hide one that cannot see it (#55).
+    @TestFactory
+    @DisplayName("The concurrent contracts' weak-consistency tests")
+    Stream<DynamicNode> weakConsistencyTests() {
+        List<Break> weak = List.of(BreakableIterator.ITERATOR_IS_FAIL_FAST,
+                BreakableIterator.ITERATOR_RETURNS_AN_ELEMENT_TWICE_AFTER_A_CHANGE,
+                BreakableIterator.ITERATOR_SKIPS_AN_ELEMENT_AFTER_A_CHANGE);
+        List<Method> deque = named(BlockingDequeContract.class,
+                "iteratorWhenQueueChangesDuringTraversalIsWeaklyConsistent",
+                "descendingIteratorWhenDequeChangesDuringTraversalIsWeaklyConsistent");
+        List<Method> map = named(ConcurrentNavigableMapContract.class,
+                "keySetIteratorWhenMapChangesDuringTraversalIsWeaklyConsistent",
+                "valuesIteratorWhenMapChangesDuringTraversalIsWeaklyConsistent",
+                "entrySetIteratorWhenMapChangesDuringTraversalIsWeaklyConsistent",
+                "keySetDescendingIteratorWhenMapChangesDuringTraversalIsWeaklyConsistent",
+                "navigableKeySetIteratorWhenMapChangesDuringTraversalIsWeaklyConsistent",
+                "navigableKeySetDescendingIteratorWhenMapChangesDuringTraversalIsWeaklyConsistent",
+                "descendingKeySetIteratorWhenMapChangesDuringTraversalIsWeaklyConsistent",
+                "descendingKeySetDescendingIteratorWhenMapChangesDuringTraversalIsWeaklyConsistent");
+        Stream<DynamicNode> dequeFails = weak.stream().flatMap(b -> deque.stream().map(m -> eachFails(m, b,
+                () -> new BrokenBlockingDeque(boundedDequeBuilder().addBreak(b), noNulls(STANDARD)))));
+        Stream<DynamicNode> mapFails = weak.stream().flatMap(b -> map.stream().map(m -> eachFails(m, b,
+                () -> new BrokenConcurrentNavigableMap(navigableMapBuilder(b)))));
+        Stream<DynamicNode> optedOut = weak.stream().flatMap(b -> Stream.of(
+                passes("BlockingDequeContract's opted out, with " + b.description(),
+                        () -> new OptedOutBlockingDeque(boundedDequeBuilder().addBreak(b)), deque),
+                passes("ConcurrentNavigableMapContract's opted out, with " + b.description(),
+                        () -> new OptedOutConcurrentNavigableMap(navigableMapBuilder(b)), map)));
+        return Stream.of(dynamicContainer("The concurrent contracts' weak-consistency tests",
+                Stream.of(dequeFails, mapFails, optedOut).flatMap(n -> n)));
+    }
+
+    private static List<Method> named(final Class<?> contract, final String... names) {
+        List<Method> methods = ContractRuns.testMethods(contract, false).stream()
+                .filter(m -> List.of(names).contains(m.getName())).toList();
+        assertEquals(names.length, methods.size(), () -> "test methods of " + contract.getSimpleName() + " missing: "
+                + List.of(names) + " against " + methods);
+        return methods;
+    }
+
+    private static DynamicNode eachFails(final Method method, final Break b, final Supplier<?> contract) {
+        return dynamicTest(method.getName() + " fails with " + b.description(), () -> assertFalse(
+                ContractRuns.failures(contract, List.of(method)).isEmpty(),
+                () -> method.getName() + " passes with the break: it cannot see it"));
     }
 
     @TestFactory
@@ -726,7 +823,8 @@ public class ContractCoverageTest {
     @DisplayName("ConcurrentMapContract")
     Stream<DynamicNode> concurrentMapContract() {
         List<Method> methods = ContractRuns.testMethods(ConcurrentMapContract.class, false);
-        Map<String, Break> breaks = ContractRuns.breaks(ContractRuns.withSuperclasses(BreakableConcurrentMap.class));
+        Map<String, Break> breaks = withWeakConsistencyBreaks(
+                ContractRuns.breaks(ContractRuns.withSuperclasses(BreakableConcurrentMap.class)));
         Stream<DynamicNode> passes = Stream.of(
                 passes("ConcurrentHashMap", JdkConcurrentMap::new, methods),
                 passes("ConcurrentSkipListMap", JdkConcurrentSkipListMap::new, methods),
@@ -751,8 +849,8 @@ public class ContractCoverageTest {
     @DisplayName("ConcurrentNavigableMapContract")
     Stream<DynamicNode> concurrentNavigableMapContract() {
         List<Method> methods = ContractRuns.testMethods(ConcurrentNavigableMapContract.class, false);
-        Map<String, Break> breaks = ContractRuns.breaks(
-                ContractRuns.withSuperclasses(BreakableConcurrentNavigableMap.class));
+        Map<String, Break> breaks = withWeakConsistencyBreaks(ContractRuns.breaks(
+                ContractRuns.withSuperclasses(BreakableConcurrentNavigableMap.class)));
         // In reverse order, so that a map or view that ignores the comparator shows. The views' bounds hold every
         // Integer key in that order.
         Stream<DynamicNode> passes = Stream.of(
@@ -1005,6 +1103,18 @@ public class ContractCoverageTest {
                 assertFalse(ContractRuns.anyHang(failures), () -> "they hang with " + field);
             });
         });
+    }
+
+    /// Returns the breaks with `BreakableIterator`'s three weak-consistency breaks added: the map runs take no other
+    /// iterator break, and these three reach every view the weak-consistency tests use (#55).
+    private static Map<String, Break> withWeakConsistencyBreaks(final Map<String, Break> breaks) {
+        Map<String, Break> all = new java.util.LinkedHashMap<>(breaks);
+        ContractRuns.breaks(List.of(BreakableIterator.class)).forEach((key, b) -> {
+            if (WEAK_CONSISTENCY_BREAKS.contains(key.substring(key.indexOf('.') + 1))) {
+                all.put(key, b);
+            }
+        });
+        return all;
     }
 
     private static List<Class<?>> collectionBreaks(final Class<?> breakable, final Class<?>... extra) {
@@ -1595,6 +1705,19 @@ public class ContractCoverageTest {
         }
     }
 
+    /// `BlockingDequeContract` on a breakable deque, with its weak-consistency tests turned off.
+    static final class OptedOutBlockingDeque extends DynamicCollectionContract<BreakableBlockingDeque<Integer>, Integer>
+            implements BlockingDequeContract<BreakableBlockingDeque<Integer>, Integer> {
+        OptedOutBlockingDeque(final BreakableBlockingDeque.Builder<Integer> builder) {
+            super(builder, WithIntegerElement.PROVIDER, noNulls(STANDARD));
+        }
+
+        @Override
+        public boolean iteratorsAreWeaklyConsistent() {
+            return false;
+        }
+    }
+
     static final class BrokenThreadSafeBlockingDeque
             extends DynamicCollectionContract<BreakableBlockingDeque<Integer>, Integer>
             implements ThreadSafeBlockingDequeContract<BreakableBlockingDeque<Integer>, Integer> {
@@ -1709,6 +1832,21 @@ public class ContractCoverageTest {
             String> {
         BrokenConcurrentNavigableMap(final BreakableConcurrentNavigableMap.Builder<Integer, String> builder) {
             super(builder, WithIntegerKeyAndStringValue.KEY_PROVIDER, WithIntegerKeyAndStringValue.VALUE_PROVIDER);
+        }
+    }
+
+    /// `ConcurrentNavigableMapContract` on a breakable map, with its weak-consistency tests turned off.
+    static final class OptedOutConcurrentNavigableMap
+            extends DynamicMapContract<BreakableConcurrentNavigableMap<Integer, String>, Integer, String>
+            implements ConcurrentNavigableMapContract<BreakableConcurrentNavigableMap<Integer, String>, Integer,
+            String> {
+        OptedOutConcurrentNavigableMap(final BreakableConcurrentNavigableMap.Builder<Integer, String> builder) {
+            super(builder, WithIntegerKeyAndStringValue.KEY_PROVIDER, WithIntegerKeyAndStringValue.VALUE_PROVIDER);
+        }
+
+        @Override
+        public boolean iteratorsAreWeaklyConsistent() {
+            return false;
         }
     }
 

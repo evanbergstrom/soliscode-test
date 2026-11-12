@@ -16,6 +16,7 @@
 package com.soliscode.test.provider;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -121,5 +122,37 @@ public class IteratorProvidersTest {
         assertThrows(NullPointerException.class, () -> IteratorProviders.fromList(null));
         assertThrows(NullPointerException.class, () -> IteratorProviders.listIteratorsOf(null));
         assertThrows(NullPointerException.class, () -> IteratorProviders.fromCollection(null));
+    }
+
+    @Test
+    @DisplayName("a list's and a collection's sources change their source with remove and add")
+    void sourcesChangeTheirSource() {
+        IteratorSource<Iterator<Integer>, Integer> list =
+                IteratorProviders.<Integer>arrayList().source(List.of(1, 2, 3));
+        assertTrue(list.removeFromSource(2));
+        assertTrue(list.addToSource(4));
+        assertEquals(List.of(1, 3, 4), list.elements());
+
+        IteratorSource<Iterator<Integer>, Integer> collection =
+                IteratorProviders.<Integer>fromCollection(HashSet::new).source(List.of(1, 2, 3));
+        assertTrue(collection.removeFromSource(2));
+        assertTrue(collection.addToSource(4));
+        assertFalse(collection.addToSource(4), "a set refuses a second copy");
+        assertEquals(Set.of(1, 3, 4), new HashSet<>(collection.elements()));
+    }
+
+    @Test
+    @DisplayName("a source that cannot be changed returns false from removeFromSource and addToSource")
+    void unchangeableSourcesReturnFalse() {
+        IteratorSource<Iterator<Integer>, Integer> fixed =
+                IteratorProviders.<Integer>fromList(List::copyOf).source(List.of(1, 2, 3));
+        assertFalse(fixed.removeFromSource(2));
+        assertFalse(fixed.addToSource(4));
+        assertEquals(List.of(1, 2, 3), fixed.elements());
+
+        IteratorSource<Iterator<Integer>, Integer> unmodifiable = IteratorProviders.<Integer>fromCollection(
+                l -> Collections.unmodifiableCollection(new ArrayList<>(l))).source(List.of(1, 2, 3));
+        assertFalse(unmodifiable.removeFromSource(2));
+        assertFalse(unmodifiable.addToSource(4));
     }
 }

@@ -38,6 +38,8 @@ import com.soliscode.test.contract.deque.DequeContract;
 ///   `takeLast()` returns what `peekLast()` returned just before; and so on.
 /// - **Thread safety.** [ThreadSafeBlockingDequeContract] tests it; this contract runs on one thread, except the
 ///   tests that a call waits for another thread.
+/// - **Weakly consistent iterators, stricter**, as [BlockingQueueContract] reads them: `iterator()` and, by
+///   [DescendingIteratorWeakConsistencyContract], `descendingIterator()`.
 ///
 /// `BlockingDeque` says that the [java.util.concurrent.BlockingQueue] methods are "precisely equivalent" to its own
 /// (`put` to `putLast`, `take` to `takeFirst`, and so on). The contract does not test that equivalence: the
@@ -80,7 +82,8 @@ public interface BlockingDequeContract<D extends BlockingDeque<E>, E> extends Bl
         OfferLastWithTimeoutContract<D, E>,
         PollFirstWithTimeoutContract<D, E>,
         PollLastWithTimeoutContract<D, E>,
-        FullDequeContract<D, E> {
+        FullDequeContract<D, E>,
+        DescendingIteratorWeakConsistencyContract<D, E> {
 
     @Override
     default void doesNotSupportModification() {

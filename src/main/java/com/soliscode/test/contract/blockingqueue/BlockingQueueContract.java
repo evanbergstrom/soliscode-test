@@ -45,6 +45,10 @@ import com.soliscode.test.contract.queue.QueueContract;
 ///   elements overrides it to return `true`.
 /// - **Thread safety.** [ThreadSafeBlockingQueueContract] tests it; this contract runs on one thread, except the
 ///   tests that `put` and `take` wait for another thread.
+/// - **Weakly consistent iterators, stricter.** [BlockingQueue] does not promise them; the `java.util.concurrent`
+///   package summary says "most" concurrent collections have them, and every JDK `BlockingQueue` does.
+///   [IteratorWeakConsistencyContract] tests `iterator()` after a change to the queue during a traversal, by default;
+///   a test of a queue with fail-fast iterators overrides `iteratorsAreWeaklyConsistent()` to return `false`.
 ///
 /// `BlockingQueue`'s methods are not optional operations, but a test reads [BlockingQueueMethods] as the queue
 /// contracts read [com.soliscode.test.contract.queue.QueueMethods]: where a method is not supported, it expects
@@ -86,7 +90,8 @@ public interface BlockingQueueContract<Q extends BlockingQueue<E>, E> extends Qu
         AddContract<Q, E>,
         OfferContract<Q, E>,
         DrainToContract<Q, E>,
-        DrainToMaxElementsContract<Q, E> {
+        DrainToMaxElementsContract<Q, E>,
+        IteratorWeakConsistencyContract<Q, E> {
 
     /// Returns `false`: a [BlockingQueue] keeps [Object]'s identity equality, as `Queue` says queues generally do.
     /// A test of a queue that compares its elements overrides it.

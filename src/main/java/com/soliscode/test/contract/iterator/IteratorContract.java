@@ -29,7 +29,8 @@ import java.util.Iterator;
 /// [UnsupportedOperationException] ([RemoveContract]), and order is checked only where the source has one
 /// ([com.soliscode.test.provider.IteratorSource#ordered()]). A test runs the branch for a supported method only if
 /// every optional method it calls is supported. It does not test an iterator whose source is changed other than
-/// through it.
+/// through it, which [Iterator] leaves unspecified; [WeaklyConsistentIteratorContract] tests one that promises to be
+/// weakly consistent.
 ///
 /// ## Usage Examples
 /// ```java
