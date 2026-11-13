@@ -42,6 +42,7 @@ import com.soliscode.test.breakable.Break;
 import com.soliscode.test.breakable.BreakableBlockingDeque;
 import com.soliscode.test.breakable.BreakableBlockingQueue;
 import com.soliscode.test.breakable.BreakableCollection;
+import com.soliscode.test.breakable.BreakableComparable;
 import com.soliscode.test.breakable.BreakableConcurrentMap;
 import com.soliscode.test.breakable.BreakableConcurrentNavigableMap;
 import com.soliscode.test.breakable.BreakableDeque;
@@ -74,6 +75,7 @@ import com.soliscode.test.contract.blockingqueue.ThreadSafeBlockingQueueContract
 import com.soliscode.test.contract.collection.CollectionContract;
 import com.soliscode.test.contract.collection.CollectionMethods;
 import com.soliscode.test.contract.collection.ThreadSafeCollectionContract;
+import com.soliscode.test.contract.comparable.ComparableContract;
 import com.soliscode.test.contract.concurrentmap.ConcurrentMapContract;
 import com.soliscode.test.contract.concurrentmap.ThreadSafeConcurrentMapContract;
 import com.soliscode.test.contract.concurrentnavigablemap.ConcurrentNavigableMapContract;
@@ -426,6 +428,23 @@ public class ContractCoverageTest {
                         passes("TreeMap's entry",
                                 () -> new MapEntrySubjects.JdkEntry(MapEntryProviders.fromMap(TreeMap::new)),
                                 methods)));
+    }
+
+    @TestFactory
+    @DisplayName("ComparableContract")
+    Stream<DynamicNode> comparableContract() {
+        List<Method> methods = ContractRuns.testMethods(ComparableContract.class, false);
+        List<Class<?>> sources = ContractRuns.withSuperclasses(BreakableComparable.class);
+        return Stream.of(
+                coverage(ComparableContract.class, "Integer", ComparableSubjects::integers, sources,
+                        (key, b) -> () -> ComparableSubjects.broken(b)),
+                Stream.of(passes("String", ComparableSubjects::strings, methods),
+                        passes("BigDecimal, not consistent with equals",
+                                () -> ComparableSubjects.bigDecimals(false), methods),
+                        passes("Boolean, two tiers", ComparableSubjects::booleans, methods),
+                        fails("BigDecimal claimed consistent with equals",
+                                () -> ComparableSubjects.bigDecimals(true), methods)),
+                ComparableSubjects.namedChecks(ContractRuns.breaks(sources))).flatMap(s -> s);
     }
 
     @TestFactory

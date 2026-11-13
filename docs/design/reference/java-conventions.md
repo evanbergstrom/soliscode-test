@@ -13,7 +13,7 @@ Related: [build-and-test.md](build-and-test.md) for how the gates run, [dependen
 
 ## Packages
 
-Built (#9). Every package is under `com.soliscode.test` (moved from `org.soliscode.test` by #9). Package names are lowercase. Every main package has a `package-info.java` (37 today) that says what it holds and is `@NullMarked`; a new package gets one. Test packages have none, except `contract.coverage`.
+Built (#9). Every package is under `com.soliscode.test` (moved from `org.soliscode.test` by #9). Package names are lowercase. Every main package has a `package-info.java` (39 today) that says what it holds and is `@NullMarked`; a new package gets one. Test packages have none, except `contract.coverage`.
 
 ## Public API
 
@@ -86,13 +86,13 @@ Not covered by the decision, and left from before #9: javac's own `unchecked`, `
 ## Javadoc and comments
 
 - Built (#9): every public and protected type, method, constructor and field has a doc comment; the Javadoc gate (doclint all, `failOnWarnings`) fails a missing one, a broken link, a missing `@param` or bad HTML. The custom block tags are `@apiNote`, `@implSpec`, `@implNote` and `@complexity`; any other fails.
-- Markdown `///` comments (JEP 467), with Markdown rather than HTML. 456 of the 459 main files use them; 14 still have a classic `/** ... */` comment. A new comment uses `///`.
+- Markdown `///` comments (JEP 467), with Markdown rather than HTML. 486 of the 489 main files use them; 14 still have a classic `/** ... */` comment. A new comment uses `///`.
 - Checkstyle cannot read `///` comments, so it counts an import that only a `///` comment uses as unused. Write such a reference fully qualified (`@throws org.opentest4j.AssertionFailedError`).
 - Habit: a public class's comment has a summary sentence, a description, and, where they apply, `## Usage Examples` (a ```` ```java ```` block), `## Thread Safety` and `## Implementation Notes`. `@param` and `@throws` name each argument's constraint and each exception's cause.
 - Habit: a `Break` constant's comment gives its **Purpose** (the fault it simulates), **Effect** (how the method's behaviour changes), and **Affected Methods**, with a `@see` to the method (`BreakableCollection`, `BreakableList`, `BreakableSequencedCollection` follow it; not every breakable does yet).
 - Habit: a contract's comment names the JDK method it tests, with a `@see`, and what its provider must supply.
 - Inline comments say why, not what. Built (#10): `FIXME:`, `HACK:` and `XXX:` fail Checkstyle; empty blocks need a comment.
-- 256 of the 585 Java files carry the Apache 2.0 licence header (`LICENSE.txt`). Put it on new files.
+- 286 of the 615 Java files carry the Apache 2.0 licence header (`LICENSE.txt`). Put it on new files.
 
 ## Imports
 
