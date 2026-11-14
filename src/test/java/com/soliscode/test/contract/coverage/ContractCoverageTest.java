@@ -41,6 +41,7 @@ import com.soliscode.test.annotations.VerySlow;
 import com.soliscode.test.breakable.Break;
 import com.soliscode.test.breakable.BreakableBlockingDeque;
 import com.soliscode.test.breakable.BreakableBlockingQueue;
+import com.soliscode.test.breakable.BreakableCharSequence;
 import com.soliscode.test.breakable.BreakableCloseable;
 import com.soliscode.test.breakable.BreakableCollection;
 import com.soliscode.test.breakable.BreakableComparable;
@@ -75,6 +76,7 @@ import com.soliscode.test.contract.blockingdeque.BlockingDequeContract;
 import com.soliscode.test.contract.blockingdeque.ThreadSafeBlockingDequeContract;
 import com.soliscode.test.contract.blockingqueue.BlockingQueueContract;
 import com.soliscode.test.contract.blockingqueue.ThreadSafeBlockingQueueContract;
+import com.soliscode.test.contract.charsequence.CharSequenceContract;
 import com.soliscode.test.contract.closeable.CloseableContract;
 import com.soliscode.test.contract.collection.CollectionContract;
 import com.soliscode.test.contract.collection.CollectionMethods;
@@ -462,6 +464,17 @@ public class ContractCoverageTest {
                         sources, (key, b) -> () -> ComparatorSubjects.broken(b)),
                 ComparatorSubjects.moreSubjects(),
                 ComparatorSubjects.namedChecks(ContractRuns.breaks(sources))).flatMap(s -> s);
+    }
+
+    @TestFactory
+    @DisplayName("CharSequenceContract")
+    Stream<DynamicNode> charSequenceContract() {
+        List<Class<?>> sources = ContractRuns.withSuperclasses(BreakableCharSequence.class);
+        return Stream.of(
+                coverage(CharSequenceContract.class, "String", CharSequenceSubjects::strings, sources,
+                        (key, b) -> () -> CharSequenceSubjects.broken(b)),
+                CharSequenceSubjects.moreSubjects(),
+                CharSequenceSubjects.namedChecks(ContractRuns.breaks(sources))).flatMap(s -> s);
     }
 
     @TestFactory

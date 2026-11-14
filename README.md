@@ -31,6 +31,7 @@ This library provides support for:\
 > - `Object` (`equals`, `hashCode`, `toString`) and `Serializable`
 > - `Comparable`
 > - `Comparator`
+> - `CharSequence`
 > - `AutoCloseable`
 >   - `Closeable`
 > - `Iterable` (with `Iterator` and `Spliterator`)
