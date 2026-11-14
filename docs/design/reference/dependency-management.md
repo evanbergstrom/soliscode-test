@@ -27,7 +27,7 @@ Built (#9). Everything is at compile scope: this is a test library, and its user
 
 There is no test-scope dependency, no JUnit Platform test kit and no AssertJ. #9 removed the one test-scope dependency, `junit-platform-launcher`, which no test used (Surefire brings its own).
 
-Main code uses two classes JUnit marks internal, `org.junit.platform.commons.util.StringUtils` (six assertion classes: `AssertContains`, `AssertContainsAll`, `AssertContainsAllByIdentity`, `AssertContainsNone`, `AssertContainsNoneByIdentity`, `AssertDoesNotContain`) and `UnrecoverableExceptions` (`AssertThrowsAnyOf`, `AssertThrowsDifferent`). A JUnit release may change them without notice; read its release notes for them.
+Main code uses two classes JUnit marks internal, `org.junit.platform.commons.util.StringUtils` (six assertion classes: `AssertContains`, `AssertContainsAll`, `AssertContainsAllByIdentity`, `AssertContainsNone`, `AssertContainsNoneByIdentity`, `AssertDoesNotContain`) and `UnrecoverableExceptions` (`AssertThrowsAnyOf`, `AssertThrowsDifferent`, and `AutoCloseableContractSupport`, #41). A JUnit release may change them without notice; read its release notes for them.
 
 Every dependency comes from Maven Central, except the parent, which is in `~/.m2` only (build-and-test.md, "Prerequisites").
 

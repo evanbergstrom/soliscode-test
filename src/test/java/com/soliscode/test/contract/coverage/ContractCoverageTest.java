@@ -41,6 +41,7 @@ import com.soliscode.test.annotations.VerySlow;
 import com.soliscode.test.breakable.Break;
 import com.soliscode.test.breakable.BreakableBlockingDeque;
 import com.soliscode.test.breakable.BreakableBlockingQueue;
+import com.soliscode.test.breakable.BreakableCloseable;
 import com.soliscode.test.breakable.BreakableCollection;
 import com.soliscode.test.breakable.BreakableComparable;
 import com.soliscode.test.breakable.BreakableConcurrentMap;
@@ -68,10 +69,12 @@ import com.soliscode.test.breakable.BreakableTransferQueue;
 import com.soliscode.test.contract.CollectionContractConfig;
 import com.soliscode.test.contract.DynamicCollectionContract;
 import com.soliscode.test.contract.DynamicMapContract;
+import com.soliscode.test.contract.autocloseable.AutoCloseableContract;
 import com.soliscode.test.contract.blockingdeque.BlockingDequeContract;
 import com.soliscode.test.contract.blockingdeque.ThreadSafeBlockingDequeContract;
 import com.soliscode.test.contract.blockingqueue.BlockingQueueContract;
 import com.soliscode.test.contract.blockingqueue.ThreadSafeBlockingQueueContract;
+import com.soliscode.test.contract.closeable.CloseableContract;
 import com.soliscode.test.contract.collection.CollectionContract;
 import com.soliscode.test.contract.collection.CollectionMethods;
 import com.soliscode.test.contract.collection.ThreadSafeCollectionContract;
@@ -113,6 +116,7 @@ import com.soliscode.test.contract.support.WithIntegerElement;
 import com.soliscode.test.contract.support.WithIntegerKeyAndStringValue;
 import com.soliscode.test.contract.transferqueue.ThreadSafeTransferQueueContract;
 import com.soliscode.test.contract.transferqueue.TransferQueueContract;
+import com.soliscode.test.provider.AutoCloseableProviders;
 import com.soliscode.test.provider.CollectionProvider;
 import com.soliscode.test.provider.CollectionProviders;
 import com.soliscode.test.provider.IteratorProviders;
@@ -445,6 +449,54 @@ public class ContractCoverageTest {
                         fails("BigDecimal claimed consistent with equals",
                                 () -> ComparableSubjects.bigDecimals(true), methods)),
                 ComparableSubjects.namedChecks(ContractRuns.breaks(sources))).flatMap(s -> s);
+    }
+
+    @TestFactory
+    @DisplayName("AutoCloseableContract")
+    Stream<DynamicNode> autoCloseableContract() {
+        List<Method> methods = ContractRuns.testMethods(AutoCloseableContract.class, false);
+        List<Class<?>> sources = ContractRuns.withSuperclasses(BreakableCloseable.class);
+        return Stream.of(
+                coverage(AutoCloseableContract.class, "BufferedReader over a StringReader",
+                        () -> new CloseableSubjects.Subject<>(AutoCloseableProviders.bufferedReader(), true), sources,
+                        (key, b) -> () -> CloseableSubjects.broken(b, true)),
+                Stream.of(passes("ByteArrayOutputStream",
+                                () -> new CloseableSubjects.Subject<>(AutoCloseableProviders.byteArrayOutputStream(),
+                                        true), methods),
+                        passes("ExecutorService",
+                                () -> new CloseableSubjects.Subject<>(CloseableSubjects.executorServices(), true),
+                                methods),
+                        passes("BreakableCloseable opting out of idempotence, with CLOSE_TWICE_THROWS",
+                                () -> CloseableSubjects.broken(BreakableCloseable.CLOSE_TWICE_THROWS, false), methods),
+                        passes("BreakableCloseable opting out of idempotence, with CLOSE_TWICE_REOPENS",
+                                () -> CloseableSubjects.broken(BreakableCloseable.CLOSE_TWICE_REOPENS, false),
+                                methods)),
+                CloseableSubjects.namedChecks(AutoCloseableContract.class, b -> () -> CloseableSubjects.broken(b, true),
+                        ContractRuns.breaks(sources))).flatMap(s -> s);
+    }
+
+    @TestFactory
+    @DisplayName("CloseableContract")
+    Stream<DynamicNode> closeableContract() {
+        List<Method> methods = ContractRuns.testMethods(CloseableContract.class, false);
+        List<Class<?>> sources = ContractRuns.withSuperclasses(BreakableCloseable.class);
+        return Stream.of(
+                coverage(CloseableContract.class, "BufferedReader over a StringReader",
+                        () -> new CloseableSubjects.CloseableSubject<>(AutoCloseableProviders.bufferedReader(), true),
+                        sources, (key, b) -> () -> CloseableSubjects.brokenCloseable(b, true)),
+                Stream.of(passes("ByteArrayOutputStream", () -> new CloseableSubjects.CloseableSubject<>(
+                                AutoCloseableProviders.byteArrayOutputStream(), true), methods),
+                        fails("BreakableCloseable opting out of idempotence, which Closeable ignores, with "
+                                        + "CLOSE_TWICE_THROWS",
+                                () -> CloseableSubjects.brokenCloseable(BreakableCloseable.CLOSE_TWICE_THROWS, false),
+                                methods),
+                        fails("BreakableCloseable opting out of idempotence, which Closeable ignores, with "
+                                        + "CLOSE_TWICE_REOPENS",
+                                () -> CloseableSubjects.brokenCloseable(BreakableCloseable.CLOSE_TWICE_REOPENS, false),
+                                methods)),
+                CloseableSubjects.namedChecks(CloseableContract.class,
+                        b -> () -> CloseableSubjects.brokenCloseable(b, true), ContractRuns.breaks(sources)))
+                .flatMap(s -> s);
     }
 
     @TestFactory
