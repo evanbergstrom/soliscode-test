@@ -49,6 +49,7 @@ import com.soliscode.test.breakable.BreakableComparator;
 import com.soliscode.test.breakable.BreakableConcurrentMap;
 import com.soliscode.test.breakable.BreakableConcurrentNavigableMap;
 import com.soliscode.test.breakable.BreakableDeque;
+import com.soliscode.test.breakable.BreakableFuture;
 import com.soliscode.test.breakable.BreakableIterable;
 import com.soliscode.test.breakable.BreakableIterator;
 import com.soliscode.test.breakable.BreakableList;
@@ -88,6 +89,8 @@ import com.soliscode.test.contract.concurrentmap.ThreadSafeConcurrentMapContract
 import com.soliscode.test.contract.concurrentnavigablemap.ConcurrentNavigableMapContract;
 import com.soliscode.test.contract.deque.DequeContract;
 import com.soliscode.test.contract.deque.DequeMethods;
+import com.soliscode.test.contract.future.FutureContract;
+import com.soliscode.test.contract.future.ThreadSafeFutureContract;
 import com.soliscode.test.contract.iterable.IterableContract;
 import com.soliscode.test.contract.iterable.IterableMethods;
 import com.soliscode.test.contract.iterator.IteratorContract;
@@ -129,6 +132,8 @@ import com.soliscode.test.provider.MapProvider;
 import com.soliscode.test.provider.MapProviders;
 import com.soliscode.test.provider.SpliteratorProviders;
 
+import static com.soliscode.test.contract.coverage.ContractRuns.fails;
+import static com.soliscode.test.contract.coverage.ContractRuns.passes;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -255,6 +260,11 @@ public class ContractCoverageTest {
         boolean blockingDequeBreak = key.startsWith(BreakableBlockingDeque.class.getSimpleName() + ".");
         boolean transferQueueBreak = key.startsWith(BreakableTransferQueue.class.getSimpleName() + ".");
         boolean concurrentMapBreak = key.startsWith(BreakableConcurrentMap.class.getSimpleName() + ".");
+        boolean futureBreak = key.startsWith(BreakableFuture.class.getSimpleName() + ".");
+        if (field.endsWith(THREAD_SAFETY_BREAK) && futureBreak) {
+            return contract == ThreadSafeFutureContract.class ? null
+                    : "a thread-safety break: ThreadSafeFutureContract checks it";
+        }
         if (field.endsWith(THREAD_SAFETY_BREAK) && contract == ThreadSafeConcurrentMapContract.class) {
             return concurrentMapBreak ? null : "not a fault for a BreakableConcurrentMap: its store is a concurrent "
                     + "map, and the breakable takes no lock of its own, so the break changes nothing there";
@@ -478,6 +488,23 @@ public class ContractCoverageTest {
     }
 
     @TestFactory
+    @DisplayName("FutureContract")
+    Stream<DynamicNode> futureContract() {
+        List<Class<?>> sources = ContractRuns.withSuperclasses(BreakableFuture.class);
+        return Stream.concat(coverage(FutureContract.class, "CompletableFuture", FutureSubjects::completableFutures,
+                sources, (key, b) -> () -> FutureSubjects.broken(b)), FutureSubjects.moreChecks(
+                        k -> uncheckedReason(FutureContract.class, k) == null));
+    }
+
+    @TestFactory
+    @VerySlow
+    @DisplayName("ThreadSafeFutureContract")
+    Stream<DynamicNode> threadSafeFutureContract() {
+        return FutureSubjects.threadSafeChecks(k -> k.endsWith(THREAD_SAFETY_BREAK)
+                && uncheckedReason(ThreadSafeFutureContract.class, k) == null);
+    }
+
+    @TestFactory
     @DisplayName("AutoCloseableContract")
     Stream<DynamicNode> autoCloseableContract() {
         List<Method> methods = ContractRuns.testMethods(AutoCloseableContract.class, false);
@@ -647,24 +674,24 @@ public class ContractCoverageTest {
                 .map(base -> passes("unbroken breakable over " + base,
                         () -> SpliteratorSubjects.broken(base, null), methods));
         Stream<DynamicNode> named = Stream.of(
-                failsIn(SpliteratorSubjects.Base.TREE_SET_REVERSED,
+                SpliteratorSubjects.failsIn(SpliteratorSubjects.Base.TREE_SET_REVERSED,
                         BreakableSpliterator.SPLITERATOR_GET_COMPARATOR_ALWAYS_RETURNS_NULL,
                         "sortedCharacteristicHolds"),
-                failsIn(SpliteratorSubjects.Base.TREE_SET_NATURAL,
+                SpliteratorSubjects.failsIn(SpliteratorSubjects.Base.TREE_SET_NATURAL,
                         BreakableSpliterator.SPLITERATOR_GET_COMPARATOR_RETURNS_NATURAL_ORDER,
                         "sortedCharacteristicHolds"),
-                failsIn(SpliteratorSubjects.Base.TREE_SET_REVERSED,
+                SpliteratorSubjects.failsIn(SpliteratorSubjects.Base.TREE_SET_REVERSED,
                         BreakableSpliterator.SPLITERATOR_RETURNS_FIRST_ELEMENT_TWICE, "distinctCharacteristicHolds"),
-                failsIn(SpliteratorSubjects.Base.INT_RANGE,
+                SpliteratorSubjects.failsIn(SpliteratorSubjects.Base.INT_RANGE,
                         BreakableSpliterator.SPLITERATOR_FIRST_ELEMENT_IS_NULL, "nonNullCharacteristicHolds"),
-                failsIn(SpliteratorSubjects.Base.UNKNOWN_SIZE,
+                SpliteratorSubjects.failsIn(SpliteratorSubjects.Base.UNKNOWN_SIZE,
                         BreakableSpliterator.SPLITERATOR_REPORTS_CONCURRENT, "concurrentCharacteristicHolds"),
-                failsIn(SpliteratorSubjects.Base.TREE_SET_REVERSED,
+                SpliteratorSubjects.failsIn(SpliteratorSubjects.Base.TREE_SET_REVERSED,
                         BreakableSpliterator.SPLITERATOR_CHARACTERISTICS_LEAVE_OUT_ORDERED,
                         "sortedCharacteristicHolds"),
-                failsIn(SpliteratorSubjects.Base.TREE_SET_NATURAL,
+                SpliteratorSubjects.failsIn(SpliteratorSubjects.Base.TREE_SET_NATURAL,
                         BreakableSpliterator.SPLITERATOR_GET_COMPARATOR_ALWAYS_THROWS, "sortedCharacteristicHolds"),
-                failsIn(SpliteratorSubjects.Base.ARRAY_LIST,
+                SpliteratorSubjects.failsIn(SpliteratorSubjects.Base.ARRAY_LIST,
                         BreakableSpliterator.SPLITERATOR_CHARACTERISTICS_LEAVE_OUT_SIZED,
                         "subsizedCharacteristicHolds"));
         // Not shown to fail by any break: sizedCharacteristicHolds's check that a SIZED part estimates its own count,
@@ -1183,35 +1210,6 @@ public class ContractCoverageTest {
                 .map(e -> fails(e.getKey(), broken.apply(e.getKey(), e.getValue()), methods));
         return Stream.of(dynamicContainer(contract.getSimpleName(),
                 Stream.of(passes, unbroken, setupPasses, fails).flatMap(s -> s)));
-    }
-
-    private static DynamicNode passes(final String name, final Supplier<?> contract, final List<Method> methods) {
-        return dynamicTest("passes against " + name, () -> {
-            List<String> failures = ContractRuns.failures(contract, methods);
-            assertTrue(failures.isEmpty(), () -> failures.size() + " of " + methods.size()
-                    + " test methods failed:\n  " + String.join("\n  ", failures));
-        });
-    }
-
-    private static DynamicNode fails(final String breakKey, final Supplier<?> contract, final List<Method> methods) {
-        return dynamicTest("fails with " + breakKey, () -> {
-            List<String> failures = ContractRuns.failures(contract, methods, true);
-            assertFalse(failures.isEmpty(),
-                    () -> "no test method of the contract fails with " + breakKey + ": the contract cannot see it");
-            assertFalse(ContractRuns.anyHang(failures),
-                    () -> "the contract hangs with " + breakKey + ":\n  " + String.join("\n  ", failures));
-        });
-    }
-
-    /// A check that one named test method of `SpliteratorContract` fails, on a breakable over a base, with a break:
-    /// for the tests that the `ArrayList` subject cannot fail, since it does not report their characteristic.
-    private static DynamicNode failsIn(final SpliteratorSubjects.Base base, final Break b, final String method) {
-        List<Method> named = ContractRuns.testMethods(SpliteratorContract.class, false).stream()
-                .filter(m -> m.getName().equals(method)).toList();
-        assertEquals(1, named.size(), () -> "no test method " + method);
-        return dynamicTest(method + " fails with " + b.description() + " over " + base, () -> assertFalse(
-                ContractRuns.failures(() -> SpliteratorSubjects.broken(base, b), named).isEmpty(),
-                () -> method + " passes with the break: it cannot see it"));
     }
 
     /// Checks that a primitive spliterator contract's own test methods, not those it inherits, fail for each break of

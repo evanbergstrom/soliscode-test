@@ -32,6 +32,7 @@ This library provides support for:\
 > - `Comparable`
 > - `Comparator`
 > - `CharSequence`
+> - `Future`, and thread-safe futures
 > - `AutoCloseable`
 >   - `Closeable`
 > - `Iterable` (with `Iterator` and `Spliterator`)

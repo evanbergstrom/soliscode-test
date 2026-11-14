@@ -15,12 +15,17 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
+import org.junit.jupiter.api.DynamicNode;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.commons.support.AnnotationSupport;
 
 import com.soliscode.test.annotations.ConcurrencyTest;
 import com.soliscode.test.breakable.Break;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
 /// Runs every test method of a contract against one contract instance, outside JUnit, and reports which fail.
 ///
@@ -161,6 +166,36 @@ final class ContractRuns {
             Thread.currentThread().interrupt();
             throw new AssertionError("interrupted while running " + method, e);
         }
+    }
+
+    /// A check that a contract passes: every test method passes against new instances.
+    ///
+    /// @param name what the contract runs against, for the check's name
+    /// @param contract creates the contract instance for each test method
+    /// @param methods the test methods
+    /// @return the check
+    static DynamicNode passes(final String name, final Supplier<?> contract, final List<Method> methods) {
+        return dynamicTest("passes against " + name, () -> {
+            List<String> failures = failures(contract, methods);
+            assertTrue(failures.isEmpty(), () -> failures.size() + " of " + methods.size()
+                    + " test methods failed:\n  " + String.join("\n  ", failures));
+        });
+    }
+
+    /// A check that a contract fails with a break: some test method fails, and none hangs.
+    ///
+    /// @param breakKey the break, for the check's name
+    /// @param contract creates the contract instance, on the broken subject, for each test method
+    /// @param methods the test methods
+    /// @return the check
+    static DynamicNode fails(final String breakKey, final Supplier<?> contract, final List<Method> methods) {
+        return dynamicTest("fails with " + breakKey, () -> {
+            List<String> failures = failures(contract, methods, true);
+            assertFalse(failures.isEmpty(),
+                    () -> "no test method of the contract fails with " + breakKey + ": the contract cannot see it");
+            assertFalse(anyHang(failures),
+                    () -> "the contract hangs with " + breakKey + ":\n  " + String.join("\n  ", failures));
+        });
     }
 
     /// Whether any of the failures is a test method that did not end.

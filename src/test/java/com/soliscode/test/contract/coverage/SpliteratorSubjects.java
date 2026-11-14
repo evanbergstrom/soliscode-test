@@ -15,6 +15,7 @@
  */
 package com.soliscode.test.contract.coverage;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -37,6 +38,7 @@ import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 import org.jspecify.annotations.Nullable;
+import org.junit.jupiter.api.DynamicNode;
 
 import com.soliscode.test.AbstractTest;
 import com.soliscode.test.breakable.Break;
@@ -55,6 +57,10 @@ import com.soliscode.test.provider.ObjectProvider;
 import com.soliscode.test.provider.SpliteratorProvider;
 import com.soliscode.test.provider.SpliteratorProviders;
 import com.soliscode.test.provider.SpliteratorSource;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
 /// The subjects `ContractCoverageTest` runs the spliterator contracts against: JDK spliterators, and breakable ones
 /// over a JDK spliterator, with a break or none (#38).
@@ -278,5 +284,16 @@ final class SpliteratorSubjects {
                 ConcurrentSkipListSet::new, Spliterator.CONCURRENT | Spliterator.NONNULL
                         | Spliterator.DISTINCT | Spliterator.SORTED | Spliterator.ORDERED, true));
         return providers;
+    }
+
+    /// A check that one named test method of `SpliteratorContract` fails, on a breakable over a base, with a break:
+    /// for the tests that the `ArrayList` subject cannot fail, since it does not report their characteristic.
+    static DynamicNode failsIn(final Base base, final Break b, final String method) {
+        List<Method> named = ContractRuns.testMethods(SpliteratorContract.class, false).stream()
+                .filter(m -> m.getName().equals(method)).toList();
+        assertEquals(1, named.size(), () -> "no test method " + method);
+        return dynamicTest(method + " fails with " + b.description() + " over " + base, () -> assertFalse(
+                ContractRuns.failures(() -> broken(base, b), named).isEmpty(),
+                () -> method + " passes with the break: it cannot see it"));
     }
 }
