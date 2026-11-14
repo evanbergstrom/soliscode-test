@@ -4,7 +4,7 @@ The packages, what each holds, what each depends on, and how the parts fit. Read
 
 ## 1. Overview
 
-Built. One Maven module, `com.soliscode:soliscode-test`, a jar, with `com.soliscode:soliscode-parent:0.1.2` as its parent (#9, #14). There is no `module-info.java`: the jar is on the class path, with every package open to its users.
+Built. One Maven module, `com.soliscode:soliscode-test`, a jar, with `com.soliscode:soliscode-parent:0.1.8` as its parent (#9, #14, #57). There is no `module-info.java`: the jar is on the class path, with every package open to its users.
 
 Its main code is test code. A user's test class implements a contract interface, supplies a provider of the class under test, and JUnit runs the contract's `default` `@Test` methods as the test class's own. The library starts threads only in `ContentionCoordinator` and in `BlockingQueueContractSupport.bounded` (section 5).
 

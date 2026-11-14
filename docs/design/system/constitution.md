@@ -15,7 +15,7 @@ When a document and the code disagree, the code says what exists. A change that 
 
 ## 2. What the system is
 
-Built. A Java library for testing implementations of JDK interfaces with JUnit 6. One Maven module, `com.soliscode:soliscode-test`, with `com.soliscode:soliscode-parent:0.1.2` as its parent (#9, #14); its packages are `com.soliscode.test.*` (#9). It provides:
+Built. A Java library for testing implementations of JDK interfaces with JUnit 6. One Maven module, `com.soliscode:soliscode-test`, with `com.soliscode:soliscode-parent:0.1.8` as its parent (#9, #14, #57); its packages are `com.soliscode.test.*` (#9). It provides:
 
 | Part | What |
 |------|------|
@@ -108,6 +108,7 @@ Gates fail the build like a compile error; "the tests pass" is no substitute. Th
 - **JaCoCo line coverage**, at least 0.70 (`jacoco.minimum.coverage`): Built; measured 0.8985 on 2026-11-08 (#10).
 - **Maven enforcer**: Built (#9).
 - **Licences**: every dependency under an OSI-approved licence, and none at `system` scope: Built (#14).
+- **Gate guard**: the parent refuses a gate plugin's version, dependencies or deciding settings set in this POM, a property that narrows a gate, in the POM or as a `-D`, and a setting the parent fixes given twice in a gate's execution: Built (#57). Some flags on `CLAUDE.md`'s list it lets through (`-DskipTests` and `-Djacoco.skip` in a verify, `-Djacoco.minimum.coverage`, a gate's profile turned off, `-Dmaven.test.skip`, `-Dmaven.test.failure.ignore`; `-Djacoco.haltOnFailure=false` changes nothing, the check sets it literally); the list holds either way.
 
 ## 8. Anti-patterns
 

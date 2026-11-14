@@ -6,7 +6,7 @@ Related: [soliscode-parent's dependency-management.md](https://gitlab.com/solisc
 
 ## Where versions are set
 
-Built (#9, #14). soliscode-parent 0.1.2 sets every version: its `dependencyManagement` names each library (JUnit's through its BOM, `org.junit:junit-bom`, imported, so the Jupiter and Platform artifacts agree), and its `pluginManagement` names each plugin. This project's `pom.xml` names its dependencies without versions, and sets no plugin, plugin version or compiler level. The only version it sets is its own, `${revision}`, and its parent's, `0.1.2`.
+Built (#9, #14, #57). soliscode-parent 0.1.8 sets every version: its `dependencyManagement` names each library (JUnit's through its BOM, `org.junit:junit-bom`, imported, so the Jupiter and Platform artifacts agree), and its `pluginManagement` names each plugin. This project's `pom.xml` names its dependencies without versions, and sets no plugin, plugin version or compiler level. The only version it sets is its own, `${revision}`, and its parent's, `0.1.8`.
 
 The parent's enforcer, at `validate`, refuses a dependency graph that does not converge (`dependencyConvergence`) and a class found in two artifacts on the class path (`banDuplicateClasses`).
 

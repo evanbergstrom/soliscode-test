@@ -9,7 +9,7 @@
   <parent>
     <groupId>com.soliscode</groupId>
     <artifactId>soliscode-parent</artifactId>
-    <version>0.1.2</version>
+    <version>0.1.8</version>
     <relativePath/>
   </parent>
 

@@ -8,7 +8,7 @@ The gates, their switches and the flags never to use are soliscode-parent's, and
 
 - Maven 3.9 or later.
 - Built (#9): JDK 25 on the `PATH`, with no toolchains entry. No preview feature is used. The enforcer refuses an older JDK or Maven.
-- `com.soliscode:soliscode-parent:0.1.2` in `~/.m2` (#14). The POM names it with an empty `<relativePath/>`, so Maven never looks for it in a sibling directory; it is not on Maven Central. A release of soliscode-parent, made in its own clone, installs it.
+- `com.soliscode:soliscode-parent:0.1.8` in `~/.m2` (#57). The POM names it with an empty `<relativePath/>`, so Maven never looks for it in a sibling directory; it is not on Maven Central. A release of soliscode-parent, made in its own clone, installs it.
 - Never print or change `~/.m2/settings.xml`. It holds credentials, and Maven reads it without being told to.
 
 ## Commands
@@ -31,16 +31,17 @@ Built (#10): Checkstyle runs at `validate` and passes, with no finding. It had 2
 
 ## Gates
 
-Every gate is inherited from soliscode-parent 0.1.2 (#14). This project configures none of them itself.
+Every gate is inherited from soliscode-parent 0.1.8 (#14, #57). This project configures none of them itself. Since 0.1.4 the parent's gate guard refuses a gate plugin's version, dependencies or deciding settings set in this POM, a property that narrows a gate, in the POM or as a `-D`, and a setting the parent fixes given twice in a gate's execution; some flags on `CLAUDE.md`'s list it lets through (`-DskipTests` and `-Djacoco.skip` in a verify, `-Djacoco.minimum.coverage`, a gate's profile turned off, `-Dmaven.test.skip`, `-Dmaven.test.failure.ignore`; `-Djacoco.haltOnFailure=false` changes nothing, the check sets it literally); the list holds either way. A profile turned off turns off that gate's guard with it, and a lower `jacoco.minimum.coverage` in the POM passes it. The gates' executions are `soliscode-enforcer`, `soliscode-checkstyle`, `soliscode-license`, `soliscode-javadoc`, the coverage gate's `soliscode-prepare-agent`, `soliscode-coverage-report`, `soliscode-coverage-check` and `soliscode-coverage-minimum` (with Surefire's `default-test`), and ErrorProne's `default-compile`. An execution of this project's own under another id runs beside a gate; one under a gate's id merges into it, and the guard checks it.
 
 | Gate | Phase | State here |
 |------|-------|------------|
 | Maven enforcer: Java 25, Maven 3.9, dependency convergence, no class twice on the class path, no `system`-scope dependency, `jacoco.minimum.coverage` set | `validate` | Built (#9, #14). Passes |
+| Gate guard: enforcer executions `soliscode-guard` and `soliscode-guard-<gate>`. They refuse a gate plugin's version, dependencies or deciding settings set in this POM, a setting, property or `-D` that narrows a gate, a setting the parent fixes given twice in a gate's execution, and Surefire's `forkCount` 0 or an `argLine` without `@{argLine}` (the parent's build-and-test.md, "What a child cannot change") | `validate` | Built (#57). Passes: this POM sets nothing for a gate's plugin |
 | Licences: every dependency, in any scope, transitive ones included, names an OSI-approved licence (the MojoHaus License Maven Plugin, `add-third-party`, the `license-main` and `license-test` profiles; it writes `target/generated-sources/license/THIRD-PARTY.txt`) | `validate` | Built (#14). Passes: 9 dependencies, EPL-2.0 (JUnit's six) and Apache-2.0 (JSpecify, OpenTest4J, apiguardian) |
 | Checkstyle, the parent's rules (`soliscode/checkstyle.xml` from soliscode-build-tools), main and test sources | `validate` | Built (#10). Passes. The rule for test-method names, `[TestMethodName]`, is in soliscode-parent 0.1.2 (soliscode/soliscode-parent#2, java-conventions.md, "Test method names") |
 | ErrorProne and NullAway, at ERROR, `failOnWarning`, main sources, activated by the empty `.errorprone` file | `compile` | Built (#9). Passes, with the suppressions java-conventions.md lists |
-| Javadoc, `doclint` all, `failOnWarnings`, main sources, classic and Markdown `///` comments | `verify` | Built (#9). Passes |
-| JaCoCo `check`: line coverage at least `jacoco.minimum.coverage` | `verify` | Built (#9). Passes ("Coverage" below) |
+| Javadoc, `doclint` all, `failOnWarnings`, main sources, classic and Markdown `///` comments; files under a `jmh_generated` directory are left out (0.1.5) | `verify` | Built (#9). Passes |
+| JaCoCo `check`: line coverage at least `jacoco.minimum.coverage`; classes in a package with a part named `generated`, `artiogen` or `jmh_generated` are left out (0.1.6) | `verify` | Built (#9). Passes ("Coverage" below) |
 | OWASP dependency-check, key from `NVD_API_KEY` | on request, `-P dependency-check` | Inherited, advisory. Not run here yet |
 
 A change is done only with zero findings from every gate. The flags never to use, and what to do when a gate fires on code you did not touch, are in the parent's document ("Flags never to use"); the same list holds here, with no addition.
@@ -48,7 +49,7 @@ A change is done only with zero findings from every gate. The flags never to use
 ## What this project adds
 
 Built (#9). The seven things the parent's "What a child adds" asks for, and two of its own:
-1. The parent, `com.soliscode:soliscode-parent:0.1.2`, with `<relativePath/>`.
+1. The parent, `com.soliscode:soliscode-parent:0.1.8`, with `<relativePath/>`.
 2. `revision` `0.1-SNAPSHOT` in `pom.xml`; the version is `${revision}`.
 3. `.mvn/jvm.config`, exactly the parent's ten `--add-exports` and `--add-opens` lines for ErrorProne.
 4. An empty `.errorprone` file at the root.
@@ -97,7 +98,7 @@ Built. Concurrency and deadlock tests do not sleep and do not wait without a lim
 
 ## Coverage
 
-Built (#9). The parent's `coverage` profile runs JaCoCo's `report` (`target/site/jacoco/`) and `check` at `verify`: the `LINE` covered ratio of the module as a whole must be at least `jacoco.minimum.coverage`, which is 0.70, quant-test's figure (#3). Measured on 2026-11-08: 6,743 of 7,504 lines, 0.8985 (the `LINE` counter at the end of `target/site/jacoco/jacoco.xml`). A task that raises coverage may raise the minimum; none lowers it without the user's word.
+Built (#9). The parent's `coverage` profile runs JaCoCo's `report` (`target/site/jacoco/`) and `check` at `verify`: the `LINE` covered ratio of the module as a whole must be at least `jacoco.minimum.coverage`, which is 0.70, quant-test's figure (#3). Measured on 2026-11-08: 6,743 of 7,504 lines, 0.8985 (the `LINE` counter at the end of `target/site/jacoco/jacoco.xml`). A task that raises coverage may raise the minimum; none lowers it without the user's word. Since parent 0.1.6 the check and the report leave out every class in a package with a part named `generated`, `artiogen` or `jmh_generated`; this project has none, and hand-written code goes in no such package, where it would not be measured.
 
 ## Releases
 

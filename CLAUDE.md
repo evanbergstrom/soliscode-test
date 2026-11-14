@@ -2,7 +2,7 @@
 
 soliscode-test: a Java library (`com.soliscode:soliscode-test`) for JUnit 6 with three goals (constitution, section 3.1): test methods JUnit lacks, test suites for the JDK's interfaces (every collection interface, then others where a suite is useful, in order of how commonly classes implement them), and thread-safety testing. It holds contracts (interfaces of default test methods for `Collection`, `List`, `Set`, `Map`, `Queue`, `Deque`, their sequenced forms, `SortedSet`, `NavigableSet`, `BlockingQueue`, `BlockingDeque`, `TransferQueue`, `SortedMap`, `NavigableMap`, `ConcurrentMap`, `ConcurrentNavigableMap` (#36), `Iterable`, `Iterator` and `ListIterator` (#37), weakly consistent iterators (#55), `Spliterator` and its primitive kinds (#38), `Map.Entry` (#39), `Comparable` (#40), `Object` and `Serializable`; the other chosen interfaces are #41–#48 and #50), a breakable implementation of each interface whose faults are switched on by `Break` constants, providers of instances and elements, assertions, and concurrency-test support. soliscode-common and soliscode-quant test with it (the split of the quant libraries, soliscode/soliscode-quant#6). It builds on the shared parent `com.soliscode:soliscode-parent` (#9), and is developed with Claude Code, with Codex reviewing; [`AGENTS.md`](AGENTS.md) points Codex at this file.
 
-Built: the parent and its gates (#9; at 0.1.2, #14), the contracts and breakables (#1), quant-test's fixes (#2), this file's structure, the scripts and git hooks (#11), Checkstyle passing with every test method in JUnit's naming (#10). **Don't describe a gate or anything else as existing without checking the code**: each document marks its parts Built, Partly built or Designed, and this file does the same.
+Built: the parent and its gates (#9; at 0.1.8, #14, #57), the contracts and breakables (#1), quant-test's fixes (#2), this file's structure, the scripts and git hooks (#11), Checkstyle passing with every test method in JUnit's naming (#10). **Don't describe a gate or anything else as existing without checking the code**: each document marks its parts Built, Partly built or Designed, and this file does the same.
 
 ## Where things are
 
@@ -65,7 +65,7 @@ Recommend clearing the context (`/clear`, or a new session) in one line of the c
 
 All commands run from the repository root. Detail and pitfalls are in [`build-and-test.md`](docs/design/reference/build-and-test.md); the `gates` skill says which to run. **Never run two Maven builds at once**: they share `target/` and `~/.m2`.
 
-Built (#9): Java 25, from the JDK on the `PATH`; Maven 3.9 or later. The enforcer refuses anything older. The parent, `com.soliscode:soliscode-parent:0.1.2` (#14), comes from `~/.m2`.
+Built (#9): Java 25, from the JDK on the `PATH`; Maven 3.9 or later. The enforcer refuses anything older. The parent, `com.soliscode:soliscode-parent:0.1.8` (#57), comes from `~/.m2`.
 
 ```bash
 mvn -B -Djacoco.check.skip=true -DskipTests install   # the install gate: enforcer, licences, Checkstyle, compile with ErrorProne and NullAway, Javadoc
@@ -93,6 +93,7 @@ The parent's gates are **gates, not advisories**: a finding fails the task like 
 | ErrorProne and NullAway (`error-prone` profile, the root `.errorprone`, main sources, at `compile`; NullAway at ERROR, ErrorProne's warnings fatal through `failOnWarning`), JSpecify `@NullMarked` packages | Built, #9 |
 | JaCoCo `check` (`jacoco.minimum.coverage` 0.70, line coverage, at `verify`), Maven enforcer (Java 25, Maven 3.9, dependency convergence, no duplicate classes, no `system` scope, at `validate`) | Built, #9, #14 |
 | Licences (every dependency, in any scope, under an OSI-approved licence; the `license-main` and `license-test` profiles, at `validate`) | Built, #14 |
+| Gate guard (enforcer executions `soliscode-guard` and `soliscode-guard-<gate>`, at `validate`: refuses a gate plugin's version, dependencies or deciding settings set in this POM, a property that narrows a gate, in the POM or as a `-D`, and a setting the parent fixes given twice in a gate's execution. Some flags on `CLAUDE.md`'s list it lets through (`-DskipTests` and `-Djacoco.skip` in a verify, `-Djacoco.minimum.coverage`, a gate's profile turned off, `-Dmaven.test.skip`, `-Dmaven.test.failure.ignore`; `-Djacoco.haltOnFailure=false` changes nothing, the check sets it literally); the list holds either way. Each `soliscode-guard-<gate>` is in its gate's profile. The gates' execution ids are in `build-and-test.md`, "Gates") | Built, #57 |
 
 As each is built, the task that builds it marks it Built in every place that names its issue as Designed or Partly built: `grep -rn '#<N>' CLAUDE.md AGENTS.md RELEASES.md docs .claude` lists them. Before calling Java work done, run every gate that is built and confirm zero new findings. ErrorProne findings print with an `errorprone.info` link: count them with `grep -c 'errorprone.info' <log>`.
 
@@ -101,9 +102,10 @@ Never use the following without the user's approval in the current session (appr
 - `-P '!error-prone'`, `-P '!checkstyle-main'`, `-P '!checkstyle-test'`, `-P '!license-main'`, `-P '!license-test'` or `-P '!coverage'`, or an ErrorProne option that turns a check off or demotes it (`-XepAllErrorsAsWarnings`, `-Xep:<Check>:WARN|OFF`).
 - `-DskipTests` or `-Djacoco.skip=true` in a full verify (they leave the coverage check nothing to check); `-DskipTests` is fine in the install gate
 - `-Dmaven.test.skip=true`, and `-Dmaven.test.failure.ignore=true` in a gate
-- `-Djacoco.haltOnFailure=false`, Surefire's `-DforkCount=0`, a command-line `-DargLine`, the enforcer's `-Denforcer.rules`
+- `-Djacoco.haltOnFailure=false`, `-Djacoco.minimum.coverage` on the command line, Surefire's `-DforkCount=0`, a command-line `-DargLine`, the enforcer's `-Denforcer.rules`
 - a `-D` in `MAVEN_OPTS`, `JAVA_TOOL_OPTIONS`, `_JAVA_OPTIONS` or `JDK_JAVA_OPTIONS` (verify.sh and release.sh refuse one)
-- a property, `-D` or plugin configuration that narrows a gate (Checkstyle's `includes`, `excludes`, `suppressionsLocation`, `violationIgnore`; the enforcer's `rulesToSkip`; Javadoc's `excludePackageNames`; the licence plugin's `includedTypes`, `missingLicensesFileArtifact`, or a licence list or exception of this project's own), a plugin of this project's own that writes under `target/license/`, and a `system`-scope dependency
+- a property, `-D` or plugin configuration that narrows a gate (Checkstyle's `includes`, `excludes`, `suppressionsLocation`, `violationIgnore`; the enforcer's `rulesToSkip`; Javadoc's `excludePackageNames`; the licence plugin's `includedTypes`, `missingLicensesFileArtifact`, or a licence list or exception of this project's own), a plugin of this project's own that writes under `target/license/`, a `system`-scope dependency, and configuration of the guard's own executions (`soliscode-guard`, `soliscode-guard-<gate>`)
+- hand-written code in a package with a part named `generated`, `artiogen` or `jmh_generated`: the coverage gate leaves it out (and the Javadoc gate leaves out `jmh_generated`)
 - a `@SuppressWarnings` for a check, except as `java-conventions.md` ("Suppressions") allows: code that does on purpose what the check warns against, one finding, the smallest declaration, a one-line reason (the user's decision on #9). A workaround that hides a finding instead is not allowed.
 
 If a gate fires on code you didn't touch, pre-existing or not: stop and tell the user the gate, file and count, and offer:
