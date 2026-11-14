@@ -38,7 +38,7 @@ public final class ComparableProviders {
     /// @throws IllegalArgumentException if there are no tiers, or a tier is empty
     public static <T extends Comparable<? super T>> ComparableProvider<T> of(
             final List<? extends List<? extends T>> tiers) {
-        List<List<T>> copy = checkedCopy(tiers);
+        List<List<T>> copy = checkedCopy(tiers, "comparable");
         return () -> copy;
     }
 
@@ -93,15 +93,16 @@ public final class ComparableProviders {
                 List.of(new BigDecimal("10"), new BigDecimal("1E+1"))));
     }
 
-    /// Checks the tiers and copies them.
+    /// Checks the tiers and copies them. [ComparatorProviders] checks its tiers with it too.
     ///
     /// @param tiers the tiers
+    /// @param kind  the kind of provider, for the message: `"comparable"` or `"comparator"`
     /// @param <T> the type of the samples
     /// @return an unmodifiable copy
-    private static <T> List<List<T>> checkedCopy(final List<? extends List<? extends T>> tiers) {
+    static <T> List<List<T>> checkedCopy(final List<? extends List<? extends T>> tiers, final String kind) {
         Objects.requireNonNull(tiers, "tiers");
         if (tiers.isEmpty()) {
-            throw new IllegalArgumentException("no tiers: a comparable provider needs at least one sample");
+            throw new IllegalArgumentException("no tiers: a " + kind + " provider needs at least one sample");
         }
         List<List<T>> copy = new ArrayList<>(tiers.size());
         for (int i = 0; i < tiers.size(); i++) {

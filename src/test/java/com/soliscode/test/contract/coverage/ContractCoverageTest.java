@@ -44,6 +44,7 @@ import com.soliscode.test.breakable.BreakableBlockingQueue;
 import com.soliscode.test.breakable.BreakableCloseable;
 import com.soliscode.test.breakable.BreakableCollection;
 import com.soliscode.test.breakable.BreakableComparable;
+import com.soliscode.test.breakable.BreakableComparator;
 import com.soliscode.test.breakable.BreakableConcurrentMap;
 import com.soliscode.test.breakable.BreakableConcurrentNavigableMap;
 import com.soliscode.test.breakable.BreakableDeque;
@@ -79,6 +80,7 @@ import com.soliscode.test.contract.collection.CollectionContract;
 import com.soliscode.test.contract.collection.CollectionMethods;
 import com.soliscode.test.contract.collection.ThreadSafeCollectionContract;
 import com.soliscode.test.contract.comparable.ComparableContract;
+import com.soliscode.test.contract.comparator.ComparatorContract;
 import com.soliscode.test.contract.concurrentmap.ConcurrentMapContract;
 import com.soliscode.test.contract.concurrentmap.ThreadSafeConcurrentMapContract;
 import com.soliscode.test.contract.concurrentnavigablemap.ConcurrentNavigableMapContract;
@@ -449,6 +451,17 @@ public class ContractCoverageTest {
                         fails("BigDecimal claimed consistent with equals",
                                 () -> ComparableSubjects.bigDecimals(true), methods)),
                 ComparableSubjects.namedChecks(ContractRuns.breaks(sources))).flatMap(s -> s);
+    }
+
+    @TestFactory
+    @DisplayName("ComparatorContract")
+    Stream<DynamicNode> comparatorContract() {
+        List<Class<?>> sources = ContractRuns.withSuperclasses(BreakableComparator.class);
+        return Stream.of(
+                coverage(ComparatorContract.class, "naturalOrder()", () -> ComparatorSubjects.naturalOrder(false),
+                        sources, (key, b) -> () -> ComparatorSubjects.broken(b)),
+                ComparatorSubjects.moreSubjects(),
+                ComparatorSubjects.namedChecks(ContractRuns.breaks(sources))).flatMap(s -> s);
     }
 
     @TestFactory

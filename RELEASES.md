@@ -32,6 +32,16 @@ As a task merges, it adds what a user of the library will see differently under 
 
 ## Unreleased
 
+- New contract: `ComparatorContract` (`contract.comparator`), with `CompareContract`, `ReversedContract`, `ThenComparingContract` and `NullsFirstAndNullsLastContract`, tests any `Comparator`:
+  - that `compare` follows the order of the provider's samples, is sign-symmetric and transitive, and compares alike elements that compare as equal;
+  - that it throws `NullPointerException` for a null argument, unless the comparator permits nulls, when the laws are tested with `null` among the samples;
+  - that it is consistent with `equals`;
+  - that `reversed()` reverses it, and that each `thenComparing` form breaks its ties and throws `NullPointerException` for a null argument;
+  - that the JDK's `nullsFirst` and `nullsLast` wrappers made from it, with their `reversed()` and `thenComparing`, put null first or last.
+
+  A comparator that is not consistent with `equals` (`String.CASE_INSENSITIVE_ORDER`) overrides `comparatorIsConsistentWithEquals()` to return `false`; one that permits nulls overrides `comparatorPermitsNulls()` to return `true`. A test class supplies the comparator and ordered samples through the new `ComparatorProvider` (`provider`), in tiers that compare as equal, made by `ComparatorProviders` (`of`, `ascending`, `naturalOrder`, `reverseOrder`, `caseInsensitiveOrder()`), and the new `ComparatorProviderSupport` and `ComparatorContractSupport` (`contract.support`). `ClassCastException` and `Comparator.equals` are not tested. It is not the `ComparatorContract` of `contract.sortedmap` or `contract.sortedset`, which keep their names (#42).
+- New breakable: `BreakableComparator`, a breakable `Comparator` over a delegate, with 18 breaks (`COMPARE_IS_CYCLIC`, `COMPARE_BREAKS_TIES_BY_IDENTITY`, `REVERSED_KEEPS_THE_ORDER`, `THEN_COMPARING_CONSULTS_THE_OTHER_FIRST`, `THEN_COMPARING_INT_IGNORES_THE_KEY` and the others) (#42).
+
 ## 0.1.3 — 2026-11-14
 
 Commit `8906998`. Full verify: Tests run: 8552, Failures: 0, Errors: 0.

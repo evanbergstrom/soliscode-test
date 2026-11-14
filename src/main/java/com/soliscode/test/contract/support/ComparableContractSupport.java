@@ -18,8 +18,6 @@ package com.soliscode.test.contract.support;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.opentest4j.AssertionFailedError;
-
 /// The base interface of the comparable contracts: it gives them the ordered samples, checked, and whether the class
 /// under test claims that its natural ordering is consistent with `equals`.
 ///
@@ -42,24 +40,7 @@ public interface ComparableContractSupport<T extends Comparable<? super T>> exte
     ///
     /// @return the tiers, lowest first
     default List<List<T>> sampleTiers() {
-        List<List<T>> tiers = comparableProvider().ascendingSamples();
-        if (tiers == null || tiers.isEmpty()) {
-            throw new AssertionFailedError("the comparable provider is at fault: it gave no tiers of samples");
-        }
-        for (int i = 0; i < tiers.size(); i++) {
-            List<T> tier = tiers.get(i);
-            if (tier == null || tier.isEmpty()) {
-                throw new AssertionFailedError("the comparable provider is at fault: its tier " + i
-                        + " is null or empty");
-            }
-            for (int j = 0; j < tier.size(); j++) {
-                if (tier.get(j) == null) {
-                    throw new AssertionFailedError("the comparable provider is at fault: sample " + j
-                            + " of its tier " + i + " is null");
-                }
-            }
-        }
-        return tiers;
+        return SampleTiers.checked(comparableProvider().ascendingSamples(), "comparable");
     }
 
     /// Returns the samples of every tier, lowest first, each with its tier and index.

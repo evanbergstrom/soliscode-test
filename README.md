@@ -30,6 +30,7 @@ This library provides support for:\
 > This library is a work in progress. It has contracts for these interfaces:
 > - `Object` (`equals`, `hashCode`, `toString`) and `Serializable`
 > - `Comparable`
+> - `Comparator`
 > - `AutoCloseable`
 >   - `Closeable`
 > - `Iterable` (with `Iterator` and `Spliterator`)
