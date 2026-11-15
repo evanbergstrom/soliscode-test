@@ -49,6 +49,7 @@ import com.soliscode.test.breakable.BreakableComparator;
 import com.soliscode.test.breakable.BreakableConcurrentMap;
 import com.soliscode.test.breakable.BreakableConcurrentNavigableMap;
 import com.soliscode.test.breakable.BreakableDeque;
+import com.soliscode.test.breakable.BreakableExecutorService;
 import com.soliscode.test.breakable.BreakableFuture;
 import com.soliscode.test.breakable.BreakableIterable;
 import com.soliscode.test.breakable.BreakableIterator;
@@ -89,6 +90,8 @@ import com.soliscode.test.contract.concurrentmap.ThreadSafeConcurrentMapContract
 import com.soliscode.test.contract.concurrentnavigablemap.ConcurrentNavigableMapContract;
 import com.soliscode.test.contract.deque.DequeContract;
 import com.soliscode.test.contract.deque.DequeMethods;
+import com.soliscode.test.contract.executorservice.ExecutorServiceContract;
+import com.soliscode.test.contract.executorservice.ThreadSafeExecutorServiceContract;
 import com.soliscode.test.contract.future.FutureContract;
 import com.soliscode.test.contract.future.ThreadSafeFutureContract;
 import com.soliscode.test.contract.iterable.IterableContract;
@@ -132,9 +135,10 @@ import com.soliscode.test.provider.MapProvider;
 import com.soliscode.test.provider.MapProviders;
 import com.soliscode.test.provider.SpliteratorProviders;
 
+import static com.soliscode.test.contract.coverage.ContractRuns.eachFails;
 import static com.soliscode.test.contract.coverage.ContractRuns.fails;
+import static com.soliscode.test.contract.coverage.ContractRuns.named;
 import static com.soliscode.test.contract.coverage.ContractRuns.passes;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.DynamicContainer.dynamicContainer;
@@ -261,9 +265,10 @@ public class ContractCoverageTest {
         boolean transferQueueBreak = key.startsWith(BreakableTransferQueue.class.getSimpleName() + ".");
         boolean concurrentMapBreak = key.startsWith(BreakableConcurrentMap.class.getSimpleName() + ".");
         boolean futureBreak = key.startsWith(BreakableFuture.class.getSimpleName() + ".");
-        if (field.endsWith(THREAD_SAFETY_BREAK) && futureBreak) {
-            return contract == ThreadSafeFutureContract.class ? null
-                    : "a thread-safety break: ThreadSafeFutureContract checks it";
+        boolean executorBreak = key.startsWith(BreakableExecutorService.class.getSimpleName() + ".");
+        if (field.endsWith(THREAD_SAFETY_BREAK) && (futureBreak || executorBreak)) {
+            Class<?> own = futureBreak ? ThreadSafeFutureContract.class : ThreadSafeExecutorServiceContract.class;
+            return contract == own ? null : "a thread-safety break: " + own.getSimpleName() + " checks it";
         }
         if (field.endsWith(THREAD_SAFETY_BREAK) && contract == ThreadSafeConcurrentMapContract.class) {
             return concurrentMapBreak ? null : "not a fault for a BreakableConcurrentMap: its store is a concurrent "
@@ -490,10 +495,9 @@ public class ContractCoverageTest {
     @TestFactory
     @DisplayName("FutureContract")
     Stream<DynamicNode> futureContract() {
-        List<Class<?>> sources = ContractRuns.withSuperclasses(BreakableFuture.class);
         return Stream.concat(coverage(FutureContract.class, "CompletableFuture", FutureSubjects::completableFutures,
-                sources, (key, b) -> () -> FutureSubjects.broken(b)), FutureSubjects.moreChecks(
-                        k -> uncheckedReason(FutureContract.class, k) == null));
+                ContractRuns.withSuperclasses(BreakableFuture.class), (key, b) -> () -> FutureSubjects.broken(b)),
+                FutureSubjects.moreChecks(k -> uncheckedReason(FutureContract.class, k) == null));
     }
 
     @TestFactory
@@ -502,6 +506,20 @@ public class ContractCoverageTest {
     Stream<DynamicNode> threadSafeFutureContract() {
         return FutureSubjects.threadSafeChecks(k -> k.endsWith(THREAD_SAFETY_BREAK)
                 && uncheckedReason(ThreadSafeFutureContract.class, k) == null);
+    }
+
+    @TestFactory
+    @DisplayName("ExecutorServiceContract")
+    Stream<DynamicNode> executorServiceContract() {
+        return ExecutorServiceSubjects.checks(k -> uncheckedReason(ExecutorServiceContract.class, k) == null);
+    }
+
+    @TestFactory
+    @VerySlow
+    @DisplayName("ThreadSafeExecutorServiceContract")
+    Stream<DynamicNode> threadSafeExecutorServiceContract() {
+        return ExecutorServiceSubjects.threadSafeChecks(k -> k.endsWith(THREAD_SAFETY_BREAK)
+                && uncheckedReason(ThreadSafeExecutorServiceContract.class, k) == null);
     }
 
     @TestFactory
@@ -619,20 +637,6 @@ public class ContractCoverageTest {
                         () -> new OptedOutConcurrentNavigableMap(navigableMapBuilder(b)), map)));
         return Stream.of(dynamicContainer("The concurrent contracts' weak-consistency tests",
                 Stream.of(dequeFails, mapFails, optedOut).flatMap(n -> n)));
-    }
-
-    private static List<Method> named(final Class<?> contract, final String... names) {
-        List<Method> methods = ContractRuns.testMethods(contract, false).stream()
-                .filter(m -> List.of(names).contains(m.getName())).toList();
-        assertEquals(names.length, methods.size(), () -> "test methods of " + contract.getSimpleName() + " missing: "
-                + List.of(names) + " against " + methods);
-        return methods;
-    }
-
-    private static DynamicNode eachFails(final Method method, final Break b, final Supplier<?> contract) {
-        return dynamicTest(method.getName() + " fails with " + b.description(), () -> assertFalse(
-                ContractRuns.failures(contract, List.of(method)).isEmpty(),
-                () -> method.getName() + " passes with the break: it cannot see it"));
     }
 
     @TestFactory

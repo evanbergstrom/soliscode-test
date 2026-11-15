@@ -23,6 +23,7 @@ import org.junit.platform.commons.support.AnnotationSupport;
 import com.soliscode.test.annotations.ConcurrencyTest;
 import com.soliscode.test.breakable.Break;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
@@ -196,6 +197,31 @@ final class ContractRuns {
             assertFalse(anyHang(failures),
                     () -> "the contract hangs with " + breakKey + ":\n  " + String.join("\n  ", failures));
         });
+    }
+
+    /// The test methods of a contract with the given names, checked: each name must be one.
+    ///
+    /// @param contract the contract
+    /// @param names the names of its test methods
+    /// @return the test methods
+    static List<Method> named(final Class<?> contract, final String... names) {
+        List<Method> methods = testMethods(contract, false).stream()
+                .filter(m -> List.of(names).contains(m.getName())).toList();
+        assertEquals(names.length, methods.size(), () -> "test methods of " + contract.getSimpleName() + " missing: "
+                + List.of(names) + " against " + methods);
+        return methods;
+    }
+
+    /// A check that one test method fails with a break.
+    ///
+    /// @param method the test method
+    /// @param b the break, for the check's name
+    /// @param contract creates the contract instance, on the broken subject
+    /// @return the check
+    static DynamicNode eachFails(final Method method, final Break b, final Supplier<?> contract) {
+        return dynamicTest(method.getName() + " fails with " + b.description(), () -> assertFalse(
+                failures(contract, List.of(method)).isEmpty(),
+                () -> method.getName() + " passes with the break: it cannot see it"));
     }
 
     /// Whether any of the failures is a test method that did not end.

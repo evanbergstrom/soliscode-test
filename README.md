@@ -33,6 +33,7 @@ This library provides support for:\
 > - `Comparator`
 > - `CharSequence`
 > - `Future`, and thread-safe futures
+> - `ExecutorService`, and thread-safe executors
 > - `AutoCloseable`
 >   - `Closeable`
 > - `Iterable` (with `Iterator` and `Spliterator`)
