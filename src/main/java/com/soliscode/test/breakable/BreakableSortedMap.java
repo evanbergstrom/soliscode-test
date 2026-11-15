@@ -82,6 +82,14 @@ import com.soliscode.test.contract.sortedmap.SortedMapMethods;
 /// @param <K> the type of keys maintained by this map
 /// @param <V> the type of mapped values
 /// @author evanbergstrom
+/// ## Thread Safety
+///
+/// Built with `setSafe(true)`, the map runs each of its methods under a lock of its own, and so do its views (#52):
+/// `subMap`, `headMap` and `tailMap` return maps of this map's kind over the store's views that share this map's lock,
+/// as `Collections.synchronizedSortedMap`'s views synchronize on the map, with this map's method statuses and none of
+/// its breaks, since a break describes a method of this map. A traversal of an iterator or spliterator is not made
+/// under the lock. Built otherwise, the map and its views take no lock.
+///
 /// @since 1.0
 /// @see BreakableMap
 /// @see SortedMap
@@ -497,23 +505,26 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
     @SuppressWarnings("unchecked")
     @Override
     public @Nullable Comparator<? super K> comparator() {
-        if (!supportsMethod(SortedMapMethods.COMPARATOR)) {
-            throw new UnsupportedOperationException("comparator() method is not supported");
-        }
-        if (hasBreak(COMPARATOR_ALWAYS_RETURNS_NULL)) {
-            return null;
-        }
-        if (hasBreak(COMPARATOR_THROWS_EXCEPTION)) {
-            throw new ClassCastException("Comparator access failed due to break");
-        }
-        if (hasBreak(COMPARATOR_ALWAYS_RETURNS_NATURAL_COMPARATOR) && !sortedStore().isEmpty()) {
-            K key = sortedStore().firstKey();
-            if (key instanceof Comparable<?>) {
-                // unchecked cast
-                return (Comparator<? super K>) Comparator.naturalOrder();
+        return getWithSafety(() -> {
+            if (!supportsMethod(SortedMapMethods.COMPARATOR)) {
+                throw new UnsupportedOperationException("comparator() method is not supported");
             }
-        }
-        return sortedStore().comparator();
+            if (hasBreak(COMPARATOR_ALWAYS_RETURNS_NULL)) {
+                return null;
+            }
+            if (hasBreak(COMPARATOR_THROWS_EXCEPTION)) {
+                throw new ClassCastException("Comparator access failed due to break");
+            }
+            if (hasBreak(COMPARATOR_ALWAYS_RETURNS_NATURAL_COMPARATOR) && !sortedStore().isEmpty()) {
+                K key = sortedStore().firstKey();
+                if (key instanceof Comparable<?>) {
+                    // unchecked cast
+                    return (Comparator<? super K>) Comparator.naturalOrder();
+                }
+            }
+            return sortedStore().comparator();
+
+        });
     }
 
     /// {@inheritDoc}
@@ -542,20 +553,22 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
     /// @throws NoSuchElementException if this map is empty or due to break
     @Override
     public K firstKey() {
-        if (!supportsMethod(SortedMapMethods.FIRST_KEY)) {
-            throw new UnsupportedOperationException("firstKey() method is not supported");
-        }
+        return getWithSafety(() -> {
+            if (!supportsMethod(SortedMapMethods.FIRST_KEY)) {
+                throw new UnsupportedOperationException("firstKey() method is not supported");
+            }
 
-        if (hasBreak(FIRST_KEY_THROWS_EXCEPTION)) {
-            throw new NoSuchElementException("First key access failed due to break");
-        }
+            if (hasBreak(FIRST_KEY_THROWS_EXCEPTION)) {
+                throw new NoSuchElementException("First key access failed due to break");
+            }
 
-        if (hasBreak(FIRST_KEY_RETURNS_RANDOM_KEY) && sortedStore().size() > 1) {
-            // Return another key than the first: the last.
-            return sortedStore().lastKey();
-        }
+            if (hasBreak(FIRST_KEY_RETURNS_RANDOM_KEY) && sortedStore().size() > 1) {
+                // Return another key than the first: the last.
+                return sortedStore().lastKey();
+            }
 
-        return sortedStore().firstKey();
+            return sortedStore().firstKey();
+        });
     }
 
     /// {@inheritDoc}
@@ -584,20 +597,22 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
     /// @throws NoSuchElementException if this map is empty or due to break
     @Override
     public K lastKey() {
-        if (!supportsMethod(SortedMapMethods.LAST_KEY)) {
-            throw new UnsupportedOperationException("lastKey() method is not supported");
-        }
+        return getWithSafety(() -> {
+            if (!supportsMethod(SortedMapMethods.LAST_KEY)) {
+                throw new UnsupportedOperationException("lastKey() method is not supported");
+            }
 
-        if (hasBreak(LAST_KEY_THROWS_EXCEPTION)) {
-            throw new NoSuchElementException("Last key access failed due to break");
-        }
+            if (hasBreak(LAST_KEY_THROWS_EXCEPTION)) {
+                throw new NoSuchElementException("Last key access failed due to break");
+            }
 
-        if (hasBreak(LAST_KEY_RETURNS_RANDOM_KEY) && !sortedStore().isEmpty()) {
-            // Return an arbitrary key instead of the last
-            return sortedStore().keySet().iterator().next();
-        }
+            if (hasBreak(LAST_KEY_RETURNS_RANDOM_KEY) && !sortedStore().isEmpty()) {
+                // Return an arbitrary key instead of the last
+                return sortedStore().keySet().iterator().next();
+            }
 
-        return sortedStore().lastKey();
+            return sortedStore().lastKey();
+        });
     }
 
     /// {@inheritDoc}
@@ -633,24 +648,26 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
     /// @throws NullPointerException if toKey is null and this map does not permit null keys
     @Override
     public @Nullable SortedMap<K, V> headMap(final K toKey) {
-        if (!supportsMethod(SortedMapMethods.HEAD_MAP)) {
-            throw new UnsupportedOperationException("headMap() method is not supported");
-        }
+        return getWithSafety(() -> {
+            if (!supportsMethod(SortedMapMethods.HEAD_MAP)) {
+                throw new UnsupportedOperationException("headMap() method is not supported");
+            }
 
-        if (hasBreak(HEAD_MAP_RETURNS_EMPTY_MAP)) {
-            //noinspection SortedCollectionWithNonComparableKeys
-            return new TreeMap<>();
-        }
+            if (hasBreak(HEAD_MAP_RETURNS_EMPTY_MAP)) {
+                //noinspection SortedCollectionWithNonComparableKeys
+                return new TreeMap<>();
+            }
 
-        if (hasBreak(HEAD_MAP_RETURNS_NULL)) {
-            return null;
-        }
+            if (hasBreak(HEAD_MAP_RETURNS_NULL)) {
+                return null;
+            }
 
-        if (hasBreak(HEAD_MAP_THROWS_EXCEPTION)) {
-            throw new IllegalArgumentException("HeadMap creation failed due to break");
-        }
+            if (hasBreak(HEAD_MAP_THROWS_EXCEPTION)) {
+                throw new IllegalArgumentException("HeadMap creation failed due to break");
+            }
 
-        return sortedStore().headMap(toKey);
+            return view(sortedStore().headMap(toKey));
+        });
     }
 
     /// {@inheritDoc}
@@ -686,24 +703,26 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
     /// @throws NullPointerException if fromKey is null and this map does not permit null keys
     @Override
     public @Nullable SortedMap<K, V> tailMap(final K fromKey) {
-        if (!supportsMethod(SortedMapMethods.TAIL_MAP)) {
-            throw new UnsupportedOperationException("tailMap() method is not supported");
-        }
+        return getWithSafety(() -> {
+            if (!supportsMethod(SortedMapMethods.TAIL_MAP)) {
+                throw new UnsupportedOperationException("tailMap() method is not supported");
+            }
 
-        if (hasBreak(TAIL_MAP_RETURNS_EMPTY_MAP)) {
-            //noinspection SortedCollectionWithNonComparableKeys
-            return new TreeMap<>();
-        }
+            if (hasBreak(TAIL_MAP_RETURNS_EMPTY_MAP)) {
+                //noinspection SortedCollectionWithNonComparableKeys
+                return new TreeMap<>();
+            }
 
-        if (hasBreak(TAIL_MAP_RETURNS_NULL)) {
-            return null;
-        }
+            if (hasBreak(TAIL_MAP_RETURNS_NULL)) {
+                return null;
+            }
 
-        if (hasBreak(TAIL_MAP_THROWS_EXCEPTION)) {
-            throw new IllegalArgumentException("TailMap creation failed due to break");
-        }
+            if (hasBreak(TAIL_MAP_THROWS_EXCEPTION)) {
+                throw new IllegalArgumentException("TailMap creation failed due to break");
+            }
 
-        return sortedStore().tailMap(fromKey);
+            return view(sortedStore().tailMap(fromKey));
+        });
     }
 
     /// {@inheritDoc}
@@ -742,24 +761,37 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
     /// @throws NullPointerException if fromKey or toKey is null and this map does not permit null keys
     @Override
     public @Nullable SortedMap<K, V> subMap(final K fromKey, final K toKey) {
-        if (!supportsMethod(SortedMapMethods.SUB_MAP)) {
-            throw new UnsupportedOperationException("subMap() method is not supported");
-        }
+        return getWithSafety(() -> {
+            if (!supportsMethod(SortedMapMethods.SUB_MAP)) {
+                throw new UnsupportedOperationException("subMap() method is not supported");
+            }
 
-        if (hasBreak(SUB_MAP_RETURNS_EMPTY_MAP)) {
-            //noinspection SortedCollectionWithNonComparableKeys
-            return new TreeMap<>();
-        }
+            if (hasBreak(SUB_MAP_RETURNS_EMPTY_MAP)) {
+                //noinspection SortedCollectionWithNonComparableKeys
+                return new TreeMap<>();
+            }
 
-        if (hasBreak(SUB_MAP_RETURNS_NULL)) {
-            return null;
-        }
+            if (hasBreak(SUB_MAP_RETURNS_NULL)) {
+                return null;
+            }
 
-        if (hasBreak(SUB_MAP_THROWS_EXCEPTION)) {
-            throw new IllegalArgumentException("SubMap creation failed due to break");
-        }
+            if (hasBreak(SUB_MAP_THROWS_EXCEPTION)) {
+                throw new IllegalArgumentException("SubMap creation failed due to break");
+            }
 
-        return sortedStore().subMap(fromKey, toKey);
+            return view(sortedStore().subMap(fromKey, toKey));
+        });
+    }
+
+    /// Returns a view of this map over a view of its store: a map of this map's kind, with its method statuses and
+    /// permits and none of its breaks, since a break describes a method of this map, that shares its lock, as
+    /// `Collections.synchronizedSortedMap` synchronizes a view on the map's lock (#52).
+    ///
+    /// @param view the store's view
+    /// @return the view
+    SortedMap<K, V> view(final SortedMap<K, V> view) {
+        return sharingLockOf(
+                new BreakableSortedMap<K, V>(view, DEFAULT_BREAKS, methodStatuses(), permits(), false), this);
     }
 
     // ========== Builder Pattern ==========

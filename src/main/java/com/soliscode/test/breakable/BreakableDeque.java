@@ -153,10 +153,10 @@ import com.soliscode.test.provider.ObjectProvider;
 ///
 /// ## Thread Safety
 ///
-/// Like its parent classes, BreakableDeque is not thread-safe in terms of break configuration.
-/// The underlying Deque implementation provides the thread safety for normal operations,
-/// but break checking adds additional complexity that requires external synchronization for
-/// concurrent break modifications.
+/// Built with `setSafe(true)`, the deque runs each of its methods under a lock of its own (#52), and so does
+/// `reversed()`, the JDK's view over this deque's own methods. A traversal of an iterator is not made under the lock.
+/// Built otherwise, it takes no lock. Its breaks and method statuses are set before it is shared, and are not
+/// synchronized. A `BreakableBlockingDeque` takes no lock: its store is thread safe.
 ///
 /// ## Performance Considerations
 ///
@@ -897,22 +897,24 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Throws UnsupportedOperationException if the method is not supported
     @Override
     public boolean offerFirst(final E e) {
-        checkMethodSupport(DequeMethods.OFFER_FIRST);
+        return getWithSafety(() -> {
+            checkMethodSupport(DequeMethods.OFFER_FIRST);
 
-        if (hasBreak(OFFER_FIRST_DOES_NOT_ADD_ELEMENT)) {
+            if (hasBreak(OFFER_FIRST_DOES_NOT_ADD_ELEMENT)) {
+                checkNewElement(e);
+                return true; // Return true but don't actually add the element
+            }
+
+            // Add the element first
             checkNewElement(e);
-            return true; // Return true but don't actually add the element
-        }
+            boolean result = deque.offerFirst(e);
 
-        // Add the element first
-        checkNewElement(e);
-        boolean result = deque.offerFirst(e);
+            if (hasBreak(OFFER_FIRST_ALWAYS_RETURNS_FALSE)) {
+                return false;
+            }
 
-        if (hasBreak(OFFER_FIRST_ALWAYS_RETURNS_FALSE)) {
-            return false;
-        }
-
-        return result;
+            return result;
+        });
     }
 
     /// {@inheritDoc}
@@ -929,22 +931,24 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Throws UnsupportedOperationException if the method is not supported
     @Override
     public boolean offerLast(final E e) {
-        checkMethodSupport(DequeMethods.OFFER_LAST);
+        return getWithSafety(() -> {
+            checkMethodSupport(DequeMethods.OFFER_LAST);
 
-        if (hasBreak(OFFER_LAST_DOES_NOT_ADD_ELEMENT)) {
+            if (hasBreak(OFFER_LAST_DOES_NOT_ADD_ELEMENT)) {
+                checkNewElement(e);
+                return true; // Return true but don't add the element
+            }
+
+            // Add the element first
             checkNewElement(e);
-            return true; // Return true but don't add the element
-        }
+            boolean result = deque.offerLast(e);
 
-        // Add the element first
-        checkNewElement(e);
-        boolean result = deque.offerLast(e);
+            if (hasBreak(OFFER_LAST_ALWAYS_RETURNS_FALSE)) {
+                return false;
+            }
 
-        if (hasBreak(OFFER_LAST_ALWAYS_RETURNS_FALSE)) {
-            return false;
-        }
-
-        return result;
+            return result;
+        });
     }
 
     /// {@inheritDoc}
@@ -960,17 +964,19 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Throws UnsupportedOperationException if the method is not supported
     @Override
     public @Nullable E pollFirst() {
-        checkMethodSupport(DequeMethods.POLL_FIRST);
+        return getWithSafety(() -> {
+            checkMethodSupport(DequeMethods.POLL_FIRST);
 
-        if (hasBreak(POLL_FIRST_ALWAYS_RETURNS_NULL)) {
-            return null;
-        }
+            if (hasBreak(POLL_FIRST_ALWAYS_RETURNS_NULL)) {
+                return null;
+            }
 
-        if (hasBreak(POLL_FIRST_DOES_NOT_REMOVE_ELEMENT)) {
-            return deque.peekFirst(); // Return element but don't remove it
-        }
+            if (hasBreak(POLL_FIRST_DOES_NOT_REMOVE_ELEMENT)) {
+                return deque.peekFirst(); // Return element but don't remove it
+            }
 
-        return deque.pollFirst();
+            return deque.pollFirst();
+        });
     }
 
     /// {@inheritDoc}
@@ -986,17 +992,19 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Throws UnsupportedOperationException if the method is not supported
     @Override
     public @Nullable E pollLast() {
-        checkMethodSupport(DequeMethods.POLL_LAST);
+        return getWithSafety(() -> {
+            checkMethodSupport(DequeMethods.POLL_LAST);
 
-        if (hasBreak(POLL_LAST_ALWAYS_RETURNS_NULL)) {
-            return null;
-        }
+            if (hasBreak(POLL_LAST_ALWAYS_RETURNS_NULL)) {
+                return null;
+            }
 
-        if (hasBreak(POLL_LAST_DOES_NOT_REMOVE_ELEMENT)) {
-            return deque.peekLast(); // Return element but don't remove it
-        }
+            if (hasBreak(POLL_LAST_DOES_NOT_REMOVE_ELEMENT)) {
+                return deque.peekLast(); // Return element but don't remove it
+            }
 
-        return deque.pollLast();
+            return deque.pollLast();
+        });
     }
 
     /// {@inheritDoc}
@@ -1012,17 +1020,19 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Throws UnsupportedOperationException if the method is not supported
     @Override
     public @Nullable E peekFirst() {
-        checkMethodSupport(DequeMethods.PEEK_FIRST);
+        return getWithSafety(() -> {
+            checkMethodSupport(DequeMethods.PEEK_FIRST);
 
-        if (hasBreak(PEEK_FIRST_ALWAYS_RETURNS_NULL)) {
-            return null;
-        }
+            if (hasBreak(PEEK_FIRST_ALWAYS_RETURNS_NULL)) {
+                return null;
+            }
 
-        if (hasBreak(PEEK_FIRST_RETURNS_RANDOM_ELEMENT) && deque.size() > 1) {
-            return randomElementExcludingIndex(0);
-        }
+            if (hasBreak(PEEK_FIRST_RETURNS_RANDOM_ELEMENT) && deque.size() > 1) {
+                return randomElementExcludingIndex(0);
+            }
 
-        return deque.peekFirst();
+            return deque.peekFirst();
+        });
     }
 
     /// {@inheritDoc}
@@ -1038,17 +1048,19 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Throws UnsupportedOperationException if the method is not supported
     @Override
     public @Nullable E peekLast() {
-        checkMethodSupport(DequeMethods.PEEK_LAST);
+        return getWithSafety(() -> {
+            checkMethodSupport(DequeMethods.PEEK_LAST);
 
-        if (hasBreak(PEEK_LAST_ALWAYS_RETURNS_NULL)) {
-            return null;
-        }
+            if (hasBreak(PEEK_LAST_ALWAYS_RETURNS_NULL)) {
+                return null;
+            }
 
-        if (hasBreak(PEEK_LAST_RETURNS_RANDOM_ELEMENT) && !deque.isEmpty()) {
-            return randomElementExcludingIndex(size() - 1);
-        }
+            if (hasBreak(PEEK_LAST_RETURNS_RANDOM_ELEMENT) && !deque.isEmpty()) {
+                return randomElementExcludingIndex(size() - 1);
+            }
 
-        return deque.peekLast();
+            return deque.peekLast();
+        });
     }
 
     /// {@inheritDoc}
@@ -1064,17 +1076,19 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Throws UnsupportedOperationException if the method is not supported
     @Override
     public boolean removeFirstOccurrence(final Object o) {
-        checkMethodSupport(DequeMethods.REMOVE_FIRST_OCCURRENCES);
+        return getWithSafety(() -> {
+            checkMethodSupport(DequeMethods.REMOVE_FIRST_OCCURRENCES);
 
-        if (hasBreak(REMOVE_FIRST_OCCURRENCE_ALWAYS_RETURNS_FALSE)) {
-            return false;
-        }
+            if (hasBreak(REMOVE_FIRST_OCCURRENCE_ALWAYS_RETURNS_FALSE)) {
+                return false;
+            }
 
-        if (hasBreak(REMOVE_FIRST_OCCURRENCE_DOES_NOT_REMOVE)) {
-            return deque.contains(o); // Return true if found but don't actually remove
-        }
+            if (hasBreak(REMOVE_FIRST_OCCURRENCE_DOES_NOT_REMOVE)) {
+                return deque.contains(o); // Return true if found but don't actually remove
+            }
 
-        return deque.removeFirstOccurrence(o);
+            return deque.removeFirstOccurrence(o);
+        });
     }
 
     /// {@inheritDoc}
@@ -1090,17 +1104,19 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Throws UnsupportedOperationException if the method is not supported
     @Override
     public boolean removeLastOccurrence(final Object o) {
-        checkMethodSupport(DequeMethods.REMOVE_LAST_OCCURRENCES);
+        return getWithSafety(() -> {
+            checkMethodSupport(DequeMethods.REMOVE_LAST_OCCURRENCES);
 
-        if (hasBreak(REMOVE_LAST_OCCURRENCE_ALWAYS_RETURNS_FALSE)) {
-            return false;
-        }
+            if (hasBreak(REMOVE_LAST_OCCURRENCE_ALWAYS_RETURNS_FALSE)) {
+                return false;
+            }
 
-        if (hasBreak(REMOVE_LAST_OCCURRENCE_DOES_NOT_REMOVE)) {
-            return deque.contains(o); // Return true if found but don't actually remove
-        }
+            if (hasBreak(REMOVE_LAST_OCCURRENCE_DOES_NOT_REMOVE)) {
+                return deque.contains(o); // Return true if found but don't actually remove
+            }
 
-        return deque.removeLastOccurrence(o);
+            return deque.removeLastOccurrence(o);
+        });
     }
 
     /// {@inheritDoc}
@@ -1117,18 +1133,20 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - May throw IllegalStateException due to PUSH_THROWS_EXCEPTION break
     @Override
     public void push(final E e) {
-        checkMethodSupport(DequeMethods.PUSH);
-        checkNewElement(e);
+        runWithSafety(() -> {
+            checkMethodSupport(DequeMethods.PUSH);
+            checkNewElement(e);
 
-        if (hasBreak(PUSH_THROWS_EXCEPTION)) {
-            throw new IllegalStateException("Push operation failed due to break");
-        }
+            if (hasBreak(PUSH_THROWS_EXCEPTION)) {
+                throw new IllegalStateException("Push operation failed due to break");
+            }
 
-        if (hasBreak(PUSH_DOES_NOT_ADD_ELEMENT)) {
-            return; // Return without adding the element
-        }
+            if (hasBreak(PUSH_DOES_NOT_ADD_ELEMENT)) {
+                return; // Return without adding the element
+            }
 
-        deque.push(e);
+            deque.push(e);
+        });
     }
 
     /// {@inheritDoc}
@@ -1145,19 +1163,21 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - May throw IllegalStateException due to POP_THROWS_EXCEPTION break
     @Override
     public @Nullable E pop() {
-        if (!supportsMethod(DequeMethods.POP)) {
-            throw new UnsupportedOperationException("pop() method is not supported");
-        }
+        return getWithSafety(() -> {
+            if (!supportsMethod(DequeMethods.POP)) {
+                throw new UnsupportedOperationException("pop() method is not supported");
+            }
 
-        if (hasBreak(POP_THROWS_EXCEPTION)) {
-            throw new IllegalStateException("Pop operation failed due to break");
-        }
+            if (hasBreak(POP_THROWS_EXCEPTION)) {
+                throw new IllegalStateException("Pop operation failed due to break");
+            }
 
-        if (hasBreak(POP_ALWAYS_RETURNS_NULL)) {
-            return null; // Non-standard behavior for testing
-        }
+            if (hasBreak(POP_ALWAYS_RETURNS_NULL)) {
+                return null; // Non-standard behavior for testing
+            }
 
-        return deque.pop();
+            return deque.pop();
+        });
     }
 
     /// {@inheritDoc}
@@ -1209,30 +1229,32 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Throws NoSuchElementException if this deque is empty (or due to breaks)
     @Override
     public @Nullable E getFirst() {
-        if (!supportsMethod(SequencedCollectionMethods.GET_FIRST)) {
-            throw new UnsupportedOperationException("getFirst() method is not supported");
-        }
-
-        if (hasBreak(GET_FIRST_RETURNS_NULL)) {
-            return null; // Non-standard behavior for testing
-        }
-
-        if (hasBreak(GET_FIRST_ALWAYS_THROWS)) {
-            throw new NoSuchElementException("getFirst() failed due to break");
-        }
-
-        if (hasBreak(GET_FIRST_SKIPS_FIRST_ELEMENT)) {
-            Iterator<E> iter = deque.iterator();
-            if (iter.hasNext()) {
-                iter.next(); // Skip first element
-                if (iter.hasNext()) {
-                    return iter.next(); // Return second element
-                }
+        return getWithSafety(() -> {
+            if (!supportsMethod(SequencedCollectionMethods.GET_FIRST)) {
+                throw new UnsupportedOperationException("getFirst() method is not supported");
             }
-            throw new NoSuchElementException("No second element available");
-        }
 
-        return deque.getFirst();
+            if (hasBreak(GET_FIRST_RETURNS_NULL)) {
+                return null; // Non-standard behavior for testing
+            }
+
+            if (hasBreak(GET_FIRST_ALWAYS_THROWS)) {
+                throw new NoSuchElementException("getFirst() failed due to break");
+            }
+
+            if (hasBreak(GET_FIRST_SKIPS_FIRST_ELEMENT)) {
+                Iterator<E> iter = deque.iterator();
+                if (iter.hasNext()) {
+                    iter.next(); // Skip first element
+                    if (iter.hasNext()) {
+                        return iter.next(); // Return second element
+                    }
+                }
+                throw new NoSuchElementException("No second element available");
+            }
+
+            return deque.getFirst();
+        });
     }
 
     /// {@inheritDoc}
@@ -1251,30 +1273,32 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Throws NoSuchElementException if this deque is empty (or due to breaks)
     @Override
     public @Nullable E getLast() {
-        if (!supportsMethod(SequencedCollectionMethods.GET_LAST)) {
-            throw new UnsupportedOperationException("getLast() method is not supported");
-        }
-
-        if (hasBreak(GET_LAST_RETURNS_NULL)) {
-            return null; // Non-standard behavior for testing
-        }
-
-        if (hasBreak(GET_LAST_ALWAYS_THROWS)) {
-            throw new NoSuchElementException("getLast() failed due to break");
-        }
-
-        if (hasBreak(GET_LAST_SKIPS_LAST_ELEMENT)) {
-            Iterator<E> iter = deque.descendingIterator();
-            if (iter.hasNext()) {
-                iter.next(); // Skip last element
-                if (iter.hasNext()) {
-                    return iter.next(); // Return second-to-last element
-                }
+        return getWithSafety(() -> {
+            if (!supportsMethod(SequencedCollectionMethods.GET_LAST)) {
+                throw new UnsupportedOperationException("getLast() method is not supported");
             }
-            throw new NoSuchElementException("No second-to-last element available");
-        }
 
-        return deque.getLast();
+            if (hasBreak(GET_LAST_RETURNS_NULL)) {
+                return null; // Non-standard behavior for testing
+            }
+
+            if (hasBreak(GET_LAST_ALWAYS_THROWS)) {
+                throw new NoSuchElementException("getLast() failed due to break");
+            }
+
+            if (hasBreak(GET_LAST_SKIPS_LAST_ELEMENT)) {
+                Iterator<E> iter = deque.descendingIterator();
+                if (iter.hasNext()) {
+                    iter.next(); // Skip last element
+                    if (iter.hasNext()) {
+                        return iter.next(); // Return second-to-last element
+                    }
+                }
+                throw new NoSuchElementException("No second-to-last element available");
+            }
+
+            return deque.getLast();
+        });
     }
 
     /// {@inheritDoc}
@@ -1291,22 +1315,24 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Throws UnsupportedOperationException if the method is not supported
     @Override
     public void addFirst(final E e) {
-        if (!supportsMethod(SequencedCollectionMethods.ADD_FIRST)) {
-            throw new UnsupportedOperationException("addFirst() method is not supported");
-        }
+        runWithSafety(() -> {
+            if (!supportsMethod(SequencedCollectionMethods.ADD_FIRST)) {
+                throw new UnsupportedOperationException("addFirst() method is not supported");
+            }
 
-        checkNewElement(e);
+            checkNewElement(e);
 
-        if (hasBreak(ADD_FIRST_DOES_NOT_ADD_ELEMENT)) {
-            return; // Return without adding the element
-        }
+            if (hasBreak(ADD_FIRST_DOES_NOT_ADD_ELEMENT)) {
+                return; // Return without adding the element
+            }
 
-        if (hasBreak(ADD_FIRST_ADDS_TO_END)) {
-            deque.addLast(e); // Add to end instead of beginning
-            return;
-        }
+            if (hasBreak(ADD_FIRST_ADDS_TO_END)) {
+                deque.addLast(e); // Add to end instead of beginning
+                return;
+            }
 
-        deque.addFirst(e);
+            deque.addFirst(e);
+        });
     }
 
     /// {@inheritDoc}
@@ -1323,22 +1349,24 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Throws UnsupportedOperationException if the method is not supported
     @Override
     public void addLast(final E e) {
-        if (!supportsMethod(SequencedCollectionMethods.ADD_LAST)) {
-            throw new UnsupportedOperationException("addLast() method is not supported");
-        }
+        runWithSafety(() -> {
+            if (!supportsMethod(SequencedCollectionMethods.ADD_LAST)) {
+                throw new UnsupportedOperationException("addLast() method is not supported");
+            }
 
-        checkNewElement(e);
+            checkNewElement(e);
 
-        if (hasBreak(ADD_LAST_DOES_NOT_ADD_ELEMENT)) {
-            return; // Return without adding the element
-        }
+            if (hasBreak(ADD_LAST_DOES_NOT_ADD_ELEMENT)) {
+                return; // Return without adding the element
+            }
 
-        if (hasBreak(ADD_LAST_ADDS_TO_FRONT)) {
-            deque.addFirst(e); // Add to beginning instead of end
-            return;
-        }
+            if (hasBreak(ADD_LAST_ADDS_TO_FRONT)) {
+                deque.addFirst(e); // Add to beginning instead of end
+                return;
+            }
 
-        deque.addLast(e);
+            deque.addLast(e);
+        });
     }
 
     /// {@inheritDoc}
@@ -1357,23 +1385,25 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Throws NoSuchElementException if this deque is empty (or due to breaks)
     @Override
     public @Nullable E removeFirst() {
-        if (!supportsMethod(SequencedCollectionMethods.REMOVE_FIRST)) {
-            throw new UnsupportedOperationException("removeFirst() method is not supported");
-        }
+        return getWithSafety(() -> {
+            if (!supportsMethod(SequencedCollectionMethods.REMOVE_FIRST)) {
+                throw new UnsupportedOperationException("removeFirst() method is not supported");
+            }
 
-        if (hasBreak(REMOVE_FIRST_DOES_NOT_REMOVE_ELEMENT)) {
-            return deque.getFirst(); // Return element but don't remove it
-        }
+            if (hasBreak(REMOVE_FIRST_DOES_NOT_REMOVE_ELEMENT)) {
+                return deque.getFirst(); // Return element but don't remove it
+            }
 
-        if (hasBreak(REMOVE_FIRST_RETURNS_NULL)) {
-            return null; // Non-standard behavior for testing
-        }
+            if (hasBreak(REMOVE_FIRST_RETURNS_NULL)) {
+                return null; // Non-standard behavior for testing
+            }
 
-        if (hasBreak(REMOVE_FIRST_ALWAYS_THROWS)) {
-            throw new NoSuchElementException("removeFirst() failed due to break");
-        }
+            if (hasBreak(REMOVE_FIRST_ALWAYS_THROWS)) {
+                throw new NoSuchElementException("removeFirst() failed due to break");
+            }
 
-        return deque.removeFirst();
+            return deque.removeFirst();
+        });
     }
 
     /// {@inheritDoc}
@@ -1392,23 +1422,25 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// - Throws NoSuchElementException if this deque is empty (or due to breaks)
     @Override
     public @Nullable E removeLast() {
-        if (!supportsMethod(SequencedCollectionMethods.REMOVE_LAST)) {
-            throw new UnsupportedOperationException("removeLast() method is not supported");
-        }
+        return getWithSafety(() -> {
+            if (!supportsMethod(SequencedCollectionMethods.REMOVE_LAST)) {
+                throw new UnsupportedOperationException("removeLast() method is not supported");
+            }
 
-        if (hasBreak(REMOVE_LAST_DOES_NOT_REMOVE_ELEMENT)) {
-            return deque.getLast(); // Return element but don't remove it
-        }
+            if (hasBreak(REMOVE_LAST_DOES_NOT_REMOVE_ELEMENT)) {
+                return deque.getLast(); // Return element but don't remove it
+            }
 
-        if (hasBreak(REMOVE_LAST_RETURNS_NULL)) {
-            return null; // Non-standard behavior for testing
-        }
+            if (hasBreak(REMOVE_LAST_RETURNS_NULL)) {
+                return null; // Non-standard behavior for testing
+            }
 
-        if (hasBreak(REMOVE_LAST_ALWAYS_THROWS)) {
-            throw new NoSuchElementException("removeLast() failed due to break");
-        }
+            if (hasBreak(REMOVE_LAST_ALWAYS_THROWS)) {
+                throw new NoSuchElementException("removeLast() failed due to break");
+            }
 
-        return deque.removeLast();
+            return deque.removeLast();
+        });
     }
 
     // ========== Builder Class ==========

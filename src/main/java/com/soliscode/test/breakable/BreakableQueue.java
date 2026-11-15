@@ -116,8 +116,9 @@ import com.soliscode.test.provider.ObjectProvider;
 ///
 /// ## Thread Safety
 ///
-/// Like its parent classes, `BreakableQueue` is not thread-safe. External synchronization
-/// is required for concurrent access, particularly when queue operations are involved.
+/// Built with `setSafe(true)`, the queue runs each of its methods under a lock of its own (#52), as
+/// [BreakableCollection]'s do; built otherwise, it takes no lock. A `BreakableBlockingQueue` takes no lock: its store
+/// is thread safe.
 ///
 /// ## Performance Considerations
 ///
@@ -543,9 +544,6 @@ public class BreakableQueue<E> extends BreakableCollection<E> implements Queue<E
     /// **Performance Characteristics:**
     /// Delegates to the underlying `Queue`, typically O(1) for most implementations.
     ///
-    /// **Thread Safety:**
-    /// Not thread-safe.
-    ///
     /// @param e the element to add
     /// @return `true` if the element was added to this queue, else `false`
     /// @throws UnsupportedOperationException if the `offer()` method is not supported
@@ -557,31 +555,33 @@ public class BreakableQueue<E> extends BreakableCollection<E> implements Queue<E
     /// @since 1.0
     @Override
     public boolean offer(final E e) {
-        checkMethodSupport(QueueMethods.OFFER);
-        if (e == null && !permitsNulls()) {
-            throw new NullPointerException("offer(E): this queue does not permit null elements");
-        }
+        return getWithSafety(() -> {
+            checkMethodSupport(QueueMethods.OFFER);
+            if (e == null && !permitsNulls()) {
+                throw new NullPointerException("offer(E): this queue does not permit null elements");
+            }
 
-        if (hasBreak(OFFER_THROWS_EXCEPTION)) {
-            throw new IllegalStateException("Offer operation failed due to break");
-        }
+            if (hasBreak(OFFER_THROWS_EXCEPTION)) {
+                throw new IllegalStateException("Offer operation failed due to break");
+            }
 
-        if (hasBreak(OFFER_DOES_NOT_ADD_ELEMENT)) {
-            return true; // Return true but don't actually add the element
-        }
+            if (hasBreak(OFFER_DOES_NOT_ADD_ELEMENT)) {
+                return true; // Return true but don't actually add the element
+            }
 
-        // Add the element first
-        boolean result = queue.offer(e);
+            // Add the element first
+            boolean result = queue.offer(e);
 
-        if (hasBreak(OFFER_ALWAYS_RETURNS_FALSE)) {
-            return false;
-        }
+            if (hasBreak(OFFER_ALWAYS_RETURNS_FALSE)) {
+                return false;
+            }
 
-        if (hasBreak(OFFER_ALWAYS_RETURNS_TRUE)) {
-            return true;
-        }
+            if (hasBreak(OFFER_ALWAYS_RETURNS_TRUE)) {
+                return true;
+            }
 
-        return result;
+            return result;
+        });
     }
 
     /// Retrieves and removes the head of this queue, or returns `null` if this queue is empty.
@@ -596,34 +596,33 @@ public class BreakableQueue<E> extends BreakableCollection<E> implements Queue<E
     /// **Performance Characteristics:**
     /// Delegates to the underlying `Queue`, typically O(1) for most implementations.
     ///
-    /// **Thread Safety:**
-    /// Not thread-safe.
-    ///
     /// @return the head of this queue, or `null` if this queue is empty
     /// @throws UnsupportedOperationException if the `poll()` method is not supported
     /// @throws NoSuchElementException if `POLL_THROWS_EXCEPTION` break is applied
     /// @since 1.0
     @Override
     public @Nullable E poll() {
-        checkMethodSupport(QueueMethods.POLL);
+        return getWithSafety(() -> {
+            checkMethodSupport(QueueMethods.POLL);
 
-        if (hasBreak(POLL_ALWAYS_RETURNS_NULL)) {
-            return null;
-        }
+            if (hasBreak(POLL_ALWAYS_RETURNS_NULL)) {
+                return null;
+            }
 
-        if (hasBreak(POLL_THROWS_EXCEPTION)) {
-            throw new NoSuchElementException("Poll operation failed due to break");
-        }
+            if (hasBreak(POLL_THROWS_EXCEPTION)) {
+                throw new NoSuchElementException("Poll operation failed due to break");
+            }
 
-        if (hasBreak(POLL_RETURNS_RANDOM_ELEMENT) && queue.size() > 1) {
-            return randomElementExcludingIndex(0);
-        }
+            if (hasBreak(POLL_RETURNS_RANDOM_ELEMENT) && queue.size() > 1) {
+                return randomElementExcludingIndex(0);
+            }
 
-        if (hasBreak(POLL_DOES_NOT_REMOVE_ELEMENT)) {
-            return queue.peek(); // Return head but don't remove
-        }
+            if (hasBreak(POLL_DOES_NOT_REMOVE_ELEMENT)) {
+                return queue.peek(); // Return head but don't remove
+            }
 
-        return queue.poll();
+            return queue.poll();
+        });
     }
 
     /// Retrieves, but does not remove, the head of this queue, or returns `null` if this queue is empty.
@@ -637,30 +636,29 @@ public class BreakableQueue<E> extends BreakableCollection<E> implements Queue<E
     /// **Performance Characteristics:**
     /// Delegates to the underlying `Queue`, typically O(1) for most implementations.
     ///
-    /// **Thread Safety:**
-    /// Not thread-safe.
-    ///
     /// @return the head of this queue, or `null` if this queue is empty
     /// @throws UnsupportedOperationException if the `peek()` method is not supported
     /// @throws NoSuchElementException if `PEEK_THROWS_EXCEPTION` break is applied
     /// @since 1.0
     @Override
     public @Nullable E peek() {
-        checkMethodSupport(QueueMethods.PEEK);
+        return getWithSafety(() -> {
+            checkMethodSupport(QueueMethods.PEEK);
 
-        if (hasBreak(PEEK_ALWAYS_RETURNS_NULL)) {
-            return null;
-        }
+            if (hasBreak(PEEK_ALWAYS_RETURNS_NULL)) {
+                return null;
+            }
 
-        if (hasBreak(PEEK_THROWS_EXCEPTION)) {
-            throw new NoSuchElementException("Peek operation failed due to break");
-        }
+            if (hasBreak(PEEK_THROWS_EXCEPTION)) {
+                throw new NoSuchElementException("Peek operation failed due to break");
+            }
 
-        if (hasBreak(PEEK_RETURNS_RANDOM_ELEMENT) && !queue.isEmpty()) {
-            return randomElementExcludingIndex(0);
-        }
+            if (hasBreak(PEEK_RETURNS_RANDOM_ELEMENT) && !queue.isEmpty()) {
+                return randomElementExcludingIndex(0);
+            }
 
-        return queue.peek();
+            return queue.peek();
+        });
     }
 
     /// Retrieves, but does not remove, the head of this queue. This method differs
@@ -674,9 +672,6 @@ public class BreakableQueue<E> extends BreakableCollection<E> implements Queue<E
     /// **Performance Characteristics:**
     /// Delegates to the underlying `Queue`, typically O(1) for most implementations.
     ///
-    /// **Thread Safety:**
-    /// Not thread-safe.
-    ///
     /// @return the head of this queue
     /// @throws UnsupportedOperationException if the `element()` method is not supported
     /// @throws NoSuchElementException if this queue is empty or due to `ELEMENT_THROWS_EXCEPTION` break
@@ -684,22 +679,24 @@ public class BreakableQueue<E> extends BreakableCollection<E> implements Queue<E
     @SuppressWarnings("unchecked")
     @Override
     public E element() {
-        checkMethodSupport(QueueMethods.ELEMENT);
+        return getWithSafety(() -> {
+            checkMethodSupport(QueueMethods.ELEMENT);
 
-        if (hasBreak(ELEMENT_THROWS_EXCEPTION)) {
-            throw new NoSuchElementException("Element access failed due to break");
-        }
-
-        if (hasBreak(ELEMENT_RETURNS_RANDOM_ELEMENT) && !queue.isEmpty()) {
-            Object[] elements = queue.toArray();
-            //noinspection ConstantValue
-            if (elements.length > 0) {
-                // unchecked cast
-                return (E) elements[Math.abs(randomInt()) % elements.length];
+            if (hasBreak(ELEMENT_THROWS_EXCEPTION)) {
+                throw new NoSuchElementException("Element access failed due to break");
             }
-        }
 
-        return queue.element();
+            if (hasBreak(ELEMENT_RETURNS_RANDOM_ELEMENT) && !queue.isEmpty()) {
+                Object[] elements = queue.toArray();
+                //noinspection ConstantValue
+                if (elements.length > 0) {
+                    // unchecked cast
+                    return (E) elements[Math.abs(randomInt()) % elements.length];
+                }
+            }
+
+            return queue.element();
+        });
     }
 
     /// Retrieves and removes the head of this queue. Unlike `poll()`, this method
@@ -714,9 +711,6 @@ public class BreakableQueue<E> extends BreakableCollection<E> implements Queue<E
     /// **Performance Characteristics:**
     /// Delegates to the underlying `Queue`, typically O(1) for most implementations.
     ///
-    /// **Thread Safety:**
-    /// Not thread-safe.
-    ///
     /// @return the head of this queue
     /// @throws UnsupportedOperationException if the `remove()` method is not supported
     /// @throws NoSuchElementException if this queue is empty (unless breaks modify behavior)
@@ -724,29 +718,31 @@ public class BreakableQueue<E> extends BreakableCollection<E> implements Queue<E
     /// @since 1.0
     @Override
     public @Nullable E remove() {
-        checkMethodSupport(QueueMethods.REMOVE);
+        return getWithSafety(() -> {
+            checkMethodSupport(QueueMethods.REMOVE);
 
-        if (hasBreak(REMOVE_THROWS_EXCEPTION)) {
-            throw new IllegalStateException("Remove operation failed due to break");
-        }
+            if (hasBreak(REMOVE_THROWS_EXCEPTION)) {
+                throw new IllegalStateException("Remove operation failed due to break");
+            }
 
-        if (hasBreak(REMOVE_ALWAYS_RETURNS_NULL)) {
-            return null; // Non-standard behavior for testing
-        }
+            if (hasBreak(REMOVE_ALWAYS_RETURNS_NULL)) {
+                return null; // Non-standard behavior for testing
+            }
 
-        if (hasBreak(REMOVE_DOES_NOT_REMOVE_ELEMENT)) {
-            E element = queue.peek();
+            if (hasBreak(REMOVE_DOES_NOT_REMOVE_ELEMENT)) {
+                E element = queue.peek();
+                if (element == null) {
+                    throw new NoSuchElementException("Queue is empty");
+                }
+                return element; // Return element but don't remove it
+            }
+
+            E element = queue.poll();
             if (element == null) {
                 throw new NoSuchElementException("Queue is empty");
             }
-            return element; // Return element but don't remove it
-        }
-
-        E element = queue.poll();
-        if (element == null) {
-            throw new NoSuchElementException("Queue is empty");
-        }
-        return element;
+            return element;
+        });
     }
 
     // ========== Builder Class ==========

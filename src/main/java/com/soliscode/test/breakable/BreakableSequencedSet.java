@@ -14,6 +14,7 @@ import org.jspecify.annotations.Nullable;
 
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.MethodStatus;
+import com.soliscode.test.contract.sequencedcollection.SequencedCollectionMethods;
 
 /// **Breakable SequencedSet Implementation for Testing**
 ///
@@ -75,7 +76,9 @@ import com.soliscode.test.MethodStatus;
 ///
 /// ## Thread Safety
 ///
-/// This class is not thread-safe. External synchronization is required for concurrent access.
+/// Built with `setSafe(true)`, the set runs each of its methods under a lock of its own, and so does `reversed()`, a
+/// set over the store's reversed view that shares this set's lock and has its method statuses and none of its breaks
+/// (#52). Built otherwise, the set and its view take no lock.
 ///
 /// @param <E> the type of elements maintained by this sequenced set
 /// @author evanbergstrom
@@ -143,17 +146,20 @@ public class BreakableSequencedSet<E> extends BreakableSet<E> implements Sequenc
     /// @return a reverse-ordered view of this set
     @Override
     public SequencedSet<E> reversed() {
-        if (hasBreak(BreakableSequencedCollection.REVERSED_DOES_NOT_REVERSE_COLLECTION)) {
-            return this;
-        }
-        if (hasBreak(BreakableSequencedCollection.REVERSED_MODIFIES_THE_COLLECTION)) {
-            SequencedSet<E> reversed = sequencedSet.reversed();
-            sequencedSet.clear();
-            sequencedSet.addAll(reversed);
-            return this;
-        }
-        return new BreakableSequencedSet<>(sequencedSet.reversed(), breaks(), methodStatuses(), characteristics(),
-                permits(), isSafe(), compatibleType());
+        return getWithSafety(() -> {
+            if (hasBreak(BreakableSequencedCollection.REVERSED_DOES_NOT_REVERSE_COLLECTION)) {
+                return this;
+            }
+            if (hasBreak(BreakableSequencedCollection.REVERSED_MODIFIES_THE_COLLECTION)) {
+                SequencedSet<E> reversed = sequencedSet.reversed();
+                sequencedSet.clear();
+                sequencedSet.addAll(reversed);
+                return this;
+            }
+            // A view: this set's statuses and lock, none of its breaks (#52).
+            return sharingLockOf(new BreakableSequencedSet<E>(sequencedSet.reversed(), DEFAULT_BREAKS, methodStatuses(),
+                    characteristics(), permits(), false, compatibleType()), this);
+        });
     }
 
     /// Adds an element as the first element of this set.
@@ -165,15 +171,18 @@ public class BreakableSequencedSet<E> extends BreakableSet<E> implements Sequenc
     /// @param e the element to add
     @Override
     public void addFirst(final E e) {
-        checkArgument(e);
-        if (hasBreak(BreakableSequencedCollection.ADD_FIRST_DOES_NOT_ADD_ELEMENT)) {
-            return;
-        }
-        if (hasBreak(BreakableSequencedCollection.ADD_FIRST_ADDS_TO_END)) {
-            addLast(e);
-            return;
-        }
-        sequencedSet.addFirst(e);
+        checkMethodSupport(SequencedCollectionMethods.ADD_FIRST);
+        runWithSafety(() -> {
+            checkArgument(e);
+            if (hasBreak(BreakableSequencedCollection.ADD_FIRST_DOES_NOT_ADD_ELEMENT)) {
+                return;
+            }
+            if (hasBreak(BreakableSequencedCollection.ADD_FIRST_ADDS_TO_END)) {
+                addLast(e);
+                return;
+            }
+            sequencedSet.addFirst(e);
+        });
     }
 
     /// Adds an element as the last element of this set.
@@ -185,15 +194,18 @@ public class BreakableSequencedSet<E> extends BreakableSet<E> implements Sequenc
     /// @param e the element to add
     @Override
     public void addLast(final E e) {
-        checkArgument(e);
-        if (hasBreak(BreakableSequencedCollection.ADD_LAST_DOES_NOT_ADD_ELEMENT)) {
-            return;
-        }
-        if (hasBreak(BreakableSequencedCollection.ADD_LAST_ADDS_TO_FRONT)) {
-            addFirst(e);
-            return;
-        }
-        sequencedSet.addLast(e);
+        checkMethodSupport(SequencedCollectionMethods.ADD_LAST);
+        runWithSafety(() -> {
+            checkArgument(e);
+            if (hasBreak(BreakableSequencedCollection.ADD_LAST_DOES_NOT_ADD_ELEMENT)) {
+                return;
+            }
+            if (hasBreak(BreakableSequencedCollection.ADD_LAST_ADDS_TO_FRONT)) {
+                addFirst(e);
+                return;
+            }
+            sequencedSet.addLast(e);
+        });
     }
 
     /// Gets the first element of this set.
@@ -207,22 +219,25 @@ public class BreakableSequencedSet<E> extends BreakableSet<E> implements Sequenc
     /// @throws NoSuchElementException if this set is empty (or if broken)
     @Override
     public @Nullable E getFirst() {
-        if (hasBreak(BreakableSequencedCollection.GET_FIRST_ALWAYS_THROWS)) {
-            throw new NoSuchElementException();
-        }
-        if (sequencedSet.isEmpty()) {
-            throw new NoSuchElementException();
-        }
-        if (hasBreak(BreakableSequencedCollection.GET_FIRST_RETURNS_NULL)) {
-            return null;
-        }
-        if (hasBreak(BreakableSequencedCollection.GET_FIRST_SKIPS_FIRST_ELEMENT)) {
-            if (sequencedSet.size() < 2) {
+        checkMethodSupport(SequencedCollectionMethods.GET_FIRST);
+        return getWithSafety(() -> {
+            if (hasBreak(BreakableSequencedCollection.GET_FIRST_ALWAYS_THROWS)) {
                 throw new NoSuchElementException();
             }
-            return new ArrayList<>(sequencedSet).get(1);
-        }
-        return sequencedSet.getFirst();
+            if (sequencedSet.isEmpty()) {
+                throw new NoSuchElementException();
+            }
+            if (hasBreak(BreakableSequencedCollection.GET_FIRST_RETURNS_NULL)) {
+                return null;
+            }
+            if (hasBreak(BreakableSequencedCollection.GET_FIRST_SKIPS_FIRST_ELEMENT)) {
+                if (sequencedSet.size() < 2) {
+                    throw new NoSuchElementException();
+                }
+                return new ArrayList<>(sequencedSet).get(1);
+            }
+            return sequencedSet.getFirst();
+        });
     }
 
     /// Gets the last element of this set.
@@ -236,22 +251,25 @@ public class BreakableSequencedSet<E> extends BreakableSet<E> implements Sequenc
     /// @throws NoSuchElementException if this set is empty (or if broken)
     @Override
     public @Nullable E getLast() {
-        if (hasBreak(BreakableSequencedCollection.GET_LAST_ALWAYS_THROWS)) {
-            throw new NoSuchElementException();
-        }
-        if (sequencedSet.isEmpty()) {
-            throw new NoSuchElementException();
-        }
-        if (hasBreak(BreakableSequencedCollection.GET_LAST_RETURNS_NULL)) {
-            return null;
-        }
-        if (hasBreak(BreakableSequencedCollection.GET_LAST_SKIPS_LAST_ELEMENT)) {
-            if (sequencedSet.size() < 2) {
+        checkMethodSupport(SequencedCollectionMethods.GET_LAST);
+        return getWithSafety(() -> {
+            if (hasBreak(BreakableSequencedCollection.GET_LAST_ALWAYS_THROWS)) {
                 throw new NoSuchElementException();
             }
-            return new ArrayList<>(sequencedSet).get(sequencedSet.size() - 2);
-        }
-        return sequencedSet.getLast();
+            if (sequencedSet.isEmpty()) {
+                throw new NoSuchElementException();
+            }
+            if (hasBreak(BreakableSequencedCollection.GET_LAST_RETURNS_NULL)) {
+                return null;
+            }
+            if (hasBreak(BreakableSequencedCollection.GET_LAST_SKIPS_LAST_ELEMENT)) {
+                if (sequencedSet.size() < 2) {
+                    throw new NoSuchElementException();
+                }
+                return new ArrayList<>(sequencedSet).get(sequencedSet.size() - 2);
+            }
+            return sequencedSet.getLast();
+        });
     }
 
     /// Removes and returns the first element of this set.
@@ -265,20 +283,23 @@ public class BreakableSequencedSet<E> extends BreakableSet<E> implements Sequenc
     /// @throws NoSuchElementException if this set is empty (or if broken)
     @Override
     public @Nullable E removeFirst() {
-        if (hasBreak(BreakableSequencedCollection.REMOVE_FIRST_ALWAYS_THROWS)) {
-            throw new NoSuchElementException();
-        }
-        if (sequencedSet.isEmpty()) {
-            throw new NoSuchElementException();
-        }
-        if (hasBreak(BreakableSequencedCollection.REMOVE_FIRST_RETURNS_NULL)) {
-            sequencedSet.removeFirst();
-            return null;
-        }
-        if (hasBreak(BreakableSequencedCollection.REMOVE_FIRST_DOES_NOT_REMOVE_ELEMENT)) {
-            return sequencedSet.getFirst();
-        }
-        return sequencedSet.removeFirst();
+        checkMethodSupport(SequencedCollectionMethods.REMOVE_FIRST);
+        return getWithSafety(() -> {
+            if (hasBreak(BreakableSequencedCollection.REMOVE_FIRST_ALWAYS_THROWS)) {
+                throw new NoSuchElementException();
+            }
+            if (sequencedSet.isEmpty()) {
+                throw new NoSuchElementException();
+            }
+            if (hasBreak(BreakableSequencedCollection.REMOVE_FIRST_RETURNS_NULL)) {
+                sequencedSet.removeFirst();
+                return null;
+            }
+            if (hasBreak(BreakableSequencedCollection.REMOVE_FIRST_DOES_NOT_REMOVE_ELEMENT)) {
+                return sequencedSet.getFirst();
+            }
+            return sequencedSet.removeFirst();
+        });
     }
 
     /// Removes and returns the last element of this set.
@@ -292,20 +313,23 @@ public class BreakableSequencedSet<E> extends BreakableSet<E> implements Sequenc
     /// @throws NoSuchElementException if this set is empty (or if broken)
     @Override
     public @Nullable E removeLast() {
-        if (hasBreak(BreakableSequencedCollection.REMOVE_LAST_ALWAYS_THROWS)) {
-            throw new NoSuchElementException();
-        }
-        if (sequencedSet.isEmpty()) {
-            throw new NoSuchElementException();
-        }
-        if (hasBreak(BreakableSequencedCollection.REMOVE_LAST_RETURNS_NULL)) {
-            sequencedSet.removeLast();
-            return null;
-        }
-        if (hasBreak(BreakableSequencedCollection.REMOVE_LAST_DOES_NOT_REMOVE_ELEMENT)) {
-            return sequencedSet.getLast();
-        }
-        return sequencedSet.removeLast();
+        checkMethodSupport(SequencedCollectionMethods.REMOVE_LAST);
+        return getWithSafety(() -> {
+            if (hasBreak(BreakableSequencedCollection.REMOVE_LAST_ALWAYS_THROWS)) {
+                throw new NoSuchElementException();
+            }
+            if (sequencedSet.isEmpty()) {
+                throw new NoSuchElementException();
+            }
+            if (hasBreak(BreakableSequencedCollection.REMOVE_LAST_RETURNS_NULL)) {
+                sequencedSet.removeLast();
+                return null;
+            }
+            if (hasBreak(BreakableSequencedCollection.REMOVE_LAST_DOES_NOT_REMOVE_ELEMENT)) {
+                return sequencedSet.getLast();
+            }
+            return sequencedSet.removeLast();
+        });
     }
 
     /// **Builder for creating `BreakableSequencedSet` instances.**

@@ -308,7 +308,16 @@ public class BreakableConcurrentMap<K, V> extends BreakableMap<K, V> implements 
             final Set<Break> breaks,
             final Map<InterfaceMethod, MethodStatus> methodStatuses,
             final int permits) {
-        super(concurrentMapArg, breaks, methodStatuses, permits, true);
+        super(concurrentMapArg, breaks, methodStatuses, permits, false);
+    }
+
+    /// Returns `true`: the map is thread safe through its store, a concurrent map, and holds no lock of its own (#52),
+    /// so that a call on the store runs as the store runs it.
+    ///
+    /// @return `true`
+    @Override
+    public boolean isSafe() {
+        return true;
     }
 
     // ========== The store ==========
@@ -724,13 +733,25 @@ public class BreakableConcurrentMap<K, V> extends BreakableMap<K, V> implements 
 
     // ========== The views ==========
 
+    /// Returns the breaks the collection views carry: of this map's breaks, [BreakableIterator#ITERATOR_IS_FAIL_FAST],
+    /// [BreakableIterator#ITERATOR_RETURNS_AN_ELEMENT_TWICE_AFTER_A_CHANGE] and
+    /// [BreakableIterator#ITERATOR_SKIPS_AN_ELEMENT_AFTER_A_CHANGE], which name the views' iterators: `keySet()`,
+    /// `values()` and `entrySet()` apply them, and no other break (#52).
+    ///
+    /// @return the views' breaks
+    @Override
+    Set<Break> collectionViewBreaks() {
+        final Set<Break> weak = new HashSet<>();
+        for (final Break b : breaks()) {
+            if (BreakableIterator.hasWeakConsistencyBreak(Set.of(b))) {
+                weak.add(b);
+            }
+        }
+        return weak;
+    }
+
     /// Returns the entries, as [BreakableMap] does. With [#ENTRY_SET_REMOVE_IF_IS_NOT_THREAD_SAFE], the view's
     /// `removeIf` removes through the iterator.
-    ///
-    /// With [BreakableIterator#ITERATOR_IS_FAIL_FAST],
-    /// [BreakableIterator#ITERATOR_RETURNS_AN_ELEMENT_TWICE_AFTER_A_CHANGE] or
-    /// [BreakableIterator#ITERATOR_SKIPS_AN_ELEMENT_AFTER_A_CHANGE], the view's iterator applies it, and no other
-    /// iterator break; `keySet()` and `values()` get every iterator break, as [BreakableMap]'s do.
     ///
     /// @return the entries
     @Override
@@ -739,7 +760,7 @@ public class BreakableConcurrentMap<K, V> extends BreakableMap<K, V> implements 
         if (entries != null && hasBreak(ENTRY_SET_REMOVE_IF_IS_NOT_THREAD_SAFE)) {
             return new IteratorRemoveIfSet<>(entries);
         }
-        return entries == null ? null : WeakConsistencyViews.set(entries, breaks());
+        return entries;
     }
 
     /// Returns the values, as [BreakableMap] does. With [#VALUES_REMOVE_IF_IS_NOT_THREAD_SAFE], it returns the store's

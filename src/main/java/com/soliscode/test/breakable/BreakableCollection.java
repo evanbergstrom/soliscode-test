@@ -1055,12 +1055,10 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     public boolean add(final E e) {
         checkOptionalMethodSupport(CollectionMethods.ADD, ADD_THROWS_WRONG_UNSUPPORTED_EXCEPTION);
 
-        boolean result = false;
-        if (checkNewElement(e, ADD_THROWS_WRONG_NULL_EXCEPTION, ADD_THROWS_WRONG_INCOMPATIBLE_TYPE_EXCEPTION)) {
-            if (!hasBreak(ADD_DOES_NOT_ADD_ELEMENT)) {
-                result = getWithBreakableSafety(ADD_IS_NOT_THREAD_SAFE, () -> collection.add(e));
-            }
-        }
+        // The check for a duplicate and the add run under one lock, so that the add acts on what the check saw.
+        boolean result = getWithBreakableSafety(ADD_IS_NOT_THREAD_SAFE, () ->
+                checkNewElement(e, ADD_THROWS_WRONG_NULL_EXCEPTION, ADD_THROWS_WRONG_INCOMPATIBLE_TYPE_EXCEPTION)
+                        && !hasBreak(ADD_DOES_NOT_ADD_ELEMENT) && collection.add(e));
 
         if (hasBreak(ADD_ALWAYS_RETURNS_TRUE)) {
             return true;

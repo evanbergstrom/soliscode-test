@@ -688,7 +688,7 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
             return null;
         }
         if (hasBreak(DESCENDING_MAP_IS_IN_ASCENDING_ORDER)) {
-            return navigableStore();
+            return view(navigableStore());
         }
         return copyIf(DESCENDING_MAP_IS_A_COPY, navigableStore().descendingMap());
     }
@@ -699,8 +699,7 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
         if (hasBreak(NAVIGABLE_KEY_SET_RETURNS_NULL)) {
             return null;
         }
-        return WeakConsistencyViews.navigableSet(
-                copyIf(NAVIGABLE_KEY_SET_IS_A_COPY, navigableStore().navigableKeySet()), breaks());
+        return keysOrCopy(NAVIGABLE_KEY_SET_IS_A_COPY, navigableStore().navigableKeySet());
     }
 
     /// Returns a [NavigableSet] view of the keys, as `navigableKeySet()` does.
@@ -719,7 +718,7 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
         if (hasBreak(KEY_SET_RETURNS_NULL_WHEN_EMPTY) && navigableStore().isEmpty()) {
             return null;
         }
-        return WeakConsistencyViews.navigableSet(copyIf(KEY_SET_IS_A_COPY, navigableStore().keySet()), breaks());
+        return keysOrCopy(KEY_SET_IS_A_COPY, navigableStore().keySet());
     }
 
     @Override
@@ -728,8 +727,7 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
         if (hasBreak(DESCENDING_KEY_SET_RETURNS_NULL)) {
             return null;
         }
-        return WeakConsistencyViews.navigableSet(
-                copyIf(DESCENDING_KEY_SET_IS_A_COPY, navigableStore().descendingKeySet()), breaks());
+        return keysOrCopy(DESCENDING_KEY_SET_IS_A_COPY, navigableStore().descendingKeySet());
     }
 
     @Override
@@ -742,7 +740,7 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
         }
         if (hasBreak(SUB_MAP_IGNORES_BOUNDS)) {
             // The whole map, from its first key to its last; firstKey() throws on an empty map.
-            return navigableStore().subMap(navigableStore().firstKey(), true, navigableStore().lastKey(), true);
+            return view(navigableStore().subMap(navigableStore().firstKey(), true, navigableStore().lastKey(), true));
         }
         return copyIf(SUB_MAP_FOUR_ARG_IS_A_COPY,
                 navigableStore().subMap(fromKey, fromInclusive, toKey, toInclusive));
@@ -800,22 +798,42 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
         return copyIf(TAIL_MAP_IS_A_COPY, navigableStore().tailMap(fromKey));
     }
 
-    /// Returns a view, or, with a copy break set, a copy of it that is not backed by the map.
+    /// Returns a view of this map over the store's view, or, with a copy break set, a copy of the store's view that is
+    /// not backed by the map.
     ///
     /// @param copyBreak the break that makes it a copy
-    /// @param view the view
-    /// @return the view, or a copy of it
+    /// @param view the store's view
+    /// @return the view, or a copy
     private ConcurrentNavigableMap<K, V> copyIf(final Break copyBreak, final ConcurrentNavigableMap<K, V> view) {
-        return hasBreak(copyBreak) ? new ConcurrentSkipListMap<>(view) : view;
+        return hasBreak(copyBreak) ? new ConcurrentSkipListMap<>(view) : view(view);
     }
 
-    /// Returns a key set, or, with a copy break set, a copy of it that is not backed by the map.
+    /// Returns a view of this map over a view of its store: a map of this kind, with this map's method statuses and
+    /// permits and none of its breaks (#52). It holds no lock, as this map holds none.
+    ///
+    /// @param view the store's view
+    /// @return the view
+    private ConcurrentNavigableMap<K, V> view(final ConcurrentNavigableMap<K, V> view) {
+        return sharingLockOf(
+                new BreakableConcurrentNavigableMap<K, V>(view, DEFAULT_BREAKS, methodStatuses(), permits()), this);
+    }
+
+    /// Returns a key set of this map over the store's, or, with a copy break set, a copy of the store's that is not
+    /// backed by the map. The key set is a [BreakableNavigableSet] with the map's statuses mapped onto it
+    /// ([MapViews]), over the store's wrapped in [WeakConsistencyViews]: the weak-consistency breaks name it. A copy
+    /// is wrapped in [WeakConsistencyViews] alone.
     ///
     /// @param copyBreak the break that makes it a copy
-    /// @param view the key set
-    /// @return the key set, or a copy of it
-    private NavigableSet<K> copyIf(final Break copyBreak, final NavigableSet<K> view) {
-        return hasBreak(copyBreak) ? new ConcurrentSkipListSet<>(view) : view;
+    /// @param keys the store's key set
+    /// @return the key set, or a copy
+    private NavigableSet<K> keysOrCopy(final Break copyBreak, final NavigableSet<K> keys) {
+        if (hasBreak(copyBreak)) {
+            return WeakConsistencyViews.navigableSet(new ConcurrentSkipListSet<>(keys), breaks());
+        }
+        return sharingLockOf(
+                new BreakableNavigableSet<K>(WeakConsistencyViews.navigableSet(keys, breaks()), DEFAULT_BREAKS,
+                    MapViews.statuses(this, methodStatuses()), BreakableSortedSet.DEFAULT_CHARACTERISTICS,
+                    MapViews.keyPermits(this), false, Object.class), this);
     }
 
     /// Throws for a `null` bound, where the map refuses null keys: `NullPointerException`, or, with the break set,

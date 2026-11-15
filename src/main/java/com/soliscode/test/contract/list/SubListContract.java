@@ -30,7 +30,8 @@ public interface SubListContract<L extends List<E>, E> extends CollectionContrac
         L list = provider().createInstance(initial);
         assertIterableEquals(initial.subList(2, DEFAULT_SIZE - 2), list.subList(2, DEFAULT_SIZE - 2));
         assertIterableEquals(initial, list.subList(0, DEFAULT_SIZE));
-        assertTrue(list.subList(3, 3).isEmpty());
+        // Compared by its elements, as above, not by isEmpty(): a view has its list's method statuses (#52).
+        assertIterableEquals(List.of(), list.subList(3, 3));
     }
 
     /// Tests that [subList(int, int)][List#subList(int, int)] throws [IndexOutOfBoundsException] for a range outside

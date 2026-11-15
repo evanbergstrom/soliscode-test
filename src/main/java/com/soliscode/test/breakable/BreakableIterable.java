@@ -403,7 +403,7 @@ public class BreakableIterable<E> extends BreakableObject<Iterable<E>> implement
         final IntSupplier sourceSize = iterable instanceof Collection<E> c
                 && BreakableIterator.hasWeakConsistencyBreak(breaks()) ? c::size : null;
         final BreakableIterator<E> iterator = new BreakableIterator<>(iterable.iterator(), breaks(), methodStatuses(),
-                characteristics, isSafe(), sourceSize);
+                characteristics, hasLock(), sourceSize);
         unsupportedMethods().forEach(iterator::doesNotSupportMethod);
         return iterator;
     }
@@ -426,36 +426,38 @@ public class BreakableIterable<E> extends BreakableObject<Iterable<E>> implement
     /// @throws NullPointerException if the specified action is null
     @Override
     public void forEach(final Consumer<? super E> action) {
-        checkMethodSupport(IterableMethods.FOR_EACH);
+        runWithSafety(() -> {
+            checkMethodSupport(IterableMethods.FOR_EACH);
 
-        if (action == null) {
-            if (hasBreak(FOR_EACH_THROWS_WRONG_EXCEPTION_FOR_NULL_ARGUMENT)) {
-                throw new IllegalArgumentException();
-            } else {
-                throw new NullPointerException();
+            if (action == null) {
+                if (hasBreak(FOR_EACH_THROWS_WRONG_EXCEPTION_FOR_NULL_ARGUMENT)) {
+                    throw new IllegalArgumentException();
+                } else {
+                    throw new NullPointerException();
+                }
             }
-        }
-        if (!hasBreak(FOR_EACH_DOES_NOT_CALL_ACTION)) {
-            if (hasBreak(FOR_EACH_SKIPS_FIRST_ELEMENT)) {
-                Iterator<E> iterator = this.iterable.iterator();
-                if (iterator.hasNext()) {
-                    iterator.next();
-                }
-                while (iterator.hasNext()) {
-                    action.accept(iterator.next());
-                }
-            } else if (hasBreak(FOR_EACH_SKIPS_LAST_ELEMENT)) {
-                Iterator<E> iterator = this.iterable.iterator();
-                while (iterator.hasNext()) {
-                    E element = iterator.next();
+            if (!hasBreak(FOR_EACH_DOES_NOT_CALL_ACTION)) {
+                if (hasBreak(FOR_EACH_SKIPS_FIRST_ELEMENT)) {
+                    Iterator<E> iterator = this.iterable.iterator();
                     if (iterator.hasNext()) {
-                        action.accept(element);
+                        iterator.next();
                     }
+                    while (iterator.hasNext()) {
+                        action.accept(iterator.next());
+                    }
+                } else if (hasBreak(FOR_EACH_SKIPS_LAST_ELEMENT)) {
+                    Iterator<E> iterator = this.iterable.iterator();
+                    while (iterator.hasNext()) {
+                        E element = iterator.next();
+                        if (iterator.hasNext()) {
+                            action.accept(element);
+                        }
+                    }
+                } else {
+                    iterable.forEach(action);
                 }
-            } else {
-                iterable.forEach(action);
             }
-        }
+        });
     }
 
     /// Implements the [iterator][Iterable#spliterator] method from the [Iterable] interface. This method can be broken
@@ -477,7 +479,7 @@ public class BreakableIterable<E> extends BreakableObject<Iterable<E>> implement
         // characteristics the builder added.
         Spliterator<E> spliterator = iterable.spliterator();
         return new BreakableSpliterator<>(spliterator, breaks(), methodStatuses(),
-                spliterator.characteristics() | characteristics, isSafe());
+                spliterator.characteristics() | characteristics, hasLock());
     }
 
     /// returns the elements as an unbroken instance of `Iterable'

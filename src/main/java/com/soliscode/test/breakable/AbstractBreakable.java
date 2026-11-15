@@ -192,7 +192,7 @@ public abstract class AbstractBreakable extends MethodSupport implements Breakab
     public AbstractBreakable(final AbstractBreakable other) {
         super(other);
         this.breaks = new HashSet<>(other.breaks);
-        this.lock = other.isSafe() ? new ReentrantLock() : null;
+        this.lock = other.lock != null ? new ReentrantLock() : null;
     }
 
     /// Creates a breakable object with the specified collection of breaks.
@@ -443,6 +443,65 @@ public abstract class AbstractBreakable extends MethodSupport implements Breakab
     /// @return true if safe, false otherwise
     public boolean isSafe() {
         return lock != null;
+    }
+
+    /// Returns whether this object holds a lock, its own or one it shares with the breakable it is a view of. A
+    /// breakable whose store is thread safe (a concurrent map, a blocking queue) holds none, though it is safe.
+    ///
+    /// @return whether this object holds a lock
+    final boolean hasLock() {
+        return lock != null;
+    }
+
+    /// Gives a view the owner's lock, the same [ReentrantLock] or none, so that the view runs under the lock of the
+    /// breakable it is a view of, as the JDK's synchronized wrappers synchronize a view on the parent's lock (#52).
+    ///
+    /// @param <T> the type of the view
+    /// @param view the view, which takes the owner's lock
+    /// @param owner the breakable whose lock the view takes
+    /// @return the view
+    static <T extends AbstractBreakable> T sharingLockOf(final T view, final AbstractBreakable owner) {
+        ((AbstractBreakable) view).lock = owner.lock;
+        return view;
+    }
+
+    /// Runs the runnable under this object's lock, if it has one. For a method that has no `*_IS_NOT_THREAD_SAFE`
+    /// break.
+    ///
+    /// @param runnable the runnable to run
+    /// @since 0.1.5
+    protected void runWithSafety(final Runnable runnable) {
+        final ReentrantLock theLock = lock;
+        if (theLock != null) {
+            theLock.lock();
+            try {
+                runnable.run();
+            } finally {
+                theLock.unlock();
+            }
+        } else {
+            runnable.run();
+        }
+    }
+
+    /// Returns the supplier's result, got under this object's lock, if it has one. For a method that has no
+    /// `*_IS_NOT_THREAD_SAFE` break.
+    ///
+    /// @param <T> the type of the result
+    /// @param supplier the supplier to run
+    /// @return the supplier's result
+    /// @since 0.1.5
+    protected <T extends @Nullable Object> T getWithSafety(final Supplier<T> supplier) {
+        final ReentrantLock theLock = lock;
+        if (theLock != null) {
+            theLock.lock();
+            try {
+                return supplier.get();
+            } finally {
+                theLock.unlock();
+            }
+        }
+        return supplier.get();
     }
 
     /// Executes the specified runnable with synchronization if the object is safe and the safety break is not present.

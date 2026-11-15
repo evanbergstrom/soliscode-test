@@ -305,9 +305,12 @@ import com.soliscode.test.contract.sequencedcollection.SequencedCollectionMethod
 /// ## Design Considerations
 ///
 /// ### Thread Safety
-/// This class is not thread-safe. The underlying List's thread safety characteristics
-/// determine the overall thread safety behavior. External synchronization is required for
-/// concurrent access.
+/// Built with `setSafe(true)`, the list runs each of its methods under a lock of its own, and so do its views
+/// (#52): `subList` and `reversed()` return lists over the store's views that share this list's lock, as
+/// `Collections.synchronizedList`'s views synchronize on the list, with this list's method statuses and none of its
+/// breaks, since a break describes a method of this list. A traversal of an iterator or spliterator is not made under
+/// the lock. Built otherwise, the list and its views take no lock, and need external synchronization for concurrent
+/// access.
 ///
 /// ### Performance
 /// - **Normal Operations**: Performance depends on the backing List (default: ArrayList)
@@ -612,18 +615,20 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
 
     @Override
     public List<E> reversed() {
-        // The breaks are those of BreakableSequencedCollection#reversed().
-        if (!supportsMethod(SequencedCollectionMethods.REVERSED)) {
-            throw new UnsupportedOperationException("Unsupported method: reversed()");
-        }
-        if (hasBreak(REVERSED_DOES_NOT_REVERSE_COLLECTION)) {
-            return this;
-        }
-        if (hasBreak(REVERSED_MODIFIES_THE_COLLECTION)) {
-            Collections.reverse(list);
-            return this;
-        }
-        return list.reversed();
+        return getWithSafety(() -> {
+            // The breaks are those of BreakableSequencedCollection#reversed().
+            if (!supportsMethod(SequencedCollectionMethods.REVERSED)) {
+                throw new UnsupportedOperationException("Unsupported method: reversed()");
+            }
+            if (hasBreak(REVERSED_DOES_NOT_REVERSE_COLLECTION)) {
+                return this;
+            }
+            if (hasBreak(REVERSED_MODIFIES_THE_COLLECTION)) {
+                Collections.reverse(list);
+                return this;
+            }
+            return view(list.reversed());
+        });
     }
 
     // Implements the [addAll][List#addAll] method from the [List] interface. This method can be broken using the
@@ -664,41 +669,44 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     @SuppressWarnings("ConstantValue")
     @Override
     public boolean addAll(final int index, final Collection<? extends E> c) {
-        if (supportsMethod(ListMethods.ADD_ALL_AT_INDEX)) {
-            // index == size() is valid: it appends (List#addAll(int, Collection)).
-            if ((index < 0 || index > list.size()) && hasBreak(ADD_ALL_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX)) {
-                throw new RuntimeException();
-            }
+        return getWithSafety(() -> {
+            if (supportsMethod(ListMethods.ADD_ALL_AT_INDEX)) {
+                // index == size() is valid: it appends (List#addAll(int, Collection)).
+                if ((index < 0 || index > list.size())
+                        && hasBreak(ADD_ALL_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX)) {
+                    throw new RuntimeException();
+                }
 
-            if (c == null && hasBreak(ADD_ALL_AT_INDEX_THROWS_WRONG_EXCEPTION_WHEN_ARGUMENT_IS_NULL)) {
-                throw new RuntimeException();
-            }
+                if (c == null && hasBreak(ADD_ALL_AT_INDEX_THROWS_WRONG_EXCEPTION_WHEN_ARGUMENT_IS_NULL)) {
+                    throw new RuntimeException();
+                }
 
-            boolean result;
-            if (hasBreak(ADD_ALL_AT_INDEX_ADDS_TO_THE_END)) {
-                result = list.addAll(c);
-            } else if (!hasBreak(ADD_ALL_AT_INDEX_DOES_NOT_ADD_ANY_ELEMENTS)) {
-                result = list.addAll(index, c);
-            } else {
-                result = false;
-            }
+                boolean result;
+                if (hasBreak(ADD_ALL_AT_INDEX_ADDS_TO_THE_END)) {
+                    result = list.addAll(c);
+                } else if (!hasBreak(ADD_ALL_AT_INDEX_DOES_NOT_ADD_ANY_ELEMENTS)) {
+                    result = list.addAll(index, c);
+                } else {
+                    result = false;
+                }
 
-            if (hasBreak(ADD_ALL_AT_INDEX_ALWAYS_RETURNS_TRUE)) {
-                return true;
-            } else if (hasBreak(ADD_ALL_AT_INDEX_ALWAYS_RETURNS_FALSE)) {
-                return false;
-            } else if (hasBreak(ADD_ALL_AT_INDEX_ALWAYS_RETURNS_OPPOSITE_VALUE)) {
-                return !result;
+                if (hasBreak(ADD_ALL_AT_INDEX_ALWAYS_RETURNS_TRUE)) {
+                    return true;
+                } else if (hasBreak(ADD_ALL_AT_INDEX_ALWAYS_RETURNS_FALSE)) {
+                    return false;
+                } else if (hasBreak(ADD_ALL_AT_INDEX_ALWAYS_RETURNS_OPPOSITE_VALUE)) {
+                    return !result;
+                } else {
+                    return result;
+                }
             } else {
-                return result;
+                if (hasBreak(ADD_ALL_AT_INDEX_THROWS_WRONG_EXCEPTION_IF_NOT_SUPPORTED)) {
+                    throw new RuntimeException();
+                } else {
+                    throw new UnsupportedOperationException();
+                }
             }
-        } else {
-            if (hasBreak(ADD_ALL_AT_INDEX_THROWS_WRONG_EXCEPTION_IF_NOT_SUPPORTED)) {
-                throw new RuntimeException();
-            } else {
-                throw new UnsupportedOperationException();
-            }
-        }
+        });
     }
 
     /// Implements the [replaceAll][List#replaceAll] method from the [List] interface. This method can be broken using
@@ -722,26 +730,28 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     /// @see List#replaceAll(UnaryOperator)
     @Override
     public void replaceAll(final UnaryOperator<E> operator) {
-        if (supportsMethod(ListMethods.REPLACE_ALL)) {
-            int start = 0;
-            int end = list.size();
-            if (hasBreak(REPLACE_ALL_SKIPS_FIRST_ELEMENT)) {
-                start = 1;
-            } else if (hasBreak(REPLACE_ALL_SKIPS_LAST_ELEMENT)) {
-                end = size() - 1;
-            } else if (hasBreak(REPLACE_ALL_DOES_NOT_REPLACE_ELEMENTS)) {
-                return;
-            }
-            for (int i = start; i < end; i++) {
-                E e = operator.apply(list.get(i));
-                if (e == null && !permitsNulls()) {
-                    throw new NullPointerException();
+        runWithSafety(() -> {
+            if (supportsMethod(ListMethods.REPLACE_ALL)) {
+                int start = 0;
+                int end = list.size();
+                if (hasBreak(REPLACE_ALL_SKIPS_FIRST_ELEMENT)) {
+                    start = 1;
+                } else if (hasBreak(REPLACE_ALL_SKIPS_LAST_ELEMENT)) {
+                    end = size() - 1;
+                } else if (hasBreak(REPLACE_ALL_DOES_NOT_REPLACE_ELEMENTS)) {
+                    return;
                 }
-                list.set(i, e);
+                for (int i = start; i < end; i++) {
+                    E e = operator.apply(list.get(i));
+                    if (e == null && !permitsNulls()) {
+                        throw new NullPointerException();
+                    }
+                    list.set(i, e);
+                }
+            } else {
+                throw new UnsupportedOperationException("Unsupported method: addAll");
             }
-        } else {
-            throw new UnsupportedOperationException("Unsupported method: addAll");
-        }
+        });
     }
 
     // Implements the [sort][List#sort] method from the [List] interface. This method can be broken using the
@@ -767,20 +777,22 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     /// @see List#sort(Comparator)
     @Override
     public void sort(final Comparator<? super E> c) {
-        if (supportsMethod(ListMethods.SORT)) {
-            if (hasBreak(SORT_REVERSES_THE_ORDER)) {
-                list.sort(c.reversed());
-            } else if (hasBreak(SORT_THROWS_ON_NULL_ARGUMENT)) {
-                if (c == null) {
-                    throw new NullPointerException();
+        runWithSafety(() -> {
+            if (supportsMethod(ListMethods.SORT)) {
+                if (hasBreak(SORT_REVERSES_THE_ORDER)) {
+                    list.sort(c.reversed());
+                } else if (hasBreak(SORT_THROWS_ON_NULL_ARGUMENT)) {
+                    if (c == null) {
+                        throw new NullPointerException();
+                    }
+                    list.sort(c);
+                } else if (!hasBreak(SORT_DOES_NOT_SORT_THE_ELEMENTS)) {
+                    list.sort(c);
                 }
-                list.sort(c);
-            } else if (!hasBreak(SORT_DOES_NOT_SORT_THE_ELEMENTS)) {
-                list.sort(c);
+            } else {
+                throw new UnsupportedOperationException("Unsupported method: sort");
             }
-        } else {
-            throw new UnsupportedOperationException("Unsupported method: sort");
-        }
+        });
     }
 
     // Implements the [get][List#get] method from the [List] interface. This method can be broken using the
@@ -808,30 +820,32 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     /// @throws IndexOutOfBoundsException if the index is out of range `index < 0 || index >= size()}`
     @Override
     public @Nullable E get(final int index) {
-        if (supportsMethod(ListMethods.GET)) {
-            if (hasBreak(GET_ALWAYS_RETURNS_NULL)) {
-                return null;
-            } else if (hasBreak(GET_ALWAYS_RETURNS_THE_FIRST_ELEMENT)) {
-                return list.getFirst();
-            } else if (hasBreak(GET_ALWAYS_RETURNS_THE_LAST_ELEMENT)) {
-                return list.getLast();
-            } else if (hasBreak(GET_RETURNS_THE_NEXT_ELEMENT)) {
-                return list.get(index + 1);
-            } else if (hasBreak(GET_RETURNS_THE_PREVIOUS_ELEMENT)) {
-                return list.get(index - 1);
-            } else {
-                if (index < 0 || index >= list.size()) {
-                    if (hasBreak(GET_RETURNS_NULL_ON_BAD_INDEX)) {
-                        return null;
-                    } else if (hasBreak(GET_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX)) {
-                        throw new IllegalArgumentException();
+        return getWithSafety(() -> {
+            if (supportsMethod(ListMethods.GET)) {
+                if (hasBreak(GET_ALWAYS_RETURNS_NULL)) {
+                    return null;
+                } else if (hasBreak(GET_ALWAYS_RETURNS_THE_FIRST_ELEMENT)) {
+                    return list.getFirst();
+                } else if (hasBreak(GET_ALWAYS_RETURNS_THE_LAST_ELEMENT)) {
+                    return list.getLast();
+                } else if (hasBreak(GET_RETURNS_THE_NEXT_ELEMENT)) {
+                    return list.get(index + 1);
+                } else if (hasBreak(GET_RETURNS_THE_PREVIOUS_ELEMENT)) {
+                    return list.get(index - 1);
+                } else {
+                    if (index < 0 || index >= list.size()) {
+                        if (hasBreak(GET_RETURNS_NULL_ON_BAD_INDEX)) {
+                            return null;
+                        } else if (hasBreak(GET_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX)) {
+                            throw new IllegalArgumentException();
+                        }
                     }
+                    return list.get(index);
                 }
-                return list.get(index);
+            } else {
+                throw new UnsupportedOperationException("Unsupported method: sort");
             }
-        } else {
-            throw new UnsupportedOperationException("Unsupported method: sort");
-        }
+        });
     }
 
     // Implements the [set][List#set] method from the [List] interface. This method can be broken using the
@@ -859,37 +873,39 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     /// @throws IndexOutOfBoundsException if the index is out of range `index < 0 || index >= size()}`
     @Override
     public @Nullable E set(final int index, final E element) {
-        if (supportsMethod(ListMethods.SET)) {
-            if (element == null && !permitsNulls()) {
-                throw new NullPointerException("set(int, E): this list does not permit null elements");
-            }
-            if (index < 0 || index >= list.size()) {
-                if (hasBreak(SET_RETURNS_NULL_ON_BAD_INDEX)) {
-                    return null;
-                } else if (hasBreak(SET_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX)) {
-                    throw new IllegalArgumentException();
+        return getWithSafety(() -> {
+            if (supportsMethod(ListMethods.SET)) {
+                if (element == null && !permitsNulls()) {
+                    throw new NullPointerException("set(int, E): this list does not permit null elements");
                 }
-            }
+                if (index < 0 || index >= list.size()) {
+                    if (hasBreak(SET_RETURNS_NULL_ON_BAD_INDEX)) {
+                        return null;
+                    } else if (hasBreak(SET_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX)) {
+                        throw new IllegalArgumentException();
+                    }
+                }
 
-            E result;
-            if (hasBreak(SET_CHANGES_THE_NEXT_ELEMENT)) {
-                result = list.set(index + 1, element);
-            } else if (hasBreak(SET_CHANGES_THE_PREVIOUS_ELEMENT)) {
-                result = list.set(index - 1, element);
-            } else if (hasBreak(SET_DOES_NOT_CHANGE_THE_ELEMENT)) {
-                result = list.get(index);
-            } else {
-                result = list.set(index, element);
-            }
+                E result;
+                if (hasBreak(SET_CHANGES_THE_NEXT_ELEMENT)) {
+                    result = list.set(index + 1, element);
+                } else if (hasBreak(SET_CHANGES_THE_PREVIOUS_ELEMENT)) {
+                    result = list.set(index - 1, element);
+                } else if (hasBreak(SET_DOES_NOT_CHANGE_THE_ELEMENT)) {
+                    result = list.get(index);
+                } else {
+                    result = list.set(index, element);
+                }
 
-            if (hasBreak(SET_ALWAYS_RETURNS_NULL)) {
-                return null;
+                if (hasBreak(SET_ALWAYS_RETURNS_NULL)) {
+                    return null;
+                } else {
+                    return result;
+                }
             } else {
-                return result;
+                throw new UnsupportedOperationException("Unsupported method: set");
             }
-        } else {
-            throw new UnsupportedOperationException("Unsupported method: set");
-        }
+        });
     }
 
     /// Implements the [add][List#add(int, Object)] method from the [List] interface. This method can be broken using
@@ -918,21 +934,23 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     /// @throws IndexOutOfBoundsException if the index is out of range (`index < 0 || index > size()`)
     @Override
     public void add(final int index, final E element) {
-        if (supportsMethod(ListMethods.ADD_AT_INDEX)) {
-            // index == size() is valid: it appends (List#add(int, Object)).
-            boolean badIndex = index < 0 || index > list.size();
-            if (badIndex && hasBreak(ADD_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX)) {
-                throw new IllegalArgumentException();
-            } else if (!badIndex && hasBreak(ADD_AT_INDEX_ADDS_AT_NEXT_POSITION)) {
-                list.add(Math.min(index + 1, list.size()), element);
-            } else if (!badIndex && hasBreak(ADD_AT_INDEX_ADDS_AT_PREVIOUS_POSITION)) {
-                list.add(Math.max(index - 1, 0), element);
-            } else if (!hasBreak(ADD_AT_INDEX_DOES_NOT_ADD_THE_ELEMENT)) {
-                list.add(index, element);
+        runWithSafety(() -> {
+            if (supportsMethod(ListMethods.ADD_AT_INDEX)) {
+                // index == size() is valid: it appends (List#add(int, Object)).
+                boolean badIndex = index < 0 || index > list.size();
+                if (badIndex && hasBreak(ADD_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX)) {
+                    throw new IllegalArgumentException();
+                } else if (!badIndex && hasBreak(ADD_AT_INDEX_ADDS_AT_NEXT_POSITION)) {
+                    list.add(Math.min(index + 1, list.size()), element);
+                } else if (!badIndex && hasBreak(ADD_AT_INDEX_ADDS_AT_PREVIOUS_POSITION)) {
+                    list.add(Math.max(index - 1, 0), element);
+                } else if (!hasBreak(ADD_AT_INDEX_DOES_NOT_ADD_THE_ELEMENT)) {
+                    list.add(index, element);
+                }
+            } else {
+                throw new UnsupportedOperationException();
             }
-        } else {
-            throw new UnsupportedOperationException();
-        }
+        });
     }
 
     /// Implements the [remove][List#remove(int)] method from the [List] interface. This method can be broken using the
@@ -959,47 +977,51 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     /// @throws IndexOutOfBoundsException if the index is out of range (`@code index < 0 || index >= size()`)
     @Override
     public @Nullable E remove(final int index) {
-        if (supportsMethod(ListMethods.REMOVE_AT_INDEX)) {
-            if (index < 0 || index >= list.size()) {
-                if (hasBreak(REMOVE_AT_INDEX_RETURNS_NULL_ON_BAD_INDEX)) {
-                    return null;
-                } else if (hasBreak(REMOVE_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX)) {
-                    throw new IllegalArgumentException();
+        return getWithSafety(() -> {
+            if (supportsMethod(ListMethods.REMOVE_AT_INDEX)) {
+                if (index < 0 || index >= list.size()) {
+                    if (hasBreak(REMOVE_AT_INDEX_RETURNS_NULL_ON_BAD_INDEX)) {
+                        return null;
+                    } else if (hasBreak(REMOVE_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX)) {
+                        throw new IllegalArgumentException();
+                    }
                 }
-            }
 
-            E result;
-            if (hasBreak(REMOVE_AT_INDEX_REMOVES_THE_NEXT_ELEMENT)) {
-                result = list.remove(index + 1);
-            } else if (hasBreak(REMOVE_AT_INDEX_REMOVES_THE_PREVIOUS_ELEMENT)) {
-                result = list.remove(index - 1);
-            } else if (hasBreak(REMOVE_AT_INDEX_DOES_NOT_REMOVE_THE_ELEMENT)) {
-                result = list.get(index);
-            } else {
-                result = list.remove(index);
-            }
+                E result;
+                if (hasBreak(REMOVE_AT_INDEX_REMOVES_THE_NEXT_ELEMENT)) {
+                    result = list.remove(index + 1);
+                } else if (hasBreak(REMOVE_AT_INDEX_REMOVES_THE_PREVIOUS_ELEMENT)) {
+                    result = list.remove(index - 1);
+                } else if (hasBreak(REMOVE_AT_INDEX_DOES_NOT_REMOVE_THE_ELEMENT)) {
+                    result = list.get(index);
+                } else {
+                    result = list.remove(index);
+                }
 
-            if (hasBreak(REMOVE_AT_INDEX_ALWAYS_RETURNS_NULL)) {
-                return null;
+                if (hasBreak(REMOVE_AT_INDEX_ALWAYS_RETURNS_NULL)) {
+                    return null;
+                } else {
+                    return result;
+                }
             } else {
-                return result;
+                throw new UnsupportedOperationException();
             }
-        } else {
-            throw new UnsupportedOperationException();
-        }
+        });
     }
 
     @Override
     public int indexOf(final Object o) {
-        return list.indexOf(o);
+        return getWithSafety(() -> list.indexOf(o));
     }
 
     @Override
     public int lastIndexOf(final Object o) {
-        if (hasBreak(LAST_INDEX_OF_RETURNS_FIRST_INDEX)) {
-            return list.indexOf(o);
-        }
-        return list.lastIndexOf(o);
+        return getWithSafety(() -> {
+            if (hasBreak(LAST_INDEX_OF_RETURNS_FIRST_INDEX)) {
+                return list.indexOf(o);
+            }
+            return list.lastIndexOf(o);
+        });
     }
 
     @Override
@@ -1014,10 +1036,24 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
 
     @Override
     public List<E> subList(final int fromIndex, final int toIndex) {
-        if (hasBreak(SUB_LIST_EXCLUDES_FIRST_ELEMENT) && fromIndex < toIndex) {
-            return list.subList(fromIndex + 1, toIndex);
-        }
-        return list.subList(fromIndex, toIndex);
+        return getWithSafety(() -> {
+            if (hasBreak(SUB_LIST_EXCLUDES_FIRST_ELEMENT) && fromIndex < toIndex) {
+                return view(list.subList(fromIndex + 1, toIndex));
+            }
+            return view(list.subList(fromIndex, toIndex));
+        });
+    }
+
+    /// Returns a view of this list over a view of its store: a list with this list's method statuses,
+    /// characteristics, permits and compatible type and none of its breaks, since a break describes a method of this
+    /// list, that shares its lock, as `Collections.synchronizedList` synchronizes a view on the list's lock (#52).
+    ///
+    /// @param view the store's view
+    /// @return the view
+    private List<E> view(final List<E> view) {
+        return sharingLockOf(
+                new BreakableList<E>(view, DEFAULT_BREAKS, methodStatuses(), characteristics(), permits(), false,
+                    compatibleType()), this);
     }
 
     /// Builder for creating BreakableList instances.

@@ -129,27 +129,29 @@ public class BreakableObject<T> extends AbstractBreakable implements Serializabl
     @SuppressWarnings("EqualsGetClass")
     @Override
     public boolean equals(final @Nullable Object o) {
-        if (hasBreak(EQUALS_ALWAYS_RETURNS_TRUE)) {
-            return true;
-        }
-        if (hasBreak(EQUALS_ALWAYS_RETURNS_FALSE)) {
-            return false;
-        }
-        boolean result;
-        if (o == null) {
-            result = false;
-        } else if (getClass() != o.getClass()) {
-            if (hasBreak(EQUALS_THROWS_FOR_OTHER_TYPES)) {
-                throw new ClassCastException();
+        return getWithSafety(() -> {
+            if (hasBreak(EQUALS_ALWAYS_RETURNS_TRUE)) {
+                return true;
             }
-            result = valueEqualsOtherType(o);
-        } else {
-            result =  valueEquals((BreakableObject<?>) o);
-        }
-        if (hasBreak(EQUALS_ALWAYS_RETURNS_OPPOSITE_VALUE)) {
-            return !result;
-        }
-        return result;
+            if (hasBreak(EQUALS_ALWAYS_RETURNS_FALSE)) {
+                return false;
+            }
+            boolean result;
+            if (o == null) {
+                result = false;
+            } else if (getClass() != o.getClass()) {
+                if (hasBreak(EQUALS_THROWS_FOR_OTHER_TYPES)) {
+                    throw new ClassCastException();
+                }
+                result = valueEqualsOtherType(o);
+            } else {
+                result =  valueEquals((BreakableObject<?>) o);
+            }
+            if (hasBreak(EQUALS_ALWAYS_RETURNS_OPPOSITE_VALUE)) {
+                return !result;
+            }
+            return result;
+        });
     }
 
     /// Compares the underlying values of this object and another `BreakableObject`.
@@ -178,13 +180,15 @@ public class BreakableObject<T> extends AbstractBreakable implements Serializabl
     /// @see Object#hashCode()
     @Override
     public int hashCode() {
-        if (hasBreak(HASH_CODE_ALWAYS_RETURNS_ZERO)) {
-            return 0;
-        }
-        if (hasBreak(HASH_CODE_IS_NOT_STABLE)) {
-            return randomInt();
-        }
-        return value.hashCode();
+        return getWithSafety(() -> {
+            if (hasBreak(HASH_CODE_ALWAYS_RETURNS_ZERO)) {
+                return 0;
+            }
+            if (hasBreak(HASH_CODE_IS_NOT_STABLE)) {
+                return randomInt();
+            }
+            return value.hashCode();
+        });
     }
 
     /// Returns a string representation of the object.
@@ -196,10 +200,12 @@ public class BreakableObject<T> extends AbstractBreakable implements Serializabl
     /// @see Object#toString()
     @Override
     public String toString() {
-        if (hasBreak(TO_STRING_RETURNS_EMPTY_STRING)) {
-            return "";
-        }
-        return value.toString();
+        return getWithSafety(() -> {
+            if (hasBreak(TO_STRING_RETURNS_EMPTY_STRING)) {
+                return "";
+            }
+            return value.toString();
+        });
     }
 
     /// Returns the underlying value wrapped by this object.

@@ -603,9 +603,19 @@ public class BreakableBlockingQueue<E> extends BreakableQueue<E> implements Bloc
             final int permits,
             final boolean isSafe,
             final Class<?> compatibleType) {
-        super(blockingQueueArg, breaks, methodStatuses, characteristics, permits, isSafe,
-                compatibleType);
+        // No lock, whatever isSafe says: the store is thread safe, and a blocking call made under a lock would hold
+        // out every other thread (#52).
+        super(blockingQueueArg, breaks, methodStatuses, characteristics, permits, false, compatibleType);
         this.blockingQueue = blockingQueueArg;
+    }
+
+    /// Returns `true`: the queue is thread safe through its store, a JDK `BlockingQueue`, and holds no lock of its own,
+    /// whatever its builder's `setSafe` says (#52).
+    ///
+    /// @return `true`
+    @Override
+    public boolean isSafe() {
+        return true;
     }
 
     /// Inserts the specified element into this queue if it is possible to do so immediately

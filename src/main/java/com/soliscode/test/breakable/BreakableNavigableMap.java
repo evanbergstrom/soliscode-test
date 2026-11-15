@@ -8,6 +8,7 @@ import java.util.NavigableMap;
 import java.util.NavigableSet;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.jspecify.annotations.Nullable;
@@ -120,8 +121,12 @@ import com.soliscode.test.contract.navigablemap.NavigableMapMethods;
 ///
 /// ## Thread Safety
 ///
-/// Like its parent classes, BreakableNavigableMap is not thread-safe. External synchronization
-/// is required for concurrent access, particularly when navigation operations are involved.
+/// Built with `setSafe(true)`, the map runs each of its methods under a lock of its own, and so do its views (#52):
+/// `descendingMap()`, the ranged `subMap`, `headMap` and `tailMap` and the one-bound ones are navigable maps over the
+/// store's views, and `navigableKeySet()` and `descendingKeySet()` navigable sets, that share this map's lock, as
+/// `Collections.synchronizedNavigableMap`'s views synchronize on the map. A map view carries this map's method statuses
+/// and none of its breaks; a key set takes the statuses mapped as [BreakableMap]'s collection views do. A traversal of
+/// an iterator or spliterator is not made under the lock. Built otherwise, the map and its views take no lock.
 ///
 /// ## Performance Considerations
 ///
@@ -673,20 +678,22 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     /// - May throw NoSuchElementException due to LOWER_ENTRY_THROWS_EXCEPTION break
     @Override
     public Map.@Nullable Entry<K, V> lowerEntry(final K key) {
-        if (!supportsMethod(NavigableMapMethods.LOWER_ENTRY)) {
-            throw new UnsupportedOperationException("lowerEntry() method is not supported");
-        }
-        if (hasBreak(LOWER_ENTRY_ALWAYS_RETURNS_NULL)) {
-            return null;
-        }
-        if (hasBreak(LOWER_ENTRY_THROWS_EXCEPTION)) {
-            throw new NoSuchElementException("LowerEntry access failed due to break");
-        }
-        if (hasBreak(LOWER_ENTRY_RETURNS_RANDOM_ENTRY) && !navigableStore().isEmpty()) {
-            K randomKey = navigableStore().keySet().iterator().next();
-            return Map.entry(randomKey, navigableStore().get(randomKey));
-        }
-        return navigableStore().lowerEntry(key);
+        return getWithSafety(() -> {
+            if (!supportsMethod(NavigableMapMethods.LOWER_ENTRY)) {
+                throw new UnsupportedOperationException("lowerEntry() method is not supported");
+            }
+            if (hasBreak(LOWER_ENTRY_ALWAYS_RETURNS_NULL)) {
+                return null;
+            }
+            if (hasBreak(LOWER_ENTRY_THROWS_EXCEPTION)) {
+                throw new NoSuchElementException("LowerEntry access failed due to break");
+            }
+            if (hasBreak(LOWER_ENTRY_RETURNS_RANDOM_ENTRY) && !navigableStore().isEmpty()) {
+                K randomKey = navigableStore().keySet().iterator().next();
+                return Map.entry(randomKey, navigableStore().get(randomKey));
+            }
+            return navigableStore().lowerEntry(key);
+        });
     }
 
     /// {@inheritDoc}
@@ -709,19 +716,21 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     /// @see NavigableMap#lowerKey(Object)
     @Override
     public @Nullable K lowerKey(final K key) {
-        if (!supportsMethod(NavigableMapMethods.LOWER_KEY)) {
-            throw new UnsupportedOperationException("lowerKey() method is not supported");
-        }
-        if (hasBreak(LOWER_KEY_ALWAYS_RETURNS_NULL)) {
-            return null;
-        }
-        if (hasBreak(LOWER_KEY_THROWS_EXCEPTION)) {
-            throw new NoSuchElementException("LowerKey access failed due to break");
-        }
-        if (hasBreak(LOWER_KEY_RETURNS_RANDOM_KEY) && !navigableStore().isEmpty()) {
-            return navigableStore().keySet().iterator().next();
-        }
-        return navigableStore().lowerKey(key);
+        return getWithSafety(() -> {
+            if (!supportsMethod(NavigableMapMethods.LOWER_KEY)) {
+                throw new UnsupportedOperationException("lowerKey() method is not supported");
+            }
+            if (hasBreak(LOWER_KEY_ALWAYS_RETURNS_NULL)) {
+                return null;
+            }
+            if (hasBreak(LOWER_KEY_THROWS_EXCEPTION)) {
+                throw new NoSuchElementException("LowerKey access failed due to break");
+            }
+            if (hasBreak(LOWER_KEY_RETURNS_RANDOM_KEY) && !navigableStore().isEmpty()) {
+                return navigableStore().keySet().iterator().next();
+            }
+            return navigableStore().lowerKey(key);
+        });
     }
 
     /// {@inheritDoc}
@@ -744,20 +753,22 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     /// @see NavigableMap#floorEntry(Object)
     @Override
     public Map.@Nullable Entry<K, V> floorEntry(final K key) {
-        if (!supportsMethod(NavigableMapMethods.FLOOR_ENTRY)) {
-            throw new UnsupportedOperationException("floorEntry() method is not supported");
-        }
-        if (hasBreak(FLOOR_ENTRY_ALWAYS_RETURNS_NULL)) {
-            return null;
-        }
-        if (hasBreak(FLOOR_ENTRY_THROWS_EXCEPTION)) {
-            throw new NoSuchElementException("FloorEntry access failed due to break");
-        }
-        if (hasBreak(FLOOR_ENTRY_RETURNS_RANDOM_ENTRY) && !navigableStore().isEmpty()) {
-            K randomKey = navigableStore().keySet().iterator().next();
-            return Map.entry(randomKey, navigableStore().get(randomKey));
-        }
-        return navigableStore().floorEntry(key);
+        return getWithSafety(() -> {
+            if (!supportsMethod(NavigableMapMethods.FLOOR_ENTRY)) {
+                throw new UnsupportedOperationException("floorEntry() method is not supported");
+            }
+            if (hasBreak(FLOOR_ENTRY_ALWAYS_RETURNS_NULL)) {
+                return null;
+            }
+            if (hasBreak(FLOOR_ENTRY_THROWS_EXCEPTION)) {
+                throw new NoSuchElementException("FloorEntry access failed due to break");
+            }
+            if (hasBreak(FLOOR_ENTRY_RETURNS_RANDOM_ENTRY) && !navigableStore().isEmpty()) {
+                K randomKey = navigableStore().keySet().iterator().next();
+                return Map.entry(randomKey, navigableStore().get(randomKey));
+            }
+            return navigableStore().floorEntry(key);
+        });
     }
 
     /// {@inheritDoc}
@@ -780,19 +791,21 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     /// @see NavigableMap#floorKey(Object)
     @Override
     public @Nullable K floorKey(final K key) {
-        if (!supportsMethod(NavigableMapMethods.FLOOR_KEY)) {
-            throw new UnsupportedOperationException("floorKey() method is not supported");
-        }
-        if (hasBreak(FLOOR_KEY_ALWAYS_RETURNS_NULL)) {
-            return null;
-        }
-        if (hasBreak(FLOOR_KEY_THROWS_EXCEPTION)) {
-            throw new NoSuchElementException("FloorKey access failed due to break");
-        }
-        if (hasBreak(FLOOR_KEY_RETURNS_RANDOM_KEY) && !navigableStore().isEmpty()) {
-            return navigableStore().keySet().iterator().next();
-        }
-        return navigableStore().floorKey(key);
+        return getWithSafety(() -> {
+            if (!supportsMethod(NavigableMapMethods.FLOOR_KEY)) {
+                throw new UnsupportedOperationException("floorKey() method is not supported");
+            }
+            if (hasBreak(FLOOR_KEY_ALWAYS_RETURNS_NULL)) {
+                return null;
+            }
+            if (hasBreak(FLOOR_KEY_THROWS_EXCEPTION)) {
+                throw new NoSuchElementException("FloorKey access failed due to break");
+            }
+            if (hasBreak(FLOOR_KEY_RETURNS_RANDOM_KEY) && !navigableStore().isEmpty()) {
+                return navigableStore().keySet().iterator().next();
+            }
+            return navigableStore().floorKey(key);
+        });
     }
 
     /// {@inheritDoc}
@@ -815,20 +828,22 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     /// @see NavigableMap#ceilingEntry(Object)
     @Override
     public Map.@Nullable Entry<K, V> ceilingEntry(final K key) {
-        if (!supportsMethod(NavigableMapMethods.CEILING_ENTRY)) {
-            throw new UnsupportedOperationException("ceilingEntry() method is not supported");
-        }
-        if (hasBreak(CEILING_ENTRY_ALWAYS_RETURNS_NULL)) {
-            return null;
-        }
-        if (hasBreak(CEILING_ENTRY_THROWS_EXCEPTION)) {
-            throw new NoSuchElementException("CeilingEntry access failed due to break");
-        }
-        if (hasBreak(CEILING_ENTRY_RETURNS_RANDOM_ENTRY) && !navigableStore().isEmpty()) {
-            K randomKey = navigableStore().keySet().iterator().next();
-            return Map.entry(randomKey, navigableStore().get(randomKey));
-        }
-        return navigableStore().ceilingEntry(key);
+        return getWithSafety(() -> {
+            if (!supportsMethod(NavigableMapMethods.CEILING_ENTRY)) {
+                throw new UnsupportedOperationException("ceilingEntry() method is not supported");
+            }
+            if (hasBreak(CEILING_ENTRY_ALWAYS_RETURNS_NULL)) {
+                return null;
+            }
+            if (hasBreak(CEILING_ENTRY_THROWS_EXCEPTION)) {
+                throw new NoSuchElementException("CeilingEntry access failed due to break");
+            }
+            if (hasBreak(CEILING_ENTRY_RETURNS_RANDOM_ENTRY) && !navigableStore().isEmpty()) {
+                K randomKey = navigableStore().keySet().iterator().next();
+                return Map.entry(randomKey, navigableStore().get(randomKey));
+            }
+            return navigableStore().ceilingEntry(key);
+        });
     }
 
     /// {@inheritDoc}
@@ -851,19 +866,21 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     /// @see NavigableMap#ceilingKey(Object)
     @Override
     public @Nullable K ceilingKey(final K key) {
-        if (!supportsMethod(NavigableMapMethods.CEILING_KEY)) {
-            throw new UnsupportedOperationException("ceilingKey() method is not supported");
-        }
-        if (hasBreak(CEILING_KEY_ALWAYS_RETURNS_NULL)) {
-            return null;
-        }
-        if (hasBreak(CEILING_KEY_THROWS_EXCEPTION)) {
-            throw new NoSuchElementException("CeilingKey access failed due to break");
-        }
-        if (hasBreak(CEILING_KEY_RETURNS_RANDOM_KEY) && !navigableStore().isEmpty()) {
-            return navigableStore().keySet().iterator().next();
-        }
-        return navigableStore().ceilingKey(key);
+        return getWithSafety(() -> {
+            if (!supportsMethod(NavigableMapMethods.CEILING_KEY)) {
+                throw new UnsupportedOperationException("ceilingKey() method is not supported");
+            }
+            if (hasBreak(CEILING_KEY_ALWAYS_RETURNS_NULL)) {
+                return null;
+            }
+            if (hasBreak(CEILING_KEY_THROWS_EXCEPTION)) {
+                throw new NoSuchElementException("CeilingKey access failed due to break");
+            }
+            if (hasBreak(CEILING_KEY_RETURNS_RANDOM_KEY) && !navigableStore().isEmpty()) {
+                return navigableStore().keySet().iterator().next();
+            }
+            return navigableStore().ceilingKey(key);
+        });
     }
 
     /// {@inheritDoc}
@@ -886,20 +903,22 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     /// @see NavigableMap#higherEntry(Object)
     @Override
     public Map.@Nullable Entry<K, V> higherEntry(final K key) {
-        if (!supportsMethod(NavigableMapMethods.HIGHER_ENTRY)) {
-            throw new UnsupportedOperationException("higherEntry() method is not supported");
-        }
-        if (hasBreak(HIGHER_ENTRY_ALWAYS_RETURNS_NULL)) {
-            return null;
-        }
-        if (hasBreak(HIGHER_ENTRY_THROWS_EXCEPTION)) {
-            throw new NoSuchElementException("HigherEntry access failed due to break");
-        }
-        if (hasBreak(HIGHER_ENTRY_RETURNS_RANDOM_ENTRY) && !navigableStore().isEmpty()) {
-            K randomKey = navigableStore().keySet().iterator().next();
-            return Map.entry(randomKey, navigableStore().get(randomKey));
-        }
-        return navigableStore().higherEntry(key);
+        return getWithSafety(() -> {
+            if (!supportsMethod(NavigableMapMethods.HIGHER_ENTRY)) {
+                throw new UnsupportedOperationException("higherEntry() method is not supported");
+            }
+            if (hasBreak(HIGHER_ENTRY_ALWAYS_RETURNS_NULL)) {
+                return null;
+            }
+            if (hasBreak(HIGHER_ENTRY_THROWS_EXCEPTION)) {
+                throw new NoSuchElementException("HigherEntry access failed due to break");
+            }
+            if (hasBreak(HIGHER_ENTRY_RETURNS_RANDOM_ENTRY) && !navigableStore().isEmpty()) {
+                K randomKey = navigableStore().keySet().iterator().next();
+                return Map.entry(randomKey, navigableStore().get(randomKey));
+            }
+            return navigableStore().higherEntry(key);
+        });
     }
 
     /// {@inheritDoc}
@@ -922,19 +941,21 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     /// @see NavigableMap#higherKey(Object)
     @Override
     public @Nullable K higherKey(final K key) {
-        if (!supportsMethod(NavigableMapMethods.HIGHER_KEY)) {
-            throw new UnsupportedOperationException("higherKey() method is not supported");
-        }
-        if (hasBreak(HIGHER_KEY_ALWAYS_RETURNS_NULL)) {
-            return null;
-        }
-        if (hasBreak(HIGHER_KEY_THROWS_EXCEPTION)) {
-            throw new NoSuchElementException("HigherKey access failed due to break");
-        }
-        if (hasBreak(HIGHER_KEY_RETURNS_RANDOM_KEY) && !navigableStore().isEmpty()) {
-            return navigableStore().keySet().iterator().next();
-        }
-        return navigableStore().higherKey(key);
+        return getWithSafety(() -> {
+            if (!supportsMethod(NavigableMapMethods.HIGHER_KEY)) {
+                throw new UnsupportedOperationException("higherKey() method is not supported");
+            }
+            if (hasBreak(HIGHER_KEY_ALWAYS_RETURNS_NULL)) {
+                return null;
+            }
+            if (hasBreak(HIGHER_KEY_THROWS_EXCEPTION)) {
+                throw new NoSuchElementException("HigherKey access failed due to break");
+            }
+            if (hasBreak(HIGHER_KEY_RETURNS_RANDOM_KEY) && !navigableStore().isEmpty()) {
+                return navigableStore().keySet().iterator().next();
+            }
+            return navigableStore().higherKey(key);
+        });
     }
 
     /// {@inheritDoc}
@@ -956,20 +977,22 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     /// @see NavigableMap#firstEntry()
     @Override
     public Map.@Nullable Entry<K, V> firstEntry() {
-        if (!supportsMethod(NavigableMapMethods.FIRST_ENTRY)) {
-            throw new UnsupportedOperationException("firstEntry() method is not supported");
-        }
-        if (hasBreak(FIRST_ENTRY_ALWAYS_RETURNS_NULL)) {
-            return null;
-        }
-        if (hasBreak(FIRST_ENTRY_THROWS_EXCEPTION)) {
-            throw new NoSuchElementException("FirstEntry access failed due to break");
-        }
-        if (hasBreak(FIRST_ENTRY_RETURNS_RANDOM_ENTRY) && navigableStore().size() > 1) {
-            // Return another entry than the first: the last.
-            return navigableStore().lastEntry();
-        }
-        return navigableStore().firstEntry();
+        return getWithSafety(() -> {
+            if (!supportsMethod(NavigableMapMethods.FIRST_ENTRY)) {
+                throw new UnsupportedOperationException("firstEntry() method is not supported");
+            }
+            if (hasBreak(FIRST_ENTRY_ALWAYS_RETURNS_NULL)) {
+                return null;
+            }
+            if (hasBreak(FIRST_ENTRY_THROWS_EXCEPTION)) {
+                throw new NoSuchElementException("FirstEntry access failed due to break");
+            }
+            if (hasBreak(FIRST_ENTRY_RETURNS_RANDOM_ENTRY) && navigableStore().size() > 1) {
+                // Return another entry than the first: the last.
+                return navigableStore().lastEntry();
+            }
+            return navigableStore().firstEntry();
+        });
     }
 
     /// {@inheritDoc}
@@ -991,20 +1014,22 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     /// @see NavigableMap#lastEntry()
     @Override
     public Map.@Nullable Entry<K, V> lastEntry() {
-        if (!supportsMethod(NavigableMapMethods.LAST_ENTRY)) {
-            throw new UnsupportedOperationException("lastEntry() method is not supported");
-        }
-        if (hasBreak(LAST_ENTRY_ALWAYS_RETURNS_NULL)) {
-            return null;
-        }
-        if (hasBreak(LAST_ENTRY_THROWS_EXCEPTION)) {
-            throw new NoSuchElementException("LastEntry access failed due to break");
-        }
-        if (hasBreak(LAST_ENTRY_RETURNS_RANDOM_ENTRY) && !navigableStore().isEmpty()) {
-            K randomKey = navigableStore().keySet().iterator().next();
-            return Map.entry(randomKey, navigableStore().get(randomKey));
-        }
-        return navigableStore().lastEntry();
+        return getWithSafety(() -> {
+            if (!supportsMethod(NavigableMapMethods.LAST_ENTRY)) {
+                throw new UnsupportedOperationException("lastEntry() method is not supported");
+            }
+            if (hasBreak(LAST_ENTRY_ALWAYS_RETURNS_NULL)) {
+                return null;
+            }
+            if (hasBreak(LAST_ENTRY_THROWS_EXCEPTION)) {
+                throw new NoSuchElementException("LastEntry access failed due to break");
+            }
+            if (hasBreak(LAST_ENTRY_RETURNS_RANDOM_ENTRY) && !navigableStore().isEmpty()) {
+                K randomKey = navigableStore().keySet().iterator().next();
+                return Map.entry(randomKey, navigableStore().get(randomKey));
+            }
+            return navigableStore().lastEntry();
+        });
     }
 
     /// {@inheritDoc}
@@ -1026,19 +1051,21 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     /// @see NavigableMap#pollFirstEntry()
     @Override
     public Map.@Nullable Entry<K, V> pollFirstEntry() {
-        if (!supportsMethod(NavigableMapMethods.POLL_FIRST_ENTRY)) {
-            throw new UnsupportedOperationException("pollFirstEntry() method is not supported");
-        }
-        if (hasBreak(POLL_FIRST_ENTRY_ALWAYS_RETURNS_NULL)) {
-            return null;
-        }
-        if (hasBreak(POLL_FIRST_ENTRY_THROWS_EXCEPTION)) {
-            throw new NoSuchElementException("PollFirstEntry access failed due to break");
-        }
-        if (hasBreak(POLL_FIRST_ENTRY_DOES_NOT_REMOVE)) {
-            return navigableStore().firstEntry(); // Return but don't remove
-        }
-        return navigableStore().pollFirstEntry();
+        return getWithSafety(() -> {
+            if (!supportsMethod(NavigableMapMethods.POLL_FIRST_ENTRY)) {
+                throw new UnsupportedOperationException("pollFirstEntry() method is not supported");
+            }
+            if (hasBreak(POLL_FIRST_ENTRY_ALWAYS_RETURNS_NULL)) {
+                return null;
+            }
+            if (hasBreak(POLL_FIRST_ENTRY_THROWS_EXCEPTION)) {
+                throw new NoSuchElementException("PollFirstEntry access failed due to break");
+            }
+            if (hasBreak(POLL_FIRST_ENTRY_DOES_NOT_REMOVE)) {
+                return navigableStore().firstEntry(); // Return but don't remove
+            }
+            return navigableStore().pollFirstEntry();
+        });
     }
 
     /// {@inheritDoc}
@@ -1060,19 +1087,21 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     /// @see NavigableMap#pollLastEntry()
     @Override
     public Map.@Nullable Entry<K, V> pollLastEntry() {
-        if (!supportsMethod(NavigableMapMethods.POLL_LAST_ENTRY)) {
-            throw new UnsupportedOperationException("pollLastEntry() method is not supported");
-        }
-        if (hasBreak(POLL_LAST_ENTRY_ALWAYS_RETURNS_NULL)) {
-            return null;
-        }
-        if (hasBreak(POLL_LAST_ENTRY_THROWS_EXCEPTION)) {
-            throw new NoSuchElementException("PollLastEntry access failed due to break");
-        }
-        if (hasBreak(POLL_LAST_ENTRY_DOES_NOT_REMOVE)) {
-            return navigableStore().lastEntry(); // Return but don't remove
-        }
-        return navigableStore().pollLastEntry();
+        return getWithSafety(() -> {
+            if (!supportsMethod(NavigableMapMethods.POLL_LAST_ENTRY)) {
+                throw new UnsupportedOperationException("pollLastEntry() method is not supported");
+            }
+            if (hasBreak(POLL_LAST_ENTRY_ALWAYS_RETURNS_NULL)) {
+                return null;
+            }
+            if (hasBreak(POLL_LAST_ENTRY_THROWS_EXCEPTION)) {
+                throw new NoSuchElementException("PollLastEntry access failed due to break");
+            }
+            if (hasBreak(POLL_LAST_ENTRY_DOES_NOT_REMOVE)) {
+                return navigableStore().lastEntry(); // Return but don't remove
+            }
+            return navigableStore().pollLastEntry();
+        });
     }
 
     /// {@inheritDoc}
@@ -1093,20 +1122,22 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     /// @see NavigableMap#descendingMap()
     @Override
     public @Nullable NavigableMap<K, V> descendingMap() {
-        if (!supportsMethod(NavigableMapMethods.DESCENDING_MAP)) {
-            throw new UnsupportedOperationException("descendingMap() method is not supported");
-        }
-        if (hasBreak(DESCENDING_MAP_RETURNS_EMPTY_MAP)) {
-            //noinspection SortedCollectionWithNonComparableKeys
-            return new TreeMap<>();
-        }
-        if (hasBreak(DESCENDING_MAP_RETURNS_NULL)) {
-            return null;
-        }
-        if (hasBreak(DESCENDING_MAP_THROWS_EXCEPTION)) {
-            throw new UnsupportedOperationException("DescendingMap access failed due to break");
-        }
-        return navigableStore().descendingMap();
+        return getWithSafety(() -> {
+            if (!supportsMethod(NavigableMapMethods.DESCENDING_MAP)) {
+                throw new UnsupportedOperationException("descendingMap() method is not supported");
+            }
+            if (hasBreak(DESCENDING_MAP_RETURNS_EMPTY_MAP)) {
+                //noinspection SortedCollectionWithNonComparableKeys
+                return new TreeMap<>();
+            }
+            if (hasBreak(DESCENDING_MAP_RETURNS_NULL)) {
+                return null;
+            }
+            if (hasBreak(DESCENDING_MAP_THROWS_EXCEPTION)) {
+                throw new UnsupportedOperationException("DescendingMap access failed due to break");
+            }
+            return view(navigableStore().descendingMap());
+        });
     }
 
     /// {@inheritDoc}
@@ -1128,19 +1159,21 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     @SuppressWarnings("SortedCollectionWithNonComparableKeys")
     @Override
     public @Nullable NavigableSet<K> navigableKeySet() {
-        if (!supportsMethod(NavigableMapMethods.NAVIGABLE_KEY_SET)) {
-            throw new UnsupportedOperationException("navigableKeySet() method is not supported");
-        }
-        if (hasBreak(NAVIGABLE_KEY_SET_RETURNS_EMPTY_SET)) {
-            return new TreeMap<K, Object>().navigableKeySet();
-        }
-        if (hasBreak(NAVIGABLE_KEY_SET_RETURNS_NULL)) {
-            return null;
-        }
-        if (hasBreak(NAVIGABLE_KEY_SET_THROWS_EXCEPTION)) {
-            throw new UnsupportedOperationException("NavigableKeySet access failed due to break");
-        }
-        return navigableStore().navigableKeySet();
+        return getWithSafety(() -> {
+            if (!supportsMethod(NavigableMapMethods.NAVIGABLE_KEY_SET)) {
+                throw new UnsupportedOperationException("navigableKeySet() method is not supported");
+            }
+            if (hasBreak(NAVIGABLE_KEY_SET_RETURNS_EMPTY_SET)) {
+                return new TreeMap<K, Object>().navigableKeySet();
+            }
+            if (hasBreak(NAVIGABLE_KEY_SET_RETURNS_NULL)) {
+                return null;
+            }
+            if (hasBreak(NAVIGABLE_KEY_SET_THROWS_EXCEPTION)) {
+                throw new UnsupportedOperationException("NavigableKeySet access failed due to break");
+            }
+            return keyView(navigableStore().navigableKeySet());
+        });
     }
 
     /// {@inheritDoc}
@@ -1162,19 +1195,21 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     @SuppressWarnings("SortedCollectionWithNonComparableKeys")
     @Override
     public @Nullable NavigableSet<K> descendingKeySet() {
-        if (!supportsMethod(NavigableMapMethods.DESCENDING_KEY_SET)) {
-            throw new UnsupportedOperationException("descendingKeySet() method is not supported");
-        }
-        if (hasBreak(DESCENDING_KEY_SET_RETURNS_EMPTY_SET)) {
-            return new TreeMap<K, Object>().descendingKeySet();
-        }
-        if (hasBreak(DESCENDING_KEY_SET_RETURNS_NULL)) {
-            return null;
-        }
-        if (hasBreak(DESCENDING_KEY_SET_THROWS_EXCEPTION)) {
-            throw new UnsupportedOperationException("DescendingKeySet access failed due to break");
-        }
-        return navigableStore().descendingKeySet();
+        return getWithSafety(() -> {
+            if (!supportsMethod(NavigableMapMethods.DESCENDING_KEY_SET)) {
+                throw new UnsupportedOperationException("descendingKeySet() method is not supported");
+            }
+            if (hasBreak(DESCENDING_KEY_SET_RETURNS_EMPTY_SET)) {
+                return new TreeMap<K, Object>().descendingKeySet();
+            }
+            if (hasBreak(DESCENDING_KEY_SET_RETURNS_NULL)) {
+                return null;
+            }
+            if (hasBreak(DESCENDING_KEY_SET_THROWS_EXCEPTION)) {
+                throw new UnsupportedOperationException("DescendingKeySet access failed due to break");
+            }
+            return keyView(navigableStore().descendingKeySet());
+        });
     }
 
     /// {@inheritDoc}
@@ -1201,20 +1236,22 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     @Override
     public @Nullable NavigableMap<K, V> subMap(final K fromKey, final boolean fromInclusive,
                                              final K toKey, final boolean toInclusive) {
-        if (!supportsMethod(NavigableMapMethods.SUB_MAP_FOUR_ARG)) {
-            throw new UnsupportedOperationException("subMap(K, boolean, K, boolean) method is not supported");
-        }
-        if (hasBreak(SUB_MAP_FOUR_ARG_RETURNS_EMPTY_MAP)) {
-            //noinspection SortedCollectionWithNonComparableKeys
-            return new TreeMap<>();
-        }
-        if (hasBreak(SUB_MAP_FOUR_ARG_RETURNS_NULL)) {
-            return null;
-        }
-        if (hasBreak(SUB_MAP_FOUR_ARG_THROWS_EXCEPTION)) {
-            throw new IllegalArgumentException("SubMap creation failed due to break");
-        }
-        return navigableStore().subMap(fromKey, fromInclusive, toKey, toInclusive);
+        return getWithSafety(() -> {
+            if (!supportsMethod(NavigableMapMethods.SUB_MAP_FOUR_ARG)) {
+                throw new UnsupportedOperationException("subMap(K, boolean, K, boolean) method is not supported");
+            }
+            if (hasBreak(SUB_MAP_FOUR_ARG_RETURNS_EMPTY_MAP)) {
+                //noinspection SortedCollectionWithNonComparableKeys
+                return new TreeMap<>();
+            }
+            if (hasBreak(SUB_MAP_FOUR_ARG_RETURNS_NULL)) {
+                return null;
+            }
+            if (hasBreak(SUB_MAP_FOUR_ARG_THROWS_EXCEPTION)) {
+                throw new IllegalArgumentException("SubMap creation failed due to break");
+            }
+            return view(navigableStore().subMap(fromKey, fromInclusive, toKey, toInclusive));
+        });
     }
 
     /// {@inheritDoc}
@@ -1238,20 +1275,22 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     /// @see NavigableMap#headMap(Object, boolean)
     @Override
     public @Nullable NavigableMap<K, V> headMap(final K toKey, final boolean inclusive) {
-        if (!supportsMethod(NavigableMapMethods.HEAD_MAP_TWO_ARG)) {
-            throw new UnsupportedOperationException("headMap(K, boolean) method is not supported");
-        }
-        if (hasBreak(HEAD_MAP_TWO_ARG_RETURNS_EMPTY_MAP)) {
-            //noinspection SortedCollectionWithNonComparableKeys
-            return new TreeMap<>();
-        }
-        if (hasBreak(HEAD_MAP_TWO_ARG_RETURNS_NULL)) {
-            return null;
-        }
-        if (hasBreak(HEAD_MAP_TWO_ARG_THROWS_EXCEPTION)) {
-            throw new IllegalArgumentException("HeadMap creation failed due to break");
-        }
-        return navigableStore().headMap(toKey, inclusive);
+        return getWithSafety(() -> {
+            if (!supportsMethod(NavigableMapMethods.HEAD_MAP_TWO_ARG)) {
+                throw new UnsupportedOperationException("headMap(K, boolean) method is not supported");
+            }
+            if (hasBreak(HEAD_MAP_TWO_ARG_RETURNS_EMPTY_MAP)) {
+                //noinspection SortedCollectionWithNonComparableKeys
+                return new TreeMap<>();
+            }
+            if (hasBreak(HEAD_MAP_TWO_ARG_RETURNS_NULL)) {
+                return null;
+            }
+            if (hasBreak(HEAD_MAP_TWO_ARG_THROWS_EXCEPTION)) {
+                throw new IllegalArgumentException("HeadMap creation failed due to break");
+            }
+            return view(navigableStore().headMap(toKey, inclusive));
+        });
     }
 
     /// {@inheritDoc}
@@ -1276,20 +1315,53 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     /// @see NavigableMap#tailMap(Object, boolean)
     @Override
     public @Nullable NavigableMap<K, V> tailMap(final K fromKey, final boolean inclusive) {
-        if (!supportsMethod(NavigableMapMethods.TAIL_MAP_TWO_ARG)) {
-            throw new UnsupportedOperationException("tailMap(K, boolean) method is not supported");
-        }
-        if (hasBreak(TAIL_MAP_TWO_ARG_RETURNS_EMPTY_MAP)) {
-            //noinspection SortedCollectionWithNonComparableKeys
-            return new TreeMap<>();
-        }
-        if (hasBreak(TAIL_MAP_TWO_ARG_RETURNS_NULL)) {
-            return null;
-        }
-        if (hasBreak(TAIL_MAP_TWO_ARG_THROWS_EXCEPTION)) {
-            throw new IllegalArgumentException("TailMap creation failed due to break");
-        }
-        return navigableStore().tailMap(fromKey, inclusive);
+        return getWithSafety(() -> {
+            if (!supportsMethod(NavigableMapMethods.TAIL_MAP_TWO_ARG)) {
+                throw new UnsupportedOperationException("tailMap(K, boolean) method is not supported");
+            }
+            if (hasBreak(TAIL_MAP_TWO_ARG_RETURNS_EMPTY_MAP)) {
+                //noinspection SortedCollectionWithNonComparableKeys
+                return new TreeMap<>();
+            }
+            if (hasBreak(TAIL_MAP_TWO_ARG_RETURNS_NULL)) {
+                return null;
+            }
+            if (hasBreak(TAIL_MAP_TWO_ARG_THROWS_EXCEPTION)) {
+                throw new IllegalArgumentException("TailMap creation failed due to break");
+            }
+            return view(navigableStore().tailMap(fromKey, inclusive));
+        });
+    }
+
+    /// Returns a view of this map over a view of its store, as [BreakableSortedMap] does: a [BreakableNavigableMap]
+    /// where the store's view is navigable, as a [java.util.TreeMap]'s are.
+    ///
+    /// @param view the store's view
+    /// @return the view
+    @Override
+    SortedMap<K, V> view(final SortedMap<K, V> view) {
+        return view instanceof NavigableMap<K, V> navigable ? view(navigable) : super.view(view);
+    }
+
+    /// Returns a view of this map over a navigable view of its store: a [BreakableNavigableMap] with this map's method
+    /// statuses and permits and none of its breaks, that shares its lock (#52).
+    ///
+    /// @param view the store's view
+    /// @return the view
+    NavigableMap<K, V> view(final NavigableMap<K, V> view) {
+        return sharingLockOf(
+                new BreakableNavigableMap<K, V>(view, DEFAULT_BREAKS, methodStatuses(), permits(), false), this);
+    }
+
+    /// Returns a key set of this map over the store's: a [BreakableNavigableSet] with the map's statuses mapped onto it
+    /// ([MapViews]) and the breaks of [#collectionViewBreaks()], that shares the map's lock (#52).
+    ///
+    /// @param keys the store's key set
+    /// @return the key set
+    NavigableSet<K> keyView(final NavigableSet<K> keys) {
+        return sharingLockOf(
+                new BreakableNavigableSet<K>(keys, collectionViewBreaks(), MapViews.statuses(this, methodStatuses()),
+                    BreakableSortedSet.DEFAULT_CHARACTERISTICS, MapViews.keyPermits(this), false, Object.class), this);
     }
 
     // ========== Builder Class ==========

@@ -39,16 +39,6 @@ final class WeakConsistencyViews {
 
     private WeakConsistencyViews() { }
 
-    /// Returns the set, or, where one of the weak-consistency breaks is set, a wrapper whose iterator applies it.
-    ///
-    /// @param set the view
-    /// @param breaks the breakable's breaks
-    /// @param <E> the element type
-    /// @return the view or its wrapper
-    static <E> Set<E> set(final Set<E> set, final Set<Break> breaks) {
-        return BreakableIterator.hasWeakConsistencyBreak(breaks) ? new WrappedSet<>(set, breaks) : set;
-    }
-
     /// Returns the navigable set, or, where one of the weak-consistency breaks is set, a wrapper whose `iterator()` and
     /// `descendingIterator()` apply it.
     ///

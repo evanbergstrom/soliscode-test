@@ -269,9 +269,10 @@ import com.soliscode.test.contract.sequencedcollection.SequencedCollectionMethod
 /// ## Design Considerations
 ///
 /// ### Thread Safety
-/// This class is not thread-safe. The underlying List's thread safety characteristics
-/// determine the overall thread safety behavior. External synchronization is required for
-/// concurrent access.
+/// Built with `setSafe(true)`, the collection runs each of its methods under a lock of its own, unless its
+/// `*_IS_NOT_THREAD_SAFE` break is set, and so does `reversed()`, a collection over the store's reversed view that
+/// shares this collection's lock and has its method statuses and none of its breaks (#52). Built otherwise, it takes no
+/// lock.
 ///
 /// ### Performance
 /// - **Normal Operations**: Performance depends on the backing List (default: ArrayList)
@@ -563,8 +564,10 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
                 return sequenced;
             }
             return getWithBreakableSafety(REVERSED_IS_NOT_THREAD_SAFE, () ->
-                    new BreakableSequencedCollection<>(sequenced.reversed(), breaks(), methodStatuses(),
-                            characteristics(), permits(), isSafe(), compatibleType()));
+                    // A view: this collection's statuses and lock, none of its breaks (#52).
+                    sharingLockOf(
+                            new BreakableSequencedCollection<E>(sequenced.reversed(), DEFAULT_BREAKS, methodStatuses(),
+                                characteristics(), permits(), false, compatibleType()), this));
         }  else {
             throw new UnsupportedOperationException();
         }
@@ -693,7 +696,7 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
                     return i.next();
                 });
             }
-            return sequenced.getLast();
+            return getWithBreakableSafety(GET_LAST_IS_NOT_THREAD_SAFE, sequenced::getLast);
         }  else {
             throw new UnsupportedOperationException();
         }
@@ -725,7 +728,7 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
             if (hasBreak(REMOVE_FIRST_ALWAYS_THROWS)) {
                 throw new NoSuchElementException();
             }
-            return sequenced.removeFirst();
+            return getWithBreakableSafety(REMOVE_FIRST_IS_NOT_THREAD_SAFE, sequenced::removeFirst);
         }  else {
             throw new UnsupportedOperationException();
         }
@@ -757,7 +760,7 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
             if (hasBreak(REMOVE_LAST_ALWAYS_THROWS)) {
                 throw new NoSuchElementException();
             }
-            return sequenced.removeLast();
+            return getWithBreakableSafety(REMOVE_LAST_IS_NOT_THREAD_SAFE, sequenced::removeLast);
         }  else {
             throw new UnsupportedOperationException();
         }

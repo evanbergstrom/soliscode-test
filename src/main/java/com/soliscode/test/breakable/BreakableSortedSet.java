@@ -332,8 +332,14 @@ import com.soliscode.test.contract.iterable.IterableMethods;
 /// ## Design Considerations
 ///
 /// ### Thread Safety
-/// This class is not thread-safe. The underlying collection's thread safety characteristics
-/// determine the overall thread safety behavior.
+/// Built with `setSafe(true)`, the set runs each of its methods under a lock of its own, and so do its views (#52):
+/// `subSet`, `headSet`, `tailSet` and `reversed()` (and a navigable set's `descendingSet()` and ranged views) return
+/// sets of this set's kind over the store's views that share this set's lock, as
+/// `Collections.synchronizedSortedSet`'s views synchronize on the set, with this set's method statuses and none of
+/// its breaks, since a break describes a method of this set. A break that names a view (`SUBSET_INCLUDES_TO_ELEMENT`,
+/// `SUBSET_OPERATIONS_IGNORE_OUT_OF_RANGE_ADD`) picks the store the view is over, and one that returns a copy or an
+/// empty set returns it as it is. A traversal of an iterator or spliterator is not made under the lock. Built
+/// otherwise, the set and its views take no lock.
 ///
 /// ### Performance
 /// - **Add Operations**: Depends on backing SortedSet implementation (typically O(log n))
@@ -690,17 +696,18 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
 
     @Override
     public SortedSet<E> reversed() {
-        if (hasBreak(BreakableSequencedCollection.REVERSED_DOES_NOT_REVERSE_COLLECTION)) {
-            return this;
-        }
-        if (hasBreak(BreakableSequencedCollection.REVERSED_MODIFIES_THE_COLLECTION)) {
-            SortedSet<E> reversed = sortedSet.reversed();
-            sortedSet.clear();
-            sortedSet.addAll(reversed);
-            return this;
-        }
-        return new BreakableSortedSet<>(sortedSet.reversed(), breaks(), methodStatuses(), characteristics(), permits(),
-                isSafe(), compatibleType());
+        return getWithSafety(() -> {
+            if (hasBreak(BreakableSequencedCollection.REVERSED_DOES_NOT_REVERSE_COLLECTION)) {
+                return this;
+            }
+            if (hasBreak(BreakableSequencedCollection.REVERSED_MODIFIES_THE_COLLECTION)) {
+                SortedSet<E> reversed = sortedSet.reversed();
+                sortedSet.clear();
+                sortedSet.addAll(reversed);
+                return this;
+            }
+            return view(sortedSet.reversed());
+        });
     }
 
     /// Returns the comparator used to order the elements in this set.
@@ -733,10 +740,13 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
     ///         (or if the COMPARATOR_ALWAYS_RETURNS_NULL break is active)
     @Override
     public @Nullable Comparator<? super E> comparator() {
-        if (hasBreak(COMPARATOR_ALWAYS_RETURNS_NULL)) {
-            return null;
-        }
-        return sortedSet.comparator();
+        return getWithSafety(() -> {
+            if (hasBreak(COMPARATOR_ALWAYS_RETURNS_NULL)) {
+                return null;
+            }
+            return sortedSet.comparator();
+
+        });
     }
 
     /// Returns a view of the portion of this set whose elements range from fromElement to toElement.
@@ -784,21 +794,23 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
     ///         (or if SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION break is active)
     @Override
     public SortedSet<E> subSet(final E fromElement, final E toElement) {
-        if (hasBreak(SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION)) {
-            throw new IllegalArgumentException("Subset operations are broken");
-        }
-        if (hasBreak(SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY)) {
-            return new TreeSet<>(sortedSet.comparator());
-        }
-        // reverseOrder(comparator) is natural reverse order for a null comparator, so it compares with no cast.
-        if (hasBreak(SUBSET_ACCEPTS_REVERSED_RANGE)
-                && Collections.reverseOrder(sortedSet.comparator()).compare(fromElement, toElement) < 0) {
-            return new TreeSet<>(sortedSet.comparator());
-        }
-        if (hasBreak(SUBSET_INCLUDES_TO_ELEMENT)) {
-            return brokenView(navigableStore().subSet(fromElement, true, toElement, true));
-        }
-        return brokenView(sortedSet.subSet(fromElement, toElement));
+        return getWithSafety(() -> {
+            if (hasBreak(SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION)) {
+                throw new IllegalArgumentException("Subset operations are broken");
+            }
+            if (hasBreak(SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY)) {
+                return new TreeSet<>(sortedSet.comparator());
+            }
+            // reverseOrder(comparator) is natural reverse order for a null comparator, so it compares with no cast.
+            if (hasBreak(SUBSET_ACCEPTS_REVERSED_RANGE)
+                    && Collections.reverseOrder(sortedSet.comparator()).compare(fromElement, toElement) < 0) {
+                return new TreeSet<>(sortedSet.comparator());
+            }
+            if (hasBreak(SUBSET_INCLUDES_TO_ELEMENT)) {
+                return brokenView(navigableStore().subSet(fromElement, true, toElement, true));
+            }
+            return brokenView(sortedSet.subSet(fromElement, toElement));
+        });
     }
 
     /// Returns a view of the portion of this set whose elements are strictly less than toElement.
@@ -825,16 +837,18 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
     ///         outside the bounds of the range (or if SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION break is active)
     @Override
     public SortedSet<E> headSet(final E toElement) {
-        if (hasBreak(SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION)) {
-            throw new IllegalArgumentException("Subset operations are broken");
-        }
-        if (hasBreak(SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY)) {
-            return new TreeSet<>(sortedSet.comparator());
-        }
-        if (hasBreak(HEAD_SET_INCLUDES_TO_ELEMENT)) {
-            return brokenView(navigableStore().headSet(toElement, true));
-        }
-        return brokenView(sortedSet.headSet(toElement));
+        return getWithSafety(() -> {
+            if (hasBreak(SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION)) {
+                throw new IllegalArgumentException("Subset operations are broken");
+            }
+            if (hasBreak(SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY)) {
+                return new TreeSet<>(sortedSet.comparator());
+            }
+            if (hasBreak(HEAD_SET_INCLUDES_TO_ELEMENT)) {
+                return brokenView(navigableStore().headSet(toElement, true));
+            }
+            return brokenView(sortedSet.headSet(toElement));
+        });
     }
 
     /// Returns a view of the portion of this set whose elements are greater than or equal to fromElement.
@@ -861,16 +875,18 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
     ///         outside the bounds of the range (or if SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION break is active)
     @Override
     public SortedSet<E> tailSet(final E fromElement) {
-        if (hasBreak(SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION)) {
-            throw new IllegalArgumentException("Subset operations are broken");
-        }
-        if (hasBreak(SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY)) {
-            return new TreeSet<>(sortedSet.comparator());
-        }
-        if (hasBreak(TAIL_SET_EXCLUDES_FROM_ELEMENT)) {
-            return brokenView(navigableStore().tailSet(fromElement, false));
-        }
-        return brokenView(sortedSet.tailSet(fromElement));
+        return getWithSafety(() -> {
+            if (hasBreak(SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION)) {
+                throw new IllegalArgumentException("Subset operations are broken");
+            }
+            if (hasBreak(SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY)) {
+                return new TreeSet<>(sortedSet.comparator());
+            }
+            if (hasBreak(TAIL_SET_EXCLUDES_FROM_ELEMENT)) {
+                return brokenView(navigableStore().tailSet(fromElement, false));
+            }
+            return brokenView(sortedSet.tailSet(fromElement));
+        });
     }
 
     /// Returns the first (lowest) element currently in this set.
@@ -903,25 +919,27 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
     /// @throws NoSuchElementException if this set is empty (or if FIRST_ALWAYS_THROWS_EXCEPTION break is active)
     @Override
     public @Nullable E first() {
-        if (hasBreak(FIRST_ALWAYS_THROWS_EXCEPTION)) {
-            throw new NoSuchElementException("First element access is broken");
-        } else if (hasBreak(FIRST_ALWAYS_RETURNS_NULL)) {
-            return null;
-        } else if (hasBreak(FIRST_RETURNS_LAST_ELEMENT)) {
-            return sortedSet.last();
-        } else if (hasBreak(FIRST_SKIPS_FIRST_ELEMENT)) {
-            if (sortedSet.size() < 2) {
+        return getWithSafety(() -> {
+            if (hasBreak(FIRST_ALWAYS_THROWS_EXCEPTION)) {
                 throw new NoSuchElementException("First element access is broken");
+            } else if (hasBreak(FIRST_ALWAYS_RETURNS_NULL)) {
+                return null;
+            } else if (hasBreak(FIRST_RETURNS_LAST_ELEMENT)) {
+                return sortedSet.last();
+            } else if (hasBreak(FIRST_SKIPS_FIRST_ELEMENT)) {
+                if (sortedSet.size() < 2) {
+                    throw new NoSuchElementException("First element access is broken");
+                } else {
+                    Iterator<E> iter = sortedSet.iterator();
+                    iter.next();
+                    return iter.next();
+                }
+            } else if (sortedSet.isEmpty() && hasBreak(FIRST_RETURNS_NULL_WHEN_EMPTY)) {
+                return null;
             } else {
-                Iterator<E> iter = sortedSet.iterator();
-                iter.next();
-                return iter.next();
+                return sortedSet.first();
             }
-        } else if (sortedSet.isEmpty() && hasBreak(FIRST_RETURNS_NULL_WHEN_EMPTY)) {
-            return null;
-        } else {
-            return sortedSet.first();
-        }
+        });
     }
 
     /// Returns the last (highest) element currently in this set.
@@ -942,25 +960,27 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
     /// @throws NoSuchElementException if this set is empty (or if LAST_ALWAYS_THROWS_EXCEPTION break is active)
     @Override
     public @Nullable E last() {
-        if (hasBreak(LAST_ALWAYS_THROWS_EXCEPTION)) {
-            throw new NoSuchElementException("Last element access is broken");
-        } else if (hasBreak(LAST_ALWAYS_RETURNS_NULL)) {
-            return null;
-        } else if (hasBreak(LAST_RETURNS_FIRST_ELEMENT)) {
-            return sortedSet.first();
-        } else if (hasBreak(LAST_SKIPS_LAST_ELEMENT)) {
-            if (sortedSet.size() < 2) {
-                throw new NoSuchElementException("last element access is broken");
+        return getWithSafety(() -> {
+            if (hasBreak(LAST_ALWAYS_THROWS_EXCEPTION)) {
+                throw new NoSuchElementException("Last element access is broken");
+            } else if (hasBreak(LAST_ALWAYS_RETURNS_NULL)) {
+                return null;
+            } else if (hasBreak(LAST_RETURNS_FIRST_ELEMENT)) {
+                return sortedSet.first();
+            } else if (hasBreak(LAST_SKIPS_LAST_ELEMENT)) {
+                if (sortedSet.size() < 2) {
+                    throw new NoSuchElementException("last element access is broken");
+                } else {
+                    Iterator<E> iter = sortedSet.reversed().iterator();
+                    iter.next();
+                    return iter.next();
+                }
+            } else if (sortedSet.isEmpty() && hasBreak(LAST_RETURNS_NULL_WHEN_EMPTY)) {
+                return null;
             } else {
-                Iterator<E> iter = sortedSet.reversed().iterator();
-                iter.next();
-                return iter.next();
+                return sortedSet.last();
             }
-        } else if (sortedSet.isEmpty() && hasBreak(LAST_RETURNS_NULL_WHEN_EMPTY)) {
-            return null;
-        } else {
-            return sortedSet.last();
-        }
+        });
     }
 
     /// Returns an iterator over the elements in ascending order, as [SortedSet] requires.
@@ -979,7 +999,7 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
         }
         checkMethodSupport(IterableMethods.ITERATOR);
         BreakableIterator<E> iterator = new BreakableIterator<>(sortedSet.reversed().iterator(), breaks(),
-                methodStatuses(), characteristics(), isSafe());
+                methodStatuses(), characteristics(), hasLock());
         unsupportedMethods().forEach(iterator::doesNotSupportMethod);
         return iterator;
     }
@@ -1003,7 +1023,7 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
         }
         Spliterator<E> store = new ClearedSpliterator<>(sortedSet.spliterator(), cleared);
         return new BreakableSpliterator<>(store, breaks(), methodStatuses(),
-                store.characteristics() | (characteristics() & ~cleared), isSafe());
+                store.characteristics() | (characteristics() & ~cleared), hasLock());
     }
 
     /// Throws [UnsupportedOperationException], as [SortedSet#addFirst(Object)] requires: a sorted set's order is
@@ -1054,15 +1074,41 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
         throw new UnsupportedOperationException("this break needs a NavigableSet store");
     }
 
-    /// Applies the view breaks to a range view of the store.
-    private SortedSet<E> brokenView(final SortedSet<E> view) {
+    /// Applies the view breaks to a range view of the store, and makes the view of this set over the result, or
+    /// returns the copy a break asks for.
+    ///
+    /// @param view the store's range view
+    /// @return the view, or a copy
+    SortedSet<E> brokenView(final SortedSet<E> view) {
         if (hasBreak(SUBSET_OPERATIONS_RETURN_COPIES)) {
             return new TreeSet<>(view);
         }
         if (hasBreak(SUBSET_OPERATIONS_IGNORE_OUT_OF_RANGE_ADD)) {
-            return new RangeIgnoringView<>(view);
+            return view(new RangeIgnoringView<>(view));
         }
-        return view;
+        return view(view);
+    }
+
+    /// Returns the characteristics a view of this set adds to its store's: those this set adds that hold for any part
+    /// of it in either order (`DISTINCT` and `NONNULL`), not `SIZED`, `SUBSIZED`, `ORDERED` or `SORTED`, which a
+    /// range or a reversed view reports through its store's spliterator where they hold.
+    ///
+    /// @return the view's characteristics
+    int viewCharacteristics() {
+        return characteristics() & (Spliterator.DISTINCT | Spliterator.NONNULL);
+    }
+
+    /// Returns a view of this set over a view of its store: a set of this set's kind, with its method statuses,
+    /// [#viewCharacteristics()], permits and compatible type and none of its breaks, since a break describes a method
+    /// of this set, that shares its lock, as `Collections.synchronizedSortedSet` synchronizes a view on the set's lock
+    /// (#52).
+    ///
+    /// @param view the store's view
+    /// @return the view
+    SortedSet<E> view(final SortedSet<E> view) {
+        return sharingLockOf(
+                new BreakableSortedSet<E>(view, DEFAULT_BREAKS, methodStatuses(), viewCharacteristics(), permits(),
+                    false, compatibleType()), this);
     }
 
     /// A range view whose `add(E)` returns `false` for an element outside the range instead of throwing

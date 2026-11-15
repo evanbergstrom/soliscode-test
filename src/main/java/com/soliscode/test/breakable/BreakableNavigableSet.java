@@ -34,6 +34,7 @@ import org.jspecify.annotations.Nullable;
 
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.MethodStatus;
+import com.soliscode.test.contract.collection.CollectionMethods;
 
 /// **Breakable NavigableSet Implementation for Testing**
 ///
@@ -148,7 +149,8 @@ import com.soliscode.test.MethodStatus;
 /// #### SUBSET_IGNORES_INCLUSIVE
 /// **Purpose**: Forces `subSet(from, fromInclusive, to, toInclusive)` to be `[from, to)` whatever the flags say
 ///
-/// The two-argument and four-argument views are the store's views, as the one-argument ones are, and
+/// The two-argument and four-argument views, as the one-argument ones, are breakables over the store's views, with
+/// this set's lock and method statuses and none of its breaks (#52), and
 /// [SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY][BreakableSortedSet#SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY],
 /// [SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION][BreakableSortedSet#SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION],
 /// [SUBSET_ACCEPTS_REVERSED_RANGE][BreakableSortedSet#SUBSET_ACCEPTS_REVERSED_RANGE],
@@ -638,17 +640,18 @@ public class BreakableNavigableSet<E> extends BreakableSortedSet<E> implements N
 
     @Override
     public NavigableSet<E> reversed() {
-        if (hasBreak(BreakableSequencedCollection.REVERSED_DOES_NOT_REVERSE_COLLECTION)) {
-            return this;
-        }
-        if (hasBreak(BreakableSequencedCollection.REVERSED_MODIFIES_THE_COLLECTION)) {
-            NavigableSet<E> reversed = navigableSet.reversed();
-            navigableSet.clear();
-            navigableSet.addAll(reversed);
-            return this;
-        }
-        return new BreakableNavigableSet<>(navigableSet.reversed(), breaks(), methodStatuses(), characteristics(),
-                permits(), isSafe(), compatibleType());
+        return getWithSafety(() -> {
+            if (hasBreak(BreakableSequencedCollection.REVERSED_DOES_NOT_REVERSE_COLLECTION)) {
+                return this;
+            }
+            if (hasBreak(BreakableSequencedCollection.REVERSED_MODIFIES_THE_COLLECTION)) {
+                NavigableSet<E> reversed = navigableSet.reversed();
+                navigableSet.clear();
+                navigableSet.addAll(reversed);
+                return this;
+            }
+            return view(navigableSet.reversed());
+        });
     }
 
     // ========== NavigableSet Implementation ==========
@@ -656,85 +659,103 @@ public class BreakableNavigableSet<E> extends BreakableSortedSet<E> implements N
     /// {@inheritDoc}
     @Override
     public @Nullable E lower(final E e) {
-        if (hasBreak(LOWER_ALWAYS_RETURNS_NULL)) {
-            return null;
-        } else if (hasBreak(LOWER_RETURNS_HIGHER_VALUE)) {
-            return navigableSet.higher(e);
-        } else {
-            return navigableSet.lower(e);
-        }
+        return getWithSafety(() -> {
+            if (hasBreak(LOWER_ALWAYS_RETURNS_NULL)) {
+                return null;
+            } else if (hasBreak(LOWER_RETURNS_HIGHER_VALUE)) {
+                return navigableSet.higher(e);
+            } else {
+                return navigableSet.lower(e);
+            }
+        });
     }
 
     /// {@inheritDoc}
     @Override
     public @Nullable E floor(final E e) {
-        if (hasBreak(FLOOR_ALWAYS_RETURNS_NULL)) {
-            return null;
-        } else if (hasBreak(FLOOR_RETURNS_CEILING_VALUE)) {
-            return navigableSet.ceiling(e);
-        } else {
-            return navigableSet.floor(e);
-        }
+        return getWithSafety(() -> {
+            if (hasBreak(FLOOR_ALWAYS_RETURNS_NULL)) {
+                return null;
+            } else if (hasBreak(FLOOR_RETURNS_CEILING_VALUE)) {
+                return navigableSet.ceiling(e);
+            } else {
+                return navigableSet.floor(e);
+            }
+        });
     }
 
     /// {@inheritDoc}
     @Override
     public @Nullable E ceiling(final E e) {
-        if (hasBreak(CEILING_ALWAYS_RETURNS_NULL)) {
-            return null;
-        } else if (hasBreak(CEILING_RETURNS_FLOOR_VALUE)) {
-            return navigableSet.floor(e);
-        } else {
-            return navigableSet.ceiling(e);
-        }
+        return getWithSafety(() -> {
+            if (hasBreak(CEILING_ALWAYS_RETURNS_NULL)) {
+                return null;
+            } else if (hasBreak(CEILING_RETURNS_FLOOR_VALUE)) {
+                return navigableSet.floor(e);
+            } else {
+                return navigableSet.ceiling(e);
+            }
+        });
     }
 
     /// {@inheritDoc}
     @Override
     public @Nullable E higher(final E e) {
-        if (hasBreak(HIGHER_ALWAYS_RETURNS_NULL)) {
-            return null;
-        } else if (hasBreak(HIGHER_RETURNS_LOWER_VALUE)) {
-            return navigableSet.lower(e);
-        } else {
-            return navigableSet.higher(e);
-        }
+        return getWithSafety(() -> {
+            if (hasBreak(HIGHER_ALWAYS_RETURNS_NULL)) {
+                return null;
+            } else if (hasBreak(HIGHER_RETURNS_LOWER_VALUE)) {
+                return navigableSet.lower(e);
+            } else {
+                return navigableSet.higher(e);
+            }
+        });
     }
 
     /// {@inheritDoc}
     @Override
     public @Nullable E pollFirst() {
-        if (navigableSet.isEmpty() && hasBreak(POLL_FIRST_THROWS_WHEN_EMPTY)) {
-            throw new NoSuchElementException("pollFirst() of an empty set is broken");
-        } else if (hasBreak(POLL_FIRST_ALWAYS_RETURNS_NULL)) {
-            return null;
-        } else if (hasBreak(POLL_FIRST_DOES_NOT_REMOVE)) {
-            try {
-                return first();
-            } catch (final NoSuchElementException e) {
+        // NavigableSet has no method enum: pollFirst removes, so it follows remove's status, as PollFirstContract
+        // and PollLastContract expect.
+        checkMethodSupport(CollectionMethods.REMOVE);
+        return getWithSafety(() -> {
+            if (navigableSet.isEmpty() && hasBreak(POLL_FIRST_THROWS_WHEN_EMPTY)) {
+                throw new NoSuchElementException("pollFirst() of an empty set is broken");
+            } else if (hasBreak(POLL_FIRST_ALWAYS_RETURNS_NULL)) {
                 return null;
+            } else if (hasBreak(POLL_FIRST_DOES_NOT_REMOVE)) {
+                try {
+                    return first();
+                } catch (final NoSuchElementException e) {
+                    return null;
+                }
+            } else {
+                return navigableSet.pollFirst();
             }
-        } else {
-            return navigableSet.pollFirst();
-        }
+        });
     }
 
     /// {@inheritDoc}
     @Override
     public @Nullable E pollLast() {
-        if (navigableSet.isEmpty() && hasBreak(POLL_LAST_THROWS_WHEN_EMPTY)) {
-            throw new NoSuchElementException("pollLast() of an empty set is broken");
-        } else if (hasBreak(POLL_LAST_ALWAYS_RETURNS_NULL)) {
-            return null;
-        } else if (hasBreak(POLL_LAST_DOES_NOT_REMOVE)) {
-            try {
-                return last();
-            } catch (final NoSuchElementException e) {
+        // NavigableSet has no method enum: pollLast removes, so it follows remove's status, as PollFirstContract
+        // and PollLastContract expect.
+        checkMethodSupport(CollectionMethods.REMOVE);
+        return getWithSafety(() -> {
+            if (navigableSet.isEmpty() && hasBreak(POLL_LAST_THROWS_WHEN_EMPTY)) {
+                throw new NoSuchElementException("pollLast() of an empty set is broken");
+            } else if (hasBreak(POLL_LAST_ALWAYS_RETURNS_NULL)) {
                 return null;
+            } else if (hasBreak(POLL_LAST_DOES_NOT_REMOVE)) {
+                try {
+                    return last();
+                } catch (final NoSuchElementException e) {
+                    return null;
+                }
+            } else {
+                return navigableSet.pollLast();
             }
-        } else {
-            return navigableSet.pollLast();
-        }
+        });
     }
 
     /// {@inheritDoc}
@@ -750,20 +771,20 @@ public class BreakableNavigableSet<E> extends BreakableSortedSet<E> implements N
     /// {@inheritDoc}
     @Override
     public NavigableSet<E> descendingSet() {
-        if (hasBreak(DESCENDING_SET_RETURNS_EMPTY)) {
-            return new BreakableNavigableSet<>();
-        } else if (hasBreak(DESCENDING_SET_RETURNS_COPY)) {
-            return new TreeSet<>(navigableSet.descendingSet());
-        } else {
-            // Return a new BreakableNavigableSet wrapping the descending view
-            // This ensures breaks are not inherited by the descending view
-            return new BreakableNavigableSet<>(navigableSet.descendingSet());
-        }
+        return getWithSafety(() -> {
+            if (hasBreak(DESCENDING_SET_RETURNS_EMPTY)) {
+                return new BreakableNavigableSet<>();
+            } else if (hasBreak(DESCENDING_SET_RETURNS_COPY)) {
+                return new TreeSet<>(navigableSet.descendingSet());
+            } else {
+                return view(navigableSet.descendingSet());
+            }
+        });
     }
 
     /// Returns a view of the elements from `fromElement` to `toElement`, each bound included where its flag is
-    /// `true`: the store's view, as [NavigableSet#subSet(Object, boolean, Object, boolean)] says, without this set's
-    /// configuration (as the one-argument views are).
+    /// `true`, as [NavigableSet#subSet(Object, boolean, Object, boolean)] says: a [BreakableNavigableSet] over the
+    /// store's view, with this set's lock and method statuses and none of its breaks (#52).
     ///
     /// # Breaks
     /// - [SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION][#SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION]: throws
@@ -785,25 +806,28 @@ public class BreakableNavigableSet<E> extends BreakableSortedSet<E> implements N
     @Override
     public NavigableSet<E> subSet(final E fromElement, final boolean fromInclusive,
                                   final E toElement, final boolean toInclusive) {
-        if (hasBreak(SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION)) {
-            throw new IllegalArgumentException("Subset operations are broken");
-        }
-        if (hasBreak(SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY)) {
-            return new TreeSet<>(navigableSet.comparator());
-        }
-        // reverseOrder(comparator) is natural reverse order for a null comparator, so it compares with no cast.
-        if (hasBreak(SUBSET_ACCEPTS_REVERSED_RANGE)
-                && Collections.reverseOrder(navigableSet.comparator()).compare(fromElement, toElement) < 0) {
-            return new TreeSet<>(navigableSet.comparator());
-        }
-        if (hasBreak(SUBSET_IGNORES_INCLUSIVE)) {
-            return brokenView(navigableSet.subSet(fromElement, true, toElement, false));
-        }
-        return brokenView(navigableSet.subSet(fromElement, fromInclusive, toElement, toInclusive));
+        return getWithSafety(() -> {
+            if (hasBreak(SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION)) {
+                throw new IllegalArgumentException("Subset operations are broken");
+            }
+            if (hasBreak(SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY)) {
+                return new TreeSet<>(navigableSet.comparator());
+            }
+            // reverseOrder(comparator) is natural reverse order for a null comparator, so it compares with no cast.
+            if (hasBreak(SUBSET_ACCEPTS_REVERSED_RANGE)
+                    && Collections.reverseOrder(navigableSet.comparator()).compare(fromElement, toElement) < 0) {
+                return new TreeSet<>(navigableSet.comparator());
+            }
+            if (hasBreak(SUBSET_IGNORES_INCLUSIVE)) {
+                return navigableBrokenView(navigableSet.subSet(fromElement, true, toElement, false));
+            }
+            return navigableBrokenView(navigableSet.subSet(fromElement, fromInclusive, toElement, toInclusive));
+        });
     }
 
     /// Returns a view of the elements before `toElement`, and `toElement` itself where `inclusive` is `true`: the
-    /// store's view, as [NavigableSet#headSet(Object, boolean)] says, without this set's configuration.
+    /// view of this set over the store's, as [NavigableSet#headSet(Object, boolean)] says, as for
+    /// [#subSet(Object, boolean, Object, boolean)].
     ///
     /// # Breaks
     /// - [SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION][#SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION]: throws
@@ -819,17 +843,21 @@ public class BreakableNavigableSet<E> extends BreakableSortedSet<E> implements N
     /// @return a view of the range
     @Override
     public NavigableSet<E> headSet(final E toElement, final boolean inclusive) {
-        if (hasBreak(SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION)) {
-            throw new IllegalArgumentException("Subset operations are broken");
-        }
-        if (hasBreak(SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY)) {
-            return new TreeSet<>(navigableSet.comparator());
-        }
-        return brokenView(navigableSet.headSet(toElement, inclusive && !hasBreak(HEAD_SET_IGNORES_INCLUSIVE)));
+        return getWithSafety(() -> {
+            if (hasBreak(SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION)) {
+                throw new IllegalArgumentException("Subset operations are broken");
+            }
+            if (hasBreak(SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY)) {
+                return new TreeSet<>(navigableSet.comparator());
+            }
+            return navigableBrokenView(
+                    navigableSet.headSet(toElement, inclusive && !hasBreak(HEAD_SET_IGNORES_INCLUSIVE)));
+        });
     }
 
     /// Returns a view of the elements after `fromElement`, and `fromElement` itself where `inclusive` is `true`: the
-    /// store's view, as [NavigableSet#tailSet(Object, boolean)] says, without this set's configuration.
+    /// view of this set over the store's, as [NavigableSet#tailSet(Object, boolean)] says, as for
+    /// [#subSet(Object, boolean, Object, boolean)].
     ///
     /// # Breaks
     /// - [SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION][#SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION]: throws
@@ -845,24 +873,60 @@ public class BreakableNavigableSet<E> extends BreakableSortedSet<E> implements N
     /// @return a view of the range
     @Override
     public NavigableSet<E> tailSet(final E fromElement, final boolean inclusive) {
-        if (hasBreak(SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION)) {
-            throw new IllegalArgumentException("Subset operations are broken");
-        }
-        if (hasBreak(SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY)) {
-            return new TreeSet<>(navigableSet.comparator());
-        }
-        return brokenView(navigableSet.tailSet(fromElement, inclusive || hasBreak(TAIL_SET_IGNORES_INCLUSIVE)));
+        return getWithSafety(() -> {
+            if (hasBreak(SUBSET_OPERATIONS_ALWAYS_THROW_EXCEPTION)) {
+                throw new IllegalArgumentException("Subset operations are broken");
+            }
+            if (hasBreak(SUBSET_OPERATIONS_ALWAYS_RETURN_EMPTY)) {
+                return new TreeSet<>(navigableSet.comparator());
+            }
+            return navigableBrokenView(
+                    navigableSet.tailSet(fromElement, inclusive || hasBreak(TAIL_SET_IGNORES_INCLUSIVE)));
+        });
     }
 
-    /// Applies the view breaks to a range view of the store.
-    private NavigableSet<E> brokenView(final NavigableSet<E> view) {
+    /// Applies the view breaks to a range view of the store, as [BreakableSortedSet] does, where the store's view is
+    /// navigable, as a [TreeSet]'s are, so that a one-bound view of this set is a [BreakableNavigableSet] too.
+    ///
+    /// @param view the store's range view
+    /// @return the view, or a copy
+    @Override
+    SortedSet<E> brokenView(final SortedSet<E> view) {
+        return view instanceof NavigableSet<E> navigable ? navigableBrokenView(navigable) : super.brokenView(view);
+    }
+
+    /// Applies the view breaks to a navigable range view of the store, and makes the view of this set over the
+    /// result, or returns the copy a break asks for.
+    private NavigableSet<E> navigableBrokenView(final NavigableSet<E> view) {
         if (hasBreak(SUBSET_OPERATIONS_RETURN_COPIES)) {
             return new TreeSet<>(view);
         }
         if (hasBreak(SUBSET_OPERATIONS_IGNORE_OUT_OF_RANGE_ADD)) {
-            return new RangeIgnoringView<>(view);
+            return view(new RangeIgnoringView<>(view));
         }
-        return view;
+        return view(view);
+    }
+
+    /// Returns a view of this set over a view of its store, as [BreakableSortedSet] does: a [BreakableNavigableSet]
+    /// where the store's view is navigable.
+    ///
+    /// @param view the store's view
+    /// @return the view
+    @Override
+    SortedSet<E> view(final SortedSet<E> view) {
+        return view instanceof NavigableSet<E> navigable ? view(navigable) : super.view(view);
+    }
+
+    /// Returns a view of this set over a navigable view of its store: a [BreakableNavigableSet] with this set's method
+    /// statuses, [#viewCharacteristics()], permits and compatible type and none of its breaks, that shares its lock
+    /// (#52).
+    ///
+    /// @param view the store's view
+    /// @return the view
+    NavigableSet<E> view(final NavigableSet<E> view) {
+        return sharingLockOf(
+                new BreakableNavigableSet<E>(view, DEFAULT_BREAKS, methodStatuses(), viewCharacteristics(), permits(),
+                    false, compatibleType()), this);
     }
 
     /// A range view whose `add(E)` returns `false` for an element outside the range instead of throwing

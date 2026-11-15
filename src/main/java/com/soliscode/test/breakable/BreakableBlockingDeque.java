@@ -963,9 +963,19 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
             final int permits,
             final boolean isSafe,
             final Class<?> compatibleType) {
-        super(blockingDequeArg, breaks, methodStatuses, characteristics, permits, isSafe,
-                compatibleType);
+        // No lock, whatever isSafe says: the store is thread safe, and a blocking call made under a lock would hold
+        // out every other thread (#52).
+        super(blockingDequeArg, breaks, methodStatuses, characteristics, permits, false, compatibleType);
         this.blockingDeque = blockingDequeArg;
+    }
+
+    /// Returns `true`: the deque is thread safe through its store, a JDK `BlockingDeque`, and holds no lock of its own,
+    /// whatever its builder's `setSafe` says (#52).
+    ///
+    /// @return `true`
+    @Override
+    public boolean isSafe() {
+        return true;
     }
 
     // BreakableBlockingDeque cannot extend both BreakableDeque and BreakableBlockingQueue, so we need to
