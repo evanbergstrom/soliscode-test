@@ -125,7 +125,7 @@ public class BreakableListIterator<E> extends BreakableIterator<E> implements Li
     /// Creates a `BreakableListIterator` on a list iterator, with breaks and the methods it does not support.
     ///
     /// @param listIteratorArg the underlying list iterator
-    /// @param breaks the breaks to apply, [BreakableIterator]'s included
+    /// @param breaks the breaks to apply, [BreakableIterator]'s included, copied
     /// @param methodStatuses whether each optional method is supported
     public BreakableListIterator(final ListIterator<E> listIteratorArg, final Set<Break> breaks,
                                  final Map<InterfaceMethod, MethodStatus> methodStatuses) {

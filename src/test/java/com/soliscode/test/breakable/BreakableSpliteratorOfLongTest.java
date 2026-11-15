@@ -17,6 +17,7 @@ package com.soliscode.test.breakable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /// Tests for [BreakableSpliteratorOfLong] (#38).
 @DisplayName("Tests for BreakableSpliteratorOfLong")
@@ -38,6 +40,19 @@ public class BreakableSpliteratorOfLongTest {
 
     /// Default constructor.
     public BreakableSpliteratorOfLongTest() {
+    }
+
+    @Test
+    @DisplayName("It copies its breaks: addBreak works on one made with Set.of(), and the caller's set is not shared")
+    public void constructorCopiesBreaks() {
+        BreakableSpliteratorOfLong fixed = over();
+        fixed.addBreak(BreakableSpliterator.SPLITERATOR_SKIPS_FIRST_ELEMENT);
+        assertTrue(fixed.hasBreak(BreakableSpliterator.SPLITERATOR_SKIPS_FIRST_ELEMENT));
+        Set<Break> mine = new HashSet<>();
+        BreakableSpliteratorOfLong copied =
+                new BreakableSpliteratorOfLong(Arrays.spliterator(new long[] {1L}), mine, Map.of(), 0, false);
+        mine.add(BreakableSpliterator.SPLITERATOR_SKIPS_FIRST_ELEMENT);
+        assertFalse(copied.hasBreak(BreakableSpliterator.SPLITERATOR_SKIPS_FIRST_ELEMENT));
     }
 
     private static BreakableSpliteratorOfLong over(final Break... breaks) {

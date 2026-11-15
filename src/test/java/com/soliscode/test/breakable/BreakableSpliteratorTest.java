@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -132,6 +133,20 @@ public class BreakableSpliteratorTest {
 
     ///  Default constructor
     public BreakableSpliteratorTest() {
+    }
+
+    @Test
+    @DisplayName("It copies its breaks: addBreak works on one made with Set.of(), and the caller's set is not shared")
+    public void constructorCopiesBreaks() {
+        BreakableSpliterator<Integer> fixed =
+                new BreakableSpliterator<>(List.of(1).spliterator(), Set.of(), Map.of(), 0, false);
+        fixed.addBreak(SPLITERATOR_IS_ALWAYS_EMPTY);
+        assertTrue(fixed.hasBreak(SPLITERATOR_IS_ALWAYS_EMPTY));
+        Set<Break> mine = new HashSet<>();
+        BreakableSpliterator<Integer> copied =
+                new BreakableSpliterator<>(List.of(1).spliterator(), mine, Map.of(), 0, false);
+        mine.add(SPLITERATOR_IS_ALWAYS_EMPTY);
+        assertFalse(copied.hasBreak(SPLITERATOR_IS_ALWAYS_EMPTY));
     }
 
     /// Tests the `SPLITERATOR_IS_ALWAYS_EMPTY` break behavior.

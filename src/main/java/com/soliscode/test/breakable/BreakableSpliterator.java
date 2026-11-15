@@ -17,6 +17,7 @@ package com.soliscode.test.breakable;
 
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.Spliterator;
@@ -323,14 +324,14 @@ public class BreakableSpliterator<E> extends AbstractBreakable implements Splite
 
     /// Constructs a breakable spliterator from a spliterator that will provide the implementation.
     /// @param iteratorArg The spliterator that will provide the implementation
-    /// @param breaks The breaks that define how the iterator is broken.
+    /// @param breaks The breaks that define how the iterator is broken, copied.
     /// @param methodStatuses the status of each method in the interface.
     /// @param characteristicsArg A mask that indicates the characteristics of the iterator.
     /// @param isSafe Whether the spliterator is safe for concurrent access.
     public BreakableSpliterator(final Spliterator<E> iteratorArg, final Set<Break> breaks,
                                 final Map<InterfaceMethod, MethodStatus> methodStatuses,
                                 final int characteristicsArg, final boolean isSafe) {
-        super(breaks, methodStatuses, isSafe);
+        super(new HashSet<>(breaks), methodStatuses, isSafe);
         this.iterator = iteratorArg;
         int own = iteratorArg.characteristics();
         this.added = characteristicsArg & ~own;

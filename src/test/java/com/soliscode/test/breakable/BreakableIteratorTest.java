@@ -3,6 +3,7 @@ package com.soliscode.test.breakable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.ConcurrentModificationException;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -59,6 +60,19 @@ public class BreakableIteratorTest {
     /// Default constructor.
     public BreakableIteratorTest() {
         super();
+    }
+
+    @Test
+    @DisplayName("It copies its breaks: addBreak works on one made with Set.of(), and the caller's set is not shared")
+    public void constructorCopiesBreaks() {
+        BreakableIterator<Integer> fixed = new BreakableIterator<>(List.of(1).iterator(), Set.of(), Map.of(), 0, false);
+        fixed.addBreak(ITERATOR_SKIPS_FIRST_ELEMENT);
+        assertTrue(fixed.hasBreak(ITERATOR_SKIPS_FIRST_ELEMENT));
+        Set<Break> mine = new HashSet<>();
+        BreakableIterator<Integer> copied =
+                new BreakableIterator<>(List.of(1).iterator(), mine, Map.of(), 0, false, null);
+        mine.add(ITERATOR_SKIPS_FIRST_ELEMENT);
+        assertFalse(copied.hasBreak(ITERATOR_SKIPS_FIRST_ELEMENT));
     }
 
     /// Test that the `ITERATOR_SKIPS_FIRST_ELEMENT` break causes the iterator to skip over the first element.

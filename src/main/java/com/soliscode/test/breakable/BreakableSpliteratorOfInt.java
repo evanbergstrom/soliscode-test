@@ -48,7 +48,7 @@ public class BreakableSpliteratorOfInt extends BreakableSpliterator<Integer> imp
     /// Constructs a breakable `int` spliterator from a spliterator that will provide the implementation.
     ///
     /// @param spliterator the spliterator that provides the implementation
-    /// @param breaks the breaks that define how it is broken
+    /// @param breaks the breaks that define how it is broken, copied
     /// @param methodStatuses the status of each method in the interface
     /// @param characteristics the characteristics it reports
     /// @param isSafe whether it is safe for concurrent access

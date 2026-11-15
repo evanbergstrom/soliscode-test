@@ -17,6 +17,7 @@ package com.soliscode.test.breakable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -59,6 +60,18 @@ public class BreakableListIteratorTest {
     /// Default constructor.
     public BreakableListIteratorTest() {
         super();
+    }
+
+    @Test
+    @DisplayName("It copies its breaks: addBreak works on one made with Set.of(), and the caller's set is not shared")
+    void constructorCopiesBreaks() {
+        BreakableListIterator<Integer> fixed = iterator();
+        fixed.addBreak(LIST_ITERATOR_SET_DOES_NOT_SET);
+        assertTrue(fixed.hasBreak(LIST_ITERATOR_SET_DOES_NOT_SET));
+        Set<Break> mine = new HashSet<>();
+        BreakableListIterator<Integer> copied = new BreakableListIterator<>(list.listIterator(), mine, Map.of());
+        mine.add(LIST_ITERATOR_SET_DOES_NOT_SET);
+        assertFalse(copied.hasBreak(LIST_ITERATOR_SET_DOES_NOT_SET));
     }
 
     private BreakableListIterator<Integer> iterator(final Break... breaks) {

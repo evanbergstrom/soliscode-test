@@ -247,8 +247,7 @@ public abstract class AbstractBreakable extends MethodSupport implements Breakab
     ///
     /// This implementation returns an unmodifiable view of the internal break set,
     /// preventing external modification while allowing iteration and inspection.
-    /// The returned set reflects the current state of breaks and will not change
-    /// even if breaks are added to this object later.
+    /// The returned set is a view: breaks added to this object later appear in it.
     ///
     /// @return an unmodifiable set containing all currently applied breaks;
     ///         never null but may be empty

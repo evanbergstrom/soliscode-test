@@ -17,6 +17,7 @@ package com.soliscode.test.breakable;
 
 import java.util.AbstractMap;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -71,6 +72,19 @@ public class BreakableMapEntryTest {
     private static Map.Entry<Integer, String> mapEntry(final Map<Integer, String> map) {
         map.put(1, "one");
         return map.entrySet().iterator().next();
+    }
+
+    @Test
+    @DisplayName("It copies its breaks: addBreak works on one made with Set.of(), and the caller's set is not shared")
+    void constructorCopiesBreaks() {
+        BreakableMapEntry<Integer, String> fixed = entry();
+        fixed.addBreak(MAP_ENTRY_GET_KEY_RETURNS_NULL);
+        assertTrue(fixed.hasBreak(MAP_ENTRY_GET_KEY_RETURNS_NULL));
+        Set<Break> mine = new HashSet<>();
+        BreakableMapEntry<Integer, String> copied =
+                new BreakableMapEntry<>(new AbstractMap.SimpleEntry<>(1, "one"), mine, Map.of());
+        mine.add(MAP_ENTRY_GET_KEY_RETURNS_NULL);
+        assertFalse(copied.hasBreak(MAP_ENTRY_GET_KEY_RETURNS_NULL));
     }
 
     @Test

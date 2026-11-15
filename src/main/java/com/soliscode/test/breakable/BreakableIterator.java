@@ -250,7 +250,7 @@ public class BreakableIterator<E> extends AbstractBreakable implements Iterator<
     /// - [ITERATOR_SKIPS_FIRST_ELEMENT][BreakableIterator#ITERATOR_SKIPS_FIRST_ELEMENT]
     ///
     /// @param iteratorArg       the underlying iterator.
-    /// @param breaks         the set of breaks to apply.
+    /// @param breaks         the set of breaks to apply, copied.
     /// @param methodStatuses the status of each method in the interface.
     /// @param characteristics the characteristics of the iterator.
     /// @param isSafe          whether the iterator is safe for concurrent access.
@@ -269,7 +269,7 @@ public class BreakableIterator<E> extends AbstractBreakable implements Iterator<
     /// and to `remove()` under [#ITERATOR_IS_FAIL_FAST], so that `remove()` never applies the other two.
     ///
     /// @param iteratorArg     the underlying iterator.
-    /// @param breaks          the set of breaks to apply.
+    /// @param breaks          the set of breaks to apply, copied.
     /// @param methodStatuses  the status of each method in the interface.
     /// @param characteristics the characteristics of the iterator.
     /// @param isSafe          whether the iterator is safe for concurrent access.
@@ -279,7 +279,7 @@ public class BreakableIterator<E> extends AbstractBreakable implements Iterator<
                              final Map<InterfaceMethod, MethodStatus> methodStatuses,
                              final int characteristics, final boolean isSafe,
                              final @Nullable IntSupplier sourceSizeArg) {
-        super(breaks, methodStatuses, isSafe);
+        super(new HashSet<>(breaks), methodStatuses, isSafe);
         this.sourceSize = sourceSizeArg != null && hasWeakConsistencyBreak(breaks) ? sourceSizeArg : null;
         this.expectedSize = this.sourceSize == null ? 0 : this.sourceSize.getAsInt();
         if (hasBreak(ITERATOR_IS_ALWAYS_EMPTY)) {
