@@ -66,7 +66,7 @@ The user's decision (2026-11-08, on #9): where the code does on purpose what an 
 - with a one-line comment directly above it, `// Check: reason`;
 - no disguised workaround (a cast, a helper or a narrowed type whose only purpose is to quiet the check). An agent once narrowed the providers' return types to interfaces to avoid `NonApiType`; that removed providers users had (`provideLinkedList` could no longer back a `Queue` or `Deque` contract), and was reverted.
 
-A finding that points at a fault is fixed, not suppressed. Built (#9, #30, #32, #33, #34, #35, #36, #37, #38, #44, #45): main code has 101 such suppressions, of these kinds:
+A finding that points at a fault is fixed, not suppressed. Built (#9, #30, #32, #33, #34, #35, #36, #37, #38, #44, #45, #59): main code has 102 such suppressions, of these kinds:
 
 | Check | Count | Where, and why |
 |-------|-------|----------------|
@@ -76,6 +76,7 @@ A finding that points at a fault is fixed, not suppressed. Built (#9, #30, #32, 
 | `NullAway` | 58 | Code that passes null on purpose: contract tests that pass it to a JDK method (`ToArrayContract`, `PushContract`, `OfferFirstContract`, `OfferLastContract`; by #32, `PutContract`, `OfferWithTimeoutContract`, `DrainToContract`, `DrainToMaxElementsContract`; by #33, `PutFirstContract`, `PutLastContract`, `OfferFirstWithTimeoutContract`, `OfferLastWithTimeoutContract`; by #34, `TransferContract`, `TryTransferContract`, `TryTransferWithTimeoutContract`; and, by #35, 21 in `contract.concurrentmap`'s method contracts, one per null argument tested, and `BreakableConcurrentMap.forEach`, whose `FOR_EACH_IS_NOT_THREAD_SAFE` passes `null` for a key removed meanwhile, on purpose; and, by #36, 6 in `contract.concurrentnavigablemap`'s range-view contracts, one per null-bound test; and, by #38, `BreakableSpliterator.acceptNull`, whose `SPLITERATOR_FIRST_ELEMENT_IS_NULL` passes `null` in place of an element, on purpose; and, by #44, `BreakableFuture`'s `get`, timed `get`, `resultNow` and `exceptionNow`, whose breaks return `null` for a result or an exception, on purpose, and whose unbroken paths return a `null` result, which `Future` permits and the non-null `V` cannot say until #13, or the exception field, set whenever the state is `FAILED`; and, by #45, 6 in `contract.executorservice`'s method contracts, one per test of a null task or collection, and 4 in `BreakableExecutorService` (`submit(Callable)`, `submit(Runnable, Object)`, its `invokeAny` and the future of a null task), whose breaks return `null` for a result, on purpose, which the non-null `T` cannot say until #13) |
 | `ReferenceEquality` | 7 | Identity comparisons: `AssertEqualsByIdentity`, `AssertEquals` (the same iterable is equal to itself without being iterated), `IterableTestUtils`' `containsByIdentity`, and `BreakableBlockingQueue`'s, `BreakableBlockingDeque`'s and `BoundedTransferQueue`'s refusals to drain into themselves (#32, #33, #34), and `ExecutorServiceContractSupport.assertCauseIs`, whose cause must be the task's exception itself, or a copy whose cause is it (#45) |
 | `DoNotCall` | 6 | Contract tests that call `addFirst` or `addLast` on a `SortedSet` on purpose, to check that they throw (`SortedAddFirstContract`, `SortedAddLastContract`; the user's decision on #30) |
+| `UnusedVariable` | 1 | `AbstractBreakable.serialPersistentFields`, which serialization reads by reflection, and which keeps the serialized form compatible with 0.1.4 (the user's decision on #59) |
 | `EqualsGetClass` | 1 | `BreakableObject`'s exact-class equality, which keeps `equals` symmetric |
 | `ThreadPriorityCheck` | 5 | `Thread.yield()` in `ContentionCoordinator.yieldToScheduler` (#12), which makes contention likelier; in `BreakableFuture`'s `cancel` and thread-unsafe wait (#44), where it widens the window of the fault its thread-unsafe breaks simulate; and in `ThreadSafeGetContract`'s completer (#44), whose spin for a getter must not starve it on a single core; and in `BreakableExecutorService.enqueue` (#45), where it widens the window of the faults `SUBMIT_IS_NOT_THREAD_SAFE` and `SHUTDOWN_IS_NOT_THREAD_SAFE` simulate |
 
@@ -92,7 +93,7 @@ Not covered by the decision, and left from before #9: javac's own `unchecked`, `
 - Habit: a `Break` constant's comment gives its **Purpose** (the fault it simulates), **Effect** (how the method's behaviour changes), and **Affected Methods**, with a `@see` to the method (`BreakableCollection`, `BreakableList`, `BreakableSequencedCollection` follow it; not every breakable does yet).
 - Habit: a contract's comment names the JDK method it tests, with a `@see`, and what its provider must supply.
 - Inline comments say why, not what. Built (#10): `FIXME:`, `HACK:` and `XXX:` fail Checkstyle; empty blocks need a comment.
-- 403 of the 732 Java files carry the Apache 2.0 licence header (`LICENSE.txt`). Put it on new files.
+- 405 of the 734 Java files carry the Apache 2.0 licence header (`LICENSE.txt`). Put it on new files.
 
 ## Imports
 

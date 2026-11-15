@@ -16,13 +16,18 @@
 package com.soliscode.test.breakable;
 
 import java.io.IOException;
+import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.ObjectStreamField;
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
@@ -125,11 +130,33 @@ public abstract class AbstractBreakable extends MethodSupport implements Breakab
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /// The serialized field that holds the breaks, the field [#breaks] that 0.1.4 serialized by default.
+    private static final String BREAKS_FIELD = "breaks";
+
+    /// The serialized field that holds the methods whose status is explicitly supported (#59).
+    private static final String SUPPORTED_FIELD = "supportedMethods";
+
+    /// The serialized field that holds the methods whose status is explicitly unsupported (#59).
+    private static final String UNSUPPORTED_FIELD = "unsupportedMethods";
+
+    /// The serialized form: the breaks, as 0.1.4 wrote them, and the method statuses, which [MethodSupport] does not
+    /// serialize, since it is not [Serializable]. A stream written by 0.1.4 has no statuses and reads with none, and
+    /// 0.1.4 skips the status fields of a newer stream, but still resolves their methods, so it cannot read a status of
+    /// a method constant added after it.
+    @Serial
+    // UnusedVariable: serialization reads serialPersistentFields by reflection.
+    @SuppressWarnings("UnusedVariable")
+    private static final ObjectStreamField[] serialPersistentFields = {
+        new ObjectStreamField(BREAKS_FIELD, Set.class),
+        new ObjectStreamField(SUPPORTED_FIELD, InterfaceMethod[].class),
+        new ObjectStreamField(UNSUPPORTED_FIELD, InterfaceMethod[].class),
+    };
+
     /// Random number generator for subclasses.
     private static final Random RANDOM = new Random();
 
     /// The breaks that will be applied while running methods.
-    /// Not final, so that [#clone()] can give a copy a set of its own.
+    /// Not final, so that [#clone()] and deserialization can give the object a set of its own.
     private Set<Break> breaks;
 
     /// Lock for synchronizing access to the breakable object.
@@ -211,32 +238,90 @@ public abstract class AbstractBreakable extends MethodSupport implements Breakab
 
     /// Serialization support for writing the object state.
     ///
-    /// This method ensures that the object's fields, including the behavioral
-    /// modifications, are correctly serialized. It also handles the non-serializable
-    /// mutex field by recording its presence.
+    /// Writes the fields of [#serialPersistentFields]: the breaks, and the methods whose status is explicitly
+    /// supported and explicitly unsupported. Then it records whether the object has a lock, which is not serializable.
     ///
     /// @param out the [ObjectOutputStream] to write to
-    /// @throws IOException if an I/O error occurs
+    /// @throws IOException if an I/O error occurs, or [java.io.NotSerializableException] if a method whose status is
+    ///                     set is not serializable (every [InterfaceMethod] in this library is an enum)
     @Serial
     private void writeObject(final ObjectOutputStream out) throws IOException {
-        out.defaultWriteObject();
+        final List<InterfaceMethod> supported = new ArrayList<>();
+        final List<InterfaceMethod> unsupported = new ArrayList<>();
+        methodStatuses().forEach((method, status) -> (status.supported() ? supported : unsupported).add(method));
+        final ObjectOutputStream.PutField fields = out.putFields();
+        fields.put(BREAKS_FIELD, breaks);
+        fields.put(SUPPORTED_FIELD, supported.toArray(new InterfaceMethod[0]));
+        fields.put(UNSUPPORTED_FIELD, unsupported.toArray(new InterfaceMethod[0]));
+        out.writeFields();
         out.writeBoolean(lock != null);
     }
 
     /// Serialization support for reading the object state.
     ///
-    /// This method ensures that the object's fields, including the behavioral
-    /// modifications, are correctly restored during deserialization. It also
-    /// reconstructs the mutex field if it was present in the original object.
+    /// Reads the fields of [#serialPersistentFields], checks them, and restores the breaks and the method statuses;
+    /// a stream written by 0.1.4 has no status fields and reads with no statuses. Then it gives the object a lock if
+    /// the original had one.
     ///
     /// @param in the [ObjectInputStream] to read from
-    /// @throws IOException if an I/O error occurs
+    /// @throws IOException if an I/O error occurs, or [InvalidObjectException] if the breaks are not a set of
+    ///                     [Break]s, or a status field is not an array of methods, holds a null, or names a method
+    ///                     already read
     /// @throws ClassNotFoundException if the class of a serialized object could not be found
     @Serial
     private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
+        final ObjectInputStream.GetField fields = in.readFields();
+        this.breaks = readBreaks(fields.get(BREAKS_FIELD, null));
+        final Map<InterfaceMethod, MethodStatus> statuses = new HashMap<>();
+        readStatuses(fields.get(SUPPORTED_FIELD, null), MethodStatus.SUPPORTED, statuses);
+        readStatuses(fields.get(UNSUPPORTED_FIELD, null), MethodStatus.UNSUPPORTED, statuses);
+        restoreMethodStatuses(statuses);
         if (in.readBoolean()) {
             this.lock = new ReentrantLock();
+        }
+    }
+
+    /// Returns a set of its own holding the breaks read from a stream.
+    ///
+    /// @param value the value of the breaks field
+    /// @return the breaks
+    /// @throws InvalidObjectException if `value` is not a set, or holds something other than a [Break]
+    private static Set<Break> readBreaks(final @Nullable Object value) throws InvalidObjectException {
+        if (!(value instanceof Set<?> set)) {
+            throw new InvalidObjectException("The breaks are not a set");
+        }
+        final Set<Break> result = new HashSet<>();
+        for (final Object element : set) {
+            if (!(element instanceof Break aBreak)) {
+                throw new InvalidObjectException("The breaks hold something other than a Break: " + element);
+            }
+            result.add(aBreak);
+        }
+        return result;
+    }
+
+    /// Adds the methods read from a stream's status field to `statuses`, each with `status`.
+    ///
+    /// @param value the value of the status field; null if the stream has none, as one written by 0.1.4
+    /// @param status the status of the field's methods
+    /// @param statuses the statuses read so far, added to
+    /// @throws InvalidObjectException if `value` is not an array of methods, or holds a null or a method already read
+    private static void readStatuses(final @Nullable Object value, final MethodStatus status,
+                                     final Map<InterfaceMethod, MethodStatus> statuses)
+            throws InvalidObjectException {
+        if (value == null) {
+            return;
+        }
+        if (!(value instanceof InterfaceMethod[] methods)) {
+            throw new InvalidObjectException("A method-status field is not an array of methods");
+        }
+        for (final Object element : methods) {
+            if (!(element instanceof InterfaceMethod method)) {
+                throw new InvalidObjectException("A method-status field holds a null");
+            }
+            if (statuses.put(method, status) != null) {
+                throw new InvalidObjectException("A method-status field repeats " + method);
+            }
         }
     }
 

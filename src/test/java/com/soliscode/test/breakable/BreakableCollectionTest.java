@@ -1253,4 +1253,27 @@ public class BreakableCollectionTest extends AbstractTest
         assertArrayEquals(original.toArray(), deserialized.toArray(),
                 "Deserialized collection should retain elements");
     }
+
+    /// Verifies that a serialization round trip keeps the collection's unsupported methods, and its safety (#59).
+    ///
+    /// @throws java.io.IOException if an I/O error occurs
+    /// @throws ClassNotFoundException if the class of a serialized object cannot be found
+    @Test
+    @DisplayName("serialization round-trip keeps an unsupported method unsupported and a safe collection safe")
+    public void serializeWhenMethodUnsupportedKeepsItUnsupported() throws java.io.IOException, ClassNotFoundException {
+        BreakableCollection<Integer> original = Breakables.buildCollection(1, 2, 3)
+                .doesNotSupport(CollectionMethods.ADD)
+                .setSafe(true)
+                .build();
+
+        BreakableCollection<Integer> deserialized = deserialize(serialize(original));
+
+        assertFalse(deserialized.supportsMethod(CollectionMethods.ADD),
+                "Deserialized collection should not support add");
+        assertThrows(UnsupportedOperationException.class, () -> deserialized.add(4),
+                "Deserialized collection should refuse add");
+        assertTrue(deserialized.supportsMethod(CollectionMethods.REMOVE),
+                "Deserialized collection should support remove");
+        assertTrue(deserialized.isSafe(), "Deserialized collection should stay safe");
+    }
 }

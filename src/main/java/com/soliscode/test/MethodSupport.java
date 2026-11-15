@@ -77,6 +77,19 @@ public abstract class MethodSupport implements SupportedMethods {
         return copy;
     }
 
+    /// Replaces this object's method statuses with a copy of `statuses`, so that a later change to the map does not
+    /// reach this object. It is for restoring the statuses of a copy made without a constructor, as
+    /// [com.soliscode.test.breakable.AbstractBreakable] does on deserialization, since this class is not serializable.
+    ///
+    /// @param statuses the method statuses, copied
+    /// @throws NullPointerException if `statuses` is null, or holds a null key or value
+    /// @since 0.1.5
+    protected final void restoreMethodStatuses(final Map<InterfaceMethod, MethodStatus> statuses) {
+        final Map<InterfaceMethod, MethodStatus> copy = new HashMap<>();
+        statuses.forEach((method, status) -> copy.put(Objects.requireNonNull(method), Objects.requireNonNull(status)));
+        this.methodStatuses = copy;
+    }
+
     /// Checks whether the specified optional method is supported by this implementation.
     /// Returns true if the method has not been explicitly marked as unsupported.
     ///
