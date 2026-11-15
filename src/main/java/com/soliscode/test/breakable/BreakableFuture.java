@@ -16,7 +16,6 @@
 package com.soliscode.test.breakable;
 
 import java.io.Serial;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
@@ -348,7 +347,7 @@ public class BreakableFuture<V> extends AbstractBreakable implements Future<V> {
     ///
     /// @param breaks the set of breaks to apply, copied
     public BreakableFuture(final Set<Break> breaks) {
-        super(new HashSet<>(breaks), Map.of(), false);
+        super(breaks, Map.of(), false);
     }
 
     /// Completes it with a result, if it is pending.

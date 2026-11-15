@@ -1917,6 +1917,18 @@ public class BreakableMapTest extends AbstractTest {
         assertThrows(NullPointerException.class, () -> cloned.containsValue(null));
     }
 
+    @Test
+    @DisplayName("clone() copies the breaks and method statuses: a change to the clone's does not reach the original")
+    public void cloneDoesNotShareBreaksOrMethodStatuses() {
+        BreakableMap<String, Integer> original = new BreakableMap.Builder<String, Integer>().setSafe(true).build();
+        BreakableMap<String, Integer> cloned = original.clone();
+        cloned.addBreak(SIZE_ALWAYS_RETURNS_ZERO);
+        cloned.doesNotSupportMethod(MapMethods.GET);
+        assertFalse(original.hasBreak(SIZE_ALWAYS_RETURNS_ZERO));
+        assertTrue(original.supportsMethod(MapMethods.GET));
+        assertTrue(cloned.isSafe());
+    }
+
     // ========== Unsupported Method Tests ==========
 
     /// Tests unsupported method exception handling.

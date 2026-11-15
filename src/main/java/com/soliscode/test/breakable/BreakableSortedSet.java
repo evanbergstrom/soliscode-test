@@ -670,7 +670,7 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
     /// including the backing sorted set, active breaks, and behavioral characteristics.
     ///
     /// @param sortedSetArg the backing sorted set for element storage
-    /// @param breaks the collection of breaks to activate
+    /// @param breaks the collection of breaks to activate, copied
     /// @param methodStatuses the method status configuration.
     /// @param characteristics the spliterator characteristics
     /// @param permits         the flags that indicate what types of values are supported by the collection.

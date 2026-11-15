@@ -453,7 +453,7 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
     /// specific break configurations.
     ///
     /// @param concurrentNavigableMapArg the ConcurrentNavigableMap to wrap and delegate operations to
-    /// @param breaks the collection of breaks to apply to this instance
+    /// @param breaks the collection of breaks to apply to this instance, copied
     /// @param methodStatuses the map of method statuses to track break application
     /// @param permits the flags that say which keys and values the map permits
     protected BreakableConcurrentNavigableMap(final ConcurrentNavigableMap<K, V> concurrentNavigableMapArg,

@@ -432,7 +432,7 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
     /// ```
     ///
     /// @param sortedMapArg the SortedMap to wrap; must not be null
-    /// @param breaks the set of breaks to apply to the wrapped collection
+    /// @param breaks the set of breaks to apply to the wrapped collection, copied
     /// @param methodStatuses the initial method statuses configuration
     /// @param permits the initial permits configuration for the collection
     /// @param isSafe whether the wrapped collection should be thread-safe
@@ -1069,7 +1069,7 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
     /// @param <K> the type of keys maintained by the map
     /// @param <V> the type of mapped values
     /// @param sortedMap the SortedMap to wrap; must not be null
-    /// @param breaks the collection of breaks to apply; must not be null
+    /// @param breaks the collection of breaks to apply, copied; must not be null
     /// @return a new BreakableSortedMap wrapping the specified SortedMap with the given breaks
     /// @throws NullPointerException if sortedMap or breaks is null
     public static <K, V> BreakableSortedMap<K, V> wrap(
@@ -1104,7 +1104,7 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
     /// @param <K> the type of keys maintained by the map
     /// @param <V> the type of mapped values
     /// @param sortedMap the SortedMap to wrap; must not be null
-    /// @param breaks the collection of breaks to apply; must not be null
+    /// @param breaks the collection of breaks to apply, copied; must not be null
     /// @param permits the initial permits configuration for the collection
     /// @return a new BreakableSortedMap wrapping the specified SortedMap with the given
     ///         breaks and policies

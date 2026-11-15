@@ -4,13 +4,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.soliscode.test.InterfaceMethod;
+import com.soliscode.test.MethodStatus;
 import com.soliscode.test.contract.collection.CollectionMethods;
 import com.soliscode.test.contract.iterable.IterableMethods;
 import com.soliscode.test.contract.sequencedcollection.SequencedCollectionMethods;
@@ -24,13 +28,50 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /// Tests that builders build objects holding their own copy of the builder's state, that `build(Iterable)` and
 /// `build(Map)` hold both the builder's elements and the argument's, and that copies are independent of the original.
 ///
-/// Each test fails on a builder or copy-constructor fault fixed by soliscode/soliscode-test#4.
+/// Each test fails on a builder or copy-constructor fault fixed by soliscode/soliscode-test#4, or, for
+/// `AbstractBreakableBuilder`'s constructors, by #58.
 @DisplayName("Builders and copies do not share state")
 public class BuilderIsolationTest {
 
     /// Default constructor.
     public BuilderIsolationTest() {
         super();
+    }
+
+    // ========== AbstractBreakableBuilder's constructors copy their arguments ==========
+
+    @Test
+    @DisplayName("AbstractBreakableBuilder(Set, Map): addBreak works on one made with Set.of(), and the caller's set "
+            + "and map are not shared")
+    void abstractBuilderCopiesBreaksAndMethodStatuses() {
+        PlainBuilder fixed = new PlainBuilder(Set.of(), Map.of());
+        fixed.addBreak(BreakableIterable.FOR_EACH_SKIPS_FIRST_ELEMENT).doesNotSupport(IterableMethods.ITERATOR_REMOVE);
+        assertTrue(fixed.breaks().contains(BreakableIterable.FOR_EACH_SKIPS_FIRST_ELEMENT));
+        assertTrue(fixed.methodStatuses().containsKey(IterableMethods.ITERATOR_REMOVE));
+        Set<Break> myBreaks = new HashSet<>();
+        Map<InterfaceMethod, MethodStatus> myStatuses = new HashMap<>();
+        PlainBuilder copied = new PlainBuilder(myBreaks, myStatuses);
+        myBreaks.add(BreakableIterable.FOR_EACH_SKIPS_FIRST_ELEMENT);
+        myStatuses.put(IterableMethods.ITERATOR_REMOVE, MethodStatus.UNSUPPORTED);
+        assertTrue(copied.breaks().isEmpty());
+        assertTrue(copied.methodStatuses().isEmpty());
+    }
+
+    @Test
+    @DisplayName("AbstractBreakableBuilder(Set, Map, boolean): addBreak works on one made with Set.of(), and the "
+            + "caller's set and map are not shared")
+    void abstractBuilderWithSafetyCopiesBreaksAndMethodStatuses() {
+        PlainBuilder fixed = new PlainBuilder(Set.of(), Map.of(), true);
+        fixed.addBreak(BreakableIterable.FOR_EACH_SKIPS_FIRST_ELEMENT).doesNotSupport(IterableMethods.ITERATOR_REMOVE);
+        assertTrue(fixed.breaks().contains(BreakableIterable.FOR_EACH_SKIPS_FIRST_ELEMENT));
+        assertTrue(fixed.methodStatuses().containsKey(IterableMethods.ITERATOR_REMOVE));
+        Set<Break> myBreaks = new HashSet<>();
+        Map<InterfaceMethod, MethodStatus> myStatuses = new HashMap<>();
+        PlainBuilder copied = new PlainBuilder(myBreaks, myStatuses, true);
+        myBreaks.add(BreakableIterable.FOR_EACH_SKIPS_FIRST_ELEMENT);
+        myStatuses.put(IterableMethods.ITERATOR_REMOVE, MethodStatus.UNSUPPORTED);
+        assertTrue(copied.breaks().isEmpty());
+        assertTrue(copied.methodStatuses().isEmpty());
     }
 
     // ========== build(Iterable) holds the builder's elements and the argument's ==========
@@ -278,5 +319,44 @@ public class BuilderIsolationTest {
                 .doesNotPermitNulls()
                 .build();
         assertEquals(original.permits(), new BreakableNavigableSet<>(original).permits());
+    }
+
+    /// The smallest concrete [AbstractBreakableBuilder], to reach its constructors that take a set and a map.
+    private static final class PlainBuilder
+            extends AbstractBreakableBuilder<PlainBuilder, BreakableIterable<Integer>> {
+
+        PlainBuilder(final Set<Break> breaksArg, final Map<InterfaceMethod, MethodStatus> methodStatusesArg) {
+            super(breaksArg, methodStatusesArg);
+        }
+
+        PlainBuilder(final Set<Break> breaksArg, final Map<InterfaceMethod, MethodStatus> methodStatusesArg,
+                     final boolean isSafeArg) {
+            super(breaksArg, methodStatusesArg, isSafeArg);
+        }
+
+        PlainBuilder(final PlainBuilder other) {
+            super(other);
+        }
+
+        @Override
+        public PlainBuilder self() {
+            return this;
+        }
+
+        @Override
+        public PlainBuilder copy() {
+            return new PlainBuilder(this);
+        }
+
+        @Override
+        public BreakableIterable<Integer> copy(final BreakableIterable<Integer> other) {
+            return new BreakableIterable<>(other);
+        }
+
+        @Override
+        public BreakableIterable<Integer> build() {
+            return new BreakableIterable<>(List.of(), new HashSet<>(breaks()), new HashMap<>(methodStatuses()), 0,
+                    isSafe());
+        }
     }
 }

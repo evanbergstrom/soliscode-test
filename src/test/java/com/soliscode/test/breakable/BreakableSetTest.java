@@ -1,6 +1,9 @@
 package com.soliscode.test.breakable;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -154,6 +157,19 @@ public class BreakableSetTest extends AbstractTest
     /// Default constructor.
     public BreakableSetTest() {
         super();
+    }
+
+    @Test
+    @DisplayName("wrap copies its breaks: addBreak works on one made with Set.of(), and the caller's set is not shared")
+    public void wrapCopiesBreaks() {
+        BreakableSet<Integer> fixed = BreakableSet.wrap(new HashSet<>(), Set.of(), Map.of(), 0, 0, false,
+                Object.class);
+        fixed.addBreak(BreakableSet.ADD_RETURNS_TRUE_FOR_DUPLICATES);
+        assertTrue(fixed.hasBreak(BreakableSet.ADD_RETURNS_TRUE_FOR_DUPLICATES));
+        Set<Break> mine = new HashSet<>();
+        BreakableSet<Integer> copied = BreakableSet.wrap(new HashSet<>(), mine, Map.of(), 0, 0, false, Object.class);
+        mine.add(BreakableSet.ADD_RETURNS_TRUE_FOR_DUPLICATES);
+        assertFalse(copied.hasBreak(BreakableSet.ADD_RETURNS_TRUE_FOR_DUPLICATES));
     }
 
     /// Provides the CollectionProvider for automated contract testing.

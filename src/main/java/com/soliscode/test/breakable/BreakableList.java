@@ -588,8 +588,8 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     /// characteristics. Rather than calling this constructor directly, consider using the builder
     /// [BreakableCollection.Builder].
     /// @param c               the initial elements for the breakable collection.
-    /// @param breaks          the breaks for the collection.
-    /// @param methodStatuses  the method status configuration.
+    /// @param breaks          the breaks for the collection, copied.
+    /// @param methodStatuses  the method status configuration, copied.
     /// @param characteristics the characteristics for the collection.
     /// @param permits         the flags that indicate what types of values are supported by the collection.
     /// @param isSafe          he flag that indicates whether the collection is thread-safe.

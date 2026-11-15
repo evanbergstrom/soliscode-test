@@ -618,7 +618,7 @@ public class BreakableNavigableSet<E> extends BreakableSortedSet<E> implements N
     /// ```
     ///
     /// @param navigableSetArg the backing navigable set for element storage
-    /// @param breaks the collection of breaks to activate
+    /// @param breaks the collection of breaks to activate, copied
     /// @param methodStatuses the method status configuration.
     /// @param characteristics the spliterator characteristics
     /// @param permits         the flags that indicate what types of values are supported by the collection.

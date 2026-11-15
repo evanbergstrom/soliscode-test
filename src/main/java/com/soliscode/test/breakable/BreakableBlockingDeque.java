@@ -912,14 +912,14 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
 
     /// Creates a BreakableBlockingDeque by copying another BreakableBlockingDeque.
     ///
-    /// This constructor creates a new instance that shares the underlying deque data
+    /// This constructor creates a new instance with a copy of the underlying deque data
     /// and inherits all configuration from the source deque.
     ///
     /// **Inherited Configuration:**
     /// - All break settings from source
     /// - Null element policies
     /// - Method support configuration
-    /// - Underlying BlockingDeque reference (shared, not copied)
+    /// - Underlying BlockingDeque (copied into a `LinkedBlockingDeque`, not shared)
     ///
     /// **Usage:**
     /// ```java
@@ -943,6 +943,7 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     ///                        not be `null` and should be correctly initialized for proper functioning.
     /// @param breaks          A [Set] of `Break` instances that define interruption points for certain
     ///                        operations on the deque. This enables controlled interruptions during deque usage.
+    ///                        Copied.
     /// @param methodStatuses  A [Map] mapping `InterfaceMethod` enums to corresponding [MethodStatus]
     ///                        values. This provides a mechanism to configure and track the execution behavior
     ///                        of specific methods.
@@ -1743,7 +1744,7 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     ///
     /// @param <E> the type of elements held in the blocking deque
     /// @param blockingDeque the BlockingDeque to wrap
-    /// @param breaks the collection of breaks to apply
+    /// @param breaks the collection of breaks to apply, copied
     /// @return a new BreakableBlockingDeque wrapping the specified deque with the given breaks
     /// @throws NullPointerException if blockingDeque or breaks is null
     public static <E> BreakableBlockingDeque<E> wrap(
@@ -1757,7 +1758,7 @@ public class BreakableBlockingDeque<E> extends BreakableDeque<E> implements Bloc
     ///
     /// @param <E> the type of elements held in the blocking deque
     /// @param blockingDeque the BlockingDeque to wrap
-    /// @param breaks the collection of breaks to apply
+    /// @param breaks the collection of breaks to apply, copied
     /// @param characteristics the spliterator characteristics for the deque
     /// @return a new BreakableBlockingDeque wrapping the specified deque with the given configuration
     /// @throws NullPointerException if blockingDeque or breaks is null

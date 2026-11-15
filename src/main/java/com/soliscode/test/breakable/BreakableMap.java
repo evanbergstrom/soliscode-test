@@ -771,7 +771,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// Creates a `BreakableMap` wrapping the specified map with the given breaks and null handling configuration.
     ///
     /// @param mapArg the underlying map to wrap; must not be null
-    /// @param breaks the collection of breaks to apply; must not be null
+    /// @param breaks the collection of breaks to apply, copied; must not be null
     /// @param methodStatuses the method status configuration; must not be null
     /// @param permitsArg the bitwise combination of permitted features
     /// @param isSafe whether the map is safe for concurrent access
@@ -1732,7 +1732,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     /// @param <K> the type of keys maintained by the map
     /// @param <V> the type of mapped values
     /// @param map the map to wrap; must not be `null`
-    /// @param breaks the set of breaks to apply; must not be `null`
+    /// @param breaks the set of breaks to apply, copied; must not be `null`
     /// @param statuses the method statuses to apply; must not be `null`
     /// @param permits the bitwise combination of permitted features
     /// @param isSafe whether the map is safe for concurrent access

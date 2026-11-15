@@ -17,7 +17,6 @@ package com.soliscode.test.breakable;
 
 import java.io.Serial;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -295,7 +294,7 @@ public class BreakableCharSequence extends AbstractBreakable
     /// @param delegateArg the delegate
     /// @param breaks      the set of breaks to apply, copied
     public BreakableCharSequence(final CharSequence delegateArg, final Set<Break> breaks) {
-        super(new HashSet<>(breaks), Map.of(), false);
+        super(breaks, Map.of(), false);
         this.delegate = Objects.requireNonNull(delegateArg);
     }
 

@@ -279,7 +279,7 @@ public class BreakableIterator<E> extends AbstractBreakable implements Iterator<
                              final Map<InterfaceMethod, MethodStatus> methodStatuses,
                              final int characteristics, final boolean isSafe,
                              final @Nullable IntSupplier sourceSizeArg) {
-        super(new HashSet<>(breaks), methodStatuses, isSafe);
+        super(breaks, methodStatuses, isSafe);
         this.sourceSize = sourceSizeArg != null && hasWeakConsistencyBreak(breaks) ? sourceSizeArg : null;
         this.expectedSize = this.sourceSize == null ? 0 : this.sourceSize.getAsInt();
         if (hasBreak(ITERATOR_IS_ALWAYS_EMPTY)) {

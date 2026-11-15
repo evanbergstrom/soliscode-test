@@ -103,7 +103,7 @@ public class BreakableObject<T> extends AbstractBreakable implements Serializabl
     /// Internal constructor for creating a `BreakableObject` with a specific state.
     ///
     /// @param valueArg the underlying value
-    /// @param breaks the initial set of breaks
+    /// @param breaks the initial set of breaks, copied
     /// @param methodStatuses the initial method statuses
     /// @param isSafe the initial safety state
     protected BreakableObject(final T valueArg, final Set<Break> breaks,

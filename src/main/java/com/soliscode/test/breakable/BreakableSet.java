@@ -242,7 +242,7 @@ public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
     /// ```
     ///
     /// @param setArg the backing collection for element storage
-    /// @param breaks the collection of breaks to activate
+    /// @param breaks the collection of breaks to activate, copied
     /// @param methodStatuses the method status configuration.
     /// @param characteristics the spliterator characteristics
     /// @param permits         the flags that indicate what types of values are supported by the collection; duplicates
@@ -370,7 +370,7 @@ public class BreakableSet<E> extends BreakableCollection<E> implements Set<E> {
     ///
     /// @param <E>             the type of elements in the Set
     /// @param set             the existing Set to wrap with breakable functionality
-    /// @param breaks          the set of breaks to apply to the wrapped Set
+    /// @param breaks          the set of breaks to apply to the wrapped Set, copied
     /// @param methodStatuses  the initial method statuses configuration
     /// @param characteristics the initial spliterator characteristics
     /// @param permits         the initial permits configuration for the Set

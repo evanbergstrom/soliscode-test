@@ -300,7 +300,7 @@ public class BreakableConcurrentMap<K, V> extends BreakableMap<K, V> implements 
     /// Creates a map over a store, with breaks, method support and permits.
     ///
     /// @param concurrentMapArg the store, which the map delegates to
-    /// @param breaks the breaks
+    /// @param breaks the breaks, copied
     /// @param methodStatuses the method support
     /// @param permits the permits ([BreakableMap]'s `PERMITS_*` flags)
     protected BreakableConcurrentMap(
@@ -914,7 +914,7 @@ public class BreakableConcurrentMap<K, V> extends BreakableMap<K, V> implements 
     /// @param <K> the type of keys maintained by the map
     /// @param <V> the type of mapped values
     /// @param concurrentMap the store
-    /// @param breaks the breaks
+    /// @param breaks the breaks, copied
     /// @return a new map over the store
     /// @since 1.0.0
     public static <K, V> BreakableConcurrentMap<K, V> wrap(

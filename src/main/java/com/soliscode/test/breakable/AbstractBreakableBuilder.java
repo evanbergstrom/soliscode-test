@@ -93,27 +93,27 @@ public abstract class AbstractBreakableBuilder<B extends AbstractBreakableBuilde
 
     /// Creates a new `AbstractBreakableBuilder` with the specified breaks and method statuses.
     ///
-    /// @param breaksArg the initial set of breaks; must not be null
-    /// @param methodStatusesArg the initial method statuses; must not be null
-    /// @throws NullPointerException if `breaks` or `methodStatuses` is null
+    /// @param breaksArg the initial set of breaks, copied; must not be null
+    /// @param methodStatusesArg the initial method statuses, copied; must not be null
+    /// @throws NullPointerException if `breaksArg` or `methodStatusesArg` is null
     /// @since 1.0.0
     public AbstractBreakableBuilder(final Set<Break> breaksArg,
                                     final Map<InterfaceMethod, MethodStatus> methodStatusesArg) {
-        this.breaks = breaksArg;
-        this.methodStatuses = methodStatusesArg;
+        this.breaks = new HashSet<>(breaksArg);
+        this.methodStatuses = new HashMap<>(methodStatusesArg);
     }
 
     /// Creates a new `AbstractBreakableBuilder` with the specified breaks, method statuses, and thread safety.
     ///
-    /// @param breaksArg the initial set of breaks; must not be null
-    /// @param methodStatusesArg the initial method statuses; must not be null
+    /// @param breaksArg the initial set of breaks, copied; must not be null
+    /// @param methodStatusesArg the initial method statuses, copied; must not be null
     /// @param isSafeArg whether the resulting object is safe for concurrent access
-    /// @throws NullPointerException if `breaks` or `methodStatuses` is null
+    /// @throws NullPointerException if `breaksArg` or `methodStatusesArg` is null
     public AbstractBreakableBuilder(final Set<Break> breaksArg,
                                     final Map<InterfaceMethod, MethodStatus> methodStatusesArg,
                                     final boolean isSafeArg) {
-        this.breaks = breaksArg;
-        this.methodStatuses = methodStatusesArg;
+        this.breaks = new HashSet<>(breaksArg);
+        this.methodStatuses = new HashMap<>(methodStatusesArg);
         this.isSafe = isSafeArg;
     }
 

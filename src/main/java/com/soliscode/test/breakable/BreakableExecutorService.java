@@ -520,7 +520,7 @@ public class BreakableExecutorService extends AbstractBreakable implements Execu
     /// @throws IllegalArgumentException if `threads` is not positive
     /// @throws NullPointerException     if `breaks` is null
     public BreakableExecutorService(final int threadsArg, final Set<Break> breaks) {
-        super(new HashSet<>(Objects.requireNonNull(breaks, "breaks")), Map.of(), false);
+        super(Objects.requireNonNull(breaks, "breaks"), Map.of(), false);
         if (threadsArg <= 0) {
             throw new IllegalArgumentException("threads must be positive: " + threadsArg);
         }

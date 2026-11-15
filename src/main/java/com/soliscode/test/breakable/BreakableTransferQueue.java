@@ -564,7 +564,7 @@ public class BreakableTransferQueue<E> extends BreakableBlockingQueue<E> impleme
     /// ```
     ///
     /// @param transferQueueArg   the TransferQueue to wrap
-    /// @param breaks          the breaks to apply
+    /// @param breaks          the breaks to apply, copied
     /// @param methodStatuses  the method support status for each optional method
     /// @param characteristics the spliterator characteristics
     /// @param permits         the flags that indicate what types of values are supported by the collection.
@@ -917,7 +917,7 @@ public class BreakableTransferQueue<E> extends BreakableBlockingQueue<E> impleme
     ///
     /// @param <E>           the type of elements held in the transfer queue
     /// @param transferQueue the TransferQueue to wrap
-    /// @param breaks        the set of breaks to apply
+    /// @param breaks        the set of breaks to apply, copied
     /// @return a new BreakableTransferQueue wrapping the specified queue
     /// @throws NullPointerException if transferQueue or breaks is null
     /// @since 1.0.0
@@ -932,7 +932,7 @@ public class BreakableTransferQueue<E> extends BreakableBlockingQueue<E> impleme
     ///
     /// @param <E>             the type of elements held in the transfer queue
     /// @param transferQueue   the TransferQueue to wrap
-    /// @param breaks          the set of breaks to apply
+    /// @param breaks          the set of breaks to apply, copied
     /// @param characteristics the spliterator characteristics
     /// @return a new BreakableTransferQueue wrapping the specified queue with given configuration
     /// @throws NullPointerException if transferQueue or breaks is null

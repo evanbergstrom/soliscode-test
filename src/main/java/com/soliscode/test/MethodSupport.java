@@ -40,7 +40,8 @@ public abstract class MethodSupport implements SupportedMethods {
     private static final MethodStatus DEFAULT_STATUS = new MethodStatus(true);
 
     /// Map storing the support status for each optional method that has been explicitly configured.
-    private final Map<InterfaceMethod, MethodStatus> methodStatuses;
+    /// Not final, so that [#clone()] can give a copy a map of its own.
+    private Map<InterfaceMethod, MethodStatus> methodStatuses;
 
     /// Default constructor that initializes an empty method status map.
     /// All methods will be considered supported by default.
@@ -56,9 +57,24 @@ public abstract class MethodSupport implements SupportedMethods {
     }
 
     /// Field constructor that creates a new instance with the provided method support configuration.
-    /// @param methodStatusesArg the method status configuration.
+    /// @param methodStatusesArg the method status configuration, copied.
+    /// @throws NullPointerException if `methodStatusesArg` is null
     protected MethodSupport(final Map<InterfaceMethod, MethodStatus> methodStatusesArg) {
         this.methodStatuses = new HashMap<>(Objects.requireNonNull(methodStatusesArg));
+    }
+
+    /// Returns a copy made by [Object#clone()], with a method-status map of its own, so that a change to the copy's
+    /// statuses does not reach this object, or the reverse. Only a subclass that implements [Cloneable] can be
+    /// cloned.
+    ///
+    /// @return the copy
+    /// @throws CloneNotSupportedException if this object's class does not implement [Cloneable]
+    /// @since 0.1.5
+    @Override
+    protected Object clone() throws CloneNotSupportedException {
+        final MethodSupport copy = (MethodSupport) super.clone();
+        copy.methodStatuses = new HashMap<>(methodStatuses);
+        return copy;
     }
 
     /// Checks whether the specified optional method is supported by this implementation.

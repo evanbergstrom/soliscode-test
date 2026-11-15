@@ -453,14 +453,14 @@ public class BreakableQueue<E> extends BreakableCollection<E> implements Queue<E
 
     /// Creates a `BreakableQueue` by copying another `BreakableQueue`.
     ///
-    /// This constructor creates a new instance that shares the underlying queue data
+    /// This constructor creates a new instance with a copy of the underlying queue data
     /// and inherits all configuration from the source queue.
     ///
     /// **Inherited Configuration:**
     /// - All break settings from source
     /// - Null element policies
     /// - Method support configuration
-    /// - Underlying `Queue` reference (shared, not copied)
+    /// - Underlying `Queue` (copied, not shared)
     ///
     /// **Usage:**
     /// ```java
@@ -492,7 +492,7 @@ public class BreakableQueue<E> extends BreakableCollection<E> implements Queue<E
     /// ```
     ///
     /// @param queueArg the `Queue` to wrap; must not be null
-    /// @param breaks the breaks to apply; must not be null
+    /// @param breaks the breaks to apply, copied; must not be null
     /// @param methodStatuses the method status configuration; must not be null
     /// @param characteristics the spliterator characteristics
     /// @param permits the flags that indicate what types of values are supported by the collection
@@ -959,7 +959,7 @@ public class BreakableQueue<E> extends BreakableCollection<E> implements Queue<E
     ///
     /// @param <E> the type of elements held in the queue
     /// @param queue the `Queue` implementation to wrap; must not be null
-    /// @param breaks the collection of breaks to apply; must not be null, may be empty
+    /// @param breaks the collection of breaks to apply, copied; must not be null, may be empty
     /// @return a new `BreakableQueue` wrapping the specified queue with the given breaks
     /// @throws NullPointerException if `queue` or `breaks` is null
     /// @see #wrap(Queue, Set, Map, int)
@@ -1017,7 +1017,7 @@ public class BreakableQueue<E> extends BreakableCollection<E> implements Queue<E
     ///
     /// @param <E> the type of elements held in the queue
     /// @param queue the `Queue` implementation to wrap; must not be null
-    /// @param breaks the collection of breaks to apply; must not be null, may be empty
+    /// @param breaks the collection of breaks to apply, copied; must not be null, may be empty
     /// @param methodStatuses the method status configuration; must not be null
     /// @param characteristics the spliterator characteristics for this queue
     /// @return a new `BreakableQueue` wrapping the specified queue with the given configuration

@@ -128,12 +128,14 @@ public abstract class AbstractBreakable extends MethodSupport implements Breakab
     /// Random number generator for subclasses.
     private static final Random RANDOM = new Random();
 
-    /// The breaks that will be applied while running methods
-    private final Set<Break> breaks;
+    /// The breaks that will be applied while running methods.
+    /// Not final, so that [#clone()] can give a copy a set of its own.
+    private Set<Break> breaks;
 
     /// Lock for synchronizing access to the breakable object.
     /// This is used to simulate thread safety or lack thereof based on the safety configuration.
-    private final transient @Nullable ReentrantLock lock;
+    /// Not final, so that [#clone()] and deserialization can give the object a lock of its own.
+    private transient @Nullable ReentrantLock lock;
 
     /// Creates a breakable object with no breaks applied.
     ///
@@ -174,22 +176,37 @@ public abstract class AbstractBreakable extends MethodSupport implements Breakab
     /// This is the most common constructor for creating breakable objects with known
     /// behavioral deviations, typically used in test scenarios.
     ///
-    /// @param breaksArg the collection of breaks to apply to this object; must not be null
-    ///               and may be empty to create an unbroken object
-    /// @param methodStatuses the method status configuration.
+    /// @param breaksArg the breaks to apply to this object, copied, so that a later change to the caller's set does
+    ///               not reach this object; must not be null and may be empty to create an unbroken object
+    /// @param methodStatuses the method status configuration, copied.
     /// @param isSafe whether the resulting object is safe for concurrent access.
-    /// @throws NullPointerException if breaks is null
+    /// @throws NullPointerException if `breaksArg` or `methodStatuses` is null
     protected AbstractBreakable(final Set<Break> breaksArg,
                                 final Map<InterfaceMethod, MethodStatus> methodStatuses,
                                 final boolean isSafe) {
         super(methodStatuses);
-        this.breaks = breaksArg;
+        this.breaks = new HashSet<>(Objects.requireNonNull(breaksArg));
         if (isSafe) {
             this.lock = new ReentrantLock();
         } else {
             this.lock = null;
         }
 
+    }
+
+    /// Returns a copy made by [Object#clone()], with a break set and method-status map of its own, and a lock of its
+    /// own if this object is safe, so that a break added to the copy does not reach this object, or the reverse.
+    /// Only a subclass that implements [Cloneable] can be cloned.
+    ///
+    /// @return the copy
+    /// @throws CloneNotSupportedException if this object's class does not implement [Cloneable]
+    /// @since 0.1.5
+    @Override
+    protected Object clone() throws CloneNotSupportedException {
+        final AbstractBreakable copy = (AbstractBreakable) super.clone();
+        copy.breaks = new HashSet<>(breaks);
+        copy.lock = lock != null ? new ReentrantLock() : null;
+        return copy;
     }
 
     /// Serialization support for writing the object state.
@@ -219,13 +236,7 @@ public abstract class AbstractBreakable extends MethodSupport implements Breakab
     private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
         if (in.readBoolean()) {
-            try {
-                var field = AbstractBreakable.class.getDeclaredField("lock");
-                field.setAccessible(true);
-                field.set(this, new ReentrantLock());
-            } catch (final NoSuchFieldException | IllegalAccessException e) {
-                throw new IOException("Failed to restore lock field", e);
-            }
+            this.lock = new ReentrantLock();
         }
     }
 

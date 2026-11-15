@@ -16,7 +16,6 @@
 package com.soliscode.test.breakable;
 
 import java.io.Serial;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -204,7 +203,7 @@ public class BreakableMapEntry<K, V> extends AbstractBreakable implements Map.En
     /// @param methodStatuses the status of each optional method
     public BreakableMapEntry(final Map.Entry<K, V> delegateArg, final Set<Break> breaks,
                              final Map<InterfaceMethod, MethodStatus> methodStatuses) {
-        super(new HashSet<>(breaks), methodStatuses, false);
+        super(breaks, methodStatuses, false);
         this.delegate = Objects.requireNonNull(delegateArg);
         this.hashAtCreation = Objects.hashCode(delegateArg.getKey()) ^ Objects.hashCode(delegateArg.getValue());
     }

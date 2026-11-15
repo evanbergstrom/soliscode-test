@@ -3,8 +3,10 @@ package com.soliscode.test.breakable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Spliterator;
 
@@ -40,6 +42,7 @@ import static java.util.Spliterator.SIZED;
 import static java.util.Spliterator.SORTED;
 import static java.util.Spliterator.SUBSIZED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -66,6 +69,18 @@ public class BreakableIterableTest extends AbstractTest
                 BreakableIterable::new,
                 elementProvider()
         );
+    }
+
+    @Test
+    @DisplayName("It copies its breaks: addBreak works on one made with Set.of(), and the caller's set is not shared")
+    public void constructorCopiesBreaks() {
+        BreakableIterable<Integer> fixed = new BreakableIterable<>(List.of(1), Set.of(), Map.of(), 0, false);
+        fixed.addBreak(FOR_EACH_SKIPS_FIRST_ELEMENT);
+        assertTrue(fixed.hasBreak(FOR_EACH_SKIPS_FIRST_ELEMENT));
+        Set<Break> mine = new HashSet<>();
+        BreakableIterable<Integer> copied = new BreakableIterable<>(List.of(1), mine, Map.of(), 0, false);
+        mine.add(FOR_EACH_SKIPS_FIRST_ELEMENT);
+        assertFalse(copied.hasBreak(FOR_EACH_SKIPS_FIRST_ELEMENT));
     }
 
     /// Test that the copy constructor copies the elements, breaks, and characteristics.

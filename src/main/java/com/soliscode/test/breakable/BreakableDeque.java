@@ -815,14 +815,14 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
 
     /// Creates a BreakableDeque by copying another BreakableDeque.
     ///
-    /// This constructor creates a new instance that shares the underlying deque data
+    /// This constructor creates a new instance with a copy of the underlying deque data
     /// and inherits all configuration from the source deque.
     ///
     /// **Inherited Configuration:**
     /// - All break settings from source
     /// - Null element policies
     /// - Method support configuration
-    /// - Underlying Deque reference (shared, not copied)
+    /// - Underlying Deque (copied, not shared)
     ///
     /// **Usage:**
     /// ```java
@@ -854,7 +854,7 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     /// ```
     ///
     /// @param dequeArg           the Deque to wrap
-    /// @param breaks          the breaks to apply
+    /// @param breaks          the breaks to apply, copied
     /// @param methodStatuses  the method status configuration.
     /// @param characteristics the spliterator characteristics
     /// @param permits         the flags that indicate what types of values are supported by the collection.
@@ -1604,7 +1604,7 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     ///
     /// @param <E> the type of elements held in the deque
     /// @param deque the Deque implementation to wrap; must not be null
-    /// @param breaks the set of breaks to apply; must not be null, may be empty
+    /// @param breaks the set of breaks to apply, copied; must not be null, may be empty
     /// @return a new BreakableDeque wrapping the specified deque with the given breaks
     /// @throws NullPointerException if deque or breaks is null
     /// @see #wrap(Deque, Set, int)
@@ -1661,7 +1661,7 @@ public class BreakableDeque<E> extends BreakableQueue<E> implements Deque<E>, Se
     ///
     /// @param <E> the type of elements held in the deque
     /// @param deque the Deque implementation to wrap; must not be null
-    /// @param breaks the set of breaks to apply; must not be null, may be empty
+    /// @param breaks the set of breaks to apply, copied; must not be null, may be empty
     /// @param characteristics the spliterator characteristics for this deque
     /// @return a new BreakableDeque wrapping the specified deque with the given configuration
     /// @throws NullPointerException if deque or breaks is null

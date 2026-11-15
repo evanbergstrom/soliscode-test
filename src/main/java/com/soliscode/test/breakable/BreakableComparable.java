@@ -18,7 +18,6 @@ package com.soliscode.test.breakable;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serial;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -167,7 +166,7 @@ public class BreakableComparable<T extends Comparable<? super T>> extends Abstra
     /// @param valueArg the value
     /// @param breaks   the set of breaks to apply, copied
     public BreakableComparable(final T valueArg, final Set<Break> breaks) {
-        super(new HashSet<>(breaks), Map.of(), false);
+        super(breaks, Map.of(), false);
         this.value = Objects.requireNonNull(valueArg);
         this.serial = SERIALS.getAndIncrement();
     }

@@ -359,10 +359,11 @@ public class BreakableIterable<E> extends BreakableObject<Iterable<E>> implement
     /// Creates a breakable iterable from another iterable with a set of breaks and characteristics specified by the
     /// other arguments.
     /// @param i the iterable to use for the elements.
-    /// @param breaks the set of breaks to include.
-    /// @param methodStatuses the method status configuration.
+    /// @param breaks the set of breaks to include, copied.
+    /// @param methodStatuses the method status configuration, copied.
     /// @param characteristicsArg the characteristics of the iterable.
     /// @param isSafe whether the iterable is safe for concurrent access.
+    /// @throws NullPointerException if `breaks` or `methodStatuses` is null
     public BreakableIterable(final Iterable<E> i, final Set<Break> breaks,
                              final Map<InterfaceMethod, MethodStatus> methodStatuses,
                              final int characteristicsArg, final boolean isSafe) {

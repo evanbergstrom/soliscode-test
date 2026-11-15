@@ -3,6 +3,10 @@ package com.soliscode.test.breakable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -46,6 +50,20 @@ public class BreakableListTest extends AbstractTest
             elements -> new BreakableList<>(new ArrayList<>(elements)),
             elementProvider()
         );
+    }
+
+    @Test
+    @DisplayName("It copies its breaks: addBreak works on one made with Set.of(), and the caller's set is not shared")
+    public void constructorCopiesBreaks() {
+        BreakableList<Integer> fixed = new BreakableList<>(new ArrayList<>(List.of(1)), Set.of(), Map.of(), 0, 0,
+                false, Object.class);
+        fixed.addBreak(BreakableList.ADD_ALL_AT_INDEX_ALWAYS_RETURNS_TRUE);
+        assertTrue(fixed.hasBreak(BreakableList.ADD_ALL_AT_INDEX_ALWAYS_RETURNS_TRUE));
+        Set<Break> mine = new HashSet<>();
+        BreakableList<Integer> copied = new BreakableList<>(new ArrayList<>(List.of(1)), mine, Map.of(), 0, 0,
+                false, Object.class);
+        mine.add(BreakableList.ADD_ALL_AT_INDEX_ALWAYS_RETURNS_TRUE);
+        assertFalse(copied.hasBreak(BreakableList.ADD_ALL_AT_INDEX_ALWAYS_RETURNS_TRUE));
     }
 
 

@@ -554,14 +554,14 @@ public class BreakableBlockingQueue<E> extends BreakableQueue<E> implements Bloc
 
     /// Creates a `BreakableBlockingQueue` by copying another `BreakableBlockingQueue`.
     ///
-    /// This constructor creates a new instance that shares the underlying blocking queue data
+    /// This constructor creates a new instance with a copy of the underlying blocking queue data
     /// and inherits all configuration from the source queue.
     ///
     /// **Inherited Configuration:**
     /// - All break settings from source
     /// - Null element policies
     /// - Method support configuration
-    /// - Underlying `BlockingQueue` reference (shared, not copied)
+    /// - Underlying `BlockingQueue` (copied into a `LinkedBlockingQueue`, not shared)
     ///
     /// **Usage:**
     /// ```java
@@ -584,7 +584,7 @@ public class BreakableBlockingQueue<E> extends BreakableQueue<E> implements Bloc
     ///
     /// @param blockingQueueArg   The [BlockingQueue] instance to be wrapped. Must not be `null`.
     /// @param breaks          A [Set] of `Break` configurations defining break conditions.
-    ///                        Must not be `null`.
+    ///                        Must not be `null`. Copied.
     /// @param methodStatuses  A [Map] associating [InterfaceMethod] to its [MethodStatus] instances,
     ///                        specifying the status or state of each method. Must not be `null`.
     /// @param characteristics An `int` representing the characteristics of the queue, such as thread safety
@@ -1377,7 +1377,7 @@ public class BreakableBlockingQueue<E> extends BreakableQueue<E> implements Bloc
     ///
     /// @param <E> the type of elements held in the blocking queue
     /// @param blockingQueue the `BlockingQueue` implementation to wrap; must not be null
-    /// @param breaks the set of breaks to apply; must not be null, may be empty
+    /// @param breaks the set of breaks to apply, copied; must not be null, may be empty
     /// @return a new `BreakableBlockingQueue` wrapping the specified queue with the given breaks
     /// @throws NullPointerException if `blockingQueue` or `breaks` is null
     /// @see #wrap(BlockingQueue, Set, int)
@@ -1435,7 +1435,7 @@ public class BreakableBlockingQueue<E> extends BreakableQueue<E> implements Bloc
     ///
     /// @param <E> the type of elements held in the blocking queue
     /// @param blockingQueue the `BlockingQueue` implementation to wrap; must not be null
-    /// @param breaks the set of breaks to apply; must not be null, may be empty
+    /// @param breaks the set of breaks to apply, copied; must not be null, may be empty
     /// @param characteristics the spliterator characteristics for this queue
     /// @return a new `BreakableBlockingQueue` wrapping the specified queue with the given configuration
     /// @throws NullPointerException if `blockingQueue` or `breaks` is null

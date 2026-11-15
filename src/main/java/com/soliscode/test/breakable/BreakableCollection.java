@@ -786,7 +786,7 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     /// characteristics. Rather than calling this constructor directly, consider using the builder
     /// [BreakableCollection.Builder].
     /// @param c               the initial elements for the breakable collection.
-    /// @param breaks          the breaks for the collection.
+    /// @param breaks          the breaks for the collection, copied.
     /// @param methodStatuses  the method status configuration.
     /// @param characteristics the characteristics for the collection.
     /// @param permitsArg         the flags that indicate what types of values are supported by the collection.
@@ -815,7 +815,7 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     ///
     /// @param <E> the type of elements in the collection
     /// @param collection the existing collection to wrap with breakable functionality
-    /// @param breaks the set of breaks to apply to the wrapped collection
+    /// @param breaks the set of breaks to apply to the wrapped collection, copied
     /// @param methodStatuses the initial method statuses configuration
     /// @param characteristics the initial spliterator characteristics
     /// @param permits the initial permits configuration for the collection

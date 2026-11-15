@@ -18,7 +18,6 @@ package com.soliscode.test.breakable;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.Serial;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -128,7 +127,7 @@ public class BreakableCloseable extends AbstractBreakable implements Closeable {
     ///
     /// @param breaks the set of breaks to apply, copied
     public BreakableCloseable(final Set<Break> breaks) {
-        super(new HashSet<>(breaks), Map.of(), false);
+        super(breaks, Map.of(), false);
     }
 
     /// Counts a read, and returns the count.

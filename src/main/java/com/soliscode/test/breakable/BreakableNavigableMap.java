@@ -631,7 +631,7 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     /// @param navigableMapArg The underlying [NavigableMap] that will be wrapped and managed by
     ///                     this `BreakableNavigableMap`. Must not be `null`.
     /// @param breaks       The set of [Break] instances defining interruption or control points
-    ///                     for the navigable map's methods. Must not be `null`.
+    ///                     for the navigable map's methods. Must not be `null`. Copied.
     /// @param methodStatuses A mapping of [InterfaceMethod] to [MethodStatus] to specify
     ///                       the behavioral state of each supported method in the wrapped map (e.g.,
     ///                       enabled, disabled, or overridden). Must not be `null`.
@@ -1358,7 +1358,7 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     /// @param <K> the type of keys maintained by the map
     /// @param <V> the type of mapped values
     /// @param navigableMap the NavigableMap to wrap
-    /// @param breaks the set of breaks to apply
+    /// @param breaks the set of breaks to apply, copied
     /// @return a new BreakableNavigableMap wrapping the specified map
     /// @throws NullPointerException if navigableMap or breaks is null
     /// @since 1.0.0
@@ -1374,7 +1374,7 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
     /// @param <K> the type of keys maintained by the map
     /// @param <V> the type of mapped values
     /// @param navigableMap the NavigableMap to wrap
-    /// @param breaks the set of breaks to apply
+    /// @param breaks the set of breaks to apply, copied
     /// @param permitsNullKeys whether the map permits null keys
     /// @param permitsNullValues whether the map permits null values
     /// @return a new BreakableNavigableMap wrapping the specified map

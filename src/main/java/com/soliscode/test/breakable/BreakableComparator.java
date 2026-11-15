@@ -21,7 +21,6 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -245,7 +244,7 @@ public class BreakableComparator<T> extends AbstractBreakable implements Compara
     /// @param delegateArg the delegate
     /// @param breaks      the set of breaks to apply, copied
     public BreakableComparator(final Comparator<T> delegateArg, final Set<Break> breaks) {
-        super(new HashSet<>(breaks), Map.of(), false);
+        super(breaks, Map.of(), false);
         this.delegate = Objects.requireNonNull(delegateArg);
         this.serials = newSerials();
     }
