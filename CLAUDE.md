@@ -76,7 +76,7 @@ mvn -B -Pall-tests verify                             # every test, the extremel
 scripts/install-git-hooks.sh                          # once per clone: the pre-commit and pre-push hooks
 ```
 
-A test failure is the branch's to fix or report. A full verify takes about 2½ minutes; most of it is the thread-safety contracts and `ContractCoverageTest`.
+A test failure is the branch's to fix or report. A full verify takes about 4¼ minutes (2026-11-14, #12); most of it is `ContractCoverageTest`, its thread-safety part about 70 s.
 
 The git hooks (`scripts/git-hooks/`) compile the main and test sources when a commit changes Java or a build file, and refuse a push to `main` of a commit that skipped them (`--no-verify`). They start Maven, so don't commit while a background build runs.
 

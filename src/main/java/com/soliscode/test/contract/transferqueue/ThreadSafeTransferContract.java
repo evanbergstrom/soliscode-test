@@ -66,6 +66,13 @@ public interface ThreadSafeTransferContract<Q extends TransferQueue<E>, E> exten
     /// JUnit, so that the coordinator, not JUnit, reports a run that does not finish.
     int SHUTDOWN_TIMEOUT_SECONDS = 9;
 
+    /// How many calls ({@value}) a producer or consumer makes between its yields to the scheduler. A check-then-act
+    /// hand-off shows only when producers race over a consumer already waiting in `take()`, and frequent yields let
+    /// the consumers get there: at the coordinator's default of 64 the test caught `transfer`'s check-then-act in 15
+    /// of 20 single runs, and at 4 in 20 of 20. A yield before every call caught it as well, but under load (18 busy
+    /// processes on 18 cores) the fair store's runs then timed out in 10 of 120, against none at 4 (measured on #12).
+    int YIELD_INTERVAL = 4;
+
     /// Tests that elements handed over by producers and taken by consumers, all at once, are each received before
     /// the producer's call returns, and taken exactly once.
     @DisplayName("transfer(E) and take() are thread safe under contention with each other")
@@ -80,8 +87,7 @@ public interface ThreadSafeTransferContract<Q extends TransferQueue<E>, E> exten
         Queue<E> taken = new ConcurrentLinkedQueue<>();
         AtomicInteger leftEnqueued = new AtomicInteger();
         ContentionCoordinator<Q> coordinator = new ContentionCoordinator<>(
-                ContentionCoordinator.DEFAULT_START_TIMEOUT_SECONDS, SHUTDOWN_TIMEOUT_SECONDS,
-                ContentionCoordinator.DEFAULT_YIELD_INTERVAL);
+                ContentionCoordinator.DEFAULT_START_TIMEOUT_SECONDS, SHUTDOWN_TIMEOUT_SECONDS, YIELD_INTERVAL);
         coordinator.add(PRODUCERS, ITERATIONS, unchecked(q -> {
             E e = supplier.get();
             q.transfer(e);

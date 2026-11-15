@@ -81,9 +81,9 @@ public class ContentionCoordinator<S> {
     /// Each worker thread will execute its assigned operation this many times.
     public static final int DEFAULT_ITERATIONS = 30000;
 
-    /// The interval at which threads will yield to increase contention.
+    /// The default number of iterations between a worker's yields to the scheduler, which make contention likelier.
     ///
-    /// A value of 64 means `Thread.yield()` will be called every 64 iterations.
+    /// A worker calls `Thread.yield()` before its first iteration and then once every 64 iterations.
     public static final int DEFAULT_YIELD_INTERVAL = 64;
 
     /// The number of available processors on the current machine.
@@ -92,6 +92,7 @@ public class ContentionCoordinator<S> {
     private final int startTimeoutSeconds;
     private final int shutdownTimeoutSeconds;
     private final int yieldInterval;
+    private final Runnable yielder;
     private final Collection<Operation> operations;
 
     private final class Operation {
@@ -107,12 +108,10 @@ public class ContentionCoordinator<S> {
             this.iterations = iterationsArg;
         }
 
-        // ThreadPriorityCheck: yielding to the scheduler is how the workers make contention more likely.
-        @SuppressWarnings("ThreadPriorityCheck")
         void execute(final S subject) {
             for (int i = 0; i < iterations; i++) {
-                if ((i & yieldInterval) == 0) {
-                    Thread.yield();  // Yield to increase probability of contention
+                if (i % yieldInterval == 0) {
+                    yielder.run();  // Yield to increase probability of contention
                 }
                 consumer.accept(subject);
             }
@@ -134,14 +133,34 @@ public class ContentionCoordinator<S> {
     ///
     /// @param startTimeoutSecondsArg    the maximum time in seconds to wait for workers to be ready
     /// @param shutdownTimeoutSecondsArg the maximum time in seconds to wait for workers to finish
-    /// @param yieldIntervalArg          the interval in milliseconds at which worker threads should yield
+    /// @param yieldIntervalArg          the number of iterations between a worker's yields: a worker yields before its
+    ///                                  first iteration and then once every `yieldIntervalArg` iterations, so 1
+    ///                                  yields before every iteration
+    /// @throws IllegalArgumentException if `yieldIntervalArg` is less than 1
     /// @since 1.0
     public ContentionCoordinator(final int startTimeoutSecondsArg, final int shutdownTimeoutSecondsArg,
                                  final int yieldIntervalArg) {
+        this(startTimeoutSecondsArg, shutdownTimeoutSecondsArg, yieldIntervalArg,
+                ContentionCoordinator::yieldToScheduler);
+    }
+
+    // Package-private so that a test can count the yields.
+    ContentionCoordinator(final int startTimeoutSecondsArg, final int shutdownTimeoutSecondsArg,
+                          final int yieldIntervalArg, final Runnable yielderArg) {
+        if (yieldIntervalArg < 1) {
+            throw new IllegalArgumentException("yieldInterval must be at least 1: " + yieldIntervalArg);
+        }
         this.startTimeoutSeconds = startTimeoutSecondsArg;
         this.shutdownTimeoutSeconds = shutdownTimeoutSecondsArg;
         this.yieldInterval = yieldIntervalArg;
+        this.yielder = java.util.Objects.requireNonNull(yielderArg);
         this.operations = new ConcurrentLinkedQueue<>();
+    }
+
+    // ThreadPriorityCheck: yielding to the scheduler is how the workers make contention more likely.
+    @SuppressWarnings("ThreadPriorityCheck")
+    private static void yieldToScheduler() {
+        Thread.yield();
     }
 
     /// Adds an operation to be executed using default thread count and iterations.

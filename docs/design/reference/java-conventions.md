@@ -77,7 +77,7 @@ A finding that points at a fault is fixed, not suppressed. Built (#9, #30, #32, 
 | `ReferenceEquality` | 6 | Identity comparisons: `AssertEqualsByIdentity`, `AssertEquals` (the same iterable is equal to itself without being iterated), `IterableTestUtils`' `containsByIdentity`, and `BreakableBlockingQueue`'s, `BreakableBlockingDeque`'s and `BoundedTransferQueue`'s refusals to drain into themselves (#32, #33, #34) |
 | `DoNotCall` | 6 | Contract tests that call `addFirst` or `addLast` on a `SortedSet` on purpose, to check that they throw (`SortedAddFirstContract`, `SortedAddLastContract`; the user's decision on #30) |
 | `EqualsGetClass` | 1 | `BreakableObject`'s exact-class equality, which keeps `equals` symmetric |
-| `ThreadPriorityCheck` | 4 | `Thread.yield()` in `ContentionCoordinator`, which makes contention likelier; in `BreakableFuture`'s `cancel` and thread-unsafe wait (#44), where it widens the window of the fault its thread-unsafe breaks simulate; and in `ThreadSafeGetContract`'s completer (#44), whose spin for a getter must not starve it on a single core |
+| `ThreadPriorityCheck` | 4 | `Thread.yield()` in `ContentionCoordinator.yieldToScheduler` (#12), which makes contention likelier; in `BreakableFuture`'s `cancel` and thread-unsafe wait (#44), where it widens the window of the fault its thread-unsafe breaks simulate; and in `ThreadSafeGetContract`'s completer (#44), whose spin for a getter must not starve it on a single core |
 
 A new suppression of one of these kinds follows the rule; a new kind is the user's decision.
 

@@ -142,6 +142,25 @@ class ContentionCoordinatorTest extends AbstractTest {
     }
 
     @Test
+    @DisplayName("execute() yields before the first iteration and once every yield interval (deterministic)")
+    void executeYieldsOnceEveryYieldInterval() {
+        // 2 workers of 1,000 iterations each yield ceil(1000 / interval) times apiece.
+        assertEquals(2 * 16, yieldsOf(64, 1000), "interval 64");
+        assertEquals(2 * 1000, yieldsOf(1, 1000), "interval 1");
+        assertEquals(2, yieldsOf(1000, 1000), "interval 1000");
+        assertEquals(0, yieldsOf(64, 0), "no iterations");
+    }
+
+    @Test
+    @DisplayName("ContentionCoordinator() with a yield interval below 1 throws IllegalArgumentException")
+    void constructorWithYieldIntervalBelowOneThrowsIllegalArgumentException() {
+        IllegalArgumentException zero = assertThrows(IllegalArgumentException.class,
+                () -> new ContentionCoordinator<>(1, 1, 0));
+        assertEquals("yieldInterval must be at least 1: 0", zero.getMessage());
+        assertThrows(IllegalArgumentException.class, () -> new ContentionCoordinator<>(1, 1, -1));
+    }
+
+    @Test
     @DisplayName("execute() with zero iterations does nothing")
     void executeWithZeroIterationsDoesNothing() {
         ContentionCoordinator<AtomicInteger> coordinator = new ContentionCoordinator<>();
@@ -169,8 +188,10 @@ class ContentionCoordinatorTest extends AbstractTest {
         final AtomicInteger counter = new AtomicInteger(0);
         final List<Integer> list = new ArrayList<>();  // not thread safe
 
-        ContentionCoordinator<Object> coordinator = new ContentionCoordinator<>(1,1,1);
-        coordinator.add(o ->  list.add(counter.getAndIncrement()));
+        // A finish timeout of 5 s and 10,000 calls a thread, not the default 30,000: with a yield before every call,
+        // 1 s was too short under load (#12), and a timeout is not a collision.
+        ContentionCoordinator<Object> coordinator = new ContentionCoordinator<>(1, 5, 1);
+        coordinator.add(ContentionCoordinator.DEFAULT_THREADS, 10_000, o -> list.add(counter.getAndIncrement()));
         try {
             coordinator.execute(list);
         } catch (final AssertionError e) {
@@ -294,6 +315,17 @@ class ContentionCoordinatorTest extends AbstractTest {
             assertTrue(exited.await(5, TimeUnit.SECONDS), "Deadlocked workers did not end when released");
             Assertions.assertNoDeadlocks("a deadlock was left behind for later tests");
         }
+    }
+
+    /// Runs 2 workers of `iterations` each through a coordinator with the given yield interval, and counts the yields.
+    private static long yieldsOf(final int yieldInterval, final int iterations) {
+        LongAdder yields = new LongAdder();
+        ContentionCoordinator<AtomicInteger> coordinator = new ContentionCoordinator<>(
+                ContentionCoordinator.DEFAULT_START_TIMEOUT_SECONDS,
+                ContentionCoordinator.DEFAULT_SHUTDOWN_TIMEOUT_SECONDS, yieldInterval, yields::increment);
+        coordinator.add(2, iterations, AtomicInteger::incrementAndGet);
+        coordinator.execute(new AtomicInteger(0));
+        return yields.sum();
     }
 
     private static void lockBothIgnoringInterrupts(final ReentrantLock first, final ReentrantLock second,

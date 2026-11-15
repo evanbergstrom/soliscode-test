@@ -32,6 +32,8 @@ As a task merges, it adds what a user of the library will see differently under 
 
 ## Unreleased
 
+- Fix: `ContentionCoordinator`'s workers yield once every `yieldInterval` iterations, before the first and then at every multiple of the interval, not on half of all iterations as before (`(i & yieldInterval) == 0` tested one bit of the count). With the default interval of 64 a worker yields 32 times less often, so contention runs finish sooner: the thread-safety part of the contract coverage takes about 70 s, down from 100 s, and `ThreadSafeReplaceThreeArgContract` on `ConcurrentHashMap`, with 18 busy processes on 18 cores, a median 80 ms, down from 155 ms. The three-argument constructor throws `IllegalArgumentException` for an interval below 1, and its Javadoc says the interval counts iterations, not milliseconds (#12).
+- Changed: three thread-safety tests are tuned to the corrected yield (#12): `ThreadSafeTransferContract` and `ThreadSafeTryTransferContract` yield once every 4 calls (a new constant, `YIELD_INTERVAL`, in each), and `ThreadSafeReplaceThreeArgContract.REPLACE_ITERATIONS` is 10 times `ITERATIONS`, up from 5, so that each still catches the thread-unsafe break meant for it in 20 of 20 single runs.
 - New contract: `ComparatorContract` (`contract.comparator`), with `CompareContract`, `ReversedContract`, `ThenComparingContract` and `NullsFirstAndNullsLastContract`, tests any `Comparator`:
   - that `compare` follows the order of the provider's samples, is sign-symmetric and transitive, and compares alike elements that compare as equal;
   - that it throws `NullPointerException` for a null argument, unless the comparator permits nulls, when the laws are tested with `null` among the samples;

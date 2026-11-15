@@ -50,8 +50,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public interface ThreadSafeReplaceThreeArgContract<M extends ConcurrentMap<K, V>, K, V>
         extends ThreadSafeConcurrentMapContractSupport<M, K, V> {
 
-    /// How many calls each thread makes: more than most tests, since each needs a get and a replace to collide.
-    int REPLACE_ITERATIONS = 5 * ITERATIONS;
+    /// How many calls each thread makes: more than most tests, since each needs a get and a replace to collide. At
+    /// 5 times [#ITERATIONS] the test caught `replace`'s check-then-act in 12 of 20 single runs once the coordinator
+    /// yielded once every 64 calls, not on half of them, and at 10 times in 20 of 20 (measured on #12).
+    int REPLACE_ITERATIONS = 10 * ITERATIONS;
 
     /// Tests that no successful `replace(key, oldValue, newValue)` is lost.
     @DisplayName("replace(K, V, V) is atomic under contention")
