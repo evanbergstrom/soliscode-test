@@ -27,8 +27,8 @@ import org.junit.jupiter.api.DisplayName;
 
 import com.soliscode.test.annotations.ConcurrencyTest;
 import com.soliscode.test.annotations.VerySlow;
-import com.soliscode.test.contract.map.MapMethods;
 import com.soliscode.test.contract.support.UpdateLog;
+import com.soliscode.test.methods.MapMethods;
 import com.soliscode.test.safety.ContentionCoordinator;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;

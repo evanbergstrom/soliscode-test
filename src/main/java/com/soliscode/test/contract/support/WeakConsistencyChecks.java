@@ -181,10 +181,7 @@ public final class WeakConsistencyChecks {
                                     final Change change, final boolean removeBeforeAdd, final String what) {
         Objects.requireNonNull(source);
         Objects.requireNonNull(change);
-        if (elements.size() < 4) {
-            throw new IllegalArgumentException("a check needs at least four elements, not " + elements.size());
-        }
-        List<E> held = new ArrayList<>(elements);
+        List<E> held = new ArrayList<>(atLeastFour(elements));
         if (change == Change.ELEMENT_ADDED && removeBeforeAdd && !source.remove(held.removeLast())) {
             return false;
         }
@@ -193,32 +190,64 @@ public final class WeakConsistencyChecks {
         Set<E> added = new HashSet<>();
         Iterator<E> iterator = source.iterator();
         try {
-            if (change == Change.CHANGED_DURING_FOR_EACH_REMAINING) {
-                if (!traverseWithForEachRemaining(source, iterator, returned, context)) {
-                    return false;
-                }
-            } else {
-                take(iterator, 2, returned, context);
-                boolean changed = switch (change) {
-                    case RETURNED_ELEMENT_REMOVED -> source.remove(returned.getFirst());
-                    case UNRETURNED_ELEMENT_REMOVED -> source.remove(lastNotIn(held, returned));
-                    case ELEMENT_ADDED -> source.add(extra) && added.add(extra);
-                    case CHANGED_DURING_FOR_EACH_REMAINING -> throw new AssertionError("handled above");
-                };
-                if (!changed) {
-                    return false;
-                }
-                while (iterator.hasNext()) {
-                    Assertions.assertTrue(returned.size() < TRAVERSAL_LIMIT,
-                            () -> context + ": the iterator did not end");
-                    returned.add(iterator.next());
-                }
+            boolean ended = change == Change.CHANGED_DURING_FOR_EACH_REMAINING
+                    ? traverseWithForEachRemaining(source, iterator, returned, context)
+                    : changeAfterTwo(source, iterator, change, held, extra, returned, added, context);
+            if (!ended) {
+                return false;
             }
         } catch (final ConcurrentModificationException e) {
             Assertions.fail(context + ": it threw ConcurrentModificationException, which a weakly consistent iterator "
                     + "never throws", e);
         }
         assertWeaklyConsistent(held, change, added, returned, context);
+        return true;
+    }
+
+    /// Returns the elements of a check, which needs at least four.
+    ///
+    /// @param elements the elements
+    /// @param <E> the element type
+    /// @return `elements`
+    /// @throws IllegalArgumentException if there are fewer than four
+    private static <E> List<E> atLeastFour(final List<E> elements) {
+        if (elements.size() < 4) {
+            throw new IllegalArgumentException("a check needs at least four elements, not " + elements.size());
+        }
+        return elements;
+    }
+
+    /// Takes two elements, makes a change other than [Change#CHANGED_DURING_FOR_EACH_REMAINING], and takes the rest.
+    ///
+    /// @param source the source
+    /// @param iterator the iterator under test, new
+    /// @param change the change
+    /// @param held the elements the source holds
+    /// @param extra an element it does not hold, for [Change#ELEMENT_ADDED]
+    /// @param returned the elements the iterator returns, in order, added to
+    /// @param added the elements the change added, added to
+    /// @param context the iterator and the change, for failure messages
+    /// @param <E> the element type
+    /// @return `true` once the iterator has ended; `false` if the source refused the change
+    private static <E> boolean changeAfterTwo(final Source<E> source, final Iterator<E> iterator, final Change change,
+            final List<E> held, final E extra, final List<E> returned, final Set<E> added, final String context) {
+        take(iterator, 2, returned, context);
+        boolean changed = switch (change) {
+            case RETURNED_ELEMENT_REMOVED -> source.remove(returned.getFirst());
+            case UNRETURNED_ELEMENT_REMOVED -> source.remove(lastNotIn(held, returned));
+            case ELEMENT_ADDED -> {
+                added.add(extra);
+                yield source.add(extra);
+            }
+            case CHANGED_DURING_FOR_EACH_REMAINING -> throw new AssertionError("handled by the caller");
+        };
+        if (!changed) {
+            return false;
+        }
+        while (iterator.hasNext()) {
+            Assertions.assertTrue(returned.size() < TRAVERSAL_LIMIT, () -> context + ": the iterator did not end");
+            returned.add(iterator.next());
+        }
         return true;
     }
 

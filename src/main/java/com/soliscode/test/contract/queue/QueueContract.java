@@ -3,6 +3,7 @@ package com.soliscode.test.contract.queue;
 import java.util.Queue;
 
 import com.soliscode.test.contract.collection.CollectionContract;
+import com.soliscode.test.methods.QueueMethods;
 
 /// **Contract for the `Queue` interface**
 ///

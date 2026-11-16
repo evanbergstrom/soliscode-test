@@ -125,8 +125,6 @@ public interface ThreadSafeGetContract<F extends Future<V>, V> extends FutureCon
     ///
     /// @param get  the `get` under test
     /// @param name its name, for the failure message
-    // ThreadPriorityCheck: the completer's yield lets the getter it waits for run, on purpose.
-    @SuppressWarnings("ThreadPriorityCheck")
     default void assertGettersSeeCompletions(final Get<F, V> get, final String name) {
         List<FutureSource<F, V>> rounds = new ArrayList<>(ROUNDS);
         for (int r = 0; r < ROUNDS; r++) {
@@ -146,29 +144,10 @@ public interface ThreadSafeGetContract<F extends Future<V>, V> extends FutureCon
                     if (failure.get() != null || Thread.currentThread().isInterrupted()) {
                         return;
                     }
-                    FutureSource<F, V> source = futures.get(r);
                     arrived.incrementAndGet(r);
-                    @Nullable V got;
-                    try {
-                        got = get.get(source.future());
-                    } catch (final InterruptedException e) {
-                        // The completer records a failure before it interrupts a getter: an interrupt with none
-                        // recorded came from the future, not from this run.
-                        failure.compareAndSet(null, name + " of round " + r + " threw " + e + ", though nothing "
-                                + "interrupted its thread");
-                        return;
-                    } catch (final Exception e) {
-                        failure.compareAndSet(null, name + " of round " + r + " threw " + e);
-                        return;
-                    }
-                    if (!Objects.equals(source.value(), got)) {
-                        failure.compareAndSet(null, name + " of round " + r + " returned " + got + ", not "
-                                + source.value());
-                        return;
-                    }
-                    if (marks[r] != r + 1) {
-                        failure.compareAndSet(null, name + " of round " + r + " returned before the completing "
-                                + "thread's earlier write was visible: the completion does not happen-before it");
+                    @Nullable String wrong = getOnce(get, name, futures.get(r), r, marks);
+                    if (wrong != null) {
+                        failure.compareAndSet(null, wrong);
                         return;
                     }
                 }
@@ -179,18 +158,9 @@ public interface ThreadSafeGetContract<F extends Future<V>, V> extends FutureCon
         coordinator.add(1, 1, futures -> {
             long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(DEADLINE_MILLIS);
             for (int r = 0; r < ROUNDS; r++) {
-                while (arrived.get(r) == 0) {
-                    if (failure.get() != null) {
-                        getters.forEach(Thread::interrupt);
-                        return;
-                    }
-                    if (System.nanoTime() - deadline >= 0) {
-                        failure.compareAndSet(null, "no getter reached round " + r + " within " + DEADLINE_MILLIS
-                                + " ms: the others are blocked in " + name + " on a completed future");
-                        getters.forEach(Thread::interrupt);
-                        return;
-                    }
-                    Thread.yield();
+                if (!awaitArrival(arrived, r, deadline, failure, name)) {
+                    getters.forEach(Thread::interrupt);
+                    return;
                 }
                 marks[r] = r + 1;
                 futures.get(r).succeed();
@@ -209,5 +179,61 @@ public interface ThreadSafeGetContract<F extends Future<V>, V> extends FutureCon
         });
         coordinator.execute(rounds);
         assertNull(failure.get(), failure::get);
+    }
+
+    /// One getter's call of `get` on a round's future.
+    ///
+    /// @param get    the `get` under test
+    /// @param name   its name, for the failure message
+    /// @param source the round's future and the value it completes with
+    /// @param r      the round
+    /// @param marks  the completer's writes, one per round, made before it completes the round's future
+    /// @return what the call got wrong, or `null` if it returned the value after the completer's write
+    private @Nullable String getOnce(final Get<F, V> get, final String name, final FutureSource<F, V> source,
+            final int r, final int[] marks) {
+        @Nullable V got;
+        try {
+            got = get.get(source.future());
+        } catch (final InterruptedException e) {
+            // The completer records a failure before it interrupts a getter: an interrupt with none recorded came
+            // from the future, not from this run.
+            return name + " of round " + r + " threw " + e + ", though nothing interrupted its thread";
+        } catch (final Exception e) {
+            return name + " of round " + r + " threw " + e;
+        }
+        if (!Objects.equals(source.value(), got)) {
+            return name + " of round " + r + " returned " + got + ", not " + source.value();
+        }
+        if (marks[r] != r + 1) {
+            return name + " of round " + r + " returned before the completing thread's earlier write was visible: "
+                    + "the completion does not happen-before it";
+        }
+        return null;
+    }
+
+    /// The completer's wait for a getter to reach a round, yielding meanwhile.
+    ///
+    /// @param arrived  the getters that have reached each round
+    /// @param r        the round
+    /// @param deadline the [System#nanoTime()] by which a getter must reach it
+    /// @param failure  the run's first failure, which the wait records if no getter reaches the round in time
+    /// @param name     the name of the `get` under test, for the failure message
+    /// @return whether a getter reached it, rather than the run failing first
+    // ThreadPriorityCheck: the completer's yield lets the getter it waits for run, on purpose.
+    @SuppressWarnings("ThreadPriorityCheck")
+    private boolean awaitArrival(final AtomicIntegerArray arrived, final int r, final long deadline,
+            final AtomicReference<@Nullable String> failure, final String name) {
+        while (arrived.get(r) == 0) {
+            if (failure.get() != null) {
+                return false;
+            }
+            if (System.nanoTime() - deadline >= 0) {
+                failure.compareAndSet(null, "no getter reached round " + r + " within " + DEADLINE_MILLIS
+                        + " ms: the others are blocked in " + name + " on a completed future");
+                return false;
+            }
+            Thread.yield();
+        }
+        return true;
     }
 }

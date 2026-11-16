@@ -14,7 +14,7 @@ import org.jspecify.annotations.Nullable;
 
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.MethodStatus;
-import com.soliscode.test.contract.sequencedcollection.SequencedCollectionMethods;
+import com.soliscode.test.methods.SequencedCollectionMethods;
 
 /// **Breakable SequencedSet Implementation for Testing**
 ///

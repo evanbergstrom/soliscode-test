@@ -1,4 +1,4 @@
-package com.soliscode.test.contract.sequencedmap;
+package com.soliscode.test.methods;
 
 import com.soliscode.test.InterfaceMethod;
 
@@ -6,7 +6,8 @@ import com.soliscode.test.InterfaceMethod;
 /// These values are used to identify which methods are supported by a map implementation
 /// during contract testing.
 ///
-/// @see SequencedMapContract#supportsMethod(com.soliscode.test.InterfaceMethod)
+/// @see
+/// com.soliscode.test.contract.sequencedmap.SequencedMapContract#supportsMethod(com.soliscode.test.InterfaceMethod)
 /// @author evanbergstrom
 /// @since 1.0.0
 public enum SequencedMapMethods implements InterfaceMethod {

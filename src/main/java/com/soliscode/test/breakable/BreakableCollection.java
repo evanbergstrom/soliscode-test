@@ -36,8 +36,8 @@ import org.jspecify.annotations.Nullable;
 
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.MethodStatus;
-import com.soliscode.test.contract.collection.CollectionMethods;
 import com.soliscode.test.contract.support.CollectionProviderSupport;
+import com.soliscode.test.methods.CollectionMethods;
 import com.soliscode.test.provider.CollectionProvider;
 import com.soliscode.test.provider.ObjectProvider;
 import com.soliscode.test.util.IterableTestUtils;
@@ -1592,13 +1592,13 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
     protected void checkArgument(final Object arg, final Break wrongNullBreak, final Break wrongTypeBreak) {
         if (!permitsNulls() && arg == null) {
             if (hasBreak(wrongNullBreak)) {
-                throw new RuntimeException();
+                throw new WrongException();
             }
             throw new NullPointerException();
         }
         if (!permitsIncompatibleTypes() && arg != null && !compatibleType.isAssignableFrom(arg.getClass())) {
             if (hasBreak(wrongTypeBreak)) {
-                throw new RuntimeException();
+                throw new WrongException();
             }
             throw new ClassCastException("incompatible type: " + arg.getClass().getName());
         }

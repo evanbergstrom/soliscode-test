@@ -17,9 +17,9 @@ import org.jspecify.annotations.Nullable;
 
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.MethodStatus;
-import com.soliscode.test.contract.deque.DequeMethods;
-import com.soliscode.test.contract.sequencedcollection.SequencedCollectionMethods;
 import com.soliscode.test.contract.support.CollectionProviderSupport;
+import com.soliscode.test.methods.DequeMethods;
+import com.soliscode.test.methods.SequencedCollectionMethods;
 import com.soliscode.test.provider.CollectionProvider;
 import com.soliscode.test.provider.ObjectProvider;
 

@@ -1,10 +1,12 @@
-package com.soliscode.test.contract.sortedmap;
+package com.soliscode.test.methods;
 
 import com.soliscode.test.InterfaceMethod;
 
-/// Enumeration of [java.util.SortedMap] methods that can be toggled in [SortedMapContract].
+/// Enumeration of [java.util.SortedMap] methods that can be toggled in
+/// [com.soliscode.test.contract.sortedmap.SortedMapContract].
 ///
-/// This enum allows users of the [SortedMapContract] to specify which methods of the [java.util.SortedMap]
+/// This enum allows users of the [com.soliscode.test.contract.sortedmap.SortedMapContract] to specify which methods of
+/// the [java.util.SortedMap]
 /// interface are supported by the implementation being tested.
 ///
 /// ## Usage Examples
@@ -28,7 +30,7 @@ import com.soliscode.test.InterfaceMethod;
 ///
 /// This enum is thread-safe as it is immutable.
 ///
-/// @see SortedMapContract#supportsMethod(InterfaceMethod)
+/// @see com.soliscode.test.contract.sortedmap.SortedMapContract#supportsMethod(InterfaceMethod)
 /// @see java.util.SortedMap
 /// @author evanbergstrom
 /// @since 1.0

@@ -49,7 +49,6 @@ import com.soliscode.test.breakable.BreakableComparator;
 import com.soliscode.test.breakable.BreakableConcurrentMap;
 import com.soliscode.test.breakable.BreakableConcurrentNavigableMap;
 import com.soliscode.test.breakable.BreakableDeque;
-import com.soliscode.test.breakable.BreakableExecutorService;
 import com.soliscode.test.breakable.BreakableFuture;
 import com.soliscode.test.breakable.BreakableIterable;
 import com.soliscode.test.breakable.BreakableIterator;
@@ -81,7 +80,6 @@ import com.soliscode.test.contract.blockingqueue.ThreadSafeBlockingQueueContract
 import com.soliscode.test.contract.charsequence.CharSequenceContract;
 import com.soliscode.test.contract.closeable.CloseableContract;
 import com.soliscode.test.contract.collection.CollectionContract;
-import com.soliscode.test.contract.collection.CollectionMethods;
 import com.soliscode.test.contract.collection.ThreadSafeCollectionContract;
 import com.soliscode.test.contract.comparable.ComparableContract;
 import com.soliscode.test.contract.comparator.ComparatorContract;
@@ -89,31 +87,23 @@ import com.soliscode.test.contract.concurrentmap.ConcurrentMapContract;
 import com.soliscode.test.contract.concurrentmap.ThreadSafeConcurrentMapContract;
 import com.soliscode.test.contract.concurrentnavigablemap.ConcurrentNavigableMapContract;
 import com.soliscode.test.contract.deque.DequeContract;
-import com.soliscode.test.contract.deque.DequeMethods;
 import com.soliscode.test.contract.executorservice.ExecutorServiceContract;
 import com.soliscode.test.contract.executorservice.ThreadSafeExecutorServiceContract;
 import com.soliscode.test.contract.future.FutureContract;
 import com.soliscode.test.contract.future.ThreadSafeFutureContract;
 import com.soliscode.test.contract.iterable.IterableContract;
-import com.soliscode.test.contract.iterable.IterableMethods;
 import com.soliscode.test.contract.iterator.IteratorContract;
 import com.soliscode.test.contract.iterator.WeaklyConsistentIteratorContract;
 import com.soliscode.test.contract.list.ListContract;
-import com.soliscode.test.contract.list.ListMethods;
 import com.soliscode.test.contract.listiterator.ListIteratorContract;
-import com.soliscode.test.contract.listiterator.ListIteratorMethods;
 import com.soliscode.test.contract.map.MapContract;
 import com.soliscode.test.contract.mapentry.MapEntryContract;
-import com.soliscode.test.contract.mapentry.MapEntryMethods;
 import com.soliscode.test.contract.navigablemap.NavigableMapContract;
 import com.soliscode.test.contract.navigableset.NavigableSetContract;
 import com.soliscode.test.contract.object.SerializableContract;
 import com.soliscode.test.contract.queue.QueueContract;
-import com.soliscode.test.contract.queue.QueueMethods;
 import com.soliscode.test.contract.sequencedcollection.SequencedCollectionContract;
-import com.soliscode.test.contract.sequencedcollection.SequencedCollectionMethods;
 import com.soliscode.test.contract.sequencedmap.SequencedMapContract;
-import com.soliscode.test.contract.sequencedmap.SequencedMapMethods;
 import com.soliscode.test.contract.sequencedset.SequencedSetContract;
 import com.soliscode.test.contract.set.SetContract;
 import com.soliscode.test.contract.sortedmap.SortedMapContract;
@@ -126,6 +116,15 @@ import com.soliscode.test.contract.support.WithIntegerElement;
 import com.soliscode.test.contract.support.WithIntegerKeyAndStringValue;
 import com.soliscode.test.contract.transferqueue.ThreadSafeTransferQueueContract;
 import com.soliscode.test.contract.transferqueue.TransferQueueContract;
+import com.soliscode.test.methods.CollectionMethods;
+import com.soliscode.test.methods.DequeMethods;
+import com.soliscode.test.methods.IterableMethods;
+import com.soliscode.test.methods.ListIteratorMethods;
+import com.soliscode.test.methods.ListMethods;
+import com.soliscode.test.methods.MapEntryMethods;
+import com.soliscode.test.methods.QueueMethods;
+import com.soliscode.test.methods.SequencedCollectionMethods;
+import com.soliscode.test.methods.SequencedMapMethods;
 import com.soliscode.test.provider.AutoCloseableProviders;
 import com.soliscode.test.provider.CollectionProvider;
 import com.soliscode.test.provider.CollectionProviders;
@@ -139,6 +138,9 @@ import static com.soliscode.test.contract.coverage.ContractRuns.eachFails;
 import static com.soliscode.test.contract.coverage.ContractRuns.fails;
 import static com.soliscode.test.contract.coverage.ContractRuns.named;
 import static com.soliscode.test.contract.coverage.ContractRuns.passes;
+import static com.soliscode.test.contract.coverage.UncheckedReasons.THREAD_SAFETY_BREAK;
+import static com.soliscode.test.contract.coverage.UncheckedReasons.WEAK_CONSISTENCY_BREAKS;
+import static com.soliscode.test.contract.coverage.UncheckedReasons.uncheckedReason;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.DynamicContainer.dynamicContainer;
@@ -156,10 +158,6 @@ import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 @DisplayName("Each contract passes against a correct implementation and fails for each break")
 public class ContractCoverageTest {
 
-    private static final String THREAD_SAFETY_BREAK = "_IS_NOT_THREAD_SAFE";
-    /// The breaks that act only on a change to an iterator's source other than through it (#55).
-    private static final Set<String> WEAK_CONSISTENCY_BREAKS = Set.of("ITERATOR_IS_FAIL_FAST",
-            "ITERATOR_RETURNS_AN_ELEMENT_TWICE_AFTER_A_CHANGE", "ITERATOR_SKIPS_AN_ELEMENT_AFTER_A_CHANGE");
     private static final String WRONG_UNSUPPORTED_BREAK = "_THROWS_WRONG_UNSUPPORTED_EXCEPTION";
     private static final String WRONG_INCOMPATIBLE_BREAK = "_THROWS_WRONG_INCOMPATIBLE_TYPE_EXCEPTION";
     private static final String WRONG_NULL_BREAK = "_THROWS_WRONG_NULL_EXCEPTION";
@@ -205,26 +203,6 @@ public class ContractCoverageTest {
         }
     };
 
-    /// The spliterator breaks that are faults only for a SIZED or ORDERED spliterator.
-    private static final java.util.Set<String> BLOCKING_QUEUE_SPLITERATOR_BREAKS = java.util.Set.of(
-            "SPLITERATOR_ESTIMATE_SIZE_ALWAYS_RETURNS_MAX_VALUE",
-            "SPLITERATOR_GET_EXACT_SIZE_IF_KNOWN_ALWAYS_RETURNS_NEGATIVE_ONE",
-            "SPLITERATOR_CHARACTERISTICS_ALWAYS_RETURNS_ZERO");
-
-    /// The breaks of `BreakableSpliterator` added for the spliterator contracts (#38). The Iterable and collection
-    /// contracts, whose break sources include `BreakableSpliterator`, are not run with them.
-    private static final java.util.Set<String> SPLITERATOR_CONTRACT_BREAKS = java.util.Set.of(
-            "SPLITERATOR_TRY_ADVANCE_IGNORES_NULL_ACTION", "SPLITERATOR_TRY_ADVANCE_SWALLOWS_ACTION_EXCEPTION",
-            "SPLITERATOR_FOR_EACH_REMAINING_IGNORES_NULL_ACTION",
-            "SPLITERATOR_FOR_EACH_REMAINING_SWALLOWS_ACTION_EXCEPTION", "SPLITERATOR_RETURNS_FIRST_ELEMENT_TWICE",
-            "SPLITERATOR_FIRST_ELEMENT_IS_NULL", "SPLITERATOR_TRY_SPLIT_RETURNS_SUFFIX",
-            "SPLITERATOR_TRY_SPLIT_LOSES_PART", "SPLITERATOR_TRY_SPLIT_NEVER_RETURNS_NULL",
-            "SPLITERATOR_TRY_SPLIT_PART_IS_NOT_SIZED", "SPLITERATOR_ESTIMATE_SIZE_GROWS_AFTER_SPLIT",
-            "SPLITERATOR_CHARACTERISTICS_CHANGE_AFTER_TRAVERSAL", "SPLITERATOR_REPORTS_IMMUTABLE",
-            "SPLITERATOR_REPORTS_CONCURRENT", "SPLITERATOR_GET_COMPARATOR_RETURNS_NATURAL_ORDER",
-            "SPLITERATOR_CHARACTERISTICS_LEAVE_OUT_ORDERED", "SPLITERATOR_CHARACTERISTICS_LEAVE_OUT_SIZED",
-            "SPLITERATOR_GET_COMPARATOR_ALWAYS_THROWS");
-
     /// The breaks each primitive spliterator contract's own tests are shown to fail for (#38).
     private static final List<String> PRIMITIVE_SPLITERATOR_BREAKS = List.of(
             "SPLITERATOR_TRY_ADVANCE_DOES_NOT_CALL_ACTION", "SPLITERATOR_TRY_ADVANCE_ALWAYS_RETURNS_TRUE",
@@ -238,9 +216,6 @@ public class ContractCoverageTest {
     /// blocking-queue contracts to fill.
     private static final int QUEUE_CAPACITY = 100;
 
-    private static final java.util.regex.Pattern SORTED_MAP_METHOD_BREAK =
-            java.util.regex.Pattern.compile("(COMPARATOR|FIRST_KEY|LAST_KEY|HEAD_MAP|TAIL_MAP|SUB_MAP)_");
-
     /// The comparator the sorted-map contracts use: reverse order, so that a map that ignores it, or a
     /// comparator() that answers natural order (or `null`), shows.
     private static final java.util.Comparator<Integer> REVERSE = java.util.Comparator.reverseOrder();
@@ -248,138 +223,6 @@ public class ContractCoverageTest {
     /// Default constructor.
     public ContractCoverageTest() {
         super();
-    }
-
-    /// Why a break is not checked against a contract, or `null` if it is. A break is left out only where it is not a
-    /// fault for the contract's type, where no test could ever see it, or where another contract, named in the
-    /// reason, checks it; each reason says which.
-    ///
-    /// @param contract the contract
-    /// @param key the break, as `SimpleClassName.FIELD`
-    /// @return the reason, or `null`
-    static String uncheckedReason(final Class<?> contract, final String key) {
-        String field = key.substring(key.indexOf('.') + 1);
-        boolean isSet = SetContract.class.isAssignableFrom(contract);
-        boolean blockingQueueBreak = key.startsWith(BreakableBlockingQueue.class.getSimpleName() + ".");
-        boolean blockingDequeBreak = key.startsWith(BreakableBlockingDeque.class.getSimpleName() + ".");
-        boolean transferQueueBreak = key.startsWith(BreakableTransferQueue.class.getSimpleName() + ".");
-        boolean concurrentMapBreak = key.startsWith(BreakableConcurrentMap.class.getSimpleName() + ".");
-        boolean futureBreak = key.startsWith(BreakableFuture.class.getSimpleName() + ".");
-        boolean executorBreak = key.startsWith(BreakableExecutorService.class.getSimpleName() + ".");
-        if (field.endsWith(THREAD_SAFETY_BREAK) && (futureBreak || executorBreak)) {
-            Class<?> own = futureBreak ? ThreadSafeFutureContract.class : ThreadSafeExecutorServiceContract.class;
-            return contract == own ? null : "a thread-safety break: " + own.getSimpleName() + " checks it";
-        }
-        if (field.endsWith(THREAD_SAFETY_BREAK) && contract == ThreadSafeConcurrentMapContract.class) {
-            return concurrentMapBreak ? null : "not a fault for a BreakableConcurrentMap: its store is a concurrent "
-                    + "map, and the breakable takes no lock of its own, so the break changes nothing there";
-        }
-        if (field.endsWith(THREAD_SAFETY_BREAK) && concurrentMapBreak) {
-            return "a thread-safety break: ThreadSafeConcurrentMapContract checks it, and ConcurrentMapContract checks "
-                    + "that it is correct on one thread";
-        }
-        if (field.endsWith(THREAD_SAFETY_BREAK) && contract == ThreadSafeTransferQueueContract.class) {
-            // BreakableBlockingQueue's take, poll and drainTo run on the transfer queue's store: faults for it too.
-            return transferQueueBreak || blockingQueueBreak ? null : "not a fault for a BreakableTransferQueue: its "
-                    + "store (a LinkedTransferQueue, or its own bounded store on one lock) is thread safe without the "
-                    + "breakable's lock, so running without the lock changes nothing; ThreadSafeCollectionContract "
-                    + "covers it on BreakableCollection, or gives its reason";
-        }
-        if (field.endsWith(THREAD_SAFETY_BREAK) && transferQueueBreak) {
-            return "a thread-safety break: ThreadSafeTransferQueueContract checks it";
-        }
-        if (field.endsWith(THREAD_SAFETY_BREAK) && contract == ThreadSafeBlockingDequeContract.class) {
-            return blockingDequeBreak ? null : "not a fault for a BreakableBlockingDeque: its store is a JDK "
-                    + "BlockingDeque, thread safe without the breakable's lock, so running without the lock changes "
-                    + "nothing; ThreadSafeCollectionContract covers it on BreakableCollection, or gives its reason";
-        }
-        if (field.endsWith(THREAD_SAFETY_BREAK) && blockingDequeBreak) {
-            return "a thread-safety break: ThreadSafeBlockingDequeContract checks it";
-        }
-        if (field.endsWith(THREAD_SAFETY_BREAK) && contract == ThreadSafeBlockingQueueContract.class) {
-            return blockingQueueBreak ? null : "not a fault for a BreakableBlockingQueue: its store is a JDK "
-                    + "BlockingQueue, thread safe without the breakable's lock, so running without the lock changes "
-                    + "nothing; ThreadSafeCollectionContract covers it on BreakableCollection, or gives its reason";
-        }
-        if (field.endsWith(THREAD_SAFETY_BREAK) && blockingQueueBreak) {
-            return "a thread-safety break: ThreadSafeBlockingQueueContract checks it";
-        }
-        if (field.endsWith(THREAD_SAFETY_BREAK) && contract != ThreadSafeCollectionContract.class) {
-            return "a thread-safety break: ThreadSafeCollectionContract checks it";
-        }
-        if (WEAK_CONSISTENCY_BREAKS.contains(field)) {
-            boolean testsWeakConsistency = WeaklyConsistentIteratorContract.class.isAssignableFrom(contract)
-                    || BlockingQueueContract.class.isAssignableFrom(contract)
-                    || ConcurrentMapContract.class.isAssignableFrom(contract);
-            return testsWeakConsistency ? null : "a weak-consistency break: the weakly consistent iterator tests check "
-                    + "it, and no other contract's run changes the source during a traversal on one thread";
-        }
-        if (field.equals("ITERATOR_FOR_EACH_REMAINING_THROWS_WRONG_EXCEPTION_IF_NOT_SUPPORTED")
-                && IteratorContract.class.isAssignableFrom(contract)) {
-            return "not a fault for IteratorContract: forEachRemaining is not optional (Iterator#forEachRemaining), so "
-                    + "the setup this break needs, forEachRemaining unsupported, fails the contract without the break; "
-                    + "IterableContract checks it";
-        }
-        boolean spliteratorContract = SpliteratorContract.class.isAssignableFrom(contract);
-        if (SPLITERATOR_CONTRACT_BREAKS.contains(field) && !spliteratorContract) {
-            return "a spliterator break added for SpliteratorContract (#38), which checks it; the Iterable and "
-                    + "collection contracts are not run with it";
-        }
-        boolean primitiveSpliteratorContract = SpliteratorOfIntContract.class.isAssignableFrom(contract)
-                || SpliteratorOfLongContract.class.isAssignableFrom(contract)
-                || SpliteratorOfDoubleContract.class.isAssignableFrom(contract);
-        if (field.equals("SPLITERATOR_REPORTS_IMMUTABLE") && primitiveSpliteratorContract) {
-            return "no test can see it here: an array's spliterator already reports IMMUTABLE (Arrays#spliterator), "
-                    + "so the break changes nothing on these subjects; SpliteratorContract checks it";
-        }
-        if (field.equals("SPLITERATOR_GET_COMPARATOR_ALWAYS_THROWS") && spliteratorContract) {
-            return "no test can see it on these subjects: their spliterators (an ArrayList's, an array's) are not "
-                    + "SORTED, so getComparator must throw IllegalStateException, as the break makes it; "
-                    + "SpliteratorContract's run on a natural-order TreeSet checks it in sortedCharacteristicHolds";
-        }
-        if (field.equals("SPLITERATOR_GET_COMPARATOR_RETURNS_NATURAL_ORDER") && spliteratorContract) {
-            return "no test can see it on these subjects: their spliterators (an ArrayList's, an array's) are not "
-                    + "SORTED, so getComparator throws and the break, which changes only a null comparator, changes "
-                    + "nothing; SpliteratorContract's run on a natural-order TreeSet checks it in "
-                    + "sortedCharacteristicHolds";
-        }
-        if (field.equals("ADD_ALWAYS_RETURNS_TRUE") && !isSet) {
-            return "not a fault here: add(E) always returns true for a collection that permits duplicates "
-                    + "(Collection#add); SetContract checks it";
-        }
-        if (field.equals("SPLITERATOR_TRY_SPLIT_ALWAYS_RETURNS_NULL")) {
-            return "not a fault: Spliterator#trySplit may return null for any reason, and the contracts accept it "
-                    + "(a ConcurrentSkipListSet's spliterator does, where its random index levels allow no split)";
-        }
-        if (field.equals("OFFER_ALWAYS_RETURNS_TRUE") && !BlockingQueueContract.class.isAssignableFrom(contract)) {
-            return "not a fault for BreakableQueue or BreakableDeque: they have no capacity, so offer(E) always "
-                    + "returns true (Queue#offer); BlockingQueueContract checks it on a bounded queue";
-        }
-        if (BLOCKING_QUEUE_SPLITERATOR_BREAKS.contains(field)
-                && BlockingQueueContract.class.isAssignableFrom(contract)) {
-            return "not a fault for a BlockingQueue: its spliterator need not be SIZED or ORDERED "
-                    + "(ArrayBlockingQueue's and LinkedBlockingQueue's report CONCURRENT, ORDERED and NONNULL, not "
-                    + "SIZED, and a BlockingQueue need not be FIFO), so an estimate of Long.MAX_VALUE, an exact size "
-                    + "of -1 and no characteristics are all allowed (Spliterator#estimateSize, #getExactSizeIfKnown)";
-        }
-        if (field.equals("CLEAR_IS_NOT_THREAD_SAFE")) {
-            return "seen only by rare interleavings: ThreadSafeClearContract catches it in about 3 runs in 20 "
-                    + "(measured 2026-11-07), too few to check here without making the build flaky";
-        }
-        if (field.equals("IS_EMPTY_IS_NOT_THREAD_SAFE") || field.equals("SIZE_IS_NOT_THREAD_SAFE")) {
-            return "no test can see it: without the lock, isEmpty() and size() read one field, and any value read is "
-                    + "one some interleaving with the lock could give";
-        }
-        if ((field.equals("ADD_FIRST_ADDS_TO_END") || field.equals("ADD_LAST_ADDS_TO_FRONT"))
-                && SortedSetContract.class.isAssignableFrom(contract)) {
-            return "not a fault for a sorted set: addFirst and addLast both throw UnsupportedOperationException "
-                    + "(SortedSet#addFirst), so the one it would call throws as the one called does";
-        }
-        if (contract == SequencedMapContract.class
-                && SORTED_MAP_METHOD_BREAK.matcher(field).lookingAt()) {
-            return "a SortedMap method's break, which SequencedMapContract does not test; SortedMapContract checks it";
-        }
-        return null;
     }
 
     // ========== The contracts ==========

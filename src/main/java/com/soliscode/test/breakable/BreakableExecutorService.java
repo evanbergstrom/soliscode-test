@@ -850,6 +850,12 @@ public class BreakableExecutorService extends AbstractBreakable implements Execu
         if (hasBreak(INVOKE_ALL_DOES_NOT_WAIT)) {
             return futures;
         }
+        return awaitAll(futures);
+    }
+
+    /// Waits for every future to be done, and returns them. If interrupted, it cancels them and throws, unless
+    /// [#INVOKE_ALL_IGNORES_INTERRUPT] is set.
+    private <T> List<Future<T>> awaitAll(final List<Future<T>> futures) throws InterruptedException {
         boolean interrupted = false;
         try {
             for (final Future<T> future : futures) {
@@ -1165,19 +1171,7 @@ public class BreakableExecutorService extends AbstractBreakable implements Execu
     @SuppressWarnings("NullAway")
     private <T> T any(final Collection<? extends Callable<T>> tasks, final boolean timed, final long nanos)
             throws InterruptedException, ExecutionException, TimeoutException {
-        boolean skipNulls = !timed && hasBreak(INVOKE_ANY_ACCEPTS_NULL);
-        Collection<? extends Callable<T>> given = tasks == null && skipNulls ? List.of() : tasks;
-        Objects.requireNonNull(given, "tasks");
-        List<Callable<T>> all = new ArrayList<>(given.size());
-        for (final Callable<T> task : given) {
-            if (task == null) {
-                if (skipNulls) {
-                    continue;
-                }
-                throw new NullPointerException("a task is null");
-            }
-            all.add(task);
-        }
+        List<Callable<T>> all = nonNullTasks(tasks, !timed && hasBreak(INVOKE_ANY_ACCEPTS_NULL));
         if (all.isEmpty()) {
             if (!timed && hasBreak(INVOKE_ANY_ACCEPTS_EMPTY)) {
                 return null;
@@ -1195,21 +1189,9 @@ public class BreakableExecutorService extends AbstractBreakable implements Execu
             @Nullable ExecutionException failure = null;
             @Nullable Future<T> succeeded = null;
             for (int done = 0; done < futures.size(); done++) {
-                Future<T> next;
-                if (timed) {
-                    if (hasBreak(TIMED_INVOKE_ANY_DOES_NOT_WAIT)) {
-                        next = completion.poll();
-                    } else {
-                        next = completion.poll(deadline - System.nanoTime(), TimeUnit.NANOSECONDS);
-                    }
-                    if (next == null) {
-                        if (hasBreak(TIMED_INVOKE_ANY_DOES_NOT_TIME_OUT)) {
-                            return null;
-                        }
-                        throw new TimeoutException("no task succeeded within the timeout");
-                    }
-                } else {
-                    next = take(completion);
+                @Nullable Future<T> next = timed ? timedNext(completion, deadline) : take(completion);
+                if (next == null) {
+                    return null;
                 }
                 try {
                     T value = next.get();
@@ -1223,19 +1205,58 @@ public class BreakableExecutorService extends AbstractBreakable implements Execu
                     failure = new ExecutionException(e);
                 }
             }
-            if (waitForAll && failure != null) {
-                throw failure;
-            }
-            if (succeeded != null) {
-                return succeeded.get();
-            }
-            if (!timed && hasBreak(INVOKE_ANY_RETURNS_NULL_WHEN_ALL_FAIL)) {
-                return null;
-            }
-            throw failure != null ? failure : new ExecutionException("no task succeeded", null);
+            return outcome(waitForAll, failure, succeeded, timed);
         } finally {
             cancelAll(futures);
         }
+    }
+
+    /// The tasks given to `invokeAny`, checked for null: a null task throws, or, with `skipNulls`, is left out, as
+    /// is a null collection.
+    private static <T> List<Callable<T>> nonNullTasks(final Collection<? extends Callable<T>> tasks,
+            final boolean skipNulls) {
+        Collection<? extends Callable<T>> given = tasks == null && skipNulls ? List.of() : tasks;
+        Objects.requireNonNull(given, "tasks");
+        List<Callable<T>> all = new ArrayList<>(given.size());
+        for (final Callable<T> task : given) {
+            if (task == null) {
+                if (skipNulls) {
+                    continue;
+                }
+                throw new NullPointerException("a task is null");
+            }
+            all.add(task);
+        }
+        return all;
+    }
+
+    /// The next task done in a timed `invokeAny`, waiting until the deadline; `null` if none is done by then and
+    /// [#TIMED_INVOKE_ANY_DOES_NOT_TIME_OUT] is set.
+    private <T> @Nullable Future<T> timedNext(final ExecutorCompletionService<T> completion, final long deadline)
+            throws InterruptedException, TimeoutException {
+        Future<T> next = hasBreak(TIMED_INVOKE_ANY_DOES_NOT_WAIT) ? completion.poll()
+                : completion.poll(deadline - System.nanoTime(), TimeUnit.NANOSECONDS);
+        if (next == null && !hasBreak(TIMED_INVOKE_ANY_DOES_NOT_TIME_OUT)) {
+            throw new TimeoutException("no task succeeded within the timeout");
+        }
+        return next;
+    }
+
+    /// What `invokeAny` returns or throws once every task is done and none was returned on the way: the result of
+    /// the last task that succeeded, or else the last failure.
+    private <T> @Nullable T outcome(final boolean waitForAll, final @Nullable ExecutionException failure,
+            final @Nullable Future<T> succeeded, final boolean timed) throws InterruptedException, ExecutionException {
+        if (waitForAll && failure != null) {
+            throw failure;
+        }
+        if (succeeded != null) {
+            return succeeded.get();
+        }
+        if (!timed && hasBreak(INVOKE_ANY_RETURNS_NULL_WHEN_ALL_FAIL)) {
+            return null;
+        }
+        // Every task is done, and none succeeded, so one failed: there is at least one task.
+        throw Objects.requireNonNull(failure, "no task failed");
     }
 
     /// Takes the next completed future, ignoring interrupts with [#INVOKE_ANY_IGNORES_INTERRUPT].

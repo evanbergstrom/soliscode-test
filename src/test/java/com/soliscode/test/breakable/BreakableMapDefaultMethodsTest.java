@@ -23,7 +23,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.soliscode.test.AbstractTest;
-import com.soliscode.test.contract.map.MapMethods;
+import com.soliscode.test.methods.MapMethods;
 
 import static com.soliscode.test.breakable.BreakableMap.COMPUTE_DOES_NOT_COMPUTE_VALUE;
 import static com.soliscode.test.breakable.BreakableMap.COMPUTE_IF_ABSENT_ALWAYS_COMPUTES_VALUE;

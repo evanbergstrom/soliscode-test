@@ -15,6 +15,7 @@
  */
 package com.soliscode.test.breakable;
 
+import java.io.Serial;
 import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.Collections;
@@ -34,7 +35,7 @@ import org.jspecify.annotations.Nullable;
 
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.MethodStatus;
-import com.soliscode.test.contract.collection.CollectionMethods;
+import com.soliscode.test.methods.CollectionMethods;
 
 /// **Breakable NavigableSet Implementation for Testing**
 ///
@@ -544,6 +545,11 @@ public class BreakableNavigableSet<E> extends BreakableSortedSet<E> implements N
     /// @see #descendingIterator()
     public static final Break DESCENDING_ITERATOR_RETURNS_EMPTY =
             new Break("descendingIterator() method always returns empty iterator");
+
+    // The value Java computed for 0.1.4, before #52 added package-private methods, so that its 0.1.4 streams read
+    // (#64).
+    @Serial
+    private static final long serialVersionUID = -322284699396048271L;
 
     /// The backing navigable set that stores the elements and provides navigation functionality.
     private final NavigableSet<E> navigableSet;

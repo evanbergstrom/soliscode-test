@@ -14,7 +14,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.soliscode.test.AbstractTest;
-import com.soliscode.test.contract.navigablemap.NavigableMapMethods;
+import com.soliscode.test.methods.NavigableMapMethods;
 
 import static com.soliscode.test.breakable.BreakableNavigableMap.CEILING_ENTRY_ALWAYS_RETURNS_NULL;
 import static com.soliscode.test.breakable.BreakableNavigableMap.CEILING_KEY_THROWS_EXCEPTION;

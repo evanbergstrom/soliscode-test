@@ -21,8 +21,9 @@ import org.junit.jupiter.api.DisplayName;
 
 import com.soliscode.test.annotations.ConcurrencyTest;
 import com.soliscode.test.annotations.VerySlow;
-import com.soliscode.test.contract.blockingqueue.BlockingQueueMethods;
 import com.soliscode.test.contract.support.TransferQueueContractSupport;
+import com.soliscode.test.methods.BlockingQueueMethods;
+import com.soliscode.test.methods.TransferQueueMethods;
 import com.soliscode.test.util.RecordingSupplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -88,8 +89,8 @@ public interface ThreadSafeTryTransferContract<Q extends TransferQueue<E>, E>
     @VerySlow
     @ConcurrencyTest
     default void tryTransferAndTakeWhenCalledUnderContentionAreThreadSafe() {
-        if (!supportsMethod(TransferQueueMethods.TRY_TRANSFER) || !supportsMethod(TransferQueueMethods.TRANSFER)
-                || !supportsMethod(BlockingQueueMethods.TAKE)) {
+        if (!supportsMethods(TransferQueueMethods.TRY_TRANSFER, TransferQueueMethods.TRANSFER,
+                BlockingQueueMethods.TAKE)) {
             return;
         }
         Q queue = provider().emptyInstance();

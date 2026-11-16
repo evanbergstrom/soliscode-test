@@ -19,6 +19,7 @@ import java.util.concurrent.BlockingDeque;
 
 import com.soliscode.test.contract.blockingqueue.BlockingQueueContract;
 import com.soliscode.test.contract.deque.DequeContract;
+import com.soliscode.test.methods.BlockingDequeMethods;
 
 /// **Contract for the `BlockingDeque` interface**
 ///
@@ -46,7 +47,7 @@ import com.soliscode.test.contract.deque.DequeContract;
 /// inherited contracts test each `BlockingQueue` method by itself, at whichever end.
 ///
 /// `BlockingDeque`'s methods are not optional operations, but a test reads [BlockingDequeMethods] as the queue
-/// contracts read [com.soliscode.test.contract.queue.QueueMethods]: where a method is not supported, it expects
+/// contracts read [com.soliscode.test.methods.QueueMethods]: where a method is not supported, it expects
 /// [UnsupportedOperationException].
 ///
 /// ## Usage Examples

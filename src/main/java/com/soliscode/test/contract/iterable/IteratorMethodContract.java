@@ -26,6 +26,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.soliscode.test.contract.support.CollectionContractSupport;
+import com.soliscode.test.methods.IterableMethods;
 
 import static com.soliscode.test.util.IterableTestUtils.contains;
 import static com.soliscode.test.util.IterableTestUtils.size;

@@ -18,8 +18,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 import com.soliscode.test.AbstractTest;
 import com.soliscode.test.assertions.actions.AssertActions;
 import com.soliscode.test.contract.iterable.IterableContract;
-import com.soliscode.test.contract.iterable.IterableMethods;
 import com.soliscode.test.contract.support.WithIntegerElement;
+import com.soliscode.test.methods.IterableMethods;
 import com.soliscode.test.provider.CollectionProvider;
 import com.soliscode.test.provider.CollectionProviders;
 

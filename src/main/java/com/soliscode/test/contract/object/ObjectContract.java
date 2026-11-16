@@ -58,7 +58,7 @@ package com.soliscode.test.contract.object;
 /// @param <T> The type being tested.
 /// @author evanbergstrom
 /// @see Object
-/// @see ObjectMethods
+/// @see com.soliscode.test.methods.ObjectMethods
 /// @see EqualsMethodContract
 /// @see HashCodeMethodContract
 /// @see ToStringMethodContract

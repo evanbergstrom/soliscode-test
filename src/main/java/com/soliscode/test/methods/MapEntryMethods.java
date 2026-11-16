@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.soliscode.test.contract.mapentry;
+package com.soliscode.test.methods;
 
 import com.soliscode.test.InterfaceMethod;
 

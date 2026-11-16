@@ -29,6 +29,7 @@ import org.junit.jupiter.api.DisplayName;
 import com.soliscode.test.annotations.ConcurrencyTest;
 import com.soliscode.test.annotations.VerySlow;
 import com.soliscode.test.contract.support.BlockingQueueContractSupport;
+import com.soliscode.test.methods.BlockingDequeMethods;
 import com.soliscode.test.safety.ContentionCoordinator;
 import com.soliscode.test.util.RecordingSupplier;
 
@@ -67,10 +68,8 @@ public interface ThreadSafeOfferPollFirstLastContract<D extends BlockingDeque<E>
     @VerySlow
     @ConcurrencyTest
     default void timedOfferAndPollAtBothEndsWhenCalledUnderContentionAreThreadSafe() {
-        if (!supportsMethod(BlockingDequeMethods.OFFER_FIRST_TIMEOUT)
-                || !supportsMethod(BlockingDequeMethods.OFFER_LAST_TIMEOUT)
-                || !supportsMethod(BlockingDequeMethods.POLL_FIRST_TIMEOUT)
-                || !supportsMethod(BlockingDequeMethods.POLL_LAST_TIMEOUT)) {
+        if (!supportsMethods(BlockingDequeMethods.OFFER_FIRST_TIMEOUT, BlockingDequeMethods.OFFER_LAST_TIMEOUT,
+                BlockingDequeMethods.POLL_FIRST_TIMEOUT, BlockingDequeMethods.POLL_LAST_TIMEOUT)) {
             return;
         }
         for (final boolean fromLast : new boolean[] {true, false}) {

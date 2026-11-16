@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.soliscode.test.contract.object;
+package com.soliscode.test.methods;
 
 import com.soliscode.test.InterfaceMethod;
 

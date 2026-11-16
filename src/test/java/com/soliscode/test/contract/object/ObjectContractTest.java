@@ -4,7 +4,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 
 import com.soliscode.test.AbstractTest;
-import com.soliscode.test.contract.support.WithString;
 
 /// **Tests for the `ObjectContract` test suite**
 /// This class provides tests to ensure that the [ObjectContract] itself works as expected.

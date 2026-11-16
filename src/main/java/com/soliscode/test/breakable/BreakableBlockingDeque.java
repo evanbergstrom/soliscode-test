@@ -17,8 +17,8 @@ import org.jspecify.annotations.Nullable;
 
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.MethodStatus;
-import com.soliscode.test.contract.blockingdeque.BlockingDequeMethods;
-import com.soliscode.test.contract.blockingqueue.BlockingQueueMethods;
+import com.soliscode.test.methods.BlockingDequeMethods;
+import com.soliscode.test.methods.BlockingQueueMethods;
 
 /// A BlockingDeque implementation that can be programmatically broken for testing purposes.
 ///

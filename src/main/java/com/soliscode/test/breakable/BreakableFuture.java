@@ -481,24 +481,37 @@ public class BreakableFuture<V> extends AbstractBreakable implements Future<V> {
     // GET_RETURNS_NULL_ONCE_SUCCEEDED return null for one, on purpose.
     @SuppressWarnings("NullAway")
     public V get() throws InterruptedException, ExecutionException {
+        if (!awaitForGet()) {
+            return null;
+        }
+        return resultForGet();
+    }
+
+    /// Waits, for `get()`, until it is done; `false` if it is running and [#GET_DOES_NOT_WAIT] is set.
+    private boolean awaitForGet() throws InterruptedException {
         if (hasBreak(GET_IS_NOT_THREAD_SAFE)) {
             waitUnsafely(0L);
-        } else {
-            lock.lock();
-            try {
-                if (current == State.RUNNING && hasBreak(GET_DOES_NOT_WAIT)) {
-                    return null;
-                }
-                if (current == State.RUNNING && hasBreak(GET_IGNORES_INTERRUPT)) {
-                    boolean ignored = Thread.interrupted();
-                }
-                while (current == State.RUNNING) {
-                    finished.await();
-                }
-            } finally {
-                lock.unlock();
-            }
+            return true;
         }
+        lock.lock();
+        try {
+            if (current == State.RUNNING && hasBreak(GET_DOES_NOT_WAIT)) {
+                return false;
+            }
+            if (current == State.RUNNING && hasBreak(GET_IGNORES_INTERRUPT)) {
+                boolean ignored = Thread.interrupted();
+            }
+            while (current == State.RUNNING) {
+                finished.await();
+            }
+            return true;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /// What `get()` returns or throws once it is done.
+    private @Nullable V resultForGet() throws ExecutionException {
         lock.lock();
         try {
             if (current == State.CANCELLED && hasBreak(GET_THROWS_EXECUTION_EXCEPTION_ONCE_CANCELLED)) {

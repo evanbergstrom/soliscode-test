@@ -14,7 +14,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.soliscode.test.AbstractTest;
-import com.soliscode.test.contract.sortedmap.SortedMapMethods;
+import com.soliscode.test.methods.SortedMapMethods;
 
 import static com.soliscode.test.breakable.BreakableSortedMap.COMPARATOR_ALWAYS_RETURNS_NULL;
 import static com.soliscode.test.breakable.BreakableSortedMap.COMPARATOR_THROWS_EXCEPTION;

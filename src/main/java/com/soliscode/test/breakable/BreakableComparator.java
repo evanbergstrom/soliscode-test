@@ -287,13 +287,7 @@ public class BreakableComparator<T> extends AbstractBreakable implements Compara
     @Override
     public int compare(final @Nullable T x, final @Nullable T y) {
         if (x == null || y == null) {
-            if (hasBreak(COMPARE_NULL_DOES_NOT_THROW)) {
-                return x == null ? (y == null ? 0 : -1) : 1;
-            }
-            if (hasBreak(COMPARE_NULL_THROWS_ILLEGAL_ARGUMENT)) {
-                throw new IllegalArgumentException("compare with a null argument");
-            }
-            throw new NullPointerException("compare with a null argument");
+            return compareWithNull(x, y);
         }
         if (hasBreak(COMPARE_OF_AN_OBJECT_WITH_ITSELF_IS_NOT_ZERO) && x == y) {
             return 1;
@@ -308,6 +302,25 @@ public class BreakableComparator<T> extends AbstractBreakable implements Compara
         if (hasBreak(COMPARE_IS_NOT_SIGN_SYMMETRIC)) {
             return c == 0 ? 0 : 1;
         }
+        return withOrderBreaks(x, y, c, x == y);
+    }
+
+    /// `compare` with a null argument: throws [NullPointerException], or as [#COMPARE_NULL_DOES_NOT_THROW] or
+    /// [#COMPARE_NULL_THROWS_ILLEGAL_ARGUMENT] says.
+    private int compareWithNull(final @Nullable T x, final @Nullable T y) {
+        if (hasBreak(COMPARE_NULL_DOES_NOT_THROW)) {
+            return x == null ? (y == null ? 0 : -1) : 1;
+        }
+        if (hasBreak(COMPARE_NULL_THROWS_ILLEGAL_ARGUMENT)) {
+            throw new IllegalArgumentException("compare with a null argument");
+        }
+        throw new NullPointerException("compare with a null argument");
+    }
+
+    /// The delegate's comparison `c` of `x` and `y`, changed by [#COMPARE_IS_CYCLIC],
+    /// [#COMPARE_TREATS_NEAR_VALUES_AS_EQUAL] or [#COMPARE_BREAKS_TIES_BY_IDENTITY] where set; `same` is whether `x`
+    /// and `y` are one object.
+    private int withOrderBreaks(final T x, final T y, final int c, final boolean same) {
         if (hasBreak(COMPARE_IS_CYCLIC)) {
             int rx = Math.floorMod(x.hashCode(), 3);
             int ry = Math.floorMod(y.hashCode(), 3);
@@ -319,7 +332,7 @@ public class BreakableComparator<T> extends AbstractBreakable implements Compara
                 && Math.abs((long) x.hashCode() - (long) y.hashCode()) == 1L) {
             return 0;
         }
-        if (hasBreak(COMPARE_BREAKS_TIES_BY_IDENTITY) && c == 0 && x != y) {
+        if (hasBreak(COMPARE_BREAKS_TIES_BY_IDENTITY) && c == 0 && !same) {
             return Long.compare(serial(x), serial(y));
         }
         return c;

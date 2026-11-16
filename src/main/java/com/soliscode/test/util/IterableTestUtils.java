@@ -17,8 +17,6 @@ import org.junit.jupiter.api.Assertions;
 
 import com.soliscode.test.interfaces.IterableOnly;
 
-import static com.soliscode.test.breakable.Breakables.ensureUnbroken;
-
 /// This class consists exclusively of static methods that operate on or return iterables.
 ///
 /// The methods of this class all throw a `NullPointerException` if the iterables or class objects provided to
@@ -29,6 +27,17 @@ import static com.soliscode.test.breakable.Breakables.ensureUnbroken;
 public final class IterableTestUtils {
 
     private IterableTestUtils() { }
+
+    /// The elements of an iterable without its breaks, if it is an [UnbrokenView]; otherwise the iterable itself.
+    private static <E> Iterable<E> ensureUnbroken(final Iterable<E> i) {
+        return i instanceof UnbrokenView<E> v ? v.unbroken() : i;
+    }
+
+    /// The elements of a collection without its breaks, if it is an [UnbrokenView] of a collection; otherwise the
+    /// collection itself.
+    private static <E> Collection<E> ensureUnbroken(final Collection<E> c) {
+        return c instanceof UnbrokenView<E> v && v.unbroken() instanceof Collection<E> u ? u : c;
+    }
 
     /// Returns `true` if the iterable contains no elements.
     ///

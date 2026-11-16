@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
 
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.MethodStatus;
-import com.soliscode.test.contract.listiterator.ListIteratorMethods;
+import com.soliscode.test.methods.ListIteratorMethods;
 
 import static com.soliscode.test.assertions.Assertions.assertThrowsDifferent;
 import static com.soliscode.test.breakable.BreakableListIterator.LIST_ITERATOR_ADD_DOES_NOT_ADD;

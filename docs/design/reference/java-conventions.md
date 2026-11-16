@@ -28,10 +28,10 @@ Built (#9). Every package is under `com.soliscode.test` (moved from `org.solisco
 | Types | PascalCase, no `I` prefix, no `Impl` suffix |
 | Methods, parameters, locals, fields | camelCase |
 | Constants | `UPPER_SNAKE_CASE`; a `Break` constant names the fault (`ADD_DOES_NOT_ADD_ELEMENT`) |
-| Contracts | `XxxContract`: an interface of default test methods, in `com.soliscode.test.contract.<interface>` (`SizeContract`, `ListContract`). Each package's `XxxMethods` enum names the methods its contracts test |
+| Contracts | `XxxContract`: an interface of default test methods, in `com.soliscode.test.contract.<interface>` (`SizeContract`, `ListContract`). The `XxxMethods` enum of an interface with optional methods, in `com.soliscode.test.methods` (#67; until then in the contract's package), names the methods its contracts test |
 | Breakables | `BreakableXxx`, an implementation of the JDK interface `Xxx` whose faults are its `Break` constants (`BreakableList`, `BreakableDeque`), built with its `BreakableXxxBuilder` where it has one |
 | Providers | `XxxProvider` for a provider of one type; `CollectionProviders`, `MapProviders` and `Providers` for the static factories |
-| Contract support | `XxxSupport` and `WithXxx` in `contract.support`: the mix-ins that give a contract its provider |
+| Contract support | `XxxSupport` and `WithXxx` in `contract.support`: the mix-ins that give a contract its provider; `WithString`, which gives `ObjectContract` its, is beside it in `contract.object` (#67) |
 | Test classes | `*Test`; an abstract base class of tests `Abstract*Test` (`AbstractContractTest`); a helper that is not a test does not end in `Test` (`DynamicContract`, `ContractRuns`) |
 
 Built (#10): Checkstyle `TypeName`, `MethodName`, `ParameterName`, `LocalVariableName`, `MemberName`, `ConstantName`, `HiddenField`. A constructor parameter that would hide a field ends in `Arg`, as soliscode-quant's do (`this.breaks = breaksArg`), and its `@param` uses that name; an ordinary method parameter or local that would hide one takes a different word. An unnamed variable is `ignored`, not `_`, which `LocalVariableName` refuses.

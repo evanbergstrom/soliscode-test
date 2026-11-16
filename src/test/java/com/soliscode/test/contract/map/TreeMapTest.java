@@ -4,7 +4,7 @@ import java.util.TreeMap;
 
 import com.soliscode.test.AbstractTest;
 import com.soliscode.test.contract.navigablemap.NavigableMapContract;
-import com.soliscode.test.contract.sequencedmap.SequencedMapMethods;
+import com.soliscode.test.methods.SequencedMapMethods;
 import com.soliscode.test.provider.IntegerProvider;
 import com.soliscode.test.provider.MapProvider;
 import com.soliscode.test.provider.MapProviders;

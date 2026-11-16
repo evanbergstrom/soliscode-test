@@ -15,7 +15,7 @@ import org.jspecify.annotations.Nullable;
 
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.MethodStatus;
-import com.soliscode.test.contract.sortedmap.SortedMapMethods;
+import com.soliscode.test.methods.SortedMapMethods;
 
 /// A SortedMap implementation that can be programmatically broken for testing purposes.
 ///

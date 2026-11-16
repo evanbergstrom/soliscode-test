@@ -26,6 +26,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.soliscode.test.contract.support.ExecutorServiceContractSupport;
+import com.soliscode.test.provider.DeliberateException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -52,7 +53,7 @@ public interface InvokeAnyContract<E extends ExecutorService> extends ExecutorSe
     @DisplayName("invokeAny gives the result of a task that succeeded")
     default void invokeAnyGivesTheResultOfATaskThatSucceeded() throws Exception {
         using(executor -> {
-            Exception failure = new Exception("invokeAnyGivesTheResultOfATaskThatSucceeded");
+            Exception failure = new DeliberateException("invokeAnyGivesTheResultOfATaskThatSucceeded");
             List<Callable<Integer>> tasks = List.of(() -> {
                 throw failure;
             }, () -> 7);
@@ -68,9 +69,9 @@ public interface InvokeAnyContract<E extends ExecutorService> extends ExecutorSe
     default void invokeAnyThrowsExecutionExceptionWhenEveryTaskFails() throws Exception {
         using(executor -> {
             List<Callable<Integer>> tasks = List.of(() -> {
-                throw new Exception("the first task");
+                throw new DeliberateException("the first task");
             }, () -> {
-                throw new Exception("the second task");
+                throw new DeliberateException("the second task");
             });
             assertThrows(ExecutionException.class, () -> bounded(() -> executor.invokeAny(tasks)),
                     "invokeAny of tasks that all fail");

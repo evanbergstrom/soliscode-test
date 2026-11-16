@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.contract.collection.CollectionContract;
-import com.soliscode.test.contract.object.ObjectMethods;
+import com.soliscode.test.methods.ObjectMethods;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;

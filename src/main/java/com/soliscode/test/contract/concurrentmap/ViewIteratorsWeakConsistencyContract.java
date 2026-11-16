@@ -27,10 +27,10 @@ import java.util.function.Function;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.soliscode.test.contract.map.MapMethods;
 import com.soliscode.test.contract.support.ConcurrentMapContractSupport;
 import com.soliscode.test.contract.support.WeakConsistencyChecks;
 import com.soliscode.test.contract.support.WeaklyConsistentIteratorsSupport;
+import com.soliscode.test.methods.MapMethods;
 
 /// Contract that the iterators of a concurrent map's views, `keySet()`, `values()` and `entrySet()`, are weakly
 /// consistent, as the `java.util.concurrent` package summary says of "most concurrent Collection implementations",

@@ -16,6 +16,7 @@ import com.soliscode.test.contract.AbstractCollectionContractTest;
 import com.soliscode.test.contract.CollectionContractConfig;
 import com.soliscode.test.contract.DynamicCollectionContract;
 import com.soliscode.test.contract.support.WithIntegerElement;
+import com.soliscode.test.methods.QueueMethods;
 
 import static com.soliscode.test.breakable.BreakableQueue.ELEMENT_RETURNS_RANDOM_ELEMENT;
 import static com.soliscode.test.breakable.BreakableQueue.OFFER_ALWAYS_RETURNS_FALSE;

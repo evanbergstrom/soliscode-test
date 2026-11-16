@@ -9,8 +9,8 @@ import org.junit.jupiter.api.Test;
 
 import com.soliscode.test.AbstractTest;
 import com.soliscode.test.contract.sequencedcollection.SequencedCollectionContract;
-import com.soliscode.test.contract.sequencedcollection.SequencedCollectionMethods;
 import com.soliscode.test.contract.support.WithIntegerElement;
+import com.soliscode.test.methods.SequencedCollectionMethods;
 import com.soliscode.test.provider.CollectionProvider;
 import com.soliscode.test.provider.FunctionalCollectionProvider;
 

@@ -11,7 +11,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.soliscode.test.AbstractTest;
-import com.soliscode.test.contract.queue.QueueMethods;
+import com.soliscode.test.methods.QueueMethods;
 
 import static com.soliscode.test.breakable.BreakableQueue.ELEMENT_RETURNS_RANDOM_ELEMENT;
 import static com.soliscode.test.breakable.BreakableQueue.ELEMENT_THROWS_EXCEPTION;

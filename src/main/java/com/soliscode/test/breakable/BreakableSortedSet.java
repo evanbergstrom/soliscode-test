@@ -15,6 +15,7 @@
  */
 package com.soliscode.test.breakable;
 
+import java.io.Serial;
 import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.Collections;
@@ -36,7 +37,7 @@ import org.jspecify.annotations.Nullable;
 
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.MethodStatus;
-import com.soliscode.test.contract.iterable.IterableMethods;
+import com.soliscode.test.methods.IterableMethods;
 
 /// **Breakable SortedSet Implementation for Testing**
 ///
@@ -606,6 +607,11 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
     /// @see #spliterator()
     public static final Break SPLITERATOR_DOES_NOT_REPORT_ORDERED =
         new Break("spliterator() does not report ORDERED");
+
+    // The value Java computed for 0.1.4, before #52 added package-private methods, so that its 0.1.4 streams read
+    // (#64).
+    @Serial
+    private static final long serialVersionUID = -8492110436425117573L;
 
     /// The backing sorted set that stores the elements in sorted order.
     private final SortedSet<E> sortedSet;

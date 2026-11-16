@@ -20,8 +20,8 @@ import java.util.concurrent.ConcurrentMap;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.soliscode.test.contract.map.MapMethods;
 import com.soliscode.test.contract.support.ConcurrentMapContractSupport;
+import com.soliscode.test.methods.MapMethods;
 
 /// **Contract for `replace(key, oldValue, newValue)` of a `ConcurrentMap`**
 ///

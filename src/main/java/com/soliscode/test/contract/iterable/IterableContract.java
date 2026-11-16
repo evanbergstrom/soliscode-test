@@ -18,6 +18,7 @@ package com.soliscode.test.contract.iterable;
 
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.contract.object.ObjectContract;
+import com.soliscode.test.methods.IterableMethods;
 
 /// **Contract for the `Iterable` interface**
 ///

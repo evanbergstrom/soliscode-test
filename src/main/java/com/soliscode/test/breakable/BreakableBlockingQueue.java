@@ -18,8 +18,8 @@ import org.jspecify.annotations.Nullable;
 
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.MethodStatus;
-import com.soliscode.test.contract.blockingqueue.BlockingQueueMethods;
-import com.soliscode.test.contract.queue.QueueMethods;
+import com.soliscode.test.methods.BlockingQueueMethods;
+import com.soliscode.test.methods.QueueMethods;
 
 /// A `BlockingQueue` implementation that can be programmatically broken for testing purposes.
 ///

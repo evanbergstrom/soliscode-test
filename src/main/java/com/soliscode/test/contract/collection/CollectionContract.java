@@ -5,6 +5,7 @@ import java.util.Collection;
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.contract.CollectionContractConfig;
 import com.soliscode.test.contract.iterable.IterableContract;
+import com.soliscode.test.methods.CollectionMethods;
 
 /// **Contract for the `Collection` interface**
 ///

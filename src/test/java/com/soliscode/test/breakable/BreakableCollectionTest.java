@@ -10,10 +10,10 @@ import org.junit.jupiter.api.Test;
 import com.soliscode.test.AbstractTest;
 import com.soliscode.test.assertions.Assertions;
 import com.soliscode.test.contract.collection.CollectionContract;
-import com.soliscode.test.contract.collection.CollectionMethods;
 import com.soliscode.test.contract.object.SerializableContract;
 import com.soliscode.test.contract.support.WithIntegerElement;
 import com.soliscode.test.interfaces.CollectionOnly;
+import com.soliscode.test.methods.CollectionMethods;
 
 import static com.soliscode.test.assertions.ArrayAssertions.assertLengthEquals;
 import static com.soliscode.test.assertions.Assertions.assertThrowsDifferent;

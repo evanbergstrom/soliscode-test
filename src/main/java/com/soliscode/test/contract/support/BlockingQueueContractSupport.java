@@ -91,7 +91,7 @@ public interface BlockingQueueContractSupport<Q extends BlockingQueue<E>, E> ext
     ///
     /// @return the full queue, or empty
     default Optional<Q> fullInstance() {
-        if (!supportsMethod(com.soliscode.test.contract.blockingqueue.BlockingQueueMethods.REMAINING_CAPACITY)) {
+        if (!supportsMethod(com.soliscode.test.methods.BlockingQueueMethods.REMAINING_CAPACITY)) {
             return Optional.empty();
         }
         int room = provider().emptyInstance().remainingCapacity();

@@ -21,8 +21,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.soliscode.test.contract.blockingqueue.BlockingQueueMethods;
 import com.soliscode.test.contract.support.TransferQueueContractSupport;
+import com.soliscode.test.methods.BlockingQueueMethods;
+import com.soliscode.test.methods.TransferQueueMethods;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;

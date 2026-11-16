@@ -21,8 +21,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.soliscode.test.contract.concurrentmap.ViewIteratorsWeakConsistencyContract;
-import com.soliscode.test.contract.map.MapMethods;
-import com.soliscode.test.contract.navigablemap.NavigableMapMethods;
+import com.soliscode.test.methods.MapMethods;
+import com.soliscode.test.methods.NavigableMapMethods;
 
 /// Contract that the iterators of a concurrent navigable map's key sets are weakly consistent, as
 /// [ConcurrentNavigableMap] says of `keySet()`, `navigableKeySet()` and `descendingKeySet()`: "The view's iterators

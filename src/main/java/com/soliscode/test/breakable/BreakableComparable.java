@@ -209,13 +209,7 @@ public class BreakableComparable<T extends Comparable<? super T>> extends Abstra
     @Override
     public int compareTo(final @Nullable BreakableComparable<T> other) {
         if (other == null) {
-            if (hasBreak(COMPARE_TO_NULL_DOES_NOT_THROW)) {
-                return 1;
-            }
-            if (hasBreak(COMPARE_TO_NULL_THROWS_ILLEGAL_ARGUMENT)) {
-                throw new IllegalArgumentException("compareTo(null)");
-            }
-            throw new NullPointerException("compareTo(null)");
+            return compareToNull();
         }
         if (hasBreak(COMPARE_TO_SELF_IS_NOT_ZERO) && other == this) {
             return 1;
@@ -230,6 +224,25 @@ public class BreakableComparable<T extends Comparable<? super T>> extends Abstra
         if (hasBreak(COMPARE_TO_IS_NOT_SIGN_SYMMETRIC)) {
             return c == 0 ? 0 : 1;
         }
+        return withOrderBreaks(other, c, other == this);
+    }
+
+    /// `compareTo(null)`: throws [NullPointerException], or as [#COMPARE_TO_NULL_DOES_NOT_THROW] or
+    /// [#COMPARE_TO_NULL_THROWS_ILLEGAL_ARGUMENT] says.
+    private int compareToNull() {
+        if (hasBreak(COMPARE_TO_NULL_DOES_NOT_THROW)) {
+            return 1;
+        }
+        if (hasBreak(COMPARE_TO_NULL_THROWS_ILLEGAL_ARGUMENT)) {
+            throw new IllegalArgumentException("compareTo(null)");
+        }
+        throw new NullPointerException("compareTo(null)");
+    }
+
+    /// The comparison `c` of the values, changed by [#COMPARE_TO_IS_CYCLIC],
+    /// [#COMPARE_TO_TREATS_NEAR_VALUES_AS_EQUAL] or [#COMPARE_TO_BREAKS_TIES_BY_IDENTITY] where set; `self` is whether
+    /// `other` is this object.
+    private int withOrderBreaks(final BreakableComparable<T> other, final int c, final boolean self) {
         if (hasBreak(COMPARE_TO_IS_CYCLIC)) {
             int rx = Math.floorMod(value.hashCode(), 3);
             int ry = Math.floorMod(other.value.hashCode(), 3);
@@ -241,7 +254,7 @@ public class BreakableComparable<T extends Comparable<? super T>> extends Abstra
                 && Math.abs((long) value.hashCode() - (long) other.value.hashCode()) == 1L) {
             return 0;
         }
-        if (hasBreak(COMPARE_TO_BREAKS_TIES_BY_IDENTITY) && c == 0 && other != this) {
+        if (hasBreak(COMPARE_TO_BREAKS_TIES_BY_IDENTITY) && c == 0 && !self) {
             return Long.compare(serial, other.serial);
         }
         return c;

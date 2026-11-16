@@ -7,6 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 
 import com.soliscode.test.annotations.ConcurrencyTest;
 import com.soliscode.test.annotations.Slow;
+import com.soliscode.test.methods.CollectionMethods;
 import com.soliscode.test.safety.ContentionCoordinator;
 
 import static com.soliscode.test.assertions.collection.CollectionAssertions.assertIsEmpty;

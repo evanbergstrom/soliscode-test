@@ -12,6 +12,7 @@ import com.soliscode.test.breakable.BreakableCollectionBuilder;
 import com.soliscode.test.contract.AbstractCollectionContractTest;
 import com.soliscode.test.contract.CollectionContractConfig;
 import com.soliscode.test.contract.DynamicCollectionContract;
+import com.soliscode.test.methods.CollectionMethods;
 import com.soliscode.test.provider.IntegerProvider;
 import com.soliscode.test.provider.ObjectProvider;
 

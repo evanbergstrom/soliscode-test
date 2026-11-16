@@ -34,8 +34,8 @@ import com.soliscode.test.contract.sortedset.SortedSetContract;
 /// The expected results come from a [java.util.TreeSet] holding the same elements, with the set's `comparator()`
 /// ([com.soliscode.test.contract.support.SortedSetContractSupport]). `NavigableSet`'s methods are not optional
 /// operations, so the contract has no method enum; the tests that change the set run only where
-/// [com.soliscode.test.contract.collection.CollectionMethods#ADD] or
-/// [com.soliscode.test.contract.collection.CollectionMethods#REMOVE] is supported.
+/// [com.soliscode.test.methods.CollectionMethods#ADD] or
+/// [com.soliscode.test.methods.CollectionMethods#REMOVE] is supported.
 ///
 /// ## Usage Examples
 ///

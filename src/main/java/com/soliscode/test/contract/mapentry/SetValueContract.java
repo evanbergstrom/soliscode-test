@@ -23,6 +23,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.soliscode.test.contract.support.MapEntryContractSupport;
+import com.soliscode.test.methods.MapEntryMethods;
 import com.soliscode.test.provider.MapEntrySource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

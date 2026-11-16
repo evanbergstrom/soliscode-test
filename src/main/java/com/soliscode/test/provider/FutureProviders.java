@@ -161,7 +161,7 @@ public final class FutureProviders {
     }
 
     private static Exception failure() {
-        return new Exception("the future's failure, made by its source");
+        return new DeliberateException("the future's failure, made by its source");
     }
 
     /// What a task's computation does when run: set by the source before it runs the task, read by the thread that

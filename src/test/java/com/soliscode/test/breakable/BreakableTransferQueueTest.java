@@ -9,7 +9,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.soliscode.test.AbstractTest;
-import com.soliscode.test.contract.transferqueue.TransferQueueMethods;
+import com.soliscode.test.methods.TransferQueueMethods;
 
 import static com.soliscode.test.breakable.BreakableTransferQueue.GET_WAITING_CONSUMER_COUNT_ALWAYS_RETURNS_ZERO;
 import static com.soliscode.test.breakable.BreakableTransferQueue.GET_WAITING_CONSUMER_COUNT_RETURNS_RANDOM;

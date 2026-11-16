@@ -6,7 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.soliscode.test.AbstractTest;
-import com.soliscode.test.contract.map.MapMethods;
+import com.soliscode.test.methods.MapMethods;
 
 import static com.soliscode.test.breakable.BreakableConcurrentMap.COMPUTE_IF_ABSENT_IS_NOT_THREAD_SAFE;
 import static com.soliscode.test.breakable.BreakableConcurrentMap.COMPUTE_IF_PRESENT_IS_NOT_THREAD_SAFE;

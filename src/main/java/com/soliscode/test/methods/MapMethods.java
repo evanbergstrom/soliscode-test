@@ -1,9 +1,9 @@
-package com.soliscode.test.contract.map;
+package com.soliscode.test.methods;
 
 import com.soliscode.test.InterfaceMethod;
 
 /// Values used to identify collection class methods for use with the
-/// [MapContract#supportsMethod(InterfaceMethod)] method.
+/// [com.soliscode.test.contract.map.MapContract#supportsMethod(InterfaceMethod)] method.
 ///
 /// @author evanbergstrom
 /// @since 1.0

@@ -29,10 +29,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /// It has [IteratorContract]'s tests and a contract for each method `ListIterator` adds, with the cursor rules its
 /// Javadoc states. A test class implements it with an [com.soliscode.test.provider.IteratorProvider] of the list
 /// iterator under test (`IteratorProviders.listIteratorsOf`, for a list's) and an element provider, and says through
-/// `supportsMethod` which of `remove` ([com.soliscode.test.contract.iterable.IterableMethods#ITERATOR_REMOVE]),
-/// `set` and `add` ([ListIteratorMethods]) it does not support. A test runs the branch for a supported method only if
-/// every optional method it calls is supported, and an unsupported one is checked only for
-/// [UnsupportedOperationException].
+/// `supportsMethod` which of `remove` ([com.soliscode.test.methods.IterableMethods#ITERATOR_REMOVE]),
+/// `set` and `add` ([ListIteratorMethods][com.soliscode.test.methods.ListIteratorMethods]) it does not support. A test
+/// runs the branch for a supported method only if every optional method it calls is supported, and an unsupported one
+/// is checked only for [UnsupportedOperationException].
 ///
 /// A list iterator's order is its list's, so the source must be
 /// [ordered][com.soliscode.test.provider.IteratorSource#ordered()], and every test, [IteratorContract]'s included,

@@ -19,6 +19,7 @@ import java.util.concurrent.BlockingQueue;
 
 import com.soliscode.test.contract.DoesNotPermitNulls;
 import com.soliscode.test.contract.queue.QueueContract;
+import com.soliscode.test.methods.BlockingQueueMethods;
 
 /// **Contract for the `BlockingQueue` interface**
 ///
@@ -51,7 +52,7 @@ import com.soliscode.test.contract.queue.QueueContract;
 ///   a test of a queue with fail-fast iterators overrides `iteratorsAreWeaklyConsistent()` to return `false`.
 ///
 /// `BlockingQueue`'s methods are not optional operations, but a test reads [BlockingQueueMethods] as the queue
-/// contracts read [com.soliscode.test.contract.queue.QueueMethods]: where a method is not supported, it expects
+/// contracts read [com.soliscode.test.methods.QueueMethods]: where a method is not supported, it expects
 /// [UnsupportedOperationException].
 ///
 /// A call that may block runs with a time limit, so that a queue that blocks where it should not fails the test

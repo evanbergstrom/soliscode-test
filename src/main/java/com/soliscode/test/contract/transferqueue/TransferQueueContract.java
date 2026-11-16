@@ -18,6 +18,7 @@ package com.soliscode.test.contract.transferqueue;
 import java.util.concurrent.TransferQueue;
 
 import com.soliscode.test.contract.blockingqueue.BlockingQueueContract;
+import com.soliscode.test.methods.TransferQueueMethods;
 
 /// **Contract for the `TransferQueue` interface**
 ///

@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
 
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.MethodStatus;
-import com.soliscode.test.contract.mapentry.MapEntryMethods;
+import com.soliscode.test.methods.MapEntryMethods;
 
 import static com.soliscode.test.breakable.BreakableMapEntry.MAP_ENTRY_EQUALS_IGNORES_KEY;
 import static com.soliscode.test.breakable.BreakableMapEntry.MAP_ENTRY_EQUALS_IGNORES_VALUE;

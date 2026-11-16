@@ -24,6 +24,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.soliscode.test.contract.support.ExecutorServiceContractSupport;
+import com.soliscode.test.provider.DeliberateException;
 
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -62,7 +63,7 @@ public interface SubmitCallableContract<E extends ExecutorService> extends Execu
     @DisplayName("submit(Callable) gives the callable's exception as an ExecutionException")
     default void submitCallableGivesItsException() throws Exception {
         using(executor -> {
-            Exception failure = new Exception("submitCallableGivesItsException");
+            Exception failure = new DeliberateException("submitCallableGivesItsException");
             Future<Object> future = executor.submit(() -> {
                 throw failure;
             });

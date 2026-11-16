@@ -15,6 +15,7 @@
  */
 package com.soliscode.test.breakable;
 
+import java.io.Serial;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -30,11 +31,12 @@ import java.util.function.IntSupplier;
 
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.MethodStatus;
-import com.soliscode.test.contract.iterable.IterableMethods;
 import com.soliscode.test.contract.support.CollectionProviderSupport;
+import com.soliscode.test.methods.IterableMethods;
 import com.soliscode.test.provider.CollectionProvider;
 import com.soliscode.test.provider.ObjectProvider;
 import com.soliscode.test.util.IterableTestUtils;
+import com.soliscode.test.util.UnbrokenView;
 
 /// **Breakable Iterable Implementation for Testing**
 ///
@@ -298,7 +300,7 @@ import com.soliscode.test.util.IterableTestUtils;
 /// @author evanbergstrom
 /// @param <E> The elements type for the `Iterable`.
 /// @since 1.0
-public class BreakableIterable<E> extends BreakableObject<Iterable<E>> implements Iterable<E> {
+public class BreakableIterable<E> extends BreakableObject<Iterable<E>> implements UnbrokenView<E> {
 
     /// The method `forEach` does not call the action on any of the elements.
     /// **Affected Methods:** [forEach(Consumer)][#forEach(Consumer)]
@@ -330,6 +332,10 @@ public class BreakableIterable<E> extends BreakableObject<Iterable<E>> implement
 
     /// Default value for the characteristics field
     protected static final int DEFAULT_CHARACTERISTICS = 0;
+
+    // The value Java computed before the class implemented UnbrokenView (#67), so that its 0.1.4 streams still read.
+    @Serial
+    private static final long serialVersionUID = 1825535398663778434L;
 
     /// The underlying iterable that stores the actual elements.
     private final Iterable<E> iterable;
@@ -484,6 +490,7 @@ public class BreakableIterable<E> extends BreakableObject<Iterable<E>> implement
 
     /// returns the elements as an unbroken instance of `Iterable'
     /// @return an unbroken iterable.
+    @Override
     public Iterable<E> unbroken() {
         return iterable;
     }

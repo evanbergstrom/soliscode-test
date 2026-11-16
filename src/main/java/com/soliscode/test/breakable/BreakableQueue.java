@@ -15,8 +15,8 @@ import org.jspecify.annotations.Nullable;
 
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.MethodStatus;
-import com.soliscode.test.contract.queue.QueueMethods;
 import com.soliscode.test.contract.support.CollectionProviderSupport;
+import com.soliscode.test.methods.QueueMethods;
 import com.soliscode.test.provider.CollectionProvider;
 import com.soliscode.test.provider.ObjectProvider;
 

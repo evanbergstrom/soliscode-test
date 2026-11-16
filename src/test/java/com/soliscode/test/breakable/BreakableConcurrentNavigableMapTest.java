@@ -13,8 +13,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.soliscode.test.AbstractTest;
-import com.soliscode.test.contract.navigablemap.NavigableMapMethods;
-import com.soliscode.test.contract.sortedmap.SortedMapMethods;
+import com.soliscode.test.methods.NavigableMapMethods;
+import com.soliscode.test.methods.SortedMapMethods;
 
 import static com.soliscode.test.breakable.BreakableConcurrentNavigableMap.CEILING_ENTRY_RETURNS_NULL;
 import static com.soliscode.test.breakable.BreakableConcurrentNavigableMap.CEILING_KEY_RETURNS_NULL;

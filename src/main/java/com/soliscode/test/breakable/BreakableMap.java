@@ -19,8 +19,8 @@ import org.jspecify.annotations.Nullable;
 
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.MethodStatus;
-import com.soliscode.test.contract.map.MapMethods;
 import com.soliscode.test.contract.support.MapProviderSupport;
+import com.soliscode.test.methods.MapMethods;
 import com.soliscode.test.provider.MapProvider;
 import com.soliscode.test.provider.ObjectProvider;
 
@@ -844,7 +844,7 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
             copy.map = copyOfStore(map);
             return copy;
         } catch (final CloneNotSupportedException e) {
-            throw new RuntimeException("Cloning BreakableMap failed", e);
+            throw new AssertionError("Cloning BreakableMap failed: it is Cloneable", e);
         }
     }
 

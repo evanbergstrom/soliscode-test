@@ -375,6 +375,19 @@ public class BreakableCharSequence extends AbstractBreakable
     @Override
     public CharSequence subSequence(final int start, final int end) {
         int n = delegate.length();
+        CharSequence allowed = allowedOutOfBounds(start, end, n);
+        if (allowed != null) {
+            return allowed;
+        }
+        if (hasBreak(SUB_SEQUENCE_TREATS_END_AS_A_LENGTH)) {
+            Objects.checkFromToIndex(start, end, n);
+            return delegate.subSequence(start, (int) Math.min((long) start + end, n));
+        }
+        return delegate.subSequence(start, end);
+    }
+
+    /// The subsequence a break that allows out-of-bounds indexes gives for them, or `null` if none applies.
+    private @Nullable CharSequence allowedOutOfBounds(final int start, final int end, final int n) {
         if (start < 0 && inRange(end, n) && hasBreak(SUB_SEQUENCE_ALLOWS_A_NEGATIVE_START)) {
             return delegate.subSequence(0, end);
         }
@@ -387,11 +400,7 @@ public class BreakableCharSequence extends AbstractBreakable
         if (end > n && inRange(start, n) && hasBreak(SUB_SEQUENCE_ALLOWS_END_PAST_THE_LENGTH)) {
             return delegate.subSequence(start, n);
         }
-        if (hasBreak(SUB_SEQUENCE_TREATS_END_AS_A_LENGTH)) {
-            Objects.checkFromToIndex(start, end, n);
-            return delegate.subSequence(start, (int) Math.min((long) start + end, n));
-        }
-        return delegate.subSequence(start, end);
+        return null;
     }
 
     /// Returns the delegate's string form, which [CharSequence#toString()] says holds its `char`s.
@@ -475,27 +484,22 @@ public class BreakableCharSequence extends AbstractBreakable
         int begin = srcBegin;
         int end = srcEnd;
         int at = dstBegin;
-        boolean source = 0 <= begin && begin <= end && end <= n;
-        if (begin < 0 && inRange(end, n) && fits(at, end, size) && hasBreak(GET_CHARS_ALLOWS_A_NEGATIVE_SOURCE_BEGIN)) {
+        if (allowsNegativeSourceBegin(begin, end, at, n, size)) {
             begin = 0;
-        } else if (at < 0 && source && end - begin <= size
-                && hasBreak(GET_CHARS_ALLOWS_A_NEGATIVE_DESTINATION_BEGIN)) {
+        } else if (allowsNegativeDestinationBegin(begin, end, at, n, size)) {
             at = 0;
-        } else if (begin > end && inRange(begin, n) && inRange(end, n) && inRange(at, size)
-                && hasBreak(GET_CHARS_ALLOWS_SOURCE_BEGIN_AFTER_END)) {
+        } else if (allowsSourceBeginAfterEnd(begin, end, at, n, size)) {
             return;
-        } else if (end > n && inRange(begin, n) && fits(at, n - begin, size)
-                && hasBreak(GET_CHARS_ALLOWS_SOURCE_END_PAST_THE_LENGTH)) {
+        } else if (allowsSourceEndPastTheLength(begin, end, at, n, size)) {
             end = n;
-        } else if (source && inRange(at, size) && !fits(at, end - begin, size)
-                && hasBreak(GET_CHARS_DOES_NOT_CHECK_THE_DESTINATION_SIZE)) {
+        } else if (doesNotCheckTheDestinationSize(begin, end, at, n, size)) {
             end = begin + size - at;
         }
         Objects.checkFromToIndex(begin, end, n);
         Objects.checkFromIndexSize(at, end - begin, size);
         if (hasBreak(GET_CHARS_IGNORES_THE_DESTINATION_OFFSET)) {
             at = 0;
-        } else if (end < n && fits(at, end + 1 - begin, size) && hasBreak(GET_CHARS_COPIES_ONE_CHAR_TOO_MANY)) {
+        } else if (copiesOneCharTooMany(begin, end, at, n, size)) {
             end++;
         }
         delegate.getChars(begin, end, dst, at);
@@ -523,6 +527,56 @@ public class BreakableCharSequence extends AbstractBreakable
             return Integer.compare(delegate.length(), other.delegate.length());
         }
         return CharSequence.compare(delegate, other.delegate);
+    }
+
+    /// Whether [#GET_CHARS_ALLOWS_A_NEGATIVE_SOURCE_BEGIN] applies to `getChars(begin, end, dst, at)`, with `n` the
+    /// length and `size` the length of `dst`: only `begin` is out of bounds, and it is negative.
+    private boolean allowsNegativeSourceBegin(final int begin, final int end, final int at, final int n,
+            final int size) {
+        return begin < 0 && inRange(end, n) && fits(at, end, size)
+                && hasBreak(GET_CHARS_ALLOWS_A_NEGATIVE_SOURCE_BEGIN);
+    }
+
+    /// Whether [#GET_CHARS_ALLOWS_A_NEGATIVE_DESTINATION_BEGIN] applies: only `at` is out of bounds, and it is
+    /// negative.
+    private boolean allowsNegativeDestinationBegin(final int begin, final int end, final int at, final int n,
+            final int size) {
+        return at < 0 && validSource(begin, end, n) && end - begin <= size
+                && hasBreak(GET_CHARS_ALLOWS_A_NEGATIVE_DESTINATION_BEGIN);
+    }
+
+    /// Whether [#GET_CHARS_ALLOWS_SOURCE_BEGIN_AFTER_END] applies: every index is in range, and `begin` is after
+    /// `end`.
+    private boolean allowsSourceBeginAfterEnd(final int begin, final int end, final int at, final int n,
+            final int size) {
+        return begin > end && inRange(begin, n) && inRange(end, n) && inRange(at, size)
+                && hasBreak(GET_CHARS_ALLOWS_SOURCE_BEGIN_AFTER_END);
+    }
+
+    /// Whether [#GET_CHARS_ALLOWS_SOURCE_END_PAST_THE_LENGTH] applies: only `end` is out of bounds, past the
+    /// length.
+    private boolean allowsSourceEndPastTheLength(final int begin, final int end, final int at, final int n,
+            final int size) {
+        return end > n && inRange(begin, n) && fits(at, n - begin, size)
+                && hasBreak(GET_CHARS_ALLOWS_SOURCE_END_PAST_THE_LENGTH);
+    }
+
+    /// Whether [#GET_CHARS_DOES_NOT_CHECK_THE_DESTINATION_SIZE] applies: the indexes are in range, and the `char`s
+    /// do not fit in `dst` from `at`.
+    private boolean doesNotCheckTheDestinationSize(final int begin, final int end, final int at, final int n,
+            final int size) {
+        return validSource(begin, end, n) && inRange(at, size) && !fits(at, end - begin, size)
+                && hasBreak(GET_CHARS_DOES_NOT_CHECK_THE_DESTINATION_SIZE);
+    }
+
+    /// Whether [#GET_CHARS_COPIES_ONE_CHAR_TOO_MANY] applies: there is a `char` after `end`, and room for it.
+    private boolean copiesOneCharTooMany(final int begin, final int end, final int at, final int n, final int size) {
+        return end < n && fits(at, end + 1 - begin, size) && hasBreak(GET_CHARS_COPIES_ONE_CHAR_TOO_MANY);
+    }
+
+    /// Whether `[begin, end)` is a range of a sequence of length `n`.
+    private static boolean validSource(final int begin, final int end, final int n) {
+        return 0 <= begin && begin <= end && end <= n;
     }
 
     /// Whether `i` is in `[0, n]`.

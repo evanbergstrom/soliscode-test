@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.ObjectStreamClass;
 import java.io.OutputStream;
 import java.io.Serial;
 import java.util.ArrayList;
@@ -40,8 +41,8 @@ import org.junit.jupiter.api.Test;
 
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.MethodStatus;
-import com.soliscode.test.contract.collection.CollectionMethods;
-import com.soliscode.test.contract.map.MapMethods;
+import com.soliscode.test.methods.CollectionMethods;
+import com.soliscode.test.methods.MapMethods;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -63,6 +64,19 @@ public class BreakableSerializationTest {
     /// Default constructor.
     public BreakableSerializationTest() {
         super();
+    }
+
+    @Test
+    @DisplayName("the breakables whose class changed since 0.1.4 keep 0.1.4's serialVersionUID")
+    void changedBreakablesKeepTheirSerialVersionUid() {
+        // The values serialver gives for 0.1.4's jar: a change to the class would change the computed ones, and 0.1.4
+        // streams would no longer read (#64, #67).
+        assertEquals(1825535398663778434L, ObjectStreamClass.lookup(BreakableIterable.class).getSerialVersionUID(),
+                "BreakableIterable");
+        assertEquals(-8492110436425117573L, ObjectStreamClass.lookup(BreakableSortedSet.class).getSerialVersionUID(),
+                "BreakableSortedSet");
+        assertEquals(-322284699396048271L,
+                ObjectStreamClass.lookup(BreakableNavigableSet.class).getSerialVersionUID(), "BreakableNavigableSet");
     }
 
     /// Verifies that a serialization round trip keeps a map's unsupported methods, and its safety.

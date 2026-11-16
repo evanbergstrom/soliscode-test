@@ -29,8 +29,9 @@ import org.junit.jupiter.api.DisplayName;
 
 import com.soliscode.test.annotations.ConcurrencyTest;
 import com.soliscode.test.annotations.VerySlow;
-import com.soliscode.test.contract.queue.QueueMethods;
 import com.soliscode.test.contract.support.BlockingQueueContractSupport;
+import com.soliscode.test.methods.BlockingQueueMethods;
+import com.soliscode.test.methods.QueueMethods;
 import com.soliscode.test.safety.ContentionCoordinator;
 import com.soliscode.test.util.RecordingSupplier;
 
@@ -63,9 +64,8 @@ public interface ThreadSafeOfferPollContract<Q extends BlockingQueue<E>, E> exte
     @VerySlow
     @ConcurrencyTest
     default void offerAndPollWhenCalledUnderContentionAreThreadSafe() {
-        if (!supportsMethod(QueueMethods.OFFER) || !supportsMethod(QueueMethods.POLL)
-                || !supportsMethod(QueueMethods.REMOVE) || !supportsMethod(BlockingQueueMethods.OFFER_TIMEOUT)
-                || !supportsMethod(BlockingQueueMethods.POLL_TIMEOUT)) {
+        if (!supportsMethods(QueueMethods.OFFER, QueueMethods.POLL, QueueMethods.REMOVE,
+                BlockingQueueMethods.OFFER_TIMEOUT, BlockingQueueMethods.POLL_TIMEOUT)) {
             return;
         }
         Q queue = provider().emptyInstance();

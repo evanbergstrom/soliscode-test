@@ -22,12 +22,12 @@ import java.util.concurrent.BlockingDeque;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.soliscode.test.contract.collection.CollectionMethods;
-import com.soliscode.test.contract.deque.DequeMethods;
-import com.soliscode.test.contract.iterable.IterableMethods;
 import com.soliscode.test.contract.support.BlockingQueueContractSupport;
 import com.soliscode.test.contract.support.WeakConsistencyChecks;
 import com.soliscode.test.contract.support.WeaklyConsistentIteratorsSupport;
+import com.soliscode.test.methods.CollectionMethods;
+import com.soliscode.test.methods.DequeMethods;
+import com.soliscode.test.methods.IterableMethods;
 
 /// Contract that a blocking deque's `descendingIterator()` is weakly consistent, as its `iterator()` is
 /// ([com.soliscode.test.contract.blockingqueue.IteratorWeakConsistencyContract]): the `java.util.concurrent` package

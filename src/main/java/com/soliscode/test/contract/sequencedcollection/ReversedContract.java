@@ -9,6 +9,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.soliscode.test.contract.support.CollectionContractSupport;
+import com.soliscode.test.methods.SequencedCollectionMethods;
 
 /// Contract for testing the [reversed][SequencedCollection#reversed] method of a [SequencedCollection].
 ///

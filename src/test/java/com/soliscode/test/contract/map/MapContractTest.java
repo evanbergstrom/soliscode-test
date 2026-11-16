@@ -15,6 +15,7 @@ import com.soliscode.test.breakable.BreakableMapBuilder;
 import com.soliscode.test.contract.AbstractContractTest;
 import com.soliscode.test.contract.DynamicMapContract;
 import com.soliscode.test.contract.support.WithIntegerKeyAndStringValue;
+import com.soliscode.test.methods.MapMethods;
 
 /// Tests for the MapContract class.
 ///

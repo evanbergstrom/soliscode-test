@@ -15,7 +15,7 @@ import java.util.concurrent.TransferQueue;
 
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.MethodStatus;
-import com.soliscode.test.contract.transferqueue.TransferQueueMethods;
+import com.soliscode.test.methods.TransferQueueMethods;
 
 /// A TransferQueue implementation that can be programmatically broken for testing purposes.
 ///
@@ -623,18 +623,7 @@ public class BreakableTransferQueue<E> extends BreakableBlockingQueue<E> impleme
         }
 
         if (hasBreak(TRANSFER_ALWAYS_BLOCKS)) {
-            // Block indefinitely - wait on a never-notified object, in a loop so that a
-            // spurious wakeup does not end the block; only an interrupt ends it.
-            synchronized (this) {
-                while (true) {
-                    try {
-                        wait();
-                    } catch (final InterruptedException ie) {
-                        Thread.currentThread().interrupt();
-                        throw ie;
-                    }
-                }
-            }
+            blockUntilInterrupted();
         }
 
         if (hasBreak(TRANSFER_DOES_NOT_WAIT)) {
@@ -651,6 +640,27 @@ public class BreakableTransferQueue<E> extends BreakableBlockingQueue<E> impleme
             return;
         }
 
+        transferOrEnqueueWhenInterrupted(e);
+    }
+
+    /// Blocks until the thread is interrupted, for [#TRANSFER_ALWAYS_BLOCKS]: it waits on a never-notified object, in
+    /// a loop so that a spurious wakeup does not end the block.
+    private void blockUntilInterrupted() throws InterruptedException {
+        synchronized (this) {
+            while (true) {
+                try {
+                    wait();
+                } catch (final InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw ie;
+                }
+            }
+        }
+    }
+
+    /// Transfers the element; interrupted, it leaves the element enqueued if
+    /// [#TRANSFER_ENQUEUES_ELEMENT_WHEN_INTERRUPTED] is set.
+    private void transferOrEnqueueWhenInterrupted(final E e) throws InterruptedException {
         try {
             transferQueue.transfer(e);
         } catch (final InterruptedException ie) {

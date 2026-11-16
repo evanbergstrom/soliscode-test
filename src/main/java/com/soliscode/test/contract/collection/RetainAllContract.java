@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import com.soliscode.test.assertions.Assertions;
 import com.soliscode.test.contract.support.CollectionContractSupport;
+import com.soliscode.test.methods.CollectionMethods;
 import com.soliscode.test.util.MatchNothing;
 
 import static com.soliscode.test.assertions.collection.CollectionAssertions.assertContainsAll;

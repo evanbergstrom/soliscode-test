@@ -27,6 +27,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.soliscode.test.contract.support.ExecutorServiceContractSupport;
+import com.soliscode.test.provider.DeliberateException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -55,7 +56,7 @@ public interface InvokeAllContract<E extends ExecutorService> extends ExecutorSe
     @DisplayName("invokeAll gives the tasks' outcomes, in order")
     default void invokeAllGivesTheOutcomesInOrder() throws Exception {
         using(executor -> {
-            Exception failure = new Exception("invokeAllGivesTheOutcomesInOrder");
+            Exception failure = new DeliberateException("invokeAllGivesTheOutcomesInOrder");
             List<Callable<Integer>> tasks = List.of(() -> 1, () -> {
                 throw failure;
             }, () -> 3);

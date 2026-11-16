@@ -24,8 +24,9 @@ import org.junit.jupiter.api.DisplayName;
 
 import com.soliscode.test.annotations.ConcurrencyTest;
 import com.soliscode.test.annotations.VerySlow;
-import com.soliscode.test.contract.collection.CollectionMethods;
 import com.soliscode.test.contract.support.BlockingQueueContractSupport;
+import com.soliscode.test.methods.BlockingQueueMethods;
+import com.soliscode.test.methods.CollectionMethods;
 import com.soliscode.test.safety.ContentionCoordinator;
 import com.soliscode.test.util.RecordingSupplier;
 

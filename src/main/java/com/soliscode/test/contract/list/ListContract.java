@@ -9,8 +9,9 @@ import java.util.Spliterator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.soliscode.test.contract.object.ObjectMethods;
 import com.soliscode.test.contract.sequencedcollection.SequencedCollectionContract;
+import com.soliscode.test.methods.ListMethods;
+import com.soliscode.test.methods.ObjectMethods;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;

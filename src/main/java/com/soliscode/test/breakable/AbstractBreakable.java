@@ -426,17 +426,17 @@ public abstract class AbstractBreakable extends MethodSupport implements Breakab
                                               final Break wrongExceptionBreak) {
         if (!supportsMethod(method)) {
             if (hasBreak(wrongExceptionBreak)) {
-                throw new RuntimeException(notSupportedMessage(method));
+                throw new WrongException(notSupportedMessage(method));
             }
             throw new UnsupportedOperationException(notSupportedMessage(method));
         }
     }
 
-    /// Creates a [RuntimeException] indicating that the wrong exception was thrown.
+    /// Creates a [WrongException] indicating that the wrong exception was thrown.
     /// @param e the original exception
-    /// @return the new [RuntimeException]
+    /// @return the new [WrongException]
     protected RuntimeException wrongException(final Exception e) {
-        return new RuntimeException("Threw wrong exception", e);
+        return new WrongException("Threw wrong exception", e);
     }
 
     /// Checks if the object is configured to be thread-safe.

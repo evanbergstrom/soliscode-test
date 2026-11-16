@@ -21,8 +21,8 @@ import java.util.concurrent.ConcurrentNavigableMap;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.soliscode.test.contract.navigablemap.NavigableMapMethods;
 import com.soliscode.test.contract.support.ConcurrentNavigableMapContractSupport;
+import com.soliscode.test.methods.NavigableMapMethods;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 

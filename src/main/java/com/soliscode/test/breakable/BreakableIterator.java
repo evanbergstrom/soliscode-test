@@ -31,7 +31,7 @@ import org.jspecify.annotations.Nullable;
 
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.MethodStatus;
-import com.soliscode.test.contract.iterable.IterableMethods;
+import com.soliscode.test.methods.IterableMethods;
 
 /// An iterator that can be broken in well-defined ways in order to test collection utilities or testing classes.
 ///
@@ -382,7 +382,7 @@ public class BreakableIterator<E> extends AbstractBreakable implements Iterator<
             }
         } catch (final NoSuchElementException e) {
             if (hasBreak(ITERATOR_NEXT_THROWS_WRONG_EXCEPTION)) {
-                throw new RuntimeException();
+                throw new WrongException();
             } else {
                 throw e;
             }
@@ -464,7 +464,7 @@ public class BreakableIterator<E> extends AbstractBreakable implements Iterator<
 
         if (action == null) {
             if (hasBreak(ITERATOR_FOR_EACH_REMAINING_THROWS_WRONG_EXCEPTION_FOR_NULL_ARGUMENT)) {
-                throw new RuntimeException();
+                throw new WrongException();
             }
             throw new NullPointerException();
         }

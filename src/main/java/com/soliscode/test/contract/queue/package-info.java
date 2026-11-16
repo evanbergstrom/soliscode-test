@@ -26,7 +26,7 @@
 ///   method contracts and [CollectionContract][com.soliscode.test.contract.collection.CollectionContract].
 ///
 /// ### Support Classes
-/// - [QueueMethods][com.soliscode.test.contract.queue.QueueMethods]: Enum used to identify [Queue][java.util.Queue]
+/// - [QueueMethods][com.soliscode.test.methods.QueueMethods]: Enum used to identify [Queue][java.util.Queue]
 ///   methods for method support configuration.
 ///
 /// ## Usage Examples
@@ -66,3 +66,4 @@
 package com.soliscode.test.contract.queue;
 
 import org.jspecify.annotations.NullMarked;
+

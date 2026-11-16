@@ -24,8 +24,8 @@ import org.jspecify.annotations.Nullable;
 
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.MethodStatus;
-import com.soliscode.test.contract.iterable.IterableMethods;
-import com.soliscode.test.contract.listiterator.ListIteratorMethods;
+import com.soliscode.test.methods.IterableMethods;
+import com.soliscode.test.methods.ListIteratorMethods;
 
 /// A list iterator that can be broken in well-defined ways, to show that
 /// [com.soliscode.test.contract.listiterator.ListIteratorContract] can fail.

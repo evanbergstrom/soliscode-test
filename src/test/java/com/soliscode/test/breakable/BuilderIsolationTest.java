@@ -15,9 +15,9 @@ import org.junit.jupiter.api.Test;
 
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.MethodStatus;
-import com.soliscode.test.contract.collection.CollectionMethods;
-import com.soliscode.test.contract.iterable.IterableMethods;
-import com.soliscode.test.contract.sequencedcollection.SequencedCollectionMethods;
+import com.soliscode.test.methods.CollectionMethods;
+import com.soliscode.test.methods.IterableMethods;
+import com.soliscode.test.methods.SequencedCollectionMethods;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;

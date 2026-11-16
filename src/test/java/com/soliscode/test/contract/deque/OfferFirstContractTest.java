@@ -12,6 +12,7 @@ import com.soliscode.test.breakable.BreakableDeque;
 import com.soliscode.test.contract.AbstractCollectionContractTest;
 import com.soliscode.test.contract.CollectionContractConfig;
 import com.soliscode.test.contract.DynamicCollectionContract;
+import com.soliscode.test.methods.DequeMethods;
 import com.soliscode.test.provider.IntegerProvider;
 
 import static com.soliscode.test.breakable.BreakableDeque.OFFER_FIRST_ALWAYS_RETURNS_FALSE;

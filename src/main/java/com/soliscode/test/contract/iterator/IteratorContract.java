@@ -22,7 +22,7 @@ import java.util.Iterator;
 /// A test class implements it with an [com.soliscode.test.provider.IteratorProvider] of the iterator under test and
 /// an element provider; JUnit runs its test methods as the class's own. Where the iterator does not support
 /// `remove()`, the class says so through `supportsMethod`
-/// ([com.soliscode.test.contract.iterable.IterableMethods#ITERATOR_REMOVE]).
+/// ([com.soliscode.test.methods.IterableMethods#ITERATOR_REMOVE]).
 ///
 /// It follows the Javadoc of [Iterator], and where it reads it strictly or loosely, the method contract says so:
 /// `forEachRemaining` is not optional ([ForEachRemainingContract]), an unsupported `remove()` is checked only for

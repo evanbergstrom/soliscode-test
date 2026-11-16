@@ -8,7 +8,7 @@ import java.util.Set;
 
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.MethodStatus;
-import com.soliscode.test.contract.collection.CollectionMethods;
+import com.soliscode.test.methods.CollectionMethods;
 
 /// **Breakable Set Implementation for Testing**
 ///

@@ -20,9 +20,10 @@ import java.util.concurrent.BlockingQueue;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.soliscode.test.contract.collection.CollectionMethods;
-import com.soliscode.test.contract.queue.QueueMethods;
 import com.soliscode.test.contract.support.BlockingQueueContractSupport;
+import com.soliscode.test.methods.BlockingQueueMethods;
+import com.soliscode.test.methods.CollectionMethods;
+import com.soliscode.test.methods.QueueMethods;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -58,8 +59,7 @@ public interface RemainingCapacityContract<Q extends BlockingQueue<E>, E> extend
             assertThrows(UnsupportedOperationException.class, queue::remainingCapacity);
             return;
         }
-        if (!supportsMethod(QueueMethods.OFFER) || !supportsMethod(CollectionMethods.ADD)
-                || !supportsMethod(QueueMethods.POLL)) {
+        if (!supportsMethods(QueueMethods.OFFER, CollectionMethods.ADD, QueueMethods.POLL)) {
             return;
         }
         E element = elementProvider().createInstance();

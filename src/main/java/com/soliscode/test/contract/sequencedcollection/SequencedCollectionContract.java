@@ -3,6 +3,7 @@ package com.soliscode.test.contract.sequencedcollection;
 import java.util.SequencedCollection;
 
 import com.soliscode.test.contract.collection.CollectionContract;
+import com.soliscode.test.methods.SequencedCollectionMethods;
 
 
 /// Contract for testing the [SequencedCollection] interface.

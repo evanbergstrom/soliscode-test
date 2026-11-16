@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.soliscode.test.contract.listiterator;
+package com.soliscode.test.methods;
 
 import com.soliscode.test.InterfaceMethod;
 
 /// The optional methods of [java.util.ListIterator] that are its own, for `supportsMethod(InterfaceMethod)`.
-/// `remove()`'s is [com.soliscode.test.contract.iterable.IterableMethods#ITERATOR_REMOVE].
+/// `remove()`'s is [com.soliscode.test.methods.IterableMethods#ITERATOR_REMOVE].
 ///
 /// @since 0.1.3
 public enum ListIteratorMethods implements InterfaceMethod {

@@ -10,7 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.soliscode.test.AbstractTest;
-import com.soliscode.test.contract.map.MapMethods;
+import com.soliscode.test.methods.MapMethods;
 
 import static com.soliscode.test.breakable.BreakableMap.CLEAR_ALL_DOES_NOT_REMOVE_ANY_PAIRS;
 import static com.soliscode.test.breakable.BreakableMap.CLEAR_DOES_NOT_REMOVE_FIRST_PAIR;
@@ -1127,6 +1127,33 @@ public class BreakableMapTest extends AbstractTest {
         assertEquals(0, map.size()); // But nothing was added
         assertFalse(map.containsKey("key1"));
         assertFalse(map.containsKey("key2"));
+    }
+
+    /// Tests that putAll() refuses a null key or value only where the map does not permit it, and adds nothing
+    /// then (#68).
+    @Test
+    @DisplayName("putAll(Map) refuses a null key or value only where the map does not permit it")
+    public void putAllWithNullsRefusesOnlyWhatIsNotPermitted() {
+        Map<String, Integer> nullKey = new HashMap<>();
+        nullKey.put(null, 1);
+        Map<String, Integer> nullValue = new HashMap<>();
+        nullValue.put("key", null);
+
+        BreakableMap<String, Integer> noNullKeys = new BreakableMap.Builder<String, Integer>()
+                .doesNotPermitNullKeys()
+                .build();
+        assertThrows(NullPointerException.class, () -> noNullKeys.putAll(nullKey));
+        assertEquals(0, noNullKeys.size());
+        noNullKeys.putAll(nullValue);
+        assertTrue(noNullKeys.containsKey("key"));
+
+        BreakableMap<String, Integer> noNullValues = new BreakableMap.Builder<String, Integer>()
+                .doesNotPermitNullValues()
+                .build();
+        assertThrows(NullPointerException.class, () -> noNullValues.putAll(nullValue));
+        assertEquals(0, noNullValues.size());
+        noNullValues.putAll(nullKey);
+        assertTrue(noNullValues.containsKey(null));
     }
 
     /// Tests that putAll() throws UnsupportedOperationException when method is not supported.

@@ -22,11 +22,11 @@ import java.util.concurrent.BlockingQueue;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.soliscode.test.contract.collection.CollectionMethods;
-import com.soliscode.test.contract.iterable.IterableMethods;
 import com.soliscode.test.contract.support.BlockingQueueContractSupport;
 import com.soliscode.test.contract.support.WeakConsistencyChecks;
 import com.soliscode.test.contract.support.WeaklyConsistentIteratorsSupport;
+import com.soliscode.test.methods.CollectionMethods;
+import com.soliscode.test.methods.IterableMethods;
 
 /// Contract that a blocking queue's `iterator()` is weakly consistent, as the `java.util.concurrent` package summary
 /// says of "most concurrent Collection implementations (including most Queues)", and every JDK `BlockingQueue` keeps.

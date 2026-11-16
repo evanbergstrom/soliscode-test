@@ -25,6 +25,7 @@ import org.junit.jupiter.api.DisplayName;
 import com.soliscode.test.annotations.ConcurrencyTest;
 import com.soliscode.test.annotations.VerySlow;
 import com.soliscode.test.contract.support.BlockingQueueContractSupport;
+import com.soliscode.test.methods.BlockingDequeMethods;
 import com.soliscode.test.safety.ContentionCoordinator;
 import com.soliscode.test.util.RecordingSupplier;
 
@@ -61,9 +62,8 @@ public interface ThreadSafePutTakeFirstLastContract<D extends BlockingDeque<E>, 
     @VerySlow
     @ConcurrencyTest
     default void putAndTakeAtBothEndsWhenCalledUnderContentionAreThreadSafe() {
-        if (!supportsMethod(BlockingDequeMethods.PUT_FIRST) || !supportsMethod(BlockingDequeMethods.PUT_LAST)
-                || !supportsMethod(BlockingDequeMethods.TAKE_FIRST)
-                || !supportsMethod(BlockingDequeMethods.TAKE_LAST)) {
+        if (!supportsMethods(BlockingDequeMethods.PUT_FIRST, BlockingDequeMethods.PUT_LAST,
+                BlockingDequeMethods.TAKE_FIRST, BlockingDequeMethods.TAKE_LAST)) {
             return;
         }
         for (final boolean fromLast : new boolean[] {true, false}) {

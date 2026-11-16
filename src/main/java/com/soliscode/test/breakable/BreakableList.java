@@ -17,8 +17,8 @@ import org.jspecify.annotations.Nullable;
 
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.MethodStatus;
-import com.soliscode.test.contract.list.ListMethods;
-import com.soliscode.test.contract.sequencedcollection.SequencedCollectionMethods;
+import com.soliscode.test.methods.ListMethods;
+import com.soliscode.test.methods.SequencedCollectionMethods;
 
 /// **Breakable List Implementation for Testing**
 ///
@@ -324,7 +324,7 @@ import com.soliscode.test.contract.sequencedcollection.SequencedCollectionMethod
 /// @param <E> the type of elements maintained by this list
 /// @author evanbergstrom
 /// @since 1.0.0
-/// @see com.soliscode.test.contract.collection.CollectionMethods
+/// @see com.soliscode.test.methods.CollectionMethods
 /// @see BreakableSequencedCollection
 /// @see java.util.List
 public class BreakableList<E> extends BreakableSequencedCollection<E> implements List<E> {
@@ -674,11 +674,11 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
                 // index == size() is valid: it appends (List#addAll(int, Collection)).
                 if ((index < 0 || index > list.size())
                         && hasBreak(ADD_ALL_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX)) {
-                    throw new RuntimeException();
+                    throw new WrongException();
                 }
 
                 if (c == null && hasBreak(ADD_ALL_AT_INDEX_THROWS_WRONG_EXCEPTION_WHEN_ARGUMENT_IS_NULL)) {
-                    throw new RuntimeException();
+                    throw new WrongException();
                 }
 
                 boolean result;
@@ -701,7 +701,7 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
                 }
             } else {
                 if (hasBreak(ADD_ALL_AT_INDEX_THROWS_WRONG_EXCEPTION_IF_NOT_SUPPORTED)) {
-                    throw new RuntimeException();
+                    throw new WrongException();
                 } else {
                     throw new UnsupportedOperationException();
                 }

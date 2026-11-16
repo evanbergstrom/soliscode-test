@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.soliscode.test.contract.iterable.IterableMethods;
+import com.soliscode.test.methods.IterableMethods;
 
 import static com.soliscode.test.assertions.Assertions.assertThrowsDifferent;
 import static com.soliscode.test.assertions.collection.CollectionAssertions.assertContainsSame;

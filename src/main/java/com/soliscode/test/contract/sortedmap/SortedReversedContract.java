@@ -6,7 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.soliscode.test.contract.sequencedmap.ReversedContract;
-import com.soliscode.test.contract.sequencedmap.SequencedMapMethods;
+import com.soliscode.test.methods.SequencedMapMethods;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;

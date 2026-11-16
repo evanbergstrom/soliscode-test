@@ -1,4 +1,4 @@
-package com.soliscode.test.contract.iterable;
+package com.soliscode.test.methods;
 
 import com.soliscode.test.InterfaceMethod;
 

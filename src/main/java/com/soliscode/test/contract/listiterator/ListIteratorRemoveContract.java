@@ -22,8 +22,9 @@ import java.util.ListIterator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.soliscode.test.contract.iterable.IterableMethods;
 import com.soliscode.test.contract.support.IteratorContractSupport;
+import com.soliscode.test.methods.IterableMethods;
+import com.soliscode.test.methods.ListIteratorMethods;
 import com.soliscode.test.provider.IteratorSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

@@ -12,8 +12,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.soliscode.test.AbstractTest;
-import com.soliscode.test.contract.blockingdeque.BlockingDequeMethods;
-import com.soliscode.test.contract.blockingqueue.BlockingQueueMethods;
+import com.soliscode.test.methods.BlockingDequeMethods;
+import com.soliscode.test.methods.BlockingQueueMethods;
 
 import static com.soliscode.test.breakable.BreakableBlockingDeque.OFFER_FIRST_WITH_TIMEOUT_ALWAYS_RETURNS_FALSE;
 import static com.soliscode.test.breakable.BreakableBlockingDeque.OFFER_FIRST_WITH_TIMEOUT_THROWS_INTERRUPTED_EXCEPTION;

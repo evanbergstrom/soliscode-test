@@ -6,8 +6,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.soliscode.test.contract.support.MapContractSupport;
+import com.soliscode.test.methods.MapMethods;
 
-import static com.soliscode.test.contract.map.MapMethods.CONTAINS_KEY;
+import static com.soliscode.test.methods.MapMethods.CONTAINS_KEY;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;

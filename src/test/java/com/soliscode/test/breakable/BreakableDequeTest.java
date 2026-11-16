@@ -9,7 +9,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.soliscode.test.AbstractTest;
-import com.soliscode.test.contract.deque.DequeMethods;
+import com.soliscode.test.methods.DequeMethods;
 
 import static com.soliscode.test.assertions.collection.CollectionAssertions.assertContains;
 import static com.soliscode.test.assertions.collection.CollectionAssertions.assertContainsSame;

@@ -14,8 +14,8 @@ import org.junit.jupiter.api.Test;
 
 import com.soliscode.test.AbstractTest;
 import com.soliscode.test.contract.list.ListContract;
-import com.soliscode.test.contract.list.ListMethods;
 import com.soliscode.test.contract.support.WithIntegerElement;
+import com.soliscode.test.methods.ListMethods;
 import com.soliscode.test.provider.CollectionProvider;
 import com.soliscode.test.provider.FunctionalCollectionProvider;
 

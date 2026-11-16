@@ -11,6 +11,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.soliscode.test.contract.support.CollectionContractSupport;
+import com.soliscode.test.methods.CollectionMethods;
 import com.soliscode.test.util.CollectionTestUtils;
 import com.soliscode.test.util.MatchNothing;
 

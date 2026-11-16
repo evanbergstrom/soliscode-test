@@ -21,7 +21,7 @@ import org.jspecify.annotations.Nullable;
 
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.MethodStatus;
-import com.soliscode.test.contract.map.MapMethods;
+import com.soliscode.test.methods.MapMethods;
 
 /// A [ConcurrentMap] that can be broken for testing: a [BreakableMap] over a concurrent store (a [ConcurrentHashMap]
 /// unless another is given), with breaks of its own for the methods [ConcurrentMap] declares or re-specifies.

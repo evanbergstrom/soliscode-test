@@ -26,11 +26,11 @@ import org.jspecify.annotations.Nullable;
 
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.MethodStatus;
-import com.soliscode.test.contract.collection.CollectionMethods;
-import com.soliscode.test.contract.iterable.IterableMethods;
-import com.soliscode.test.contract.map.MapMethods;
-import com.soliscode.test.contract.mapentry.MapEntryMethods;
-import com.soliscode.test.contract.sequencedcollection.SequencedCollectionMethods;
+import com.soliscode.test.methods.CollectionMethods;
+import com.soliscode.test.methods.IterableMethods;
+import com.soliscode.test.methods.MapEntryMethods;
+import com.soliscode.test.methods.MapMethods;
+import com.soliscode.test.methods.SequencedCollectionMethods;
 
 /// The configuration of a map's collection views (`keySet()`, `values()`, `entrySet()` and a navigable map's key
 /// sets): the map's method statuses mapped onto the views' methods, the views' permits, and the entries a map whose

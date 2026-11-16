@@ -120,24 +120,8 @@ public interface ThreadSafeShutdownContract<E extends ExecutorService> extends E
                     if (!meet(barrier, deadline, failure, r)) {
                         return;
                     }
-                    ExecutorService executor = list.get(r);
-                    AtomicIntegerArray roundRuns = runs.get(r);
-                    AtomicIntegerArray roundOutcomes = outcomes.get(r);
-                    for (int k = 0; k < MAX_SUBMISSIONS; k++) {
-                        int id = base + k;
-                        try {
-                            executor.execute(() -> roundRuns.incrementAndGet(id));
-                        } catch (final RejectedExecutionException e) {
-                            roundOutcomes.set(id, ShutdownOutcome.REJECTED);
-                            break;
-                        }
-                        roundOutcomes.set(id, shutdownCalled.get(r) == 0 ? ShutdownOutcome.ACCEPTED_BEFORE_SHUTDOWN
-                                : ShutdownOutcome.ACCEPTED);
-                        accepted.incrementAndGet(r);
-                        if (!rejects && executor.isShutdown()) {
-                            break;
-                        }
-                    }
+                    submitRound(list.get(r), base, runs.get(r), outcomes.get(r), accepted, shutdownCalled, r,
+                            rejects);
                 }
             });
             coordinator.add(1, 1, list -> {
@@ -160,6 +144,37 @@ public interface ThreadSafeShutdownContract<E extends ExecutorService> extends E
         } finally {
             for (final E executor : executors) {
                 dispose(executor);
+            }
+        }
+    }
+
+    /// One submitter's tasks in one round: it submits until one is rejected, or, for a class that does not reject
+    /// tasks after shutdown, until the executor is shut down, and records each task's outcome.
+    ///
+    /// @param executor       the round's executor
+    /// @param base           the submitter's first task id
+    /// @param runs           the times each task of the round ran
+    /// @param outcomes       each task's [ShutdownOutcome]
+    /// @param accepted       the tasks accepted in each round
+    /// @param shutdownCalled whether `shutdown` has been called in each round, 1 once it has
+    /// @param round          the round
+    /// @param rejects        whether the class rejects tasks after shutdown ([#rejectsTasksAfterShutdown()])
+    private static void submitRound(final ExecutorService executor, final int base, final AtomicIntegerArray runs,
+            final AtomicIntegerArray outcomes, final AtomicIntegerArray accepted,
+            final AtomicIntegerArray shutdownCalled, final int round, final boolean rejects) {
+        for (int k = 0; k < MAX_SUBMISSIONS; k++) {
+            int id = base + k;
+            try {
+                executor.execute(() -> runs.incrementAndGet(id));
+            } catch (final RejectedExecutionException e) {
+                outcomes.set(id, ShutdownOutcome.REJECTED);
+                return;
+            }
+            outcomes.set(id, shutdownCalled.get(round) == 0 ? ShutdownOutcome.ACCEPTED_BEFORE_SHUTDOWN
+                    : ShutdownOutcome.ACCEPTED);
+            accepted.incrementAndGet(round);
+            if (!rejects && executor.isShutdown()) {
+                return;
             }
         }
     }

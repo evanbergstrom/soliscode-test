@@ -4,6 +4,7 @@ import java.util.Deque;
 
 import com.soliscode.test.contract.queue.QueueContract;
 import com.soliscode.test.contract.sequencedcollection.SequencedCollectionContract;
+import com.soliscode.test.methods.DequeMethods;
 
 /// Test suite for classes that implement the [Deque] interface. When implementing this class, the only method that will
 /// need to be implemented is [com.soliscode.test.contract.support.CollectionContractSupport#provider()].

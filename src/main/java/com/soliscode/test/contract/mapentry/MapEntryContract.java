@@ -21,7 +21,8 @@ import java.util.Map;
 ///
 /// A test class implements it with a [com.soliscode.test.provider.MapEntryProvider] of the entry under test, and
 /// providers of keys and values; JUnit runs its test methods as the class's own. Where the entry does not support
-/// `setValue`, the class says so through `supportsMethod` ([MapEntryMethods#MAP_ENTRY_SET_VALUE]).
+/// `setValue`, the class says so through `supportsMethod`
+/// ([com.soliscode.test.methods.MapEntryMethods#MAP_ENTRY_SET_VALUE]).
 ///
 /// It follows the Javadoc of [Map.Entry]: `getKey` and `getValue` return the mapping ([GetKeyContract],
 /// [GetValueContract]), `setValue` replaces the value, returns the old one and writes through to the map behind the

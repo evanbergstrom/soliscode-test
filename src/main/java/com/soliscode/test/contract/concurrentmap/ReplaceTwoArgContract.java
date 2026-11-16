@@ -22,8 +22,8 @@ import java.util.concurrent.ConcurrentMap;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.soliscode.test.contract.map.MapMethods;
 import com.soliscode.test.contract.support.ConcurrentMapContractSupport;
+import com.soliscode.test.methods.MapMethods;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;

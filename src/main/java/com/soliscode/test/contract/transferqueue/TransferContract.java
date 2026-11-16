@@ -26,9 +26,10 @@ import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.soliscode.test.contract.blockingqueue.BlockingQueueMethods;
-import com.soliscode.test.contract.queue.QueueMethods;
 import com.soliscode.test.contract.support.TransferQueueContractSupport;
+import com.soliscode.test.methods.BlockingQueueMethods;
+import com.soliscode.test.methods.QueueMethods;
+import com.soliscode.test.methods.TransferQueueMethods;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -131,8 +132,7 @@ public interface TransferContract<Q extends TransferQueue<E>, E> extends Transfe
     @DisplayName("transfer(E) on a full queue waits for room, then for a consumer")
     @Test
     default void transferWhenFullWaitsForRoomAndConsumer() {
-        if (!supportsMethod(TransferQueueMethods.TRANSFER) || !supportsMethod(QueueMethods.POLL)
-                || !supportsMethod(BlockingQueueMethods.POLL_TIMEOUT)) {
+        if (!supportsMethods(TransferQueueMethods.TRANSFER, QueueMethods.POLL, BlockingQueueMethods.POLL_TIMEOUT)) {
             return;
         }
         Optional<Q> full = fullInstance();

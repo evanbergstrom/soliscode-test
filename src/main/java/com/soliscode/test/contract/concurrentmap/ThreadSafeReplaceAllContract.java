@@ -22,14 +22,15 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 import org.junit.jupiter.api.DisplayName;
 
 import com.soliscode.test.annotations.ConcurrencyTest;
 import com.soliscode.test.annotations.VerySlow;
-import com.soliscode.test.contract.map.MapMethods;
 import com.soliscode.test.contract.support.UpdateLog;
+import com.soliscode.test.methods.MapMethods;
 import com.soliscode.test.safety.ContentionCoordinator;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -83,18 +84,8 @@ public interface ThreadSafeReplaceAllContract<M extends ConcurrentMap<K, V>, K, 
         ContentionCoordinator<M> coordinator = contentionCoordinator();
         long computes = (long) (THREADS - 1) * ITERATIONS;
         AtomicBoolean computeFailed = new AtomicBoolean();
-        coordinator.add(1, 1, m -> {
-            // Until the computes are done, or one has failed, or the coordinator has interrupted this thread.
-            for (int i = 0; i < REPLACE_ALLS
-                    || (calls.get() < computes && !computeFailed.get() && !Thread.currentThread().isInterrupted());
-                    i++) {
-                m.replaceAll((k, old) -> {
-                    V value = values.get();
-                    log.record(value, old);
-                    return value;
-                });
-            }
-        });
+        coordinator.add(1, 1, m -> replaceAllUntilComputesEnd(m, values, log,
+                () -> calls.get() < computes && !computeFailed.get()));
         coordinator.add(THREADS - 1, ITERATIONS, m -> {
             K key = hot.get((int) (calls.getAndIncrement() % HOT_KEYS));
             V result;
@@ -128,6 +119,25 @@ public interface ThreadSafeReplaceAllContract<M extends ConcurrentMap<K, V>, K, 
             V last = map.get(key);
             assertNotNull(last, "a key lost its value");
             log.assertNoUpdateLost(forKey(firsts, key), last, forKey(stored, key), "replaceAll with compute");
+        }
+    }
+
+    /// Calls `replaceAll` at least [#REPLACE_ALLS] times, and on while the `compute` threads run, logging each update.
+    ///
+    /// @param map       the map
+    /// @param values    the supplier of new values
+    /// @param log       the log of updates
+    /// @param computing whether the `compute` threads still have calls to make and none has failed
+    private void replaceAllUntilComputesEnd(final M map, final Supplier<V> values, final UpdateLog<V> log,
+            final BooleanSupplier computing) {
+        // Until the computes are done, or one has failed, or the coordinator has interrupted this thread.
+        for (int i = 0; i < REPLACE_ALLS || (computing.getAsBoolean() && !Thread.currentThread().isInterrupted());
+                i++) {
+            map.replaceAll((k, old) -> {
+                V value = values.get();
+                log.record(value, old);
+                return value;
+            });
         }
     }
 }

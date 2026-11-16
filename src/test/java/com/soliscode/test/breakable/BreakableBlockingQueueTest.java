@@ -12,7 +12,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.soliscode.test.AbstractTest;
-import com.soliscode.test.contract.blockingqueue.BlockingQueueMethods;
+import com.soliscode.test.methods.BlockingQueueMethods;
 
 import static com.soliscode.test.breakable.BreakableBlockingQueue.DRAIN_TO_ALWAYS_RETURNS_ZERO;
 import static com.soliscode.test.breakable.BreakableBlockingQueue.DRAIN_TO_DOES_NOT_REMOVE_ELEMENTS;

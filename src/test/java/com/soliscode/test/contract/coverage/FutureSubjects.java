@@ -81,7 +81,7 @@ import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 ///
 /// Beyond the coverage test's own checks, it shows by name that the test each single-thread break targets fails for
 /// it, that every such break has a target, and that every test method of `FutureContract` is one. The thread-unsafe
-/// breaks are left out of these, as `ContractCoverageTest.uncheckedReason` leaves them out of `FutureContract`'s run;
+/// breaks are left out of these, as `UncheckedReasons.uncheckedReason` leaves them out of `FutureContract`'s run;
 /// [#threadSafeChecks] shows each failing its own concurrency test, named in [#THREAD_SAFETY_TARGETS].
 final class FutureSubjects {
 

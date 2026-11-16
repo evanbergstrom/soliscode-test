@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package com.soliscode.test.contract.support;
+package com.soliscode.test.contract.object;
 
-import com.soliscode.test.contract.object.ObjectContract;
 import com.soliscode.test.provider.ObjectProvider;
 import com.soliscode.test.provider.StringProvider;
 

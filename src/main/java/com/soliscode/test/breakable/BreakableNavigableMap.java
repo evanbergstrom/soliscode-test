@@ -15,7 +15,7 @@ import org.jspecify.annotations.Nullable;
 
 import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.MethodStatus;
-import com.soliscode.test.contract.navigablemap.NavigableMapMethods;
+import com.soliscode.test.methods.NavigableMapMethods;
 
 /// A NavigableMap implementation that can be programmatically broken for testing purposes.
 ///
