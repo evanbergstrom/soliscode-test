@@ -42,6 +42,11 @@ public final class ExecutorServiceProviders {
 
     /// A provider of new fixed thread pools, made by [Executors#newFixedThreadPool(int)].
     ///
+    /// Their threads start as tasks come, so a pool can fail
+    /// [com.soliscode.test.contract.executorservice.ThreadSafeShutdownContract] through `ThreadPoolExecutor`'s race
+    /// between `shutdown` and starting a thread, which that contract describes; a pool whose core threads are started
+    /// first (`prestartAllCoreThreads()`), made with [#of(Supplier)], does not meet it.
+    ///
     /// @param threads the number of threads of each pool
     /// @return the provider
     /// @throws IllegalArgumentException if `threads` is not positive

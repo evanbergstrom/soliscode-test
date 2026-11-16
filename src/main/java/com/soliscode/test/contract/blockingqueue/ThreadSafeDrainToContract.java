@@ -71,7 +71,7 @@ public interface ThreadSafeDrainToContract<Q extends BlockingQueue<E>, E> extend
         Queue<E> offered = new ConcurrentLinkedQueue<>();
         Queue<E> drained = new ConcurrentLinkedQueue<>();
         AtomicLong drains = new AtomicLong();
-        ContentionCoordinator<Q> coordinator = new ContentionCoordinator<>();
+        ContentionCoordinator<Q> coordinator = contentionCoordinator();
         coordinator.add(THREADS, ITERATIONS, q -> {
             E e = supplier.get();
             if (q.offer(e)) {

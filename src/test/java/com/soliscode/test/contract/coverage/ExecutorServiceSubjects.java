@@ -21,9 +21,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -107,6 +110,15 @@ final class ExecutorServiceSubjects {
     /// The number of worker threads of each breakable.
     private static final int THREADS = 2;
 
+    /// The race [#prestarted] describes, as the name of the check that the contract catches it.
+    private static final String WORKER_START_RACE = "ThreadPoolExecutor's worker-start race (probably JDK-8186445)";
+
+    /// The test that catches it.
+    private static final String SHUTDOWN_TEST = "shutdownWhenCalledUnderContentionRunsEachAcceptedTask";
+
+    /// The longest ({@value} ms) [#slowToStartWorkers]' thread factory waits for the executor to be shut down.
+    private static final long WORKER_START_WAIT_MILLIS = 1_000;
+
     /// The test each single-thread break targets.
     private static final Map<Break, String> TARGETS = Map.ofEntries(
             Map.entry(EXECUTE_DOES_NOT_RUN_THE_TASK, "executeRunsTheCommandOnce"),
@@ -159,7 +171,7 @@ final class ExecutorServiceSubjects {
     /// The concurrency test each thread-unsafe break targets.
     private static final Map<Break, String> THREAD_SAFETY_TARGETS = Map.of(
             SUBMIT_IS_NOT_THREAD_SAFE, "submitWhenCalledUnderContentionRunsEachTaskOnce",
-            SHUTDOWN_IS_NOT_THREAD_SAFE, "shutdownWhenCalledUnderContentionRunsEachAcceptedTask");
+            SHUTDOWN_IS_NOT_THREAD_SAFE, SHUTDOWN_TEST);
 
     private ExecutorServiceSubjects() { }
 
@@ -196,6 +208,40 @@ final class ExecutorServiceSubjects {
     static ThreadPoolExecutor discarding() {
         return new ThreadPoolExecutor(THREADS, THREADS, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(),
                 new ThreadPoolExecutor.DiscardPolicy());
+    }
+
+    /// Starts an executor's core threads, and returns it.
+    ///
+    /// The thread-safety checks run their `ThreadPoolExecutor`s so. While a core thread is still to be started,
+    /// `ThreadPoolExecutor` has a race (probably JDK-8186445, seen on JDK 25.0.5): an `execute` that has reserved a
+    /// core slot, and is making its thread, gives the slot up and rejects its own task if `shutdown()` comes first,
+    /// while the tasks other callers queued meanwhile, accepted before `shutdown()`, are left with no worker, and the
+    /// executor never terminates. `ThreadSafeShutdownContract` catches it, rightly; with the core threads started,
+    /// `execute` only queues, and the race cannot happen (#54). [#slowToStartWorkers] shows the contract catching it.
+    static ThreadPoolExecutor prestarted(final ThreadPoolExecutor executor) {
+        executor.prestartAllCoreThreads();
+        return executor;
+    }
+
+    /// A `ThreadPoolExecutor` of 2 threads whose thread factory waits until the executor is shut down, at most
+    /// [#WORKER_START_WAIT_MILLIS], before it makes a thread: every round of `ThreadSafeShutdownContract`'s test then
+    /// meets the race [#prestarted] describes. Two submitters each reserve a core slot and wait in the factory, the
+    /// third queues the tasks the shutdowner waits for, `shutdown()` comes, and the two give up their slots, leaving
+    /// the queued tasks with no worker.
+    static ThreadPoolExecutor slowToStartWorkers() {
+        AtomicReference<@Nullable ThreadPoolExecutor> self = new AtomicReference<>();
+        ThreadFactory factory = r -> {
+            long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(WORKER_START_WAIT_MILLIS);
+            ThreadPoolExecutor executor = self.get();
+            while (executor != null && !executor.isShutdown() && System.nanoTime() - deadline < 0) {
+                Thread.onSpinWait();
+            }
+            return new Thread(r);
+        };
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(THREADS, THREADS, 0L, TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<>(), factory);
+        self.set(executor);
+        return executor;
     }
 
     /// `BreakableExecutorService`s of 2 threads with a break, or none.
@@ -237,11 +283,12 @@ final class ExecutorServiceSubjects {
                 Stream.of(passes, fails, namedChecks(breaks)).flatMap(n -> n)));
     }
 
-    /// The checks of `ThreadSafeExecutorServiceContract`: it passes against the three JDK executors, the discarding
-    /// `ThreadPoolExecutor`, opted out, and the unbroken breakable, and fails for each of the breakable's two
-    /// thread-unsafe breaks. Each break is shown failing its own concurrency test, named in
-    /// [#THREAD_SAFETY_TARGETS], and passing `ExecutorServiceContract`'s single-thread tests, so that the failure is
-    /// the concurrency test's.
+    /// The checks of `ThreadSafeExecutorServiceContract`: it passes against the three JDK executors and the
+    /// discarding `ThreadPoolExecutor`, opted out (the two `ThreadPoolExecutor`s with their core threads started,
+    /// [#prestarted]), and the unbroken breakable, and fails for `ThreadPoolExecutor`'s race ([#slowToStartWorkers])
+    /// and for each of the breakable's two thread-unsafe breaks. Each break is shown failing its own concurrency
+    /// test, named in [#THREAD_SAFETY_TARGETS], and passing `ExecutorServiceContract`'s single-thread tests, so that
+    /// the failure is the concurrency test's.
     ///
     /// @param checked whether a break, by key, is checked against `ThreadSafeExecutorServiceContract`
     /// @return the checks
@@ -253,16 +300,21 @@ final class ExecutorServiceSubjects {
         assertEquals(THREAD_SAFETY_TARGETS.keySet(), Set.copyOf(breaks.values()),
                 () -> "the thread-safety breaks of BreakableExecutorService: " + breaks.keySet());
         return Stream.of(dynamicContainer("ThreadSafeExecutorServiceContract", Stream.concat(
-                Stream.of(passes("newFixedThreadPool(2)", () -> new ThreadSafeSubject<>(
-                                ExecutorServiceProviders.fixedThreadPools(THREADS), true), all),
+                Stream.of(passes("newFixedThreadPool(2), core threads prestarted", () -> new ThreadSafeSubject<>(
+                                ExecutorServiceProviders.of(() -> prestarted(
+                                        (ThreadPoolExecutor) Executors.newFixedThreadPool(THREADS))), true), all),
                         passes("newVirtualThreadPerTaskExecutor()", () -> new ThreadSafeSubject<>(
                                 ExecutorServiceProviders.virtualThreadPerTaskExecutors(), true), all),
                         passes("a new ForkJoinPool", () -> new ThreadSafeSubject<>(
                                 ExecutorServiceProviders.forkJoinPools(), true), all),
-                        passes("a ThreadPoolExecutor with a DiscardPolicy, opted out", () -> new ThreadSafeSubject<>(
-                                ExecutorServiceProviders.of(ExecutorServiceSubjects::discarding), false), all),
+                        passes("a ThreadPoolExecutor with a DiscardPolicy, opted out, core threads prestarted",
+                                () -> new ThreadSafeSubject<>(ExecutorServiceProviders.of(
+                                        () -> prestarted(discarding())), false), all),
                         passes("unbroken BreakableExecutorService", () -> new ThreadSafeSubject<>(breakables(null),
-                                true), all)),
+                                true), all),
+                        fails(WORKER_START_RACE + " in " + SHUTDOWN_TEST, () -> new ThreadSafeSubject<>(
+                                ExecutorServiceProviders.of(ExecutorServiceSubjects::slowToStartWorkers), true),
+                                named(all, SHUTDOWN_TEST))),
                 breaks.entrySet().stream().flatMap(e -> Stream.of(
                         fails(e.getKey() + " in " + THREAD_SAFETY_TARGETS.get(e.getValue()),
                                 () -> new ThreadSafeSubject<>(breakables(e.getValue()), true), named(all,

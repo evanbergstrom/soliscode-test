@@ -30,10 +30,11 @@ import com.soliscode.test.contract.support.ConcurrentMapContractSupport;
 /// What the thread-safety contracts of a [ConcurrentMap] share: the sizes of a run, and helpers to make keys and
 /// fill a map.
 ///
-/// Each test runs [#THREADS] threads of [#ITERATIONS] calls on a [com.soliscode.test.safety.ContentionCoordinator].
-/// A test of an operation that can race only once per key walks a long run of fresh keys with all its threads in
-/// step: a shared counter counts calls, and call `n` acts on key `n / group`, so each key gets `group` calls close
-/// together in time. A test of a repeatable operation uses [#HOT_KEYS] keys for the whole run.
+/// Each test runs [#THREADS] threads of [#ITERATIONS] calls on a [com.soliscode.test.safety.ContentionCoordinator]
+/// in phases of [#PHASE_INTERVAL] calls ([#contentionCoordinator()]). A test of an operation that can race only once
+/// per key walks a long run of fresh keys with all its threads in step: a shared counter counts calls, and call `n`
+/// acts on key `n / group`, so each key gets `group` calls close together in time. A test of a repeatable operation
+/// uses [#HOT_KEYS] keys for the whole run.
 ///
 /// @param <M> the concurrent map type being tested
 /// @param <K> the key type

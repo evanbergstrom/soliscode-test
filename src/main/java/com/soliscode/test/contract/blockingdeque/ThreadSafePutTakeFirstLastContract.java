@@ -71,7 +71,7 @@ public interface ThreadSafePutTakeFirstLastContract<D extends BlockingDeque<E>, 
             RecordingSupplier<E> supplier = elementProvider().uniqueInstanceSupplier();
             Queue<E> taken = new ConcurrentLinkedQueue<>();
             AtomicLong puts = new AtomicLong();
-            ContentionCoordinator<D> coordinator = new ContentionCoordinator<>();
+            ContentionCoordinator<D> coordinator = contentionCoordinator();
             coordinator.add(THREADS, ITERATIONS, unchecked(d -> {
                 E e = supplier.get();
                 if (puts.getAndIncrement() % 2 == 0) {

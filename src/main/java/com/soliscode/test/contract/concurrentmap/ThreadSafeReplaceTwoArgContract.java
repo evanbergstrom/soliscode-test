@@ -69,7 +69,7 @@ public interface ThreadSafeReplaceTwoArgContract<M extends ConcurrentMap<K, V>, 
         Set<V> notStored = ConcurrentHashMap.newKeySet();
         Queue<V> seen = new ConcurrentLinkedQueue<>();
         AtomicLong calls = new AtomicLong();
-        ContentionCoordinator<M> coordinator = new ContentionCoordinator<>();
+        ContentionCoordinator<M> coordinator = contentionCoordinator();
         coordinator.add(THREADS, ITERATIONS, m -> {
             long call = calls.getAndIncrement();
             K key = keys.get((int) (call / GROUP % HOT_KEYS));

@@ -67,7 +67,7 @@ public interface ThreadSafePutTakeContract<Q extends BlockingQueue<E>, E> extend
         RecordingSupplier<E> supplier = elementProvider().uniqueInstanceSupplier();
         Queue<E> taken = new ConcurrentLinkedQueue<>();
         AtomicLong calls = new AtomicLong();
-        ContentionCoordinator<Q> coordinator = new ContentionCoordinator<>();
+        ContentionCoordinator<Q> coordinator = contentionCoordinator();
         coordinator.add(THREADS, ITERATIONS, unchecked(q -> {
             E e = supplier.get();
             if (calls.getAndIncrement() % 2 == 0) {

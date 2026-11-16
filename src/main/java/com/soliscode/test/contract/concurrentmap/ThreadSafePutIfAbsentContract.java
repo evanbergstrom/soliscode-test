@@ -60,7 +60,7 @@ public interface ThreadSafePutIfAbsentContract<M extends ConcurrentMap<K, V>, K,
         Map<K, Queue<V>> winners = queuesFor(keys);
         Map<K, Queue<V>> returned = queuesFor(keys);
         AtomicLong calls = new AtomicLong();
-        ContentionCoordinator<M> coordinator = new ContentionCoordinator<>();
+        ContentionCoordinator<M> coordinator = contentionCoordinator();
         coordinator.add(THREADS, ITERATIONS, m -> {
             K key = keys.get((int) (calls.getAndIncrement() / THREADS));
             V value = values.get();

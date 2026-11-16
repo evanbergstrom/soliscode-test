@@ -67,7 +67,7 @@ public interface ThreadSafeRemoveTwoArgContract<M extends ConcurrentMap<K, V>, K
         Map<K, V> firsts = new HashMap<>(map);
         AtomicIntegerArray successes = new AtomicIntegerArray(keys.size());
         AtomicLong calls = new AtomicLong();
-        ContentionCoordinator<M> coordinator = new ContentionCoordinator<>();
+        ContentionCoordinator<M> coordinator = contentionCoordinator();
         coordinator.add(THREADS, ITERATIONS, m -> {
             long call = calls.getAndIncrement();
             int index = (int) (call / GROUP);

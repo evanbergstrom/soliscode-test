@@ -59,7 +59,7 @@ public interface ThreadSafeComputeIfAbsentContract<M extends ConcurrentMap<K, V>
         Supplier<V> values = valueProvider().uniqueInstanceSupplier();
         Map<K, Queue<V>> returned = queuesFor(keys);
         AtomicLong calls = new AtomicLong();
-        ContentionCoordinator<M> coordinator = new ContentionCoordinator<>();
+        ContentionCoordinator<M> coordinator = contentionCoordinator();
         coordinator.add(THREADS, ITERATIONS, m -> {
             K key = keys.get((int) (calls.getAndIncrement() / THREADS));
             V result = m.computeIfAbsent(key, k -> values.get());

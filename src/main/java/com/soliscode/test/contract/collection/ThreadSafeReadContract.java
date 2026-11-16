@@ -50,6 +50,8 @@ public interface ThreadSafeReadContract<C extends Collection<E>, E> extends Thre
             collection.add(permanent);
             java.util.List<E> permanentOnly = java.util.List.of(permanent);
 
+            // Not in phases (contentionCoordinator()): the break needs many removals during one scan, which the
+            // removers make free, in a burst; phases hold them to the readers' pace and missed it (#54).
             ContentionCoordinator<C> coordinator = new ContentionCoordinator<>();
             coordinator.add((c) -> {
                 E e = toRemove.poll();

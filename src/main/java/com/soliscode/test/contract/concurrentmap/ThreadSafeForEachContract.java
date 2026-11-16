@@ -76,7 +76,7 @@ public interface ThreadSafeForEachContract<M extends ConcurrentMap<K, V>, K, V>
         }
         Queue<String> problems = new ConcurrentLinkedQueue<>();
         AtomicLong changes = new AtomicLong();
-        ContentionCoordinator<M> coordinator = new ContentionCoordinator<>();
+        ContentionCoordinator<M> coordinator = contentionCoordinator();
         coordinator.add(THREADS / 2, ITERATIONS, m -> {
             long change = changes.getAndIncrement();
             K key = keys.get((int) (change / 2 % KEYS));

@@ -121,7 +121,7 @@ public interface ThreadSafeViewRemoveIfContract<M extends ConcurrentMap<K, V>, K
         Map<K, Queue<V>> stored = queuesFor(keys);
         Set<V> replaced = ConcurrentHashMap.newKeySet();
         AtomicLong calls = new AtomicLong();
-        ContentionCoordinator<M> coordinator = new ContentionCoordinator<>();
+        ContentionCoordinator<M> coordinator = contentionCoordinator();
         coordinator.add(THREADS, VIEW_ITERATIONS, m -> {
             long call = calls.getAndIncrement();
             K key = keys.get((int) (call / GROUP % VIEW_KEYS));

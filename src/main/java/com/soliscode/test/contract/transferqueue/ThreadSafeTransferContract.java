@@ -15,10 +15,7 @@
  */
 package com.soliscode.test.contract.transferqueue;
 
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TransferQueue;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.DisplayName;
 
@@ -26,10 +23,10 @@ import com.soliscode.test.annotations.ConcurrencyTest;
 import com.soliscode.test.annotations.VerySlow;
 import com.soliscode.test.contract.blockingqueue.BlockingQueueMethods;
 import com.soliscode.test.contract.support.TransferQueueContractSupport;
-import com.soliscode.test.safety.ContentionCoordinator;
 import com.soliscode.test.util.RecordingSupplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /// **Contract for `transfer` of a `TransferQueue` under contention**
 ///
@@ -38,9 +35,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /// its element must have been received, so it is no longer in the queue; every element must be taken exactly once,
 /// and the queue left empty.
 ///
-/// A producer that finds its element still enqueued counts it and carries on, so that the consumers' takes still
-/// balance and the run ends; the count must be 0. The test runs on a [ContentionCoordinator], which bounds it in
-/// time.
+/// A producer that finds its element still enqueued counts it and carries on; the count must be 0. The producers
+/// start no hand-off after [#HAND_OFF_BUDGET_MILLIS], so that a run under load ends in time however slowly the
+/// hand-offs go; once they have finished, one sentinel element per consumer is put, and each consumer takes until it
+/// has taken one, so that the consumers take whatever is enqueued, in any split. The test runs on a
+/// [com.soliscode.test.safety.ContentionCoordinator], which bounds it in time.
 ///
 /// @param <Q> the transfer queue type being tested
 /// @param <E> the element type being tested
@@ -53,12 +52,19 @@ public interface ThreadSafeTransferContract<Q extends TransferQueue<E>, E> exten
     /// consumer, the likelier a check-then-act hand-off shows (measured on #34).
     int PRODUCERS = 4;
 
-    /// The number of consumers ({@value}); each takes as many elements as two producers transfer.
+    /// The number of consumers ({@value}); together they take every element the producers transfer, and a sentinel
+    /// each.
     int CONSUMERS = 2;
 
-    /// How many times ({@value}) each producer calls the queue; each consumer calls it twice as often. Each transfer
-    /// waits for a consumer to take its element, so the calls run one hand-off at a time (measured on #34).
+    /// The most times ({@value}) each producer calls the queue, within [#HAND_OFF_BUDGET_MILLIS]. Each transfer waits
+    /// for a consumer to take its element, so the calls run one hand-off at a time (measured on #34).
     int ITERATIONS = 5_000;
+
+    /// How long ({@value} ms) the producers hand off, from the first hand-off. Idle, a run makes all its
+    /// [#ITERATIONS] well within it; under load the hand-offs, each waiting on the scheduler, slow down, and the
+    /// producers start no hand-off once it has passed, leaving the rest of [#SHUTDOWN_TIMEOUT_SECONDS] for the last
+    /// hand-offs and the sentinels (measured on #54).
+    long HAND_OFF_BUDGET_MILLIS = 6_000;
 
     /// How long ({@value} s) the coordinator waits for the producers and consumers to finish, longer than its default
     /// of 5 s, since the calls run one hand-off at a time, and below the 10 s
@@ -84,21 +90,11 @@ public interface ThreadSafeTransferContract<Q extends TransferQueue<E>, E> exten
         }
         Q queue = provider().emptyInstance();
         RecordingSupplier<E> supplier = elementProvider().uniqueInstanceSupplier();
-        Queue<E> taken = new ConcurrentLinkedQueue<>();
-        AtomicInteger leftEnqueued = new AtomicInteger();
-        ContentionCoordinator<Q> coordinator = new ContentionCoordinator<>(
-                ContentionCoordinator.DEFAULT_START_TIMEOUT_SECONDS, SHUTDOWN_TIMEOUT_SECONDS, YIELD_INTERVAL);
-        coordinator.add(PRODUCERS, ITERATIONS, unchecked(q -> {
-            E e = supplier.get();
-            q.transfer(e);
-            if (q.contains(e)) {
-                leftEnqueued.incrementAndGet();
-            }
-        }));
-        coordinator.add(CONSUMERS, ITERATIONS * PRODUCERS / CONSUMERS, unchecked(q -> taken.add(q.take())));
-        coordinator.execute(queue);
-        assertEquals(0, leftEnqueued.get(), "transfer(E) returned while its element was still enqueued, not received");
-        assertEquals(0, queue.size(), "elements left after as many takes as transfers");
-        assertSameElements(supplier.recorded(), taken, "the elements taken");
+        HandOffRun<Q, E> run = new HandOffRun<Q, E>(PRODUCERS, CONSUMERS, ITERATIONS, YIELD_INTERVAL,
+                SHUTDOWN_TIMEOUT_SECONDS, HAND_OFF_BUDGET_MILLIS).run(queue, supplier, TransferQueue::transfer);
+        assertTrue(run.handedOff() > 0, "no element was transferred");
+        assertEquals(0, run.leftEnqueued(), "transfer(E) returned while its element was still enqueued, not received");
+        assertEquals(0, queue.size(), "elements left in the queue after the consumers took their sentinels");
+        assertSameElements(supplier.recorded(), run.taken(), "the elements taken");
     }
 }

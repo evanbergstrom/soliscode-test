@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Phaser;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -32,7 +33,21 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /// 2. Ensures all threads are initialized and waiting at a common barrier.
 /// 3. Releases all threads simultaneously to maximize concurrent access to the subject.
 /// 4. Periodically calls `Thread.yield()` within worker loops to increase the probability of race conditions.
-/// 5. Collects any exceptions thrown by worker threads and reports them together.
+/// 5. With a phase interval, holds the workers together in phases (below).
+/// 6. Collects any exceptions thrown by worker threads and reports them together.
+///
+/// ## Phases
+/// The start releases the workers together, but on a machine whose cores are all busy a worker can make all its
+/// calls in one time slice before another is scheduled, so that the workers run one after another and do not
+/// contend. With a phase interval p above 0 ([#ContentionCoordinator(int, int, int, int)]), a worker, after each p of
+/// its calls that has a call after it, waits until every worker still registered has arrived, and the workers then
+/// start the next phase together. It waits by spinning while the machine has more cores than workers registered,
+/// and by yielding otherwise. Each worker still makes exactly its calls.
+///
+/// A worker leaves the phases as soon as it has no arrival left: after its last arrival, or before its first call
+/// if it has p calls or fewer, or when it throws. It never arrives after its final call, so a worker that is done,
+/// or has few calls, holds no one. **In phase mode, no call may wait for another worker's progress beyond the
+/// current phase**: a long call that waits for the others to finish must be a worker of p calls or fewer.
 ///
 /// ## Use Case
 /// Use this class when testing classes that claim to be thread-safe under concurrent access,
@@ -86,12 +101,19 @@ public class ContentionCoordinator<S> {
     /// A worker calls `Thread.yield()` before its first iteration and then once every 64 iterations.
     public static final int DEFAULT_YIELD_INTERVAL = 64;
 
+    /// The default number of calls between a worker's phases: 0, no phases.
+    ///
+    /// @see #ContentionCoordinator(int, int, int, int)
+    /// @since 0.1.5
+    public static final int DEFAULT_PHASE_INTERVAL = 0;
+
     /// The number of available processors on the current machine.
     public static final int NUMBER_OF_CORES = Runtime.getRuntime().availableProcessors();
 
     private final int startTimeoutSeconds;
     private final int shutdownTimeoutSeconds;
     private final int yieldInterval;
+    private final int phaseInterval;
     private final Runnable yielder;
     private final Collection<Operation> operations;
 
@@ -108,12 +130,32 @@ public class ContentionCoordinator<S> {
             this.iterations = iterationsArg;
         }
 
-        void execute(final S subject) {
-            for (int i = 0; i < iterations; i++) {
-                if (i % yieldInterval == 0) {
-                    yielder.run();  // Yield to increase probability of contention
+        void execute(final S subject, final Phaser phaser) {
+            // The last call after which this worker arrives: the largest multiple of the interval below its count.
+            int lastArrival = phaseInterval > 0 ? (iterations - 1) / phaseInterval * phaseInterval : 0;
+            boolean registered = phaseInterval > 0;
+            try {
+                if (registered && lastArrival <= 0) {
+                    phaser.arriveAndDeregister();  // No arrival left: hold no one
+                    registered = false;
                 }
-                consumer.accept(subject);
+                for (int i = 0; i < iterations; i++) {
+                    if (registered && i > 0 && i % phaseInterval == 0) {
+                        awaitPhase(phaser, phaser.arrive());
+                        if (i == lastArrival) {
+                            phaser.arriveAndDeregister();
+                            registered = false;
+                        }
+                    }
+                    if (i % yieldInterval == 0) {
+                        yielder.run();  // Yield to increase probability of contention
+                    }
+                    consumer.accept(subject);
+                }
+            } finally {
+                if (registered) {
+                    phaser.arriveAndDeregister();  // On a terminated phaser, this does nothing
+                }
             }
         }
     }
@@ -140,21 +182,67 @@ public class ContentionCoordinator<S> {
     /// @since 1.0
     public ContentionCoordinator(final int startTimeoutSecondsArg, final int shutdownTimeoutSecondsArg,
                                  final int yieldIntervalArg) {
-        this(startTimeoutSecondsArg, shutdownTimeoutSecondsArg, yieldIntervalArg,
+        this(startTimeoutSecondsArg, shutdownTimeoutSecondsArg, yieldIntervalArg, DEFAULT_PHASE_INTERVAL);
+    }
+
+    /// Creates a `ContentionCoordinator` with specified timeouts, yield interval and phase interval.
+    ///
+    /// With a phase interval of 0 the workers run free, as with the other constructors. With an interval p above 0
+    /// they run in phases ([ContentionCoordinator], "Phases"): every worker waits, after each p of its calls that has
+    /// a call after it, until every worker still running has made as many, so that they start each phase together.
+    ///
+    /// @param startTimeoutSecondsArg    the maximum time in seconds to wait for workers to be ready
+    /// @param shutdownTimeoutSecondsArg the maximum time in seconds to wait for workers to finish
+    /// @param yieldIntervalArg          the number of iterations between a worker's yields, as for
+    ///                                  [#ContentionCoordinator(int, int, int)]
+    /// @param phaseIntervalArg          the number of calls a worker makes in a phase, or 0 for no phases
+    /// @throws IllegalArgumentException if `yieldIntervalArg` is less than 1 or `phaseIntervalArg` is negative
+    /// @since 0.1.5
+    public ContentionCoordinator(final int startTimeoutSecondsArg, final int shutdownTimeoutSecondsArg,
+                                 final int yieldIntervalArg, final int phaseIntervalArg) {
+        this(startTimeoutSecondsArg, shutdownTimeoutSecondsArg, yieldIntervalArg, phaseIntervalArg,
                 ContentionCoordinator::yieldToScheduler);
     }
 
     // Package-private so that a test can count the yields.
     ContentionCoordinator(final int startTimeoutSecondsArg, final int shutdownTimeoutSecondsArg,
-                          final int yieldIntervalArg, final Runnable yielderArg) {
+                          final int yieldIntervalArg, final int phaseIntervalArg, final Runnable yielderArg) {
         if (yieldIntervalArg < 1) {
             throw new IllegalArgumentException("yieldInterval must be at least 1: " + yieldIntervalArg);
+        }
+        if (phaseIntervalArg < 0) {
+            throw new IllegalArgumentException("phaseInterval must not be negative: " + phaseIntervalArg);
         }
         this.startTimeoutSeconds = startTimeoutSecondsArg;
         this.shutdownTimeoutSeconds = shutdownTimeoutSecondsArg;
         this.yieldInterval = yieldIntervalArg;
+        this.phaseInterval = phaseIntervalArg;
         this.yielder = java.util.Objects.requireNonNull(yielderArg);
         this.operations = new ConcurrentLinkedQueue<>();
+    }
+
+    /// Waits until the phaser leaves `phase`, it is terminated, or the worker is interrupted. The worker spins while
+    /// the machine has more cores than workers still registered, so that the workers waiting on a CPU start the next
+    /// phase together, and otherwise yields on each turn, so that it does not keep the worker it waits for off its
+    /// core.
+    private static void awaitPhase(final Phaser phaser, final int phase) {
+        // Checked before the loop too, so that an interrupted worker ends the phases even when it arrives last.
+        if (Thread.currentThread().isInterrupted()) {
+            phaser.forceTermination();
+            throw new AssertionError("Interrupted at phase " + phase);
+        }
+        // A negative phase: the phaser is terminated, and an arrival on it returns at once.
+        while (phase >= 0 && phaser.getPhase() == phase) {
+            if (Thread.currentThread().isInterrupted()) {
+                phaser.forceTermination();  // Release the others: this worker will not arrive again
+                throw new AssertionError("Interrupted while waiting at phase " + phase);
+            }
+            if (NUMBER_OF_CORES > phaser.getRegisteredParties()) {
+                Thread.onSpinWait();
+            } else {
+                yieldToScheduler();
+            }
+        }
     }
 
     // ThreadPriorityCheck: yielding to the scheduler is how the workers make contention more likely.
@@ -220,6 +308,8 @@ public class ContentionCoordinator<S> {
         // Not try-with-resources: ExecutorService.close() waits for the workers with no time limit, so a deadlocked
         // worker would hang the test. insureShutdown() bounds the wait.
         ExecutorService pool = Executors.newFixedThreadPool(totalThreads, createThreadFactory());
+        // One party per worker in phase mode; with no parties, no worker uses it.
+        final Phaser phaser = new Phaser(phaseInterval > 0 ? totalThreads : 0);
         try {
             operations.forEach((op) -> {
                 int workerThreads = (op.threads == 0) ? defaultThreads : op.threads;
@@ -228,7 +318,7 @@ public class ContentionCoordinator<S> {
                         ready.countDown();  // indicate that this thread is ready to start
                         try {
                             start.await();  // Wait for all threads to start
-                            op.execute(subject);
+                            op.execute(subject, phaser);
                         } catch (final Throwable e) {
                             errors.add(e);
                         } finally {
@@ -248,17 +338,22 @@ public class ContentionCoordinator<S> {
 
             // Wait for all the thready to be done.
             if (!done.await(shutdownTimeoutSeconds, TimeUnit.SECONDS)) {
+                String phases = phaseInterval > 0 ? " (phase " + phaser.getPhase() + ": "
+                        + phaser.getRegisteredParties() + " workers registered, " + phaser.getArrivedParties()
+                        + " arrived)" : "";
                 try {
                     assertNoDeadlocks();
                 } finally {
+                    phaser.forceTermination();  // release the workers waiting at a phase
                     pool.shutdownNow();  // interrupt the workers now, after the deadlock check has seen them
                 }
                 throw new AssertionError("Timeout: " + done.getCount() + " (of " + totalThreads
-                        + ") workers didn't finish after " + shutdownTimeoutSeconds + " seconds");
+                        + ") workers didn't finish after " + shutdownTimeoutSeconds + " seconds" + phases);
             }
         } catch (final InterruptedException e) {
             throw new AssertionError("Interrupted while waiting for threads to finish", e);
         } finally {
+            phaser.forceTermination();  // a run that ended early leaves no worker waiting at a phase
             insureShutdown(pool);
         }
 

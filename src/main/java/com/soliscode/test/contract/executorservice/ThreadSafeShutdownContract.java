@@ -58,6 +58,13 @@ import static org.junit.jupiter.api.Assertions.fail;
 /// broken or timed-out barrier, or the deadline, fails the run and stops every thread; each round's executor is
 /// disposed of at the end, whatever happened.
 ///
+/// A `ThreadPoolExecutor` whose core threads are not yet started can fail this test, rightly, through a race of its
+/// own (probably JDK-8186445; seen on JDK 25.0.5, in about 1 fresh JVM of 10 that ran the test 5 times, #54): an
+/// `execute` that has reserved a core slot, and is making its thread, gives the slot up and rejects its own task if
+/// `shutdown` comes first, while the tasks other threads queued meanwhile, accepted before `shutdown`, are left with no
+/// worker, and the executor never terminates. Starting its core threads first
+/// ([java.util.concurrent.ThreadPoolExecutor#prestartAllCoreThreads()]) avoids it.
+///
 /// @param <E> the type of the executor under test
 /// @see ExecutorService#shutdown()
 /// @since 0.1.5

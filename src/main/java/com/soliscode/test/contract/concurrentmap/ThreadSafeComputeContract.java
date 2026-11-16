@@ -66,7 +66,7 @@ public interface ThreadSafeComputeContract<M extends ConcurrentMap<K, V>, K, V>
         Map<K, Queue<V>> stored = queuesFor(keys);
         UpdateLog<V> log = new UpdateLog<>();
         AtomicLong calls = new AtomicLong();
-        ContentionCoordinator<M> coordinator = new ContentionCoordinator<>();
+        ContentionCoordinator<M> coordinator = contentionCoordinator();
         coordinator.add(THREADS, ITERATIONS, m -> {
             K key = keys.get((int) (calls.getAndIncrement() % HOT_KEYS));
             V result = m.compute(key, (k, old) -> {

@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
@@ -36,8 +37,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /// **Contract for `replaceAll` of a `ConcurrentMap` under contention**
 ///
 /// The default of [ConcurrentMap#replaceAll] replaces each entry with `replace(key, old, new)`, retried, so each
-/// entry's update is atomic. One thread calls `replaceAll` again and again; the others `compute` on [#HOT_KEYS] keys;
-/// one more puts and removes other keys, so `replaceAll` meets a changing map. Both functions log their updates in an
+/// entry's update is atomic. Threads `compute` on [#HOT_KEYS] keys, while one calls `replaceAll` again and again, at
+/// least [#REPLACE_ALLS] times and until they have made their calls; one more puts and removes other keys, so
+/// `replaceAll` meets a changing map. Both functions log their updates in an
 /// [UpdateLog], and every value `compute` returned as stored must be on the chain from the key's final value back to
 /// its first. Nothing may throw: the contract reads `replaceAll` as weakly consistent, as the `java.util.concurrent`
 /// package summary says most concurrent collections are.
@@ -52,7 +54,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public interface ThreadSafeReplaceAllContract<M extends ConcurrentMap<K, V>, K, V>
         extends ThreadSafeConcurrentMapContractSupport<M, K, V> {
 
-    /// How many times the one thread calls `replaceAll`.
+    /// The fewest times ({@value}) the one thread calls `replaceAll`. It carries on until the `compute` threads have
+    /// made all their calls, so that its calls meet theirs however the threads are scheduled: under load, 200 calls,
+    /// each over a few keys, could all run before the `compute` threads were scheduled, and the test then missed
+    /// `REPLACE_ALL_IS_NOT_THREAD_SAFE` (measured on #54). It stops sooner if a `compute` thread fails, so that the
+    /// run reports the failure, or if it is interrupted, as when the coordinator times out.
     int REPLACE_ALLS = 200;
 
     /// Tests that `replaceAll` loses none of the updates `compute` makes meanwhile, and throws nothing.
@@ -74,21 +80,36 @@ public interface ThreadSafeReplaceAllContract<M extends ConcurrentMap<K, V>, K, 
         UpdateLog<V> log = new UpdateLog<>();
         AtomicLong calls = new AtomicLong();
         AtomicLong changes = new AtomicLong();
-        ContentionCoordinator<M> coordinator = new ContentionCoordinator<>();
-        coordinator.add(1, REPLACE_ALLS, m -> m.replaceAll((k, old) -> {
-            V value = values.get();
-            log.record(value, old);
-            return value;
-        }));
+        ContentionCoordinator<M> coordinator = contentionCoordinator();
+        long computes = (long) (THREADS - 1) * ITERATIONS;
+        AtomicBoolean computeFailed = new AtomicBoolean();
+        coordinator.add(1, 1, m -> {
+            // Until the computes are done, or one has failed, or the coordinator has interrupted this thread.
+            for (int i = 0; i < REPLACE_ALLS
+                    || (calls.get() < computes && !computeFailed.get() && !Thread.currentThread().isInterrupted());
+                    i++) {
+                m.replaceAll((k, old) -> {
+                    V value = values.get();
+                    log.record(value, old);
+                    return value;
+                });
+            }
+        });
         coordinator.add(THREADS - 1, ITERATIONS, m -> {
             K key = hot.get((int) (calls.getAndIncrement() % HOT_KEYS));
-            V result = m.compute(key, (k, old) -> {
-                V value = values.get();
-                if (old != null) {
-                    log.record(value, old);
-                }
-                return value;
-            });
+            V result;
+            try {
+                result = m.compute(key, (k, old) -> {
+                    V value = values.get();
+                    if (old != null) {
+                        log.record(value, old);
+                    }
+                    return value;
+                });
+            } catch (final RuntimeException | Error e) {
+                computeFailed.set(true);
+                throw e;
+            }
             if (result != null) {
                 forKey(stored, key).add(result);
             }

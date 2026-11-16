@@ -188,9 +188,10 @@ class ContentionCoordinatorTest extends AbstractTest {
         final AtomicInteger counter = new AtomicInteger(0);
         final List<Integer> list = new ArrayList<>();  // not thread safe
 
-        // A finish timeout of 5 s and 10,000 calls a thread, not the default 30,000: with a yield before every call,
-        // 1 s was too short under load (#12), and a timeout is not a collision.
-        ContentionCoordinator<Object> coordinator = new ContentionCoordinator<>(1, 5, 1);
+        // A finish timeout of 5 s and 10,000 calls a thread, not the default 30,000, and a yield every 4 calls: with a
+        // yield before every call, 1 s was too short under load (#12), and 5 s timed out in 1 of 20 runs on 18 busy
+        // processes, where every 4 calls collided in 20 of 20, in at most 1.2 s (#54). A timeout is not a collision.
+        ContentionCoordinator<Object> coordinator = new ContentionCoordinator<>(1, 5, 4);
         coordinator.add(ContentionCoordinator.DEFAULT_THREADS, 10_000, o -> list.add(counter.getAndIncrement()));
         try {
             coordinator.execute(list);
@@ -317,12 +318,190 @@ class ContentionCoordinatorTest extends AbstractTest {
         }
     }
 
+    @Test
+    @DisplayName("execute() in phases makes exactly each worker's calls, whatever their number")
+    @Timeout(30)
+    void executeInPhasesMakesExactlyEachWorkersCalls() {
+        ContentionCoordinator<Object> coordinator = new ContentionCoordinator<>(5, 10, 64, 10);
+        int[] counts = {0, 1, 3, 10, 11, 25, 37};
+        List<AtomicInteger> calls = new ArrayList<>();
+        for (final int count : counts) {
+            AtomicInteger made = new AtomicInteger();
+            calls.add(made);
+            coordinator.add(2, count, o -> made.incrementAndGet());
+        }
+        coordinator.execute(new Object());
+        for (int i = 0; i < counts.length; i++) {
+            assertEquals(2 * counts[i], calls.get(i).get(), "the calls of the workers of " + counts[i]);
+        }
+    }
+
+    @Test
+    @DisplayName("execute() in phases does not hold a worker of few calls that waits for the others to finish")
+    @Timeout(30)
+    void executeInPhasesDoesNotHoldAFewCallWorkerThatWaitsForTheOthers() {
+        ContentionCoordinator<Object> coordinator = new ContentionCoordinator<>(5, 10, 64, 10);
+        AtomicInteger made = new AtomicInteger();
+        AtomicBoolean sawAll = new AtomicBoolean();
+        coordinator.add(2, 50, o -> made.incrementAndGet());
+        // One call that waits, bounded, until the others have made all theirs: it must have left the phases first.
+        coordinator.add(1, 1, o -> {
+            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+            while (made.get() < 100 && System.nanoTime() - deadline < 0) {
+                Thread.onSpinWait();
+            }
+            sawAll.set(made.get() == 100);
+        });
+        coordinator.execute(new Object());
+        assertTrue(sawAll.get(), "the waiting worker saw the others' calls: " + made.get() + " of 100");
+    }
+
+    @Test
+    @DisplayName("execute() in phases reports a worker's exception, not a timeout, and the others finish")
+    @Timeout(30)
+    void executeInPhasesReportsAWorkersException() {
+        ContentionCoordinator<Object> coordinator = new ContentionCoordinator<>(5, 10, 64, 10);
+        AtomicInteger made = new AtomicInteger();
+        coordinator.add(2, 50, o -> made.incrementAndGet());
+        AtomicInteger thrower = new AtomicInteger();
+        coordinator.add(1, 50, o -> {
+            if (thrower.incrementAndGet() == 15) {
+                throw new IllegalStateException("the 15th call");
+            }
+        });
+        AssertionError error = assertThrows(AssertionError.class, () -> coordinator.execute(new Object()));
+        assertTrue(error.getMessage().startsWith("Operations failed"), error.getMessage());
+        assertEquals(100, made.get(), "the other workers' calls");
+    }
+
+    @Test
+    @DisplayName("execute() in phases times out within its bound when a worker blocks, and every worker ends")
+    @Timeout(30)
+    void executeInPhasesTimesOutWhenAWorkerBlocks() throws InterruptedException {
+        ContentionCoordinator<Object> coordinator = new ContentionCoordinator<>(5, 1, 64, 2);
+        CountDownLatch never = new CountDownLatch(1);
+        CountDownLatch blockerEnded = new CountDownLatch(1);
+        AtomicInteger blocker = new AtomicInteger();
+        coordinator.add(1, 100, o -> {
+            try {
+                if (blocker.incrementAndGet() == 5) {
+                    never.await();  // interruptible: the coordinator's shutdownNow ends it
+                }
+            } catch (final InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException(e);
+            } finally {
+                if (blocker.get() == 5) {
+                    blockerEnded.countDown();
+                }
+            }
+        });
+        // The others reach the phase after call 4 and wait there for the blocked worker.
+        AtomicInteger others = new AtomicInteger();
+        coordinator.add(2, 100, o -> others.incrementAndGet());
+        long start = System.nanoTime();
+        AssertionError error = assertThrows(AssertionError.class, () -> coordinator.execute(new Object()));
+        long millis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+        assertTrue(error.getMessage().startsWith("Timeout"), error.getMessage());
+        assertTrue(error.getMessage().contains("phase"), "the message names the phases: " + error.getMessage());
+        assertTrue(millis < 5_000, "the timeout took " + millis + " ms");
+        assertTrue(blockerEnded.await(5, TimeUnit.SECONDS), "the blocked worker did not end");
+        // Released by the phaser's termination, the others make their calls and end, or are interrupted.
+        assertTrue(othersStopped(others), "the other workers kept calling: " + others.get());
+    }
+
+    /// Whether the count stays the same for 100 ms: the workers that make it have ended.
+    private static boolean othersStopped(final AtomicInteger count) {
+        int before = count.get();
+        long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(100);
+        while (System.nanoTime() - deadline < 0) {
+            if (count.get() != before) {
+                return false;
+            }
+            Thread.onSpinWait();
+        }
+        return true;
+    }
+
+    @Test
+    @DisplayName("execute() in phases keeps the workers within a phase of each other (deterministic)")
+    @Timeout(30)
+    void executeInPhasesKeepsTheWorkersTogether() {
+        assertTrue(largestLead(1) <= 1, "with phases of 1 call, a worker ran ahead");
+        assertTrue(largestLead(0) > 1, "without phases, the free worker should have run ahead: the check cannot fail");
+    }
+
+    @Test
+    @DisplayName("execute() in phases with more workers than cores makes every worker's calls")
+    @Timeout(60)
+    void executeInPhasesWithMoreWorkersThanCoresMakesEveryCall() {
+        int workers = ContentionCoordinator.NUMBER_OF_CORES + 1;
+        ContentionCoordinator<Object> coordinator = new ContentionCoordinator<>(10, 20, 64, 10);
+        AtomicInteger made = new AtomicInteger();
+        coordinator.add(workers, 30, o -> made.incrementAndGet());
+        coordinator.execute(new Object());
+        assertEquals(workers * 30, made.get(), "the calls");
+    }
+
+    @Test
+    @DisplayName("execute() in phases ends at once when a worker sets its own interrupt status and the phaser ends")
+    @Timeout(30)
+    void executeInPhasesEndsWhenAWorkerSetsItsInterruptStatus() {
+        ContentionCoordinator<Object> coordinator = new ContentionCoordinator<>(5, 5, 64, 10);
+        AtomicInteger made = new AtomicInteger();
+        coordinator.add(2, 100, o -> made.incrementAndGet());
+        // At its 15th call the worker sets its interrupt status and returns, as code that restores it does: at its
+        // next arrival it ends the phases, and the others' later arrivals must return at once.
+        AtomicInteger interrupter = new AtomicInteger();
+        coordinator.add(1, 100, o -> {
+            if (interrupter.incrementAndGet() == 15) {
+                Thread.currentThread().interrupt();
+            }
+        });
+        long start = System.nanoTime();
+        AssertionError error = assertThrows(AssertionError.class, () -> coordinator.execute(new Object()));
+        long millis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+        assertTrue(error.getMessage().startsWith("Operations failed"), error.getMessage());
+        assertTrue(millis < 4_000, "the run took " + millis + " ms, as long as its timeout");
+        assertEquals(200, made.get(), "the other workers' calls");
+    }
+
+    @Test
+    @DisplayName("ContentionCoordinator refuses a negative phase interval")
+    void constructorWithNegativePhaseIntervalThrowsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> new ContentionCoordinator<>(1, 1, 1, -1));
+    }
+
+    /// Runs two workers of 10 calls, A and B, with the given phase interval, where B's first call waits (at most
+    /// 1 s) until A has made more than 2 calls, and returns the largest number of calls by which one was ahead of the
+    /// other at the start of a call. In phases of 1 call, A cannot get ahead, so B's wait runs out.
+    private static int largestLead(final int phaseInterval) {
+        ContentionCoordinator<Object> coordinator = new ContentionCoordinator<>(5, 10, 64, phaseInterval);
+        AtomicInteger a = new AtomicInteger();
+        AtomicInteger b = new AtomicInteger();
+        AtomicInteger lead = new AtomicInteger();
+        coordinator.add(1, 10, o -> lead.accumulateAndGet(Math.abs(a.incrementAndGet() - b.get()), Math::max));
+        coordinator.add(1, 10, o -> {
+            int mine = b.incrementAndGet();
+            lead.accumulateAndGet(Math.abs(mine - a.get()), Math::max);
+            if (mine == 1) {
+                long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(1);
+                while (a.get() <= 2 && System.nanoTime() - deadline < 0) {
+                    Thread.onSpinWait();
+                }
+            }
+        });
+        coordinator.execute(new Object());
+        return lead.get();
+    }
+
     /// Runs 2 workers of `iterations` each through a coordinator with the given yield interval, and counts the yields.
     private static long yieldsOf(final int yieldInterval, final int iterations) {
         LongAdder yields = new LongAdder();
         ContentionCoordinator<AtomicInteger> coordinator = new ContentionCoordinator<>(
                 ContentionCoordinator.DEFAULT_START_TIMEOUT_SECONDS,
-                ContentionCoordinator.DEFAULT_SHUTDOWN_TIMEOUT_SECONDS, yieldInterval, yields::increment);
+                ContentionCoordinator.DEFAULT_SHUTDOWN_TIMEOUT_SECONDS, yieldInterval,
+                ContentionCoordinator.DEFAULT_PHASE_INTERVAL, yields::increment);
         coordinator.add(2, iterations, AtomicInteger::incrementAndGet);
         coordinator.execute(new AtomicInteger(0));
         return yields.sum();

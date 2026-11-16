@@ -79,7 +79,7 @@ public interface ThreadSafeOfferPollFirstLastContract<D extends BlockingDeque<E>
             Queue<E> offered = new ConcurrentLinkedQueue<>();
             Queue<E> polled = new ConcurrentLinkedQueue<>();
             AtomicLong offers = new AtomicLong();
-            ContentionCoordinator<D> coordinator = new ContentionCoordinator<>();
+            ContentionCoordinator<D> coordinator = contentionCoordinator();
             coordinator.add(THREADS, ITERATIONS, unchecked(d -> {
                 E e = supplier.get();
                 boolean accepted = offers.getAndIncrement() % 2 == 0 ? d.offerFirst(e, 0, TimeUnit.MILLISECONDS)
