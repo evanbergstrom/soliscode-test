@@ -32,6 +32,8 @@ As a task merges, it adds what a user of the library will see differently under 
 
 ## Unreleased
 
+- **New: `ThreadSafeClearContract.clearWhenCalledDuringForEachDoesNotDisturbIt` (T-0007)**, so in `ThreadSafeCollectionContract` too: a `clear()` called while `forEach` traverses the collection must not make `forEach` throw (`ConcurrentModificationException`) or give its action a `null`, an element the collection never held, or an element twice, and must leave the collection empty. The synchronized wrappers and the weakly consistent concurrent collections pass it; a collection that inherits `Iterable.forEach` over a fail-fast iterator its callers must lock by hand now fails it. It catches `BreakableCollection.CLEAR_IS_NOT_THREAD_SAFE` on every run, so `ContractCoverageTest` now checks that break. New constants `CLEAR_FOR_EACH_SIZE`, `CLEAR_CALL_WAIT_MILLIS` and `CLEAR_RETURN_WAIT_MILLIS`.
+
 ## 0.1.5 — 2026-11-16
 
 Commit `ef5de48`. Full verify: Tests run: 9365, Failures: 0, Errors: 0.

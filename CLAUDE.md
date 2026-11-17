@@ -133,7 +133,7 @@ The `LSP` tool, if a Java language server is installed, is reliable for one file
 - **Checkstyle** (Built, #10; the rules are in `java-conventions.md`): `final` parameters; lines of at most 120 characters; no star imports; the parent's import order; declaration order; no hidden fields (a constructor parameter that would hide one ends in `Arg`); no `System.out`/`System.err`; test methods named in plain camelCase, the sentence in `@DisplayName` (the user's decision, 2026-11-08; enforced since soliscode-parent 0.1.2, soliscode/soliscode-parent#2, #14). There is no formatter configuration: match the surrounding code.
 - **Nullness:** JSpecify (Built, #9). Every package is `@NullMarked`; mark what may be null `@Nullable` (`org.jspecify.annotations.Nullable`, a type annotation: `Map.@Nullable Entry`, `String @Nullable []`). There is no `@NonNull`; the rules are in `java-conventions.md`, "Nullness".
 - **Javadoc:** every public and protected type, method and field (the Javadoc gate). Markdown `///` comments.
-- **Licence:** Apache 2.0 (`LICENSE.txt`). 405 of the 734 Java source files carry its header; put it on new files.
+- **Licence:** Apache 2.0 (`LICENSE.txt`). 416 of the 745 Java source files carry its header; put it on new files.
 - **Mermaid:** no semicolons in diagrams (node text, edge labels, `Note over`); Mermaid reads `;` as a statement end.
 - **Commits:** stage explicitly (no `git add -A`, `git commit -a` or bare `git stash`), and end the message with the `Co-Authored-By:` trailer.
 - **Changes a user of the library would see** go under `## Unreleased` in `RELEASES.md`, in the task that makes them.

@@ -299,10 +299,6 @@ final class UncheckedReasons {
     /// @param field the break's field name
     /// @return the reason, or `null` to look further
     private static String interleavingReason(final String field) {
-        if (field.equals("CLEAR_IS_NOT_THREAD_SAFE")) {
-            return "seen only by rare interleavings: ThreadSafeClearContract catches it in about 3 runs in 20 "
-                    + "(measured 2026-11-07), too few to check here without making the build flaky";
-        }
         if (field.equals("IS_EMPTY_IS_NOT_THREAD_SAFE") || field.equals("SIZE_IS_NOT_THREAD_SAFE")) {
             return "no test can see it: without the lock, isEmpty() and size() read one field, and any value read is "
                     + "one some interleaving with the lock could give";
