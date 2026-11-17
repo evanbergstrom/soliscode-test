@@ -32,6 +32,13 @@ As a task merges, it adds what a user of the library will see differently under 
 
 ## Unreleased
 
+## 0.1.5 — 2026-11-16
+
+Commit `ef5de48`. Full verify: Tests run: 9365, Failures: 0, Errors: 0.
+
+Install coordinates: `com.soliscode:soliscode-test:0.1.5`.
+
+### Changes
 - **Built on `com.soliscode:soliscode-parent:0.1.9`, was 0.1.8 (T-0064).** The parent adds an architecture gate (ArchUnit rules on the main classes: no package cycles, no generic exceptions constructed, and six more), three Checkstyle rules (cyclomatic complexity at most 15, NPath complexity at most 500, at most 200 lines per method) and a coverage rule (each method's missed complexity at most 3). The library's dependencies do not change. What its code changed to pass them follows.
 - **The breaks that threw a plain `RuntimeException` throw `WrongException` (T-0066).** These threw `RuntimeException` itself, as the wrong exception: `AbstractBreakable`'s check of an unsupported method (each `*_THROWS_WRONG_UNSUPPORTED_EXCEPTION` and `*_THROWS_WRONG_EXCEPTION_IF_NOT_SUPPORTED` break that goes through it) and its `wrongException(Exception)`, `BreakableCollection`'s check of a null or incompatible argument (`*_THROWS_WRONG_NULL_EXCEPTION`, `*_THROWS_WRONG_INCOMPATIBLE_TYPE_EXCEPTION`), `BreakableIterator`'s `ITERATOR_NEXT_THROWS_WRONG_EXCEPTION` and `ITERATOR_FOR_EACH_REMAINING_THROWS_WRONG_EXCEPTION_FOR_NULL_ARGUMENT`, and `BreakableList`'s three `ADD_ALL_AT_INDEX_THROWS_WRONG_EXCEPTION_*`. They now throw the new `com.soliscode.test.breakable.WrongException`, a `RuntimeException` that is none of the exceptions the JDK's interfaces document; a test that caught `RuntimeException` still catches it. The wrong-exception breaks that throw a JDK exception of another kind are unchanged. `BreakableMap.clone()`, which cannot fail since the class is `Cloneable`, throws `AssertionError` there rather than `RuntimeException`.
 - **The tasks and futures that fail on purpose fail with `DeliberateException` (T-0066).** `FutureProviders`' failed futures, and the failing tasks of `InvokeAllContract`, `InvokeAnyContract` and `SubmitCallableContract`, failed with a plain `Exception`; they now fail with the new checked `com.soliscode.test.provider.DeliberateException`.
