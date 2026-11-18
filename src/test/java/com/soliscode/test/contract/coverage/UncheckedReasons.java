@@ -26,6 +26,7 @@ import com.soliscode.test.breakable.BreakableBlockingQueue;
 import com.soliscode.test.breakable.BreakableConcurrentMap;
 import com.soliscode.test.breakable.BreakableExecutorService;
 import com.soliscode.test.breakable.BreakableFuture;
+import com.soliscode.test.breakable.BreakableSequencedCollection;
 import com.soliscode.test.breakable.BreakableTransferQueue;
 import com.soliscode.test.contract.blockingdeque.ThreadSafeBlockingDequeContract;
 import com.soliscode.test.contract.blockingqueue.BlockingQueueContract;
@@ -37,6 +38,7 @@ import com.soliscode.test.contract.executorservice.ThreadSafeExecutorServiceCont
 import com.soliscode.test.contract.future.ThreadSafeFutureContract;
 import com.soliscode.test.contract.iterator.IteratorContract;
 import com.soliscode.test.contract.iterator.WeaklyConsistentIteratorContract;
+import com.soliscode.test.contract.sequencedcollection.ThreadSafeSequencedCollectionContract;
 import com.soliscode.test.contract.sequencedmap.SequencedMapContract;
 import com.soliscode.test.contract.set.SetContract;
 import com.soliscode.test.contract.sortedset.SortedSetContract;
@@ -150,6 +152,15 @@ final class UncheckedReasons {
                                         + "nothing; ThreadSafeCollectionContract covers it on BreakableCollection, "
                                         + "or gives its reason",
                                 "a thread-safety break: ThreadSafeBlockingQueueContract checks it"),
+                        ownThreadSafetyReason(contract, key, ThreadSafeSequencedCollectionContract.class,
+                                BreakableSequencedCollection.class, List.of(BreakableSequencedCollection.class),
+                                "not a fault of the sequenced methods: ThreadSafeCollectionContract checks it",
+                                "a thread-safety break: ThreadSafeSequencedCollectionContract checks it, on "
+                                        + "BreakableSequencedCollection; BreakableSequencedSet and the sets below it "
+                                        + "run the sequenced methods under their lock, or refuse them, whatever the "
+                                        + "break; BreakableList inherits the six others, and its reversed() honours "
+                                        + "REVERSED_IS_NOT_THREAD_SAFE as BreakableSequencedCollection's does "
+                                        + "(BreakableViewSafetyTest checks it)"),
                         contract == ThreadSafeCollectionContract.class ? null
                                 : "a thread-safety break: ThreadSafeCollectionContract checks it")
                 .filter(Objects::nonNull)

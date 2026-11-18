@@ -271,8 +271,9 @@ import com.soliscode.test.methods.SequencedCollectionMethods;
 /// ### Thread Safety
 /// Built with `setSafe(true)`, the collection runs each of its methods under a lock of its own, unless its
 /// `*_IS_NOT_THREAD_SAFE` break is set, and so does `reversed()`, a collection over the store's reversed view that
-/// shares this collection's lock and has its method statuses and none of its breaks (#52). Built otherwise, it takes no
-/// lock.
+/// shares this collection's lock (unless `REVERSED_IS_NOT_THREAD_SAFE` is set) and has its method statuses and none of
+/// its breaks (#52). Built otherwise, it takes no lock. `ThreadSafeSequencedCollectionContract` checks the
+/// thread-safety breaks (#22).
 ///
 /// ### Performance
 /// - **Normal Operations**: Performance depends on the backing List (default: ArrayList)
@@ -396,8 +397,8 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
 
     /// #### GET_LAST_IS_NOT_THREAD_SAFE
     /// **Purpose**: Forces `getLast()` method to be not thread safe
-    /// **Effect**: Disables synchronization for the `getLast` operation; only the `GET_LAST_SKIPS_LAST_ELEMENT`
-    /// path takes the lock, so without that break `getLast` is unsynchronized whether or not this one is set
+    /// **Effect**: Disables synchronization for the `getLast` operation: it runs without the lock (a method it
+    /// calls in turn takes the lock unless that method's own break is set)
     /// **Use Case**: Testing code robustness under concurrent access when thread-safety is expected
     /// **Affected Methods:** [getLast()][#getLast()]
     /// @see BreakableSequencedCollection#getLast()
@@ -429,9 +430,8 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
 
     /// #### REMOVE_FIRST_IS_NOT_THREAD_SAFE
     /// **Purpose**: Forces `removeFirst()` method to be not thread safe
-    /// **Effect**: Disables synchronization for the `removeFirst` operation; only the
-    /// `REMOVE_FIRST_DOES_NOT_REMOVE_ELEMENT` path takes the lock, so without that break `removeFirst` is
-    /// unsynchronized whether or not this one is set
+    /// **Effect**: Disables synchronization for the `removeFirst` operation: it runs without the lock (a method it
+    /// calls in turn takes the lock unless that method's own break is set)
     /// **Use Case**: Testing code robustness under concurrent access when thread-safety is expected
     /// **Affected Methods:** [removeFirst()][#removeFirst()]
     /// @see BreakableSequencedCollection#removeFirst()
@@ -463,9 +463,8 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
 
     /// #### REMOVE_LAST_IS_NOT_THREAD_SAFE
     /// **Purpose**: Forces `removeLast()` method to be not thread safe
-    /// **Effect**: Disables synchronization for the `removeLast` operation; only the
-    /// `REMOVE_LAST_DOES_NOT_REMOVE_ELEMENT` path takes the lock, so without that break `removeLast` is
-    /// unsynchronized whether or not this one is set
+    /// **Effect**: Disables synchronization for the `removeLast` operation: it runs without the lock (a method it
+    /// calls in turn takes the lock unless that method's own break is set)
     /// **Use Case**: Testing code robustness under concurrent access when thread-safety is expected
     /// **Affected Methods:** [removeLast()][#removeLast()]
     /// @see BreakableSequencedCollection#removeLast()
@@ -488,8 +487,9 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
     public static final Break REVERSED_MODIFIES_THE_COLLECTION = new Break("REVERSED_MODIFIES_THE_COLLECTION");
 
     /// #### REVERSED_IS_NOT_THREAD_SAFE
-    /// **Purpose**: Forces `reversed()` method to be not thread safe
-    /// **Effect**: Disables synchronization for the `reversed` operation
+    /// **Purpose**: Forces the view `reversed()` returns to be not thread safe
+    /// **Effect**: `reversed()` runs without the lock, and the view it returns takes none, so its methods race with
+    /// this collection's; with `REVERSED_MODIFIES_THE_COLLECTION`, the in-place reverse runs without the lock
     /// **Use Case**: Testing code robustness under concurrent access when thread-safety is expected
     /// **Affected Methods:** [reversed()][#reversed()]
     /// @see BreakableSequencedCollection#reversed()
@@ -563,11 +563,12 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
                 runWithBreakableSafety(REVERSED_IS_NOT_THREAD_SAFE, () -> Collections.reverse(sequenced));
                 return sequenced;
             }
-            return getWithBreakableSafety(REVERSED_IS_NOT_THREAD_SAFE, () ->
-                    // A view: this collection's statuses and lock, none of its breaks (#52).
-                    sharingLockOf(
-                            new BreakableSequencedCollection<E>(sequenced.reversed(), DEFAULT_BREAKS, methodStatuses(),
-                                characteristics(), permits(), false, compatibleType()), this));
+            return getWithBreakableSafety(REVERSED_IS_NOT_THREAD_SAFE, () -> {
+                // A view: this collection's statuses and lock, none of its breaks (#52); no lock with the break (#22).
+                BreakableSequencedCollection<E> view = new BreakableSequencedCollection<>(sequenced.reversed(),
+                        DEFAULT_BREAKS, methodStatuses(), characteristics(), permits(), false, compatibleType());
+                return hasBreak(REVERSED_IS_NOT_THREAD_SAFE) ? view : sharingLockOf(view, this);
+            });
         }  else {
             throw new UnsupportedOperationException();
         }

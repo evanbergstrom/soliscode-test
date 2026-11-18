@@ -55,6 +55,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -241,6 +242,29 @@ public class BreakableViewSafetyTest {
         final BreakableNavigableSet<Integer> copy = new BreakableNavigableSet<>(view);
         assertNotNull(lockOf(copy));
         assertFalse(lockOf(copy) == lockOf(set), "the copy shares the parent's lock");
+    }
+
+    @Test
+    @DisplayName("with REVERSED_IS_NOT_THREAD_SAFE, a thread-safe sequenced breakable's reversed() view holds no lock")
+    public void reversedIsNotThreadSafeGivesAViewWithNoLock() {
+        final BreakableSequencedCollection<Integer> collection = new BreakableSequencedCollection.Builder<Integer>()
+                .setSafe(true).build(List.of(1, 2, 3));
+        final BreakableSequencedCollection<Integer> broken = new BreakableSequencedCollection.Builder<Integer>()
+                .setSafe(true).addBreak(BreakableSequencedCollection.REVERSED_IS_NOT_THREAD_SAFE)
+                .build(List.of(1, 2, 3));
+        final BreakableList<Integer> list = new BreakableList.Builder<Integer>().setSafe(true).build(List.of(1, 2, 3));
+        final BreakableList<Integer> brokenList = new BreakableList.Builder<Integer>().setSafe(true)
+                .addBreak(BreakableSequencedCollection.REVERSED_IS_NOT_THREAD_SAFE).build(List.of(1, 2, 3));
+        viewOf(collection, collection.reversed());
+        viewOf(list, list.reversed());
+        for (final AbstractBreakable parent : List.<AbstractBreakable>of(broken, brokenList)) {
+            assertNotNull(lockOf(parent));
+            final Object view = ((SequencedCollection<?>) parent).reversed();
+            final AbstractBreakable breakable = assertInstanceOf(AbstractBreakable.class, view);
+            assertNull(lockOf(breakable), () -> "the reversed view holds a lock: " + view);
+            assertFalse(breakable.isSafe());
+            assertEquals(List.of(3, 2, 1), new ArrayList<>((Collection<?>) view));
+        }
     }
 
     @Test

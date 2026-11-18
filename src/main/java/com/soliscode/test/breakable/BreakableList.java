@@ -308,7 +308,8 @@ import com.soliscode.test.methods.SequencedCollectionMethods;
 /// Built with `setSafe(true)`, the list runs each of its methods under a lock of its own, and so do its views
 /// (#52): `subList` and `reversed()` return lists over the store's views that share this list's lock, as
 /// `Collections.synchronizedList`'s views synchronize on the list, with this list's method statuses and none of its
-/// breaks, since a break describes a method of this list. A traversal of an iterator or spliterator is not made under
+/// breaks, since a break describes a method of this list; with `REVERSED_IS_NOT_THREAD_SAFE`, `reversed()` runs
+/// without the lock and its view takes none (#22). A traversal of an iterator or spliterator is not made under
 /// the lock. Built otherwise, the list and its views take no lock, and need external synchronization for concurrent
 /// access.
 ///
@@ -615,7 +616,7 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
 
     @Override
     public List<E> reversed() {
-        return getWithSafety(() -> {
+        return getWithBreakableSafety(REVERSED_IS_NOT_THREAD_SAFE, () -> {
             // The breaks are those of BreakableSequencedCollection#reversed().
             if (!supportsMethod(SequencedCollectionMethods.REVERSED)) {
                 throw new UnsupportedOperationException("Unsupported method: reversed()");
@@ -627,7 +628,9 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
                 Collections.reverse(list);
                 return this;
             }
-            return view(list.reversed());
+            // No lock with the break (#22).
+            BreakableList<E> view = unlockedView(list.reversed());
+            return hasBreak(REVERSED_IS_NOT_THREAD_SAFE) ? view : sharingLockOf(view, this);
         });
     }
 
@@ -1051,9 +1054,16 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     /// @param view the store's view
     /// @return the view
     private List<E> view(final List<E> view) {
-        return sharingLockOf(
-                new BreakableList<E>(view, DEFAULT_BREAKS, methodStatuses(), characteristics(), permits(), false,
-                    compatibleType()), this);
+        return sharingLockOf(unlockedView(view), this);
+    }
+
+    /// Returns a view of this list over a view of its store, as [#view(List)] does, that takes no lock.
+    ///
+    /// @param view the store's view
+    /// @return the view
+    private BreakableList<E> unlockedView(final List<E> view) {
+        return new BreakableList<>(view, DEFAULT_BREAKS, methodStatuses(), characteristics(), permits(), false,
+                compatibleType());
     }
 
     /// Builder for creating BreakableList instances.

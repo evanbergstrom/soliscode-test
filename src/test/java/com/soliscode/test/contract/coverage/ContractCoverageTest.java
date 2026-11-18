@@ -18,6 +18,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -70,6 +71,7 @@ import com.soliscode.test.breakable.BreakableSpliteratorOfInt;
 import com.soliscode.test.breakable.BreakableSpliteratorOfLong;
 import com.soliscode.test.breakable.BreakableTransferQueue;
 import com.soliscode.test.contract.CollectionContractConfig;
+import com.soliscode.test.contract.DoesNotPermitNulls;
 import com.soliscode.test.contract.DynamicCollectionContract;
 import com.soliscode.test.contract.DynamicMapContract;
 import com.soliscode.test.contract.autocloseable.AutoCloseableContract;
@@ -103,6 +105,7 @@ import com.soliscode.test.contract.navigableset.NavigableSetContract;
 import com.soliscode.test.contract.object.SerializableContract;
 import com.soliscode.test.contract.queue.QueueContract;
 import com.soliscode.test.contract.sequencedcollection.SequencedCollectionContract;
+import com.soliscode.test.contract.sequencedcollection.ThreadSafeSequencedCollectionContract;
 import com.soliscode.test.contract.sequencedmap.SequencedMapContract;
 import com.soliscode.test.contract.sequencedset.SequencedSetContract;
 import com.soliscode.test.contract.set.SetContract;
@@ -953,6 +956,26 @@ public class ContractCoverageTest {
 
     @TestFactory
     @VerySlow
+    @DisplayName("ThreadSafeSequencedCollectionContract")
+    Stream<DynamicNode> threadSafeSequencedCollectionContract() {
+        List<Method> all = ContractRuns.testMethods(ThreadSafeSequencedCollectionContract.class, true);
+        Map<String, Break> breaks = new java.util.LinkedHashMap<>(
+                ContractRuns.breaks(List.of(BreakableSequencedCollection.class)));
+        breaks.keySet().removeIf(k -> !k.endsWith(THREAD_SAFETY_BREAK)
+                || uncheckedReason(ThreadSafeSequencedCollectionContract.class, k) != null);
+        return Stream.of(dynamicContainer("ThreadSafeSequencedCollectionContract", Stream.concat(
+                Stream.of(passes("synchronizedList(ArrayList)", JdkThreadSafeSequencedList::new, all),
+                        passes("ConcurrentLinkedDeque", JdkThreadSafeConcurrentLinkedDeque::new, all),
+                        passes("LinkedBlockingDeque()", JdkThreadSafeSequencedBlockingDeque::new, all),
+                        passes("unbroken thread-safe BreakableSequencedCollection",
+                                () -> new BrokenThreadSafeSequencedCollection(threadSafeSequencedBuilder()), all)),
+                breaks.entrySet().stream().map(e -> fails(e.getKey(),
+                        () -> new BrokenThreadSafeSequencedCollection(
+                                threadSafeSequencedBuilder().addBreak(e.getValue())), all)))));
+    }
+
+    @TestFactory
+    @VerySlow
     @DisplayName("ThreadSafeBlockingQueueContract")
     Stream<DynamicNode> threadSafeBlockingQueueContract() {
         List<Method> all = ContractRuns.testMethods(ThreadSafeBlockingQueueContract.class, true);
@@ -1206,6 +1229,10 @@ public class ContractCoverageTest {
         return new BreakableCollection.Builder<Integer>().setSafe(true);
     }
 
+    private static BreakableSequencedCollection.Builder<Integer> threadSafeSequencedBuilder() {
+        return new BreakableSequencedCollection.Builder<Integer>().setSafe(true);
+    }
+
     // ========== Contracts against JDK implementations ==========
 
     static final class JdkIterable extends AbstractTest
@@ -1375,6 +1402,48 @@ public class ContractCoverageTest {
             return CollectionProviders.from(() -> Collections.synchronizedList(new ArrayList<>()),
                     (c) -> Collections.synchronizedList(new ArrayList<>(c)),
                     (Collection<Integer> c) -> Collections.synchronizedList(new ArrayList<>(c)), PROVIDER);
+        }
+    }
+
+    static final class JdkThreadSafeSequencedList extends AbstractTest
+            implements ThreadSafeSequencedCollectionContract<List<Integer>, Integer>, WithIntegerElement {
+        @Override
+        public CollectionProvider<List<Integer>, Integer> provider() {
+            return CollectionProviders.from(() -> Collections.synchronizedList(new ArrayList<>()),
+                    (c) -> Collections.synchronizedList(new ArrayList<>(c)),
+                    (Collection<Integer> c) -> Collections.synchronizedList(new ArrayList<>(c)), PROVIDER);
+        }
+    }
+
+    static final class JdkThreadSafeConcurrentLinkedDeque extends AbstractTest
+            implements ThreadSafeSequencedCollectionContract<ConcurrentLinkedDeque<Integer>, Integer>,
+            WithIntegerElement, DoesNotPermitNulls {
+        // A deque keeps Object's identity equality.
+        @Override
+        public boolean equalsComparesValues() {
+            return false;
+        }
+
+        @Override
+        public CollectionProvider<ConcurrentLinkedDeque<Integer>, Integer> provider() {
+            return CollectionProviders.from(ConcurrentLinkedDeque::new, ConcurrentLinkedDeque::new,
+                    ConcurrentLinkedDeque::new, PROVIDER);
+        }
+    }
+
+    static final class JdkThreadSafeSequencedBlockingDeque extends AbstractTest
+            implements ThreadSafeSequencedCollectionContract<LinkedBlockingDeque<Integer>, Integer>,
+            WithIntegerElement, DoesNotPermitNulls {
+        // A deque keeps Object's identity equality.
+        @Override
+        public boolean equalsComparesValues() {
+            return false;
+        }
+
+        @Override
+        public CollectionProvider<LinkedBlockingDeque<Integer>, Integer> provider() {
+            return CollectionProviders.from(LinkedBlockingDeque::new, LinkedBlockingDeque::new,
+                    LinkedBlockingDeque::new, PROVIDER);
         }
     }
 
@@ -1573,6 +1642,14 @@ public class ContractCoverageTest {
             extends DynamicCollectionContract<BreakableCollection<Integer>, Integer>
             implements ThreadSafeCollectionContract<BreakableCollection<Integer>, Integer> {
         BrokenThreadSafeCollection(final BreakableCollection.Builder<Integer> builder) {
+            super(builder, WithIntegerElement.PROVIDER, STANDARD);
+        }
+    }
+
+    static final class BrokenThreadSafeSequencedCollection
+            extends DynamicCollectionContract<BreakableSequencedCollection<Integer>, Integer>
+            implements ThreadSafeSequencedCollectionContract<BreakableSequencedCollection<Integer>, Integer> {
+        BrokenThreadSafeSequencedCollection(final BreakableSequencedCollection.Builder<Integer> builder) {
             super(builder, WithIntegerElement.PROVIDER, STANDARD);
         }
     }
