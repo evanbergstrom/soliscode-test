@@ -32,6 +32,13 @@ As a task merges, it adds what a user of the library will see differently under 
 
 ## Unreleased
 
+## 0.1.6 — 2026-11-20
+
+Commit `24a68aa`. Full verify: Tests run: 9469, Failures: 0, Errors: 0.
+
+Install coordinates: `com.soliscode:soliscode-test:0.1.6`.
+
+### Changes
 - **New: the performance test library, `com.soliscode.test.performance` (T-0069)**, the test side of soliscode-parent's performance gate (its design.md, section 12.1), for the scenarios a module measures with `mvn soliscode-performance:run`. Each class gives its measurements as the API's `ScenarioMetric`s: `LatencyRecorder` (latencies in a pre-sized HdrHistogram, recorded allocation-free, reported as `p50`, `p90`, `p95`, `p99`, `p99.9` and `max` in ns); `OpenLoopPacer` with `PacedOperation` and `PacedRun` (operations at a fixed rate after a discarded warmup, each timed from its scheduled send, and the achieved `rate`); `Sweep` (the points of a parameter matrix, one case each); `AllocationAssertion` (an operation run `n` and `10n` times on one thread under a bound in bytes per run, skipped by `assumeTrue` where the JVM cannot measure, a virtual thread included); `ProcessTopology` with `ProcessSpec`, `ReadinessCheck` and `TopologyProcess` (processes from jars, in order, each ready on a log line or a health check within a timeout, logs kept, SIGTERM then SIGKILL, freeze and resume, sidecars with `-XX:ActiveProcessorCount` and `nice`; the signals and `nice` need a POSIX system); `StageTaps` (per-stage latency correlated by an id, failing below a minimum share of the origin's ids); `HeapSoak` (a process's heap just after a full collection, read by `jcmd` every 60 s, its slope as `heapSlope` in MB/min, with a bound for the gate). Failures inside a scenario are exceptions, which the gate reports.
 - **New compile-scope dependencies (T-0069)**, by the user's decisions on #69: `org.hdrhistogram:HdrHistogram` 2.2.2 (CC0 or BSD-2-Clause) and `com.soliscode:soliscode-performance-api`, from soliscode-parent, with `org.openjdk.jmh:jmh-core` excluded, so that JMH does not reach this library's users. soliscode-performance-api is in `~/.m2` only, released with the parent, so a project that uses this library needs it installed there.
 - **Parent 0.1.12 (T-0069)**, from 0.1.9. The parent's 0.1.10 to 0.1.12 add JMH's management, the performance gate and HdrHistogram's version, which a user of this library sees only if it turns the gate on or names HdrHistogram itself.
