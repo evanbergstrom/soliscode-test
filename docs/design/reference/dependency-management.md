@@ -6,7 +6,7 @@ Related: [soliscode-parent's dependency-management.md](https://gitlab.com/solisc
 
 ## Where versions are set
 
-Built (#9, #14, #57, #64). soliscode-parent 0.1.9 sets every version: its `dependencyManagement` names each library (JUnit's through its BOM, `org.junit:junit-bom`, imported, so the Jupiter and Platform artifacts agree), and its `pluginManagement` names each plugin. This project's `pom.xml` names its dependencies without versions, and sets no plugin, plugin version or compiler level. The only version it sets is its own, `${revision}`, and its parent's, `0.1.9`.
+Built (#9, #14, #57, #64, #69). soliscode-parent 0.1.12 sets every version: its `dependencyManagement` names each library (JUnit's through its BOM, `org.junit:junit-bom`, imported, so the Jupiter and Platform artifacts agree), and its `pluginManagement` names each plugin. This project's `pom.xml` names its dependencies without versions, and sets no plugin, plugin version or compiler level. The only versions it sets are its own, `${revision}`, and its parent's, `0.1.12`.
 
 The parent's enforcer, at `validate`, refuses a dependency graph that does not converge (`dependencyConvergence`) and a class found in two artifacts on the class path (`banDuplicateClasses`).
 
@@ -22,6 +22,8 @@ Built (#9). Everything is at compile scope: this is a test library, and its user
 | JUnit Platform Commons (`org.junit.platform:junit-platform-commons`) | 6.1.3 | The internal `StringUtils` and `UnrecoverableExceptions` (below); the tests also use its `AnnotationSupport` |
 | OpenTest4J (`org.opentest4j:opentest4j`) | 1.3.0, the version JUnit 6.1.3 uses | `AssertionFailedError`, which the assertions throw |
 | JSpecify (`org.jspecify:jspecify`) | 1.0.1; lifts the 1.0.0 that JUnit 6.1.3 brings | `@NullMarked` and `@Nullable` (java-conventions.md, "Nullness"); at compile scope so that users' tools see them |
+| soliscode-performance-api (`com.soliscode:soliscode-performance-api`) | 0.1.12, the parent's own | Built (#69). The scenario results the performance test library returns (architecture.md, section 8). Released with the parent, from `~/.m2`, not Maven Central. Declared with `org.openjdk.jmh:jmh-core` excluded, so that this library's users do not get JMH; a module that runs the performance gate gets it from the parent's `performance` profile (the user's decision on #69) |
+| HdrHistogram (`org.hdrhistogram:HdrHistogram`) | 2.2.2 | Built (#69). The performance library's histograms. CC0 or BSD-2-Clause; the licence gate passes it by BSD-2-Clause. Its version is the parent's since soliscode-parent 0.1.12 (soliscode/soliscode-parent#31; the user's decision on #69) |
 
 `org.apiguardian:apiguardian-api` (1.1.2) comes transitively from JUnit and is not declared: no code here uses it. The parent's `dependency:analyze` configuration ignores `junit-jupiter` (declared for its engine) and `junit-jupiter-params` (carried for users).
 
@@ -29,7 +31,7 @@ There is no test-scope dependency, no JUnit Platform test kit and no AssertJ. #9
 
 Main code uses two classes JUnit marks internal, `org.junit.platform.commons.util.StringUtils` (six assertion classes: `AssertContains`, `AssertContainsAll`, `AssertContainsAllByIdentity`, `AssertContainsNone`, `AssertContainsNoneByIdentity`, `AssertDoesNotContain`) and `UnrecoverableExceptions` (`AssertThrowsAnyOf`, `AssertThrowsDifferent`, and `AutoCloseableContractSupport`, #41). A JUnit release may change them without notice; read its release notes for them.
 
-Every dependency comes from Maven Central, except the parent, which is in `~/.m2` only (build-and-test.md, "Prerequisites").
+Every dependency comes from Maven Central, except the parent and `soliscode-performance-api`, released with it, which are in `~/.m2` only (build-and-test.md, "Prerequisites"; the API jar since #69, the user's decision).
 
 ## Changing a version
 

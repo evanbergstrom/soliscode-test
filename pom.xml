@@ -9,7 +9,7 @@
   <parent>
     <groupId>com.soliscode</groupId>
     <artifactId>soliscode-parent</artifactId>
-    <version>0.1.9</version>
+    <version>0.1.12</version>
     <relativePath/>
   </parent>
 
@@ -88,6 +88,24 @@
     <dependency>
       <groupId>org.opentest4j</groupId>
       <artifactId>opentest4j</artifactId>
+    </dependency>
+    <!-- The performance test library (com.soliscode.test.performance, #69): its scenarios return ScenarioResult.
+         JMH is excluded, so that this library's users do not get it; a module that runs the performance gate gets
+         it from the parent's performance profile (the user's decision on #69) -->
+    <dependency>
+      <groupId>com.soliscode</groupId>
+      <artifactId>soliscode-performance-api</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.openjdk.jmh</groupId>
+          <artifactId>jmh-core</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <!-- The latency histograms of com.soliscode.test.performance (#69) -->
+    <dependency>
+      <groupId>org.hdrhistogram</groupId>
+      <artifactId>HdrHistogram</artifactId>
     </dependency>
   </dependencies>
 

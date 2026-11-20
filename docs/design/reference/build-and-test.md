@@ -8,7 +8,7 @@ The gates, their switches and the flags never to use are soliscode-parent's, and
 
 - Maven 3.9 or later.
 - Built (#9): JDK 25 on the `PATH`, with no toolchains entry. No preview feature is used. The enforcer refuses an older JDK or Maven.
-- `com.soliscode:soliscode-parent:0.1.9` in `~/.m2` (#64; 0.1.8 from #57). The POM names it with an empty `<relativePath/>`, so Maven never looks for it in a sibling directory; it is not on Maven Central. A release of soliscode-parent, made in its own clone, installs it.
+- `com.soliscode:soliscode-parent:0.1.12` in `~/.m2` (#69; 0.1.9 from #64, 0.1.8 from #57). The POM names it with an empty `<relativePath/>`, so Maven never looks for it in a sibling directory; it is not on Maven Central. A release of soliscode-parent, made in its own clone, installs it, with `com.soliscode:soliscode-performance-api` at the same version, which the performance library depends on (#69).
 - Never print or change `~/.m2/settings.xml`. It holds credentials, and Maven reads it without being told to.
 
 ## Commands
@@ -31,7 +31,7 @@ Built (#10): Checkstyle runs at `validate` and passes, with no finding. It had 2
 
 ## Gates
 
-Every gate is inherited from soliscode-parent 0.1.9 (#14, #57, #64). This project configures none of them itself. Since 0.1.4 the parent's gate guard refuses a gate plugin's version, dependencies or deciding settings set in this POM, a property that narrows a gate, in the POM or as a `-D`, and a setting the parent fixes given twice in a gate's execution; some flags on `CLAUDE.md`'s list it lets through (`-DskipTests` and `-Djacoco.skip` in a verify, `-Djacoco.minimum.coverage`, a gate's profile turned off, `-Dmaven.test.skip`, `-Dmaven.test.failure.ignore`; `-Djacoco.haltOnFailure=false` changes nothing, the check sets it literally); the list holds either way. A profile turned off turns off that gate's guard with it, and a lower `jacoco.minimum.coverage` in the POM passes it. The gates' executions are `soliscode-enforcer`, `soliscode-checkstyle`, `soliscode-license`, `soliscode-javadoc`, the coverage gate's `soliscode-prepare-agent`, `soliscode-coverage-report`, `soliscode-coverage-check` and `soliscode-coverage-minimum` (with Surefire's `default-test`), the architecture gate's Surefire execution `soliscode-architecture` (0.1.9), and ErrorProne's `default-compile`. An execution of this project's own under another id runs beside a gate; one under a gate's id merges into it, and the guard checks it.
+Every gate is inherited from soliscode-parent 0.1.12 (#14, #57, #64, #69). This project configures none of them itself. Since 0.1.4 the parent's gate guard refuses a gate plugin's version, dependencies or deciding settings set in this POM, a property that narrows a gate, in the POM or as a `-D`, and a setting the parent fixes given twice in a gate's execution; some flags on `CLAUDE.md`'s list it lets through (`-DskipTests` and `-Djacoco.skip` in a verify, `-Djacoco.minimum.coverage`, a gate's profile turned off, `-Dmaven.test.skip`, `-Dmaven.test.failure.ignore`; `-Djacoco.haltOnFailure=false` changes nothing, the check sets it literally); the list holds either way. A profile turned off turns off that gate's guard with it, and a lower `jacoco.minimum.coverage` in the POM passes it. The gates' executions are `soliscode-enforcer`, `soliscode-checkstyle`, `soliscode-license`, `soliscode-javadoc`, the coverage gate's `soliscode-prepare-agent`, `soliscode-coverage-report`, `soliscode-coverage-check` and `soliscode-coverage-minimum` (with Surefire's `default-test`), the architecture gate's Surefire execution `soliscode-architecture` (0.1.9), and ErrorProne's `default-compile`. An execution of this project's own under another id runs beside a gate; one under a gate's id merges into it, and the guard checks it.
 
 | Gate | Phase | State here |
 |------|-------|------------|
@@ -50,7 +50,7 @@ A change is done only with zero findings from every gate. The flags never to use
 ## What this project adds
 
 Built (#9). The seven things the parent's "What a child adds" asks for, and two of its own:
-1. The parent, `com.soliscode:soliscode-parent:0.1.9`, with `<relativePath/>`.
+1. The parent, `com.soliscode:soliscode-parent:0.1.12`, with `<relativePath/>`.
 2. `revision` `0.1-SNAPSHOT` in `pom.xml`; the version is `${revision}`.
 3. `.mvn/jvm.config`, exactly the parent's ten `--add-exports` and `--add-opens` lines for ErrorProne.
 4. An empty `.errorprone` file at the root.

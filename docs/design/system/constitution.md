@@ -15,7 +15,7 @@ When a document and the code disagree, the code says what exists. A change that 
 
 ## 2. What the system is
 
-Built. A Java library for testing implementations of JDK interfaces with JUnit 6. One Maven module, `com.soliscode:soliscode-test`, with `com.soliscode:soliscode-parent:0.1.9` as its parent (#9, #14, #57, #64); its packages are `com.soliscode.test.*` (#9). It provides:
+Built. A Java library for testing implementations of JDK interfaces with JUnit 6. One Maven module, `com.soliscode:soliscode-test`, with `com.soliscode:soliscode-parent:0.1.12` as its parent (#9, #14, #57, #64, #69); its packages are `com.soliscode.test.*` (#9). It provides:
 
 | Part | What |
 |------|------|
@@ -26,6 +26,7 @@ Built. A Java library for testing implementations of JDK interfaces with JUnit 6
 | Concurrency support | `ContentionCoordinator`, which runs operations on one subject from many threads at once, and `AssertNoDeadlocks` |
 | Interface narrowing | Wrappers that hide every method but one interface's (`IterableOnly`, `CollectionOnly`, `NumberOnly`, `ObjectOnly`) |
 | Test tags | Annotations that tag a test slow, very slow, extremely slow, concurrency or nondeterministic |
+| Performance testing | Built (#69): histograms, a paced load, sweeps, an allocation assertion, multi-process topologies, stage taps and a heap soak, for the scenarios of soliscode-parent's performance gate (architecture.md, section 8) |
 
 It is a library of test code: its users put it on their test class path. It is for soliscode-common and soliscode-quant, the libraries of the split of the quant libraries (the user's decision of 2026-11-05, soliscode/soliscode-quant#6). soliscode-quant's own copy, `quant-test`, diverged from this project; its fixes were brought in by #2. Its first release under these coordinates is `0.1.1` (#3); [RELEASES.md](../../../RELEASES.md) has the version scheme and each release.
 
@@ -51,7 +52,7 @@ The user's three goals for the library (2026-11-08, #29):
 
 4. **Each contract can pass and can fail.** A contract that never fails tests nothing.
    Strong means: each interface contract passes against a JDK class and against its unbroken breakable, and fails against the breakable with each of its breaks, applied one at a time. `ContractCoverageTest` checks this (#6). A break it leaves unchecked has a reason in `uncheckedReason`, which says why no test could see it or which other contract checks it. Partly built: see section 4.
-5. **Usable by any SolisCode library.** Strong means: its only compile-scope dependencies are JUnit 6 (Jupiter API, params and engine, Platform commons), OpenTest4J and JSpecify, at the parent's versions; it depends on no other SolisCode library; and a release is installed into `~/.m2` as `com.soliscode:soliscode-test:0.1.N`. The dependencies: Built (#9). The release: Built (#3): `0.1.1`, tagged `v0.1.1`, made by `release.sh`.
+5. **Usable by any SolisCode library.** Strong means: its only compile-scope dependencies are JUnit 6 (Jupiter API, params and engine, Platform commons), OpenTest4J and JSpecify, at the parent's versions, and, for the performance test library (architecture.md, section 8), HdrHistogram and soliscode-parent's `soliscode-performance-api`, with JMH excluded from it (the user's decisions on #69, after soliscode-parent's D-16 and D-17); it depends on no other SolisCode library; and a release is installed into `~/.m2` as `com.soliscode:soliscode-test:0.1.N`. The dependencies: Built (#9); the two of the performance library: Built (#69). The release: Built (#3): `0.1.1`, tagged `v0.1.1`, made by `release.sh`.
 6. **The same gates as every SolisCode library.** Strong means: every gate the parent gives (section 7) runs and passes, with no gate turned off or lowered. Built (#10).
 
 ## 4. Scope
@@ -62,6 +63,8 @@ Contracts for `Object` (`equals`, `hashCode`, `toString`, `Serializable`), `Iter
 `ContractCoverageTest` covers 43 contracts: `Comparable`, `Comparator`, `CharSequence`, `Future`, `ExecutorService`, `AutoCloseable`, `Closeable`, `Iterable`, `Iterator`, `ListIterator`, `WeaklyConsistentIterator`, `Spliterator`, `Spliterator.OfInt`, `Spliterator.OfLong`, `Spliterator.OfDouble`, `MapEntry`, `Collection`, `SequencedCollection`, `List`, `Set`, `SequencedSet`, `SortedSet`, `NavigableSet`, `Queue`, `Deque`, `BlockingQueue`, `BlockingDeque`, `TransferQueue`, `Map`, `SequencedMap`, `SortedMap`, `NavigableMap`, `ConcurrentMap`, `ConcurrentNavigableMap`, `ThreadSafeCollection`, `ThreadSafeSequencedCollection`, `ThreadSafeBlockingQueue`, `ThreadSafeBlockingDeque`, `ThreadSafeTransferQueue`, `ThreadSafeConcurrentMap`, `ThreadSafeFuture`, `ThreadSafeExecutorService` and `Serializable`. `ObjectContract` and `IntegerContract` are not in it. `SerializableContract` is run against a chosen few breaks, not each.
 
 Built by #55: the iterators of the `java.util.concurrent` collections are tested as weakly consistent, after a change to their source during a traversal (no `ConcurrentModificationException`, no element returned twice, every element held throughout returned, only elements held returned). `WeaklyConsistentIteratorContract` tests an iterator by itself; `BlockingQueueContract` (`iterator()`), `BlockingDequeContract` (`descendingIterator()`), `ConcurrentMapContract` (the iterators of `keySet()`, `values()` and `entrySet()`) and `ConcurrentNavigableMapContract` (both iterators of each key set) run the same checks. Only `ConcurrentNavigableMap` promises it in its own Javadoc; for the others the contracts read the `java.util.concurrent` package summary more strictly than their interface, by default, and a test class opts out with `iteratorsAreWeaklyConsistent()` (the user's decision on #55). `BreakableIterator`'s `ITERATOR_IS_FAIL_FAST`, `ITERATOR_RETURNS_AN_ELEMENT_TWICE_AFTER_A_CHANGE` and `ITERATOR_SKIPS_AN_ELEMENT_AFTER_A_CHANGE` show they can fail. Spliterators are not tested for it.
+
+Built by #69: the performance test library, `com.soliscode.test.performance` (architecture.md, section 8): the test side of soliscode-parent's performance framework, placed here by its decision D-16: scope, not a fourth goal of section 3.1.
 
 Built by #8 and #51: the `preventNulls` wrappers refuse `null` through their bulk methods, and the `List` wrapper through its queries, list iterators, sub-lists and `replaceAll`.
 
@@ -82,8 +85,8 @@ Contracts for the interfaces chosen under goal 2 (the user's decision, 2026-11-0
 ## 5. Constraints
 
 - Java 25 and Maven 3.9 or later (Built, #9; the parent's enforcer refuses older).
-- Dependencies come from Maven Central only. Nothing depends on a path outside this repository or on another local project, except the parent, read from `~/.m2`.
-- JUnit, OpenTest4J and JSpecify are at compile scope, because the library's main code is test code its users run. A user declares it at test scope.
+- Dependencies come from Maven Central only. Nothing depends on a path outside this repository or on another local project, except the parent and the artifact released with it that the performance library uses, `soliscode-performance-api` (Built, #69, the user's decision), read from `~/.m2`.
+- JUnit, OpenTest4J and JSpecify, and, for the performance library, HdrHistogram and `soliscode-performance-api` (Built, #69), are at compile scope, because the library's main code is test code its users run. A user declares it at test scope.
 
 ## 6. Rules every change keeps
 
@@ -127,6 +130,6 @@ Gates fail the build like a compile error; "the tests pass" is no substitute. Th
 | Goal 2: each chosen interface has a contract that `ContractCoverageTest` checks | 26 of the collection interfaces and the types they return, with `Serializable` (#6, #30, #31, #32, #33, #34, #35, #36, #37, #38, #39), weakly consistent iterators (#55), `Comparable` (#40), `AutoCloseable` and `Closeable` (#41), `Comparator` (#42), `CharSequence` (#43), `Future` (#44), and `ExecutorService` (#45); the rest are #46–#48 and #50 |
 | Goal 3: the concurrency utilities have tests, and each chosen thread-safe interface a thread-safety contract that can fail | The utilities have tests (#12); `ThreadSafeCollectionContract` (#6, and `CLEAR_IS_NOT_THREAD_SAFE` by #7); `ThreadSafeSequencedCollectionContract` (#22); `ThreadSafeBlockingQueueContract` (#32), `ThreadSafeBlockingDequeContract` (#33), `ThreadSafeTransferQueueContract` (#34), `ThreadSafeConcurrentMapContract` (#35), which also covers `ConcurrentNavigableMap` (#36), `ThreadSafeFutureContract` (#44), `ThreadSafeExecutorServiceContract` (#45); the rest are #46 |
 | Goal 4: each contract in `ContractCoverageTest` passes against a JDK class and its unbroken breakable, and fails for each break, an unchecked break having a reason | Yes for the 43 contracts it covers (#6, #22, #30, #31, #32, #33, #34, #35, #36, #37, #38, #39, #55, #40, #41, #42, #43, #44, #45); `ObjectContract` and `IntegerContract` are not covered |
-| Goal 5: only JUnit 6, OpenTest4J and JSpecify at compile scope | Yes (#9) |
+| Goal 5: only JUnit 6, OpenTest4J and JSpecify at compile scope, and HdrHistogram and the performance API for the performance library | Yes (#9); the performance library's two: Built (#69) |
 | Goal 5: `0.1.1` installed into `~/.m2` from a tag | Yes (#3) |
 | Goal 6: every gate in section 7 passes | Yes (#10) |
