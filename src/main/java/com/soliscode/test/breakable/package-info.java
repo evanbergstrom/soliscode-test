@@ -1,3 +1,8 @@
+/*
+ * Copyright 2025 Evan Bergstrom
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 /// **Breakable Collection Framework for Robust Testing**
 ///
 /// This package provides a comprehensive framework of "breakable" collection implementations that can be

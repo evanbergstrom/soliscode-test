@@ -1,3 +1,8 @@
+/*
+ * Copyright 2025 Evan Bergstrom
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 /// **Custom JUnit 6 Annotations for Specialized Testing**
 ///
 /// This package provides a suite of custom JUnit 6 annotations designed to categorize, control, and enhance

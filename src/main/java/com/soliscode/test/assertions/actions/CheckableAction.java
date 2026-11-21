@@ -1,3 +1,8 @@
+/*
+ * Copyright 2025 Evan Bergstrom
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package com.soliscode.test.assertions.actions;
 
 /// Interface for classes that are used to test methods that accept actions (*i.e.* suppliers, consumers, *etc.*).

@@ -1,3 +1,8 @@
+/*
+ * Copyright 2025 Evan Bergstrom
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 /// Support for testing the implementation of the [java.util.List] interface methods.
 ///
 /// @author evanbergstrom

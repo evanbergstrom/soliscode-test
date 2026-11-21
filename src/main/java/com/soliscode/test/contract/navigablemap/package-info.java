@@ -1,3 +1,8 @@
+/*
+ * Copyright 2025 Evan Bergstrom
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 /// Contract classes for the [java.util.NavigableMap] interface.
 ///
 /// This package provides a set of contract interfaces that define the expected behavior

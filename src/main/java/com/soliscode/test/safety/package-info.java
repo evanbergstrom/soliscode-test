@@ -1,3 +1,8 @@
+/*
+ * Copyright 2025 Evan Bergstrom
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 /// Classes for coordinating and testing concurrent behavior.
 ///
 /// @author evanbergstrom

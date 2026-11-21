@@ -1,3 +1,8 @@
+/*
+ * Copyright 2025 Evan Bergstrom
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package com.soliscode.test.assertions;
 
 import java.util.ArrayList;
@@ -258,7 +263,7 @@ public class AssertEqualsByIdentityTest {
     public void testAssertEqualsByIdentityNullCollections() {
         List<Object> nonNull = Arrays.asList(new Object(), new Object());
 
-        // Null expected collection - throws NPE due to implementation bug (line 151)
+        // Null expected collection - throws NPE when checkEquals calls expected.iterator()
         assertThrows(NullPointerException.class,
                 () -> CollectionAssertions.assertEqualsByIdentity((Iterable<Object>) null, nonNull));
 
@@ -407,9 +412,9 @@ public class AssertEqualsByIdentityTest {
     /**
      * Tests the critical implementation bug.
      *
-     * <p>This test explicitly demonstrates the bug where {@code actualIterator = expected.iterator()}
-     * on line 152 causes incorrect behavior. Collections that should be different are considered equal
-     * because the comparison is done against the expected collection twice.</p>
+     * <p>This test guards against {@code actualIterator = expected.iterator()} in {@code checkEquals}:
+     * with it, collections that should be different would be considered equal, because the
+     * comparison would be done against the expected collection twice.</p>
      */
     @Test
     @DisplayName("assertEqualsByIdentity compares the actual iterable's elements, not the expected's twice")

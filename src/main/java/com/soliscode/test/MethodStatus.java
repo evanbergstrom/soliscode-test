@@ -1,3 +1,8 @@
+/*
+ * Copyright 2025 Evan Bergstrom
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package com.soliscode.test;
 
 /// Internal record that represents the support status of an optional method.

@@ -1,3 +1,8 @@
+/*
+ * Copyright 2025 Evan Bergstrom
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package com.soliscode.test.assertions.collection;
 
 import java.util.ArrayList;
@@ -152,7 +157,7 @@ public class AssertDoesNotContainTest {
         assertThrows(AssertionFailedError.class, () -> assertDoesNotContain(1, listWithNull));
 
         // Note: Generic Iterables with null elements cause NullPointerException in current implementation
-        // due to calling e.equals(expected) where e could be null (line 87 in AssertDoesNotContain)
+        // due to calling e.equals(expected) where e could be null (in AssertDoesNotContain.checkDoesNotContain)
         // This is a bug that only affects generic Iterables, not Collections
         // Testing Collections only for null-containing scenarios
     }

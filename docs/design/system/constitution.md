@@ -15,7 +15,7 @@ When a document and the code disagree, the code says what exists. A change that 
 
 ## 2. What the system is
 
-Built. A Java library for testing implementations of JDK interfaces with JUnit 6. One Maven module, `com.soliscode:soliscode-test`, with `com.soliscode:soliscode-parent:0.1.12` as its parent (#9, #14, #57, #64, #69); its packages are `com.soliscode.test.*` (#9). It provides:
+Built. A Java library for testing implementations of JDK interfaces with JUnit 6. One Maven module, `com.soliscode:soliscode-test`, with `com.soliscode:soliscode-parent:0.1.13` as its parent (#9, #14, #57, #64, #69, #71); its packages are `com.soliscode.test.*` (#9). It provides:
 
 | Part | What |
 |------|------|
@@ -118,7 +118,7 @@ Gates fail the build like a compile error; "the tests pass" is no substitute. Th
 - A contract test method that passes whatever the class under test does.
 - A break that changes more than one behaviour, or a break no contract can see and no reason explains.
 - A test whose expected value is computed by the code under test.
-- A to-do list in a document: work is tracked as GitLab issues (`CLAUDE.md`).
+- A to-do list in a document: work is tracked as GitLab issues (the soliscode plugin's `rules.md`, "Tasks", which `CLAUDE.md`, "Claude Code setup", names).
 - Describing what is designed as if it were built.
 
 ## 9. Success criteria

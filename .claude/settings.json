@@ -9,28 +9,16 @@
       "Bash(mvn help:effective-settings:*)"
     ]
   },
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 -I \"$CLAUDE_PROJECT_DIR/.claude/hooks/protect-generated.py\"",
-            "timeout": 10
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 -I \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-maven-settings.py\"",
-            "timeout": 10
-          }
-        ]
+  "enabledPlugins": {
+    "soliscode@soliscode-0.1.13": true
+  },
+  "extraKnownMarketplaces": {
+    "soliscode-0.1.13": {
+      "source": {
+        "source": "git",
+        "url": "https://gitlab.com/soliscode/soliscode-parent.git",
+        "ref": "v0.1.13"
       }
-    ]
+    }
   }
 }

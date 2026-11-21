@@ -8,7 +8,7 @@ Related: [build-and-test.md](build-and-test.md) for how the gates run, [dependen
 
 - Built (#9): Java 25, from the parent (`maven.compiler.release` 25), with no `--enable-preview`: no preview feature is used.
 - Records, sealed types, pattern matching, switch expressions and text blocks may be used. `Break` and `MethodStatus` are records.
-- Built (#10): 4-space indentation, no tabs, lines at most 120 characters, files at most 2,000 lines, no trailing whitespace, one top-level type per file. `BreakableCollection` and `BreakableMap` were over 2,000 lines; #10 trimmed repetition in their Javadoc (the user's decision), and split `BreakableMapTest` in two.
+- Built (#10): 4-space indentation, no tabs, lines at most 120 characters, files at most 2,000 lines, no trailing whitespace, one top-level type per file. `BreakableCollection` and `BreakableMap` were over 2,000 lines; #10 trimmed repetition in their Javadoc (the user's decision), and split `BreakableMapTest` in two. The copyright header (#71) took `BreakableMapTest` to 2,001 lines, so its `equals`, `hashCode`, `toString` and `clone` tests moved to `BreakableMapObjectMethodsTest`.
 - Built (#10): a type's members are in Checkstyle's `DeclarationOrder`: static fields, then instance fields, each public, protected, package-private, private; then constructors, together; then methods. Nested types may stand anywhere. A field is never moved above one its initializer reads.
 
 ## Packages
@@ -93,7 +93,16 @@ Not covered by the decision, and left from before #9: javac's own `unchecked`, `
 - Habit: a `Break` constant's comment gives its **Purpose** (the fault it simulates), **Effect** (how the method's behaviour changes), and **Affected Methods**, with a `@see` to the method (`BreakableCollection`, `BreakableList`, `BreakableSequencedCollection` follow it; not every breakable does yet).
 - Habit: a contract's comment names the JDK method it tests, with a `@see`, and what its provider must supply.
 - Inline comments say why, not what. Built (#10): `FIXME:`, `HACK:` and `XXX:` fail Checkstyle; empty blocks need a comment.
-- 446 of the 775 Java files carry the Apache 2.0 licence header (2026-11-20, #69) (`LICENSE.txt`). Put it on new files.
+- Every Java file, main and test, starts with the SolisCode copyright header, before the `package` line and before a `package-info.java`'s `///` comment (777 files: the 776 #71 gave it to, and the test class #71 split off; `LICENSE.txt`). Built (#71, parent 0.1.13): Checkstyle's `[CopyrightHeader]` fails a file without it. Put it on new files, exactly:
+
+  ```java
+  /*
+   * Copyright 2025 Evan Bergstrom
+   * SPDX-License-Identifier: Apache-2.0
+   */
+  ```
+
+  The year is when the project began, not when the file was written (the parent guide's Checkstyle page, "The copyright header"). The old 15-line Apache header is gone (#71).
 
 ## Imports
 

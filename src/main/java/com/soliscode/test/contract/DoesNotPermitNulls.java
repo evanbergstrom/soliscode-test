@@ -1,3 +1,8 @@
+/*
+ * Copyright 2025 Evan Bergstrom
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package com.soliscode.test.contract;
 
 /// A decorator interface that indicates that the collection class being tested does not permit `null` elements.

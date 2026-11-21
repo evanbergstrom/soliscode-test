@@ -1,3 +1,8 @@
+/*
+ * Copyright 2025 Evan Bergstrom
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 /// Test suites and contract definitions for the [Queue][java.util.Queue] interface.
 ///
 /// This package provides a comprehensive set of contract tests for the [Queue][java.util.Queue]
