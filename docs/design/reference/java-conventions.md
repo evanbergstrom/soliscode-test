@@ -93,7 +93,7 @@ Not covered by the decision, and left from before #9: javac's own `unchecked`, `
 - Habit: a `Break` constant's comment gives its **Purpose** (the fault it simulates), **Effect** (how the method's behaviour changes), and **Affected Methods**, with a `@see` to the method (`BreakableCollection`, `BreakableList`, `BreakableSequencedCollection` follow it; not every breakable does yet).
 - Habit: a contract's comment names the JDK method it tests, with a `@see`, and what its provider must supply.
 - Inline comments say why, not what. Built (#10): `FIXME:`, `HACK:` and `XXX:` fail Checkstyle; empty blocks need a comment.
-- Every Java file, main and test, starts with the SolisCode copyright header, before the `package` line and before a `package-info.java`'s `///` comment (777 files: the 776 #71 gave it to, and the test class #71 split off; `LICENSE.txt`). Built (#71, parent 0.1.13): Checkstyle's `[CopyrightHeader]` fails a file without it. Put it on new files, exactly:
+- Every Java file, main and test, starts with the SolisCode copyright header, before the `package` line and before a `package-info.java`'s `///` comment (792 files: the 776 #71 gave it to, the test class #71 split off, and the 15 of the user guide's examples, #74; `LICENSE.txt`). Built (#71, parent 0.1.13): Checkstyle's `[CopyrightHeader]` fails a file without it. Put it on new files, exactly:
 
   ```java
   /*
