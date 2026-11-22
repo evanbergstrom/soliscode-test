@@ -26,7 +26,7 @@ Now that you have finished [First steps](first-steps.md), here is where to go ne
 ## Get involved
 
 - Ask a question or report a problem: [open an issue](https://gitlab.com/soliscode/soliscode-test/-/issues)
-- Contribute: read the [constitution](../../design/system/constitution.md), the [architecture](../../design/system/architecture.md) and [Build and test](../../design/reference/build-and-test.md)
+- Contribute: read the [developer guide](../../developer-guide/README.md)
 
 ## See also
 

@@ -66,7 +66,7 @@ A dependency does not bring its build settings. If your project is not on the So
 
 ### From source
 
-To build `main` rather than a release, see [Build and test](../../design/reference/build-and-test.md) in the design documents. `main` installs as `0.1-SNAPSHOT`.
+To build `main` rather than a release, see [Building](../../developer-guide/getting-started/building.md) in the developer guide. `main` installs as `0.1-SNAPSHOT`.
 
 ## Verify the installation
 

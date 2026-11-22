@@ -47,4 +47,4 @@ See the [concepts index](concepts/README.md).
 ## See also
 
 - [The project's README](../../README.md)
-- [The design documents](../design/system/constitution.md), for people who change the library
+- [Developer guide](../developer-guide/README.md), for people who change the library

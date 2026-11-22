@@ -97,4 +97,4 @@ The Javadoc is in `target/site/en/apidocs/`. Open `target/site/en/apidocs/index.
 ## See also
 
 - [Concepts](../concepts/README.md): how the parts fit together
-- [Java conventions, "Javadoc and comments"](../../design/reference/java-conventions.md#javadoc-and-comments): how the comments are written
+- [Documentation standards](../../developer-guide/contributing/documentation.md#the-api-reference): how the comments are written
