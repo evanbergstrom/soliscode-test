@@ -6,7 +6,7 @@ Documentation is part of the change, not a follow-up. A change that a user sees 
 
 | Kind | Where | Written | For |
 |---|---|---|---|
-| README | `README.md` | By hand | Someone deciding whether to use the library |
+| README | `README.md` | By hand, with its example as a test class in `src/test/java/com/soliscode/test/guide/` | Someone deciding whether to use the library |
 | User guide | `docs/user-guide/` | By hand, in Markdown, with its examples as test classes in `src/test/java/com/soliscode/test/guide/` | Users |
 | **API reference** | `target/site/en/apidocs/`, built with `mvn -B site`. It is not published yet | **Generated from the Javadoc comments** | Users |
 | Developer guide | `docs/developer-guide/` | By hand, in Markdown | Contributors and maintainers |
@@ -77,7 +77,7 @@ The user guide follows [Diátaxis](https://diataxis.fr/). Before you write, deci
 
 Don't mix the kinds. If a how-to starts explaining background, move that to a concept page and link to it.
 
-A page's example is a test class in `src/test/java/com/soliscode/test/guide/`, which the build compiles and runs (the performance scenario it only compiles). The page shows the class's code, so change the class and its page together.
+A page's example, and the README's, is a test class in `src/test/java/com/soliscode/test/guide/`, which the build compiles and runs (the performance scenario it only compiles). The page shows the class's code, so change the class and its page together.
 
 ## Markdown conventions
 

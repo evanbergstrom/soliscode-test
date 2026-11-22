@@ -144,7 +144,7 @@ The hooks start Maven: don't commit while a background build is running. Before 
 
 ## Site and reports
 
-Inherited, not run here since #9: `mvn site` would produce the project reports, Javadoc (with the build-tools stylesheet), the Surefire, Checkstyle and JaCoCo reports and the source cross-reference. `src/site/site.xml` is this project's menu. Nothing in this repository publishes the site the README links to (`evanbergstrom.github.io/soliscode-test`).
+Inherited, not run here since #9: `mvn site` would produce the project reports, Javadoc (with the build-tools stylesheet), the Surefire, Checkstyle and JaCoCo reports and the source cross-reference. `src/site/site.xml` is this project's menu. Nothing in this repository publishes the site: the Javadoc is built with `mvn -B site` into `target/site/en/apidocs/`, and publishing it to GitLab Pages is #77.
 
 ## What the build does not have
 

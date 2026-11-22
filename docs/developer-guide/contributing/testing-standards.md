@@ -13,7 +13,7 @@ For how to *run* the tests, see [Running tests](../getting-started/running-tests
 | New break | Its run in `ContractCoverageTest`: some contract test fails with it, or it has a reason it cannot |
 | New assertion | Tests that show it passing and failing, and that check its failure message |
 | Refactoring | The existing tests pass unchanged |
-| A code sample in the user guide | Kept as a test class in `src/test/java/com/soliscode/test/guide/`, which the build compiles and runs, but for the performance scenario, which it only compiles |
+| A code sample in the user guide or the README | Kept as a test class in `src/test/java/com/soliscode/test/guide/`, which the build compiles and runs, but for the performance scenario, which it only compiles |
 
 ## Contract coverage
 
