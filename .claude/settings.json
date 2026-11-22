@@ -10,14 +10,14 @@
     ]
   },
   "enabledPlugins": {
-    "soliscode@soliscode-0.1.13": true
+    "soliscode@soliscode-0.1.14": true
   },
   "extraKnownMarketplaces": {
-    "soliscode-0.1.13": {
+    "soliscode-0.1.14": {
       "source": {
         "source": "git",
         "url": "https://gitlab.com/soliscode/soliscode-parent.git",
-        "ref": "v0.1.13"
+        "ref": "v0.1.14"
       }
     }
   }

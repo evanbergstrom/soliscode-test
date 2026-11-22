@@ -15,7 +15,7 @@ When a document and the code disagree, the code says what exists. A change that 
 
 ## 2. What the system is
 
-Built. A Java library for testing implementations of JDK interfaces with JUnit 6. One Maven module, `com.soliscode:soliscode-test`, with `com.soliscode:soliscode-parent:0.1.13` as its parent (#9, #14, #57, #64, #69, #71); its packages are `com.soliscode.test.*` (#9). It provides:
+Built. A Java library for testing implementations of JDK interfaces with JUnit 6. One Maven module, `com.soliscode:soliscode-test`, with `com.soliscode:soliscode-parent:0.1.14` as its parent (#9, #14, #57, #64, #69, #71, #73); its packages are `com.soliscode.test.*` (#9). It provides:
 
 | Part | What |
 |------|------|
