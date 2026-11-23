@@ -71,7 +71,7 @@ The maintainer merges with the `soliscode:commit-and-merge` skill: one squash co
 
 ## From outside the project
 
-The project is private: you need to be a member of it to see it, fork it or open a merge request. Fork the project, work on a branch of your fork as above, and open a [merge request](https://gitlab.com/soliscode/soliscode-test/-/merge_requests). Fill in its template (from `.gitlab/merge_request_templates/`), name the issue, and sign the [CLA](commit-conventions.md#the-cla). Until a lawyer has reviewed the CLA, no contribution from anyone but the copyright holder is merged, as [CLA.md](../../../CLA.md) says. The maintainer fetches it as a task branch, reviews it and merges it as above, then closes the merge request with a note naming the squash commit.
+The project is public: anyone signed in to GitLab can fork it and open a merge request. Fork the project, work on a branch of your fork as above, and open a [merge request](https://gitlab.com/soliscode/soliscode-test/-/merge_requests). Fill in its template (from `.gitlab/merge_request_templates/`), name the issue, and sign the [CLA](commit-conventions.md#the-cla). Until a lawyer has reviewed the CLA, no contribution from anyone but the copyright holder is merged, as [CLA.md](../../../CLA.md) says. The maintainer fetches it as a task branch, reviews it and merges it as above, then closes the merge request with a note naming the squash commit.
 
 ## See also
 

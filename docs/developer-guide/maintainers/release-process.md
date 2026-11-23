@@ -6,7 +6,7 @@ Before 1.0.0, a release is `0.1.N`: one past the highest `v0.1.*` tag. `main` is
 
 The old `org.soliscode:soliscode-test` releases, `1.0.0` to `1.0.14`, are not part of this scheme: their tags (`v1.0.*`) stay, and are not counted.
 
-Nothing is deployed to a remote repository before 1.0.0. A release is installed into the local Maven repository of the machine that made it, and tagged, and others build it from its release commit ([Installation](../../user-guide/getting-started/installation.md)).
+No Maven artifact is deployed to a remote repository before 1.0.0 (the Javadoc's zip goes to the project's package registry, as "Publish the Javadoc" says). A release is installed into the local Maven repository of the machine that made it, and tagged, and others build it from its release commit ([Installation](../../user-guide/getting-started/installation.md)).
 
 ## When to release
 
@@ -20,6 +20,7 @@ flowchart LR
     B --> C[release.sh]
     C --> D[Release commit and tag v0.1.N]
     D --> E[Push main]
+    E --> F[publish-javadoc.sh]
 ```
 
 ## Checklist
@@ -41,7 +42,20 @@ flowchart LR
   ```
 
   `--trailer` is optional, and may be given more than once. The script picks the version, builds and installs it from clean, writes its entry in `RELEASES.md` (moving the `## Unreleased` bullets into it), commits `Release 0.1.N`, and makes the annotated tag `v0.1.N`. The tag is not signed: no SolisCode release is signed before 1.0.0. It pushes nothing. [build-and-test.md](../../design/reference/build-and-test.md#releasesh), "`release.sh`", says what it does at each step, and what it does when a step fails.
-- [ ] The release commit reaches GitLab with the next push of `main` (`git push origin main`). The tag stays local unless the maintainer asks for it to be pushed: `git push origin v0.1.N`.
+- [ ] Push `main`: `git push origin main`. The tag stays local unless the maintainer asks for it to be pushed: `git push origin v0.1.N`. If the push is refused, `origin` has moved on and the release was made on a stale `main`: stop, and don't publish until `main` is reconciled and pushed.
+
+### Publish the Javadoc
+
+- [ ] Run, in the background:
+
+  ```sh
+  scripts/publish-javadoc.sh 0.1.N
+  ```
+
+  It builds the release's Javadoc in a worktree of its local tag, stores it in the project's package registry, and starts the Pages pipeline, whose one job runs on this Mac and puts every stored version into the site. Then it checks the site. The build runs every test, about five minutes: run no other build, and make no commit, until it ends. It needs `glab`, logged in, `zip`, `curl` and `python3` 3.11 or later, and the runner its job runs on: `gitlab-runner` and Docker, with the runner registered once on this Mac ([CI and the Javadoc site](ci-cd.md)). The pipeline reads `.gitlab-ci.yml` from GitLab's `main`, so push `main` first.
+- [ ] Open `https://soliscode.gitlab.io/soliscode-test/0.1.N/` and `https://soliscode.gitlab.io/soliscode-test/latest/`. The script prints the site's address.
+
+A failed publish does not undo the release: the tag and the installed artifacts stand. Run the script again; it skips a version already stored. `scripts/publish-javadoc.sh --check 0.1.N` prints what the project's settings let it publish, and changes nothing. [CI and the Javadoc site](ci-cd.md) has the detail.
 
 ### After the release
 
@@ -54,6 +68,6 @@ There are no release branches and no back-ported fixes. A fault in a release is 
 
 ## See also
 
-- [CI](ci-cd.md)
+- [CI and the Javadoc site](ci-cd.md)
 - [RELEASES.md](../../../RELEASES.md)
 - [Moving to a new release](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.14/docs/guide/05-new-release.md), in the parent's guide, for moving `<parent>`

@@ -10,10 +10,11 @@ soliscode-test/
 │   ├── user-guide/             # For people who use the library
 │   ├── developer-guide/        # For people who change it
 │   └── design/                 # The design, and the decisions in it
-├── scripts/                    # verify.sh, release/release.sh, the git hooks, and lib/ (their shared shell code)
+├── scripts/                    # verify.sh, release/release.sh, publish-javadoc.sh, the git hooks, and lib/ (their shared shell code)
 ├── .mvn/jvm.config             # The JVM options ErrorProne needs
 ├── .errorprone                 # An empty file that turns ErrorProne on
 ├── .gitlab/merge_request_templates/  # The merge request template
+├── .gitlab-ci.yml              # The Pages pipeline, which publishes the Javadoc (CI and the Javadoc site)
 ├── .claude/                    # Claude Code: the plugin's pin, this project's skills and its project file
 ├── CLAUDE.md, AGENTS.md        # The instructions for Claude Code, and for Codex and other agents
 ├── pom.xml                     # The build, on the SolisCode parent

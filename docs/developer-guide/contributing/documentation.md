@@ -8,7 +8,7 @@ Documentation is part of the change, not a follow-up. A change that a user sees 
 |---|---|---|---|
 | README | `README.md` | By hand, with its example as a test class in `src/test/java/com/soliscode/test/guide/` | Someone deciding whether to use the library |
 | User guide | `docs/user-guide/` | By hand, in Markdown, with its examples as test classes in `src/test/java/com/soliscode/test/guide/` | Users |
-| **API reference** | `target/site/en/apidocs/`, built with `mvn -B site`. It is not published yet | **Generated from the Javadoc comments** | Users |
+| **API reference** | `target/site/en/apidocs/`, built with `mvn -B site`, and each release's published at [https://soliscode.gitlab.io/soliscode-test/latest/](https://soliscode.gitlab.io/soliscode-test/latest/) | **Generated from the Javadoc comments** | Users |
 | Developer guide | `docs/developer-guide/` | By hand, in Markdown | Contributors and maintainers |
 | Design | `docs/design/` | By hand, in Markdown, with each task | Contributors and reviewers |
 | Agent instructions | `CLAUDE.md`, `AGENTS.md`, `.claude/` | By hand, with each task that changes what they say | Claude Code and Codex |
@@ -82,7 +82,7 @@ A page's example, and the README's, is a test class in `src/test/java/com/solisc
 ## Markdown conventions
 
 - One H1 for each file, matching the page's title.
-- Relative links between pages. Until the Javadoc is published, name a class or method in code font, and say which package it is in.
+- Relative links between pages. Link to the Javadoc for the detail of a class or method, through `https://soliscode.gitlab.io/soliscode-test/latest/`. A class newer than the latest release is not there yet: name it in code font, and say which package it is in.
 - Link to the SolisCode parent's guide at the parent's tag, `https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.14/docs/guide/...`, rather than describing a gate again. When `<parent>` moves to a new release, move these links with it.
 - A language on every fenced code block. Commands use `sh`, output uses `text`.
 - Diagrams in Mermaid, in fenced `mermaid` blocks, kept small. No semicolons in a diagram: Mermaid reads one as the end of a statement.

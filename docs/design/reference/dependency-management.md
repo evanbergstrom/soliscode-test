@@ -33,6 +33,8 @@ Main code uses two classes JUnit marks internal, `org.junit.platform.commons.uti
 
 Every dependency comes from Maven Central, except the parent and `soliscode-performance-api`, released with it, which are in `~/.m2` only (build-and-test.md, "Prerequisites"; the API jar since #69, the user's decision).
 
+The one version outside Maven is the Pages job's image, `alpine:3.22.2` (Built, #77), in `.gitlab-ci.yml` and as the default image of the runner `scripts/publish-javadoc.sh --register-runner` creates. It is not part of the build, and both files are the parent's, copied unchanged, so the tag changes in both with the parent's template set, never here alone (build-and-test.md, "The published Javadoc").
+
 ## Changing a version
 
 Versions change in soliscode-parent, not here:

@@ -8,7 +8,7 @@
 | Do a specific task | [How-to guides](user-guide/how-to/README.md) |
 | Look up a setting or an error | [Reference](user-guide/reference/configuration.md) |
 | Understand how it works and why | [Concepts](user-guide/concepts/README.md) |
-| Look up a class or a method | [API reference](user-guide/reference/api.md) (the packages, and how to build the Javadoc) |
+| Look up a class or a method | [API reference](https://soliscode.gitlab.io/soliscode-test/latest/) (Javadoc), and [the packages and contracts](user-guide/reference/api.md) in brief |
 | Move to a newer release | [Upgrading](user-guide/upgrading.md) |
 | Build from source or contribute | [Developer guide](developer-guide/README.md) |
 | Read why the library is built the way it is | [Design documents](design/) |
@@ -23,7 +23,7 @@
 
 These pages describe `main`, the next release.
 
-The Javadoc is not published yet. Build it from a clone with `mvn -B site`, which writes it to `target/site/en/apidocs/`. Publishing it to GitLab Pages is [#77](https://gitlab.com/soliscode/soliscode-test/-/issues/77).
+The Javadoc of each release from 0.1.6 on is at `https://soliscode.gitlab.io/soliscode-test/<version>/`, and the newest at [https://soliscode.gitlab.io/soliscode-test/latest/](https://soliscode.gitlab.io/soliscode-test/latest/).
 
 The pages as they were at a release are in the repository at its tag, `v<version>`. What changed in each release is in [RELEASES.md](../RELEASES.md).
 

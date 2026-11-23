@@ -41,7 +41,7 @@ flowchart LR
 
 ### Maintainers
 - [Release process](maintainers/release-process.md)
-- [CI](maintainers/ci-cd.md)
+- [CI and the Javadoc site](maintainers/ci-cd.md)
 - [Issue triage](maintainers/triage.md)
 - [Security response](maintainers/security.md)
 

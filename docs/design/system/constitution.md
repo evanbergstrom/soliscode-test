@@ -80,7 +80,7 @@ Contracts for the interfaces chosen under goal 2 (the user's decision, 2026-11-0
 ### 4.3 Not goals
 - A test runner or engine of its own: the contracts run on JUnit's.
 - Contracts for interfaces outside the JDK. A library that adds its own (soliscode-common, for example) builds them on this one's support interfaces.
-- A deploy to a remote repository, or CI. Releases are local, and the gates run on the developer's machine (the user's decision, soliscode/soliscode-quant#6; the pipeline was removed by #11).
+- A deploy of the Maven artifacts to a remote repository, or a CI pipeline that builds or runs a gate. Releases are local, and the gates run on the developer's machine (the user's decision, soliscode/soliscode-quant#6; the old pipeline was removed by #11). The published Javadoc is neither (Built, #77): `scripts/publish-javadoc.sh` builds it on the publisher's machine and stores it as a zip in the project's generic package registry, and the one pipeline's one job, on a project runner on that machine, unpacks it into the Pages site, building nothing (build-and-test.md, "The published Javadoc").
 
 ## 5. Constraints
 

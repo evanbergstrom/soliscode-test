@@ -24,7 +24,7 @@
    scripts/install-git-hooks.sh
    ```
 
-   The project is private: you need to be a member of it to clone it. The hooks run when you commit and push. The pre-commit hook compiles the main and test code when a commit changes `src/`, `pom.xml`, `.mvn/` or `.errorprone`, which runs the gates that come before the tests. The pre-push hook refuses a push to `main` of a commit that skipped it. [build-and-test.md](../../design/reference/build-and-test.md#git-hooks), "Git hooks", has the detail.
+   The project is public: anyone can clone it, over HTTPS (`https://gitlab.com/soliscode/soliscode-test.git`) or, with a GitLab key, over SSH as above. The hooks run when you commit and push. The pre-commit hook compiles the main and test code when a commit changes `src/`, `pom.xml`, `.mvn/` or `.errorprone`, which runs the gates that come before the tests. The pre-push hook refuses a push to `main` of a commit that skipped it. [build-and-test.md](../../design/reference/build-and-test.md#git-hooks), "Git hooks", has the detail.
 
 ## Verify your setup
 

@@ -1,21 +1,25 @@
 # API reference
 
-The complete API reference is the Javadoc, generated from the source code. SolisCode Test does not publish it yet: build it from a clone, as [Building the reference locally](#building-the-reference-locally) says, and open `target/site/en/apidocs/index.html`.
+The complete API reference is the Javadoc, generated from the source code. The newest release's is at:
+
+### [SolisCode Test API reference](https://soliscode.gitlab.io/soliscode-test/latest/)
+
+Each release's Javadoc from 0.1.6 on stays published at `https://soliscode.gitlab.io/soliscode-test/<version>/`, such as `https://soliscode.gitlab.io/soliscode-test/0.1.6/` for 0.1.6. `https://soliscode.gitlab.io/soliscode-test/` lists every version. The Javadoc of `main`, the next release, is not published: build it from a clone, as [Building the reference locally](#building-the-reference-locally) says.
 
 ## Packages
 
 | Package | Purpose |
 |---|---|
-| `com.soliscode.test` | `AbstractTest`, which a test class extends to say which optional methods its class supports, and `InterfaceMethod`, `MethodStatus` and `SupportedMethods` |
-| `com.soliscode.test.contract` and its packages | The contracts, one package for each interface (`contract.list`, `contract.map`, …), the choices a test class declares (`DoesNotPermitNulls`, `DoesNotPermitDuplicates`, `DoesNotPermitIncompatibleTypes`), and `contract.support`, the interfaces the contracts extend (`WithIntegerElement`, `WithArrayList`, `CollectionProviderSupport` and the others) |
-| `com.soliscode.test.methods` | The constants that name each optional method, for `doesNotSupportMethod`: `CollectionMethods`, `ListMethods`, `MapMethods`, `ObjectMethods` and the others |
-| `com.soliscode.test.provider` | The providers of instances and elements: `ObjectProvider`, `CollectionProvider`, `MapProvider` and the providers of the other interfaces, and the factories that make them (`Providers`, `CollectionProviders`, `MapProviders`, …) |
-| `com.soliscode.test.breakable` | The breakable implementations, their `Break` constants and their builders |
-| `com.soliscode.test.assertions` | The assertions JUnit lacks: `Assertions` (ordering, `assertThrowsAnyOf`, `assertThrowsDifferent`, `assertImplementsOnly`, `assertNoDeadlocks`, the string assertions), and `assertions.collection` and `assertions.actions` |
-| `com.soliscode.test.safety` | `ContentionCoordinator`, which runs operations from many threads at once |
-| `com.soliscode.test.performance` | The performance test library: `AllocationAssertion`, `LatencyRecorder`, `OpenLoopPacer`, `Sweep`, `ProcessTopology`, `StageTaps` and `HeapSoak` |
-| `com.soliscode.test.annotations` | The test tags: `@ConcurrencyTest`, `@Nondeterministic`, `@Slow`, `@VerySlow`, `@ExtremelySlow` |
-| `com.soliscode.test.util`, `com.soliscode.test.interfaces` | Helpers for tests: `CollectionTestUtils` (`preventNulls`), `IdentitySet`, consumers that count or collect, `UnbrokenView`, and classes that implement only one interface |
+| [`com.soliscode.test`](https://soliscode.gitlab.io/soliscode-test/latest/com/soliscode/test/package-summary.html) | `AbstractTest`, which a test class extends to say which optional methods its class supports, and `InterfaceMethod`, `MethodStatus` and `SupportedMethods` |
+| [`com.soliscode.test.contract`](https://soliscode.gitlab.io/soliscode-test/latest/com/soliscode/test/contract/package-summary.html) and its packages | The contracts, one package for each interface (`contract.list`, `contract.map`, …), the choices a test class declares (`DoesNotPermitNulls`, `DoesNotPermitDuplicates`, `DoesNotPermitIncompatibleTypes`), and `contract.support`, the interfaces the contracts extend (`WithIntegerElement`, `WithArrayList`, `CollectionProviderSupport` and the others) |
+| [`com.soliscode.test.methods`](https://soliscode.gitlab.io/soliscode-test/latest/com/soliscode/test/methods/package-summary.html) | The constants that name each optional method, for `doesNotSupportMethod`: `CollectionMethods`, `ListMethods`, `MapMethods`, `ObjectMethods` and the others |
+| [`com.soliscode.test.provider`](https://soliscode.gitlab.io/soliscode-test/latest/com/soliscode/test/provider/package-summary.html) | The providers of instances and elements: `ObjectProvider`, `CollectionProvider`, `MapProvider` and the providers of the other interfaces, and the factories that make them (`Providers`, `CollectionProviders`, `MapProviders`, …) |
+| [`com.soliscode.test.breakable`](https://soliscode.gitlab.io/soliscode-test/latest/com/soliscode/test/breakable/package-summary.html) | The breakable implementations, their `Break` constants and their builders |
+| [`com.soliscode.test.assertions`](https://soliscode.gitlab.io/soliscode-test/latest/com/soliscode/test/assertions/package-summary.html) | The assertions JUnit lacks: `Assertions` (ordering, `assertThrowsAnyOf`, `assertThrowsDifferent`, `assertImplementsOnly`, `assertNoDeadlocks`, the string assertions), and `assertions.collection` and `assertions.actions` |
+| [`com.soliscode.test.safety`](https://soliscode.gitlab.io/soliscode-test/latest/com/soliscode/test/safety/package-summary.html) | `ContentionCoordinator`, which runs operations from many threads at once |
+| [`com.soliscode.test.performance`](https://soliscode.gitlab.io/soliscode-test/latest/com/soliscode/test/performance/package-summary.html) | The performance test library: `AllocationAssertion`, `LatencyRecorder`, `OpenLoopPacer`, `Sweep`, `ProcessTopology`, `StageTaps` and `HeapSoak` |
+| [`com.soliscode.test.annotations`](https://soliscode.gitlab.io/soliscode-test/latest/com/soliscode/test/annotations/package-summary.html) | The test tags: `@ConcurrencyTest`, `@Nondeterministic`, `@Slow`, `@VerySlow`, `@ExtremelySlow` |
+| [`com.soliscode.test.util`](https://soliscode.gitlab.io/soliscode-test/latest/com/soliscode/test/util/package-summary.html), [`com.soliscode.test.interfaces`](https://soliscode.gitlab.io/soliscode-test/latest/com/soliscode/test/interfaces/package-summary.html) | Helpers for tests: `CollectionTestUtils` (`preventNulls`), `IdentitySet`, consumers that count or collect, `UnbrokenView`, and classes that implement only one interface |
 
 ## Contracts
 

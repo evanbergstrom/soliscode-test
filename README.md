@@ -1,6 +1,7 @@
 # SolisCode Test
 
 [![Licence: Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE.txt)
+[![API reference: Javadoc](https://img.shields.io/badge/API%20reference-Javadoc-informational)](https://soliscode.gitlab.io/soliscode-test/latest/)
 
 **SolisCode Test** is a Java library for people who write JUnit 6 tests that gives them ready-made test suites for the JDK's interfaces, the assertions JUnit lacks, and support for testing thread safety.
 
@@ -89,7 +90,7 @@ Next: work through the [First steps tutorial](docs/user-guide/getting-started/fi
 | Guide | For |
 |---|---|
 | [User guide](docs/user-guide/README.md) | Installing, using and configuring SolisCode Test |
-| [API reference](docs/user-guide/reference/api.md) | The packages and contracts, and how to build the Javadoc of every public class and method, which is not published yet |
+| [API reference](https://soliscode.gitlab.io/soliscode-test/latest/) | The Javadoc of every public class and method, for the newest release; [the packages and contracts](docs/user-guide/reference/api.md) in brief |
 | [Developer guide](docs/developer-guide/README.md) | Building from source, how the code is laid out, contributing |
 | [Releases](RELEASES.md) | What changed in each release |
 

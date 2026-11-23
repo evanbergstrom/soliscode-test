@@ -29,7 +29,7 @@ mvn -B -Drevision=0.1.6 install
 
 `24a68aa` is the commit of the 0.1.6 release, which [RELEASES.md](../../../RELEASES.md) names in its entry; the release's tag, `v0.1.6`, is not on GitLab yet. The POM at a release says `0.1-SNAPSHOT`. `-Drevision=0.1.6` gives the build the release's own version, so that it installs `0.1.6`. The build runs every test and gate first, and takes about five minutes.
 
-The project is private: you need to be a member of it. Clone it over SSH instead, with your GitLab key: `git clone git@gitlab.com:soliscode/soliscode-test.git soliscode-test`.
+The project is public, so anyone can clone it over HTTPS. With a GitLab key you can clone over SSH instead: `git clone git@gitlab.com:soliscode/soliscode-test.git soliscode-test`.
 
 ### 3. Add it to your POM
 
