@@ -761,6 +761,37 @@ public class BreakableNavigableMapTest extends AbstractTest {
         assertTrue(wrappedMap.permitsNullValues());
     }
 
+    /// Verifies that `wrap` with null permissions gives a map that permits, and refuses, null keys and values as asked,
+    /// for each of the four combinations (#25). The wrapped map's comparator orders null first, so that a null key
+    /// the map permits reaches it.
+    @Test
+    @DisplayName("Test wrap with null permissions permits null keys and values as asked")
+    public void wrapWithNullPermissionsPermitsNullsAsAsked() {
+        for (final boolean permitsNullKeys : new boolean[] {true, false}) {
+            for (final boolean permitsNullValues : new boolean[] {true, false}) {
+                BreakableNavigableMap<String, Integer> wrappedMap = BreakableNavigableMap.wrap(
+                        new TreeMap<>(Comparator.nullsFirst(Comparator.<String>naturalOrder())), Set.of(),
+                        permitsNullKeys, permitsNullValues);
+                String combination = "permitsNullKeys " + permitsNullKeys + ", permitsNullValues " + permitsNullValues;
+
+                assertEquals(permitsNullKeys, wrappedMap.permitsNullKeys(), combination);
+                assertEquals(permitsNullValues, wrappedMap.permitsNullValues(), combination);
+                if (permitsNullKeys) {
+                    wrappedMap.put(null, 1);
+                    assertTrue(wrappedMap.containsKey(null), combination);
+                } else {
+                    assertThrows(NullPointerException.class, () -> wrappedMap.put(null, 1), combination);
+                }
+                if (permitsNullValues) {
+                    wrappedMap.put("apple", null);
+                    assertTrue(wrappedMap.containsKey("apple"), combination);
+                } else {
+                    assertThrows(NullPointerException.class, () -> wrappedMap.put("apple", null), combination);
+                }
+            }
+        }
+    }
+
     // ========== Navigation and NavigableMap Behavior Tests ==========
 
     /// Verifies that `BreakableNavigableMap` maintains proper navigation order under normal conditions.

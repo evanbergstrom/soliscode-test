@@ -1446,7 +1446,9 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
                 DEFAULT_SAFETY);
     }
 
-    /// Creates a BreakableNavigableMap that wraps the specified NavigableMap with full configuration.
+    /// Creates a BreakableNavigableMap that wraps the specified NavigableMap with the given breaks and null
+    /// permissions. The map refuses a null key or value it does not permit with a `NullPointerException`; its other
+    /// settings are the defaults.
     ///
     /// @param <K> the type of keys maintained by the map
     /// @param <V> the type of mapped values
@@ -1462,7 +1464,13 @@ public class BreakableNavigableMap<K, V> extends BreakableSortedMap<K, V> implem
             final Set<Break> breaks,
             final boolean permitsNullKeys,
             final boolean permitsNullValues) {
-        return new BreakableNavigableMap<>(navigableMap, breaks, DEFAULT_METHOD_STATUSES, DEFAULT_PERMITS,
-                DEFAULT_SAFETY);
+        int permits = DEFAULT_PERMITS & ~(PERMITS_NULL_KEYS | PERMITS_NULL_VALUES);
+        if (permitsNullKeys) {
+            permits |= PERMITS_NULL_KEYS;
+        }
+        if (permitsNullValues) {
+            permits |= PERMITS_NULL_VALUES;
+        }
+        return new BreakableNavigableMap<>(navigableMap, breaks, DEFAULT_METHOD_STATUSES, permits, DEFAULT_SAFETY);
     }
 }
