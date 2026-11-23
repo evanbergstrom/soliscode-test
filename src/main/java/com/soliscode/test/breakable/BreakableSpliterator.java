@@ -8,6 +8,7 @@ package com.soliscode.test.breakable;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -32,12 +33,13 @@ import com.soliscode.test.MethodStatus;
 /// @see Spliterator
 public class BreakableSpliterator<E> extends AbstractBreakable implements Spliterator<E> {
 
-    /// The spliterator reports no elements to [tryAdvance(Consumer)][#tryAdvance(Consumer)] and no size, and does
-    /// not split. [forEachRemaining(Consumer)][#forEachRemaining(Consumer)] and
-    /// [characteristics()][#characteristics()] are not changed: `forEachRemaining` still passes every element to
-    /// the action.
+    /// The spliterator looks empty through every method that traverses, splits or sizes it: it passes no element to
+    /// the action of [tryAdvance(Consumer)][#tryAdvance(Consumer)] or
+    /// [forEachRemaining(Consumer)][#forEachRemaining(Consumer)], so a stream over it has no elements; it reports
+    /// no size; and it does not split. [characteristics()][#characteristics()] is not changed.
     ///
     /// **Affected Methods:** [tryAdvance(Consumer)][#tryAdvance(Consumer)] (returns `false`),
+    /// [forEachRemaining(Consumer)][#forEachRemaining(Consumer)] (calls the action for no element),
     /// [trySplit()][#trySplit()] (returns `null`), [estimateSize()][#estimateSize()] (returns zero),
     /// [getExactSizeIfKnown()][#getExactSizeIfKnown()] (returns zero)
     public static final Break SPLITERATOR_IS_ALWAYS_EMPTY =
@@ -331,6 +333,7 @@ public class BreakableSpliterator<E> extends AbstractBreakable implements Splite
     ///
     /// # Breaks
     /// This method can be broken using the following breaks:
+    /// - [SPLITERATOR_IS_ALWAYS_EMPTY][#SPLITERATOR_IS_ALWAYS_EMPTY]
     /// - [SPLITERATOR_FOR_EACH_REMAINING_DOES_NOT_CALL_ACTION][#SPLITERATOR_FOR_EACH_REMAINING_DOES_NOT_CALL_ACTION]
     /// - [SPLITERATOR_SKIPS_FIRST_ELEMENT][#SPLITERATOR_SKIPS_FIRST_ELEMENT]
     /// - [SPLITERATOR_FOR_EACH_REMAINING_IGNORES_NULL_ACTION][#SPLITERATOR_FOR_EACH_REMAINING_IGNORES_NULL_ACTION]
@@ -349,6 +352,9 @@ public class BreakableSpliterator<E> extends AbstractBreakable implements Splite
     @Override
     public void forEachRemaining(final Consumer<? super E> action) {
         if (action == null && hasBreak(SPLITERATOR_FOR_EACH_REMAINING_IGNORES_NULL_ACTION)) {
+            return;
+        } else if (hasBreak(SPLITERATOR_IS_ALWAYS_EMPTY)) {
+            Objects.requireNonNull(action, "action");
             return;
         }
         boolean first = !started;

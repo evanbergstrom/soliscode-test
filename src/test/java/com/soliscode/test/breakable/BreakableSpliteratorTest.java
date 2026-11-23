@@ -15,6 +15,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -178,6 +180,25 @@ public class BreakableSpliteratorTest {
         assertNull(iterator.trySplit());
         assertEquals(0, iterator.estimateSize());
         assertEquals(0, iterator.getExactSizeIfKnown());
+    }
+
+    /// Tests that the `SPLITERATOR_IS_ALWAYS_EMPTY` break reaches `forEachRemaining`, and so a stream's terminal
+    /// operations: the action is called for no element, and a stream over the spliterator counts and collects none.
+    /// The spliterator is `SIZED`, so `count()` alone reads the size and does not traverse; `collect` traverses.
+    @Test
+    @DisplayName("forEachRemaining() with SPLITERATOR_IS_ALWAYS_EMPTY calls the action for no element")
+    public void forEachRemainingWithSpliteratorIsAlwaysEmptyBreak() {
+        BreakableIterable<Integer> iterable = Breakables.buildIterable(1, 2, 3)
+                .addBreak(SPLITERATOR_IS_ALWAYS_EMPTY)
+                .build();
+        Collection<Integer> elements = new ArrayList<>();
+        iterable.spliterator().forEachRemaining(elements::add);
+        assertIsEmpty(elements);
+
+        assertEquals(0, StreamSupport.stream(iterable.spliterator(), false).count());
+        assertIsEmpty(StreamSupport.stream(iterable.spliterator(), false).collect(Collectors.toList()));
+        assertThrows(NullPointerException.class,
+                () -> over(List.of(1, 2), SPLITERATOR_IS_ALWAYS_EMPTY).forEachRemaining(null));
     }
 
     /// Tests the `SPLITERATOR_FOR_EACH_REMAINING_DOES_NOT_CALL_ACTION` break behavior.

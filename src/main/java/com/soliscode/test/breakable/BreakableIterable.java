@@ -216,7 +216,7 @@ import com.soliscode.test.util.UnbrokenView;
 ///     Spliterator<Integer> spliterator = withSpliteratorBreaks.spliterator();
 ///     assertEquals(0, spliterator.estimateSize()); // Spliterator break makes it appear empty
 ///     assertFalse(spliterator.tryAdvance(e -> { })); // and tryAdvance finds no element
-///     // forEachRemaining is not changed by this break: it still passes every element
+///     // forEachRemaining passes no element either, so a stream over it is empty
 ///
 ///     // But direct iteration should still work
 ///     assertEquals(5, IterableTestUtils.size(withSpliteratorBreaks));
