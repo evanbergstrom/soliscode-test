@@ -5,6 +5,7 @@
 
 package com.soliscode.test.breakable;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.junit.jupiter.api.DisplayName;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import com.soliscode.test.AbstractTest;
 import com.soliscode.test.contract.collection.CollectionContract;
 import com.soliscode.test.contract.support.WithIntegerElement;
+import com.soliscode.test.methods.SequencedCollectionMethods;
 import com.soliscode.test.provider.CollectionProvider;
 import com.soliscode.test.provider.CollectionProviders;
 import com.soliscode.test.util.UsesCollections;
@@ -85,6 +87,43 @@ public class BreakableSequencedSetTest extends AbstractTest
 
         set.addLast(2);
         assertFalse(set.contains(2));
+    }
+
+    @Test
+    @DisplayName("Test both add-position breaks add at the other end, with no recursion")
+    void bothAddPositionBreaksAddAtTheOtherEnd() {
+        BreakableSequencedSet<Integer> set = new BreakableSequencedSet.Builder<>(List.of(2))
+                .addBreak(BreakableSequencedCollection.ADD_FIRST_ADDS_TO_END)
+                .addBreak(BreakableSequencedCollection.ADD_LAST_ADDS_TO_FRONT)
+                .build();
+
+        set.addFirst(1);
+        set.addLast(3);
+        assertEquals(List.of(3, 2, 1), List.copyOf(set));
+    }
+
+    @Test
+    @DisplayName("Test an add-position break is not changed by a break of the other add method")
+    void addPositionBreakIgnoresOtherMethodsBreaks() {
+        BreakableSequencedSet<Integer> set = new BreakableSequencedSet.Builder<>(List.of(2))
+                .addBreak(BreakableSequencedCollection.ADD_FIRST_ADDS_TO_END)
+                .addBreak(BreakableSequencedCollection.ADD_LAST_DOES_NOT_ADD_ELEMENT)
+                .build();
+
+        set.addFirst(1);
+        assertEquals(List.of(2, 1), List.copyOf(set));
+    }
+
+    @Test
+    @DisplayName("Test an add-position break is not changed by the other add method being unsupported")
+    void addPositionBreakIgnoresOtherMethodsStatus() {
+        BreakableSequencedSet<Integer> set = new BreakableSequencedSet.Builder<>(List.of(2))
+                .addBreak(BreakableSequencedCollection.ADD_LAST_ADDS_TO_FRONT)
+                .doesNotSupport(SequencedCollectionMethods.ADD_FIRST)
+                .build();
+
+        set.addLast(3);
+        assertEquals(List.of(3, 2), List.copyOf(set));
     }
 
     @Test

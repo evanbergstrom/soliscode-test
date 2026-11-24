@@ -183,7 +183,8 @@ public class BreakableSequencedSet<E> extends BreakableSet<E> implements Sequenc
                 return;
             }
             if (hasBreak(BreakableSequencedCollection.ADD_FIRST_ADDS_TO_END)) {
-                addLast(e);
+                // The backing set, not addLast, which would apply addLast's breaks and status (#27).
+                sequencedSet.addLast(e);
                 return;
             }
             sequencedSet.addFirst(e);
@@ -206,7 +207,8 @@ public class BreakableSequencedSet<E> extends BreakableSet<E> implements Sequenc
                 return;
             }
             if (hasBreak(BreakableSequencedCollection.ADD_LAST_ADDS_TO_FRONT)) {
-                addFirst(e);
+                // The backing set, not addFirst, which would apply addFirst's breaks and status (#27).
+                sequencedSet.addFirst(e);
                 return;
             }
             sequencedSet.addLast(e);

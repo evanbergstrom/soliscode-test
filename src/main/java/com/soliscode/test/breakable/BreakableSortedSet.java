@@ -1029,8 +1029,8 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
     /// - [ADD_FIRST_DOES_NOT_ADD_ELEMENT][BreakableSequencedCollection#ADD_FIRST_DOES_NOT_ADD_ELEMENT]: returns
     ///   without throwing
     ///
-    /// [ADD_FIRST_ADDS_TO_END][BreakableSequencedCollection#ADD_FIRST_ADDS_TO_END] has no effect here: the method it
-    /// would call, [addLast(Object)][#addLast(Object)], throws the same exception.
+    /// [ADD_FIRST_ADDS_TO_END][BreakableSequencedCollection#ADD_FIRST_ADDS_TO_END] has no effect here: adding at the
+    /// end of a sorted set is refused with the same exception.
     ///
     /// @param e the element
     /// @throws UnsupportedOperationException always, unless a break is set
@@ -1049,8 +1049,8 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
     /// - [ADD_LAST_DOES_NOT_ADD_ELEMENT][BreakableSequencedCollection#ADD_LAST_DOES_NOT_ADD_ELEMENT]: returns
     ///   without throwing
     ///
-    /// [ADD_LAST_ADDS_TO_FRONT][BreakableSequencedCollection#ADD_LAST_ADDS_TO_FRONT] has no effect here: the method it
-    /// would call, [addFirst(Object)][#addFirst(Object)], throws the same exception.
+    /// [ADD_LAST_ADDS_TO_FRONT][BreakableSequencedCollection#ADD_LAST_ADDS_TO_FRONT] has no effect here: adding at the
+    /// front of a sorted set is refused with the same exception.
     ///
     /// @param e the element
     /// @throws UnsupportedOperationException always, unless a break is set
