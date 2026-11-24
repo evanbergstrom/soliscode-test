@@ -722,6 +722,19 @@ public class BreakableConcurrentNavigableMapTest extends AbstractTest {
         assertEquals("b", new BreakableConcurrentNavigableMap<>(map).firstKey());
     }
 
+    /// Verifies that a null comparator means natural ordering, as it does for [ConcurrentSkipListMap] (#26).
+    @Test
+    @DisplayName("Builder.setComparator(null) means natural ordering")
+    public void builderWhenComparatorSetToNullUsesNaturalOrdering() {
+        final BreakableConcurrentNavigableMap<String, Integer> map =
+                new BreakableConcurrentNavigableMap.Builder<String, Integer>()
+                        .setComparator(Comparator.reverseOrder())
+                        .setComparator(null)
+                        .build(Map.of("a", 1, "b", 2));
+        assertNull(map.comparator());
+        assertEquals("a", map.firstKey());
+    }
+
     /// Verifies that `lowerKey` checks its own support: refused where `LOWER_KEY` is not supported (#21).
     @Test
     @DisplayName("lowerKey(K) throws UnsupportedOperationException where LOWER_KEY is not supported")

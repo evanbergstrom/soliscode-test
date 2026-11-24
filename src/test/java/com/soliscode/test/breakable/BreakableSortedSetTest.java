@@ -7,6 +7,7 @@ package com.soliscode.test.breakable;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -510,6 +511,25 @@ public class BreakableSortedSetTest {
         reverseSet.addAll(Arrays.asList("a", "b", "c"));
         assertEquals("c", reverseSet.first()); // Reverse order
         assertEquals("a", reverseSet.last());
+    }
+
+    /// A null comparator means natural ordering, as it does for [java.util.TreeSet] (#26).
+    @Test
+    @DisplayName("a null comparator, given to the builder's constructor or withComparator, means natural ordering")
+    public void testBuilderNullComparatorMeansNaturalOrdering() {
+        BreakableSortedSet<String> constructed = new BreakableSortedSet.Builder<>((Comparator<String>) null)
+                .addElements("b", "c", "a")
+                .build();
+        assertNull(constructed.comparator());
+        assertEquals(List.of("a", "b", "c"), List.copyOf(constructed));
+
+        BreakableSortedSet<String> reset = new BreakableSortedSet.Builder<String>()
+                .withComparator(Collections.reverseOrder())
+                .withComparator(null)
+                .addElements("b", "c", "a")
+                .build();
+        assertNull(reset.comparator());
+        assertEquals(List.of("a", "b", "c"), List.copyOf(reset));
     }
 
     /// Tests the builder copy constructor functionality.

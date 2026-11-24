@@ -448,6 +448,21 @@ public class BreakableSortedMapTest extends AbstractTest {
         assertEquals("banana", map.firstKey()); // Still reverse ordered
     }
 
+    /// A null comparator means natural ordering, as it does for [java.util.TreeMap] (#26).
+    @Test
+    @DisplayName("Builder.setComparator(null) means natural ordering")
+    public void testBuilderNullComparatorMeansNaturalOrdering() {
+        BreakableSortedMap<String, Integer> map = new BreakableSortedMap.Builder<String, Integer>()
+                .setComparator(Collections.reverseOrder())
+                .setComparator(null)
+                .add("banana", 2)
+                .add("apple", 1)
+                .build();
+
+        assertNull(map.comparator());
+        assertEquals("apple", map.firstKey());
+    }
+
     /// Tests the COMPARATOR_THROWS_EXCEPTION break functionality.
     ///
     /// Validates that when the COMPARATOR_THROWS_EXCEPTION break is active, the comparator()

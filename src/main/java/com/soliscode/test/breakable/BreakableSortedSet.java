@@ -1291,11 +1291,10 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
     /// ### Comparator Constructor
     /// ```java
     /// // Creates builder with specified comparator and no initial elements
-    /// public AbstractBuilder(Comparator<? super E> comparator)
+    /// public AbstractBuilder(@Nullable Comparator<? super E> comparator)
     /// ```
-    /// - Initializes with custom element ordering
+    /// - Initializes with custom element ordering, or natural ordering if the comparator is null
     /// - Automatically configures for Set semantics
-    /// - Validates comparator is non-null
     ///
     /// ### Collection Constructor
     /// ```java
@@ -1408,8 +1407,7 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
     /// The builder's comparator configuration directly affects the ordering
     /// behavior of all built sorted sets:
     /// ```java
-    /// // Natural, case-sensitive ordering: the default, with no withComparator call
-    /// // (withComparator(null) throws NullPointerException)
+    /// // Natural, case-sensitive ordering: the default, or withComparator(null), as for TreeSet
     /// BreakableSortedSet.Builder<String> builder1 = new BreakableSortedSet.Builder<>();
     ///
     /// // Case-insensitive ordering
@@ -1478,11 +1476,11 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
         ///         new BreakableSortedSet.Builder<>(String.CASE_INSENSITIVE_ORDER);
         /// ```
         ///
-        /// @param comparatorArg the comparator to use for element ordering
-        /// @throws NullPointerException if comparator is null
+        /// @param comparatorArg the comparator to use for element ordering, or null for natural ordering, as for
+        ///        [TreeSet#TreeSet(Comparator)]
         public AbstractBuilder(final @Nullable Comparator<? super E> comparatorArg) {
             super();
-            this.comparator = Objects.requireNonNull(comparatorArg);
+            this.comparator = comparatorArg;
             doesNotPermitDuplicates();
         }
 
@@ -1541,10 +1539,11 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
         ///     .build();
         /// ```
         ///
-        /// @param aComparator the comparator to use for ordering elements
+        /// @param aComparator the comparator to use for ordering elements, or null for natural ordering, as for
+        ///        [TreeSet#TreeSet(Comparator)]
         /// @return this builder for method chaining
         public B withComparator(final @Nullable Comparator<? super E> aComparator) {
-            this.comparator = Objects.requireNonNull(aComparator);
+            this.comparator = aComparator;
             return self();
         }
 
@@ -1626,7 +1625,7 @@ public class BreakableSortedSet<E> extends BreakableSequencedSet<E> implements S
         ///     .build();
         /// ```
         ///
-        /// @param comparator the comparator to use for ordering elements
+        /// @param comparator the comparator to use for ordering elements, or null for natural ordering
         public Builder(final @Nullable Comparator<? super E> comparator) {
             super(comparator);
         }

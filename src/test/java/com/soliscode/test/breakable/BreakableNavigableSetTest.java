@@ -609,6 +609,21 @@ public class BreakableNavigableSetTest {
         assertEquals(4, reverseSet.lower(2)); // lower in reverse = higher in normal
     }
 
+    /// A null comparator means natural ordering, as it does for [java.util.TreeSet] (#26).
+    @Test
+    @DisplayName("Builder.withComparator(null) means natural ordering")
+    public void testBuilderNullComparatorMeansNaturalOrdering() {
+        BreakableNavigableSet<Integer> set = new BreakableNavigableSet.Builder<Integer>()
+                .withComparator(Collections.reverseOrder())
+                .withComparator(null)
+                .addElements(4, 0, 8)
+                .build();
+
+        assertNull(set.comparator());
+        assertEquals(0, set.first());
+        assertEquals(8, set.ceiling(5));
+    }
+
     /**
      * Tests the builder copy constructor functionality.
      *

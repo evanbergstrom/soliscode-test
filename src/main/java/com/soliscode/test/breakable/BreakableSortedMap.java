@@ -841,10 +841,10 @@ public class BreakableSortedMap<K, V> extends BreakableMap<K, V> implements Sort
 
         /// Sets the comparator to be used by the built map.
         ///
-        /// @param newComparator the comparator to use
+        /// @param newComparator the comparator to use, or null for natural ordering, as for
+        ///        [java.util.TreeMap#TreeMap(Comparator)]
         /// @return this builder
-        /// @throws NullPointerException if newComparator is null
-        public B setComparator(final Comparator<K> newComparator) {
+        public B setComparator(final @Nullable Comparator<K> newComparator) {
             this.comparator = newComparator;
             return self();
         }

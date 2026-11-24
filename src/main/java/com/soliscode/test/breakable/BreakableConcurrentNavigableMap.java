@@ -889,9 +889,10 @@ public class BreakableConcurrentNavigableMap<K, V> extends BreakableConcurrentMa
 
         /// Sets the comparator that orders the built map's keys.
         ///
-        /// @param comparatorArg the comparator
+        /// @param comparatorArg the comparator, or null for natural ordering, as for
+        ///        [ConcurrentSkipListMap#ConcurrentSkipListMap(Comparator)]
         /// @return this builder
-        public Builder<K, V> setComparator(final Comparator<? super K> comparatorArg) {
+        public Builder<K, V> setComparator(final @Nullable Comparator<? super K> comparatorArg) {
             this.comparator = comparatorArg;
             return self();
         }
