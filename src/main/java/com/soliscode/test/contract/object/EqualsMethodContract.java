@@ -31,7 +31,8 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 /// This contract is normally used through the [ObjectContract] class:
 ///
 /// ```java
-/// public class MyClassTest extends ObjectContract<MyClass> {
+/// public class MyClassTest extends AbstractTest implements ObjectContract<MyClass> {
+///     // provider(), as in ObjectContract's example
 /// }
 /// ```
 ///
@@ -39,7 +40,9 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 /// be omitted using the `doesNotSupportMethod()` method:
 ///
 /// ```java
-/// public class MyClassTest extends ObjectContract<MyClass> {
+/// public class MyClassTest extends AbstractTest implements ObjectContract<MyClass> {
+///     // provider(), as in ObjectContract's example
+///
 ///     public MyClassTest() {
 ///         doesNotSupportMethod(ObjectMethods.EQUALS);
 ///     }
@@ -108,9 +111,9 @@ public interface EqualsMethodContract<T> extends ContractSupport<T> {
             T x = provider().createInstance();
             T y = provider().copyInstance(x);
             T z = provider().copyInstance(y);
-            assertEquals(x, y);
-            assertEquals(y, z);
-            assertEquals(x, z);
+            assertEquals(x, y, "x equals y, a copy of x");
+            assertEquals(y, z, "y equals z, a copy of y");
+            assertEquals(x, z, "x does not equal z, though x equals y and y equals z: equals is not transitive");
         }
     }
 
@@ -136,6 +139,9 @@ public interface EqualsMethodContract<T> extends ContractSupport<T> {
 
     /// Tests that for any non-null reference value `x`, `x.equals(null)` should return `false`.
     ///
+    /// It calls `equals(null)` itself: `assertNotEquals(null, value)` would compare `null == value` and never call
+    /// it (#70).
+    ///
     /// @throws org.opentest4j.AssertionFailedError if the test fails.
     /// @see Object#equals(Object)
     @Test
@@ -143,12 +149,15 @@ public interface EqualsMethodContract<T> extends ContractSupport<T> {
     default void equalsWithNullValueReturnsFalse() {
         if (supportsMethod(ObjectMethods.EQUALS)) {
             T value = provider().createInstance();
-            assertNotEquals(null, value);
+            assertFalse(value.equals(null), () -> "equals(null) returned true for " + value);
         }
     }
 
     /// Tests that [equals(Object)][Object#equals(Object)] returns `false`, and does not throw, for an object of an
     /// unrelated type.
+    ///
+    /// [Object]'s documentation does not say this in so many words; it follows from symmetry, since
+    /// `new Object().equals(x)` is `false`, so `x.equals(new Object())` must be too.
     @Test
     @DisplayName("equals() returns false for an object of another type")
     default void equalsWithOtherTypeReturnsFalse() {

@@ -76,6 +76,27 @@ public class FunctionalCollectionProvider<I extends Iterable<E>, E> extends Func
         return createInstance(elementProvider().createUniqueInstances(DEFAULT_SIZE, seed));
     }
 
+    /// Returns the seeds [#createInstance(long)] can serve: it asks the element provider for 10 unique elements from
+    /// the seed up, so the element provider's limit, less 9, or 0 if that is below 10 (#70). An unbounded element
+    /// provider, whose limit is [Long#MAX_VALUE], gives `Long.MAX_VALUE - 9`: the last seed's window must stay below
+    /// the element provider's limit too.
+    ///
+    /// @return the limit
+    @Override
+    public long uniqueSizeLimit() {
+        return seedLimit(elementProvider().uniqueSizeLimit(), DEFAULT_SIZE);
+    }
+
+    /// Returns the seeds a provider can serve that asks another, with the given limit, for `size` unique instances from
+    /// each seed up.
+    ///
+    /// @param innerLimit the other provider's limit
+    /// @param size how many unique instances it asks for
+    /// @return the limit
+    static long seedLimit(final long innerLimit, final int size) {
+        return Math.max(0, innerLimit - (size - 1));
+    }
+
     @Override
     public I createSingleton() {
         return createInstance(Collections.singleton(elementProvider.createInstance()));

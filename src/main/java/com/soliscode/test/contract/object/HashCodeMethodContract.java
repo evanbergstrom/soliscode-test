@@ -5,10 +5,11 @@
 
 package com.soliscode.test.contract.object;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
+import java.util.Random;
+import java.util.Set;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /// **Contract for the `Object#hashCode()` method**
 ///
 /// This interface defines tests for the `hashCode()` method as specified in [Object].
-/// It verifies stability, equality consistency, and distribution quality.
+/// It verifies stability and equality consistency, as [Object] requires, and, more strictly, distribution quality.
 ///
 /// ## Purpose
 /// The purpose of this contract is to ensure that a class's `hashCode()` implementation follows the
@@ -33,7 +34,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /// This contract is normally used through the [ObjectContract] class:
 ///
 /// ```java
-/// public class MyClassTest extends ObjectContract<MyClass> {
+/// public class MyClassTest extends AbstractTest implements ObjectContract<MyClass> {
+///     // provider(), as in ObjectContract's example
 /// }
 /// ```
 ///
@@ -41,7 +43,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /// be omitted using the `doesNotSupportMethod()` method:
 ///
 /// ```java
-/// public class MyClassTest extends ObjectContract<MyClass> {
+/// public class MyClassTest extends AbstractTest implements ObjectContract<MyClass> {
+///     // provider(), as in ObjectContract's example
+///
 ///     public MyClassTest() {
 ///         doesNotSupportMethod(ObjectMethods.HASH_CODE);
 ///     }
@@ -59,8 +63,25 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /// @since 1.0.0
 public interface HashCodeMethodContract<T> extends ContractSupport<T> {
 
-    /// The amount to allow the load factor of a hash table to exceed the target.
+    /// How far, as a fraction, the occupancy of a hash table filled with unequal values may fall below what a
+    /// uniform hash gives, in [#hashCodeWhenCalledManyTimesHasUniformDistribution()]: at 0.10, the table must have at
+    /// least 90% of the occupied buckets a uniform hash would fill. Until 0.1.7 it was an allowance on a load factor
+    /// that the test could not miss (#70).
     double LOAD_FACTOR_ALLOWANCE = 0.10;
+
+    /// Returns whether the class under test spreads the hash codes of unequal values, as a hash table needs, so that
+    /// the two tests that read [Object#hashCode()] more strictly than it is written run.
+    ///
+    /// [Object#hashCode()] says that unequal objects are *not required* to have distinct hash codes, and that
+    /// distinct ones "may improve the performance of hash tables". [#hashCodeWithUniqueValuesReturnsUniqueIntegers()]
+    /// and [#hashCodeWhenCalledManyTimesHasUniformDistribution()] expect them. A class whose hash code is legitimately
+    /// constant, or coarse, returns `false`, and the other tests of `hashCode` still run.
+    ///
+    /// @return `true` unless overridden
+    /// @since 0.1.7
+    default boolean hashCodeSpreadsUnequalValues() {
+        return true;
+    }
 
     /// Tests that the `hashCode()` method consistently returns the same integer value over multiple
     /// invocations on the same instance.
@@ -97,44 +118,89 @@ public interface HashCodeMethodContract<T> extends ContractSupport<T> {
     }
 
     /// Tests that the `hashCode()` method returns different values for objects that are not equal.
-    /// This is not strictly required by the `Object` interface, but it will result in improved performance.
+    ///
+    /// This reads [Object#hashCode()] more strictly than it is written: "It is *not* required that if two objects are
+    /// unequal according to the equals method, then calling the hashCode method on each of the two objects must
+    /// produce distinct integer results." It runs only where [#hashCodeSpreadsUnequalValues()] is `true`.
     ///
     /// @throws org.opentest4j.AssertionFailedError if the test fails.
     /// @see Object#hashCode()
     @Test
     @DisplayName("hashCode() returns different integers for unequal values")
     default void hashCodeWithUniqueValuesReturnsUniqueIntegers() {
-        if (supportsMethod(ObjectMethods.HASH_CODE)) {
+        if (supportsMethod(ObjectMethods.HASH_CODE) && hashCodeSpreadsUnequalValues()) {
             List<T> values = provider().createUniqueInstances(10);
             long uniqueValues = values.stream().map(Object::hashCode).distinct().count();
             assertEquals(values.size(), uniqueValues);
         }
     }
 
-    /// Test that the hashCode function results in a uniform distribution of hashcode values.
+    /// Tests that the hash codes of unequal values spread across a hash table laid out as [java.util.HashMap] lays it
+    /// out: 1000 values in 2048 buckets, each indexed by `(h ^ (h >>> 16)) & 2047`. The test counts the occupied
+    /// buckets, and requires at least `1 - LOAD_FACTOR_ALLOWANCE` of the 791.2 that a uniform hash fills
+    /// (`m(1 - e^(-n/m))`), 712.06, so 713.
+    ///
+    /// The values are `provider().createInstance(seed)` for distinct seeds below
+    /// `min(100_000, provider().uniqueSizeLimit())`, drawn from a [Random] of a fixed seed. They are the same on every
+    /// run, and are not biased by consecutive seeds, which give `String` 662 buckets. The provider's `createInstance`
+    /// must accept every seed in that range. Only distinct values count, by `equals` (by seed, where `EQUALS` is
+    /// unsupported): a provider whose seeds alias, as
+    /// `ShortProvider`'s do above 32,767, gives fewer values than seeds. A provider that yields fewer than 1000
+    /// distinct values in 10,000 draws, or whose limit is below 1000, has too few for the test, which then does not
+    /// run.
+    ///
+    /// This reads [Object#hashCode()] more strictly than it is written, which says only that distinct hash codes "may
+    /// improve the performance of hash tables". It runs only where [#hashCodeSpreadsUnequalValues()] is `true`.
     ///
     /// @throws org.opentest4j.AssertionFailedError if the test fails.
     /// @see Object#hashCode()
-    @SuppressWarnings("checkstyle:MagicNumber")
     @Test
-    @DisplayName("hashCode() returns integers that have a uniform distribution")
+    @DisplayName("hashCode() returns integers that spread across a hash table")
     default void hashCodeWhenCalledManyTimesHasUniformDistribution() {
-        if (supportsMethod(ObjectMethods.HASH_CODE)) {
-            final double expectedLoadFactor = 0.75;
-            final int numberOfObjects = 1000;
-            final int hashTableSize = (int) (numberOfObjects / expectedLoadFactor);
-
-            final double[] table = new double[hashTableSize];
-            Supplier<T> supplier = provider().uniqueInstanceSupplier();
-
-            Stream.generate(supplier).limit(numberOfObjects).forEach((o) -> {
-                int hash = o.hashCode();
-                int index = Math.abs(hash % hashTableSize);
-                table[index] = table[index] + 1.0;
-            });
-
-            double actualLLoadFactor = Arrays.stream(table).sum() / hashTableSize;
-            assertTrue(actualLLoadFactor - expectedLoadFactor < LOAD_FACTOR_ALLOWANCE);
+        final int values = 1000;
+        final int buckets = 2048;
+        final int seedBound = 100_000;
+        final long randomSeed = 70L;
+        final int spreadShift = 16;
+        final int drawsPerValue = 10;
+        if (!supportsMethod(ObjectMethods.HASH_CODE) || !hashCodeSpreadsUnequalValues()) {
+            return;
         }
+        long seeds = Math.min(seedBound, provider().uniqueSizeLimit());
+        if (seeds < values) {
+            return;
+        }
+        Random random = new Random(randomSeed);
+        Set<Long> drawn = new HashSet<>();
+        List<T> distinct = new ArrayList<>();
+        boolean compareValues = supportsMethod(ObjectMethods.EQUALS);
+        while (distinct.size() < values && drawn.size() < values * drawsPerValue && drawn.size() < seeds) {
+            long seed = random.nextLong(seeds);
+            if (drawn.add(seed)) {
+                T value = provider().createInstance(seed);
+                if (!compareValues || !distinct.contains(value)) {
+                    distinct.add(value);
+                }
+            }
+        }
+        if (distinct.size() < values) {
+            return;
+        }
+        boolean[] occupied = new boolean[buckets];
+        int count = 0;
+        for (final T value : distinct) {
+            int h = value.hashCode();
+            int index = (h ^ (h >>> spreadShift)) & (buckets - 1);
+            if (!occupied[index]) {
+                occupied[index] = true;
+                count++;
+            }
+        }
+        double uniform = buckets * (1 - Math.exp(-(double) values / buckets));
+        double required = (1 - LOAD_FACTOR_ALLOWANCE) * uniform;
+        int filled = count;
+        assertTrue(filled >= required, () -> values + " unequal values filled " + filled + " of " + buckets
+                + " buckets; a uniform hash fills " + Math.round(uniform) + ", and at least " + required
+                + " are required");
     }
 }

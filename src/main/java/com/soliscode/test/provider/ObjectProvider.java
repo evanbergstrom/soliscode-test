@@ -99,8 +99,13 @@ public interface ObjectProvider<T> {
 
     /// Returns the number of unique instances of the class that can be created.
     ///
+    /// The limit is also the bound on the seeds the provider serves: [#createInstance(long)] must accept every seed
+    /// below it. A provider whose `createInstance(seed)` draws from other providers, such as a collection provider
+    /// asking its element provider for several unique elements from `seed` up, reports the seeds it can serve, which
+    /// those providers' limits bound (#70).
+    ///
     /// @implSpec
-    /// The default implementation returns [Integer#MAX_VALUE]. This should be overridden for enumerations or any
+    /// The default implementation returns [Long#MAX_VALUE]. This should be overridden for enumerations or any
     /// classes that have a bounded number of unique values.
     ///
     /// @return     the maximum number of unique instances that can be created.

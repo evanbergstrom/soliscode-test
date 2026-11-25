@@ -32,13 +32,24 @@ package com.soliscode.test.contract.object;
 /// This interface is a mix-in class that can be used by a test class:
 ///
 /// ```java
-/// public class MyClassTest extends ObjectContract<MyClass> {
+/// public class MyClassTest extends AbstractTest implements ObjectContract<MyClass> {
 ///     @Override
-///     public ObjectProvider<MyClass> objectProvider() {
-///         return MyClass::new;
+///     public ObjectProvider<MyClass> provider() {
+///         return new FunctionalProvider<>(MyClass::new, MyClass::new, MyClass::new);
 ///     }
 /// }
 /// ```
+///
+/// [com.soliscode.test.AbstractTest] holds the method support the contract needs, and the provider makes a default
+/// instance, a copy and an instance from a seed (`MyClass()`, `MyClass(MyClass)` and `MyClass(long)`).
+/// `ObjectContractTest` compiles and runs this example.
+///
+/// ## How it reads `Object`'s documentation
+/// The tests of `equals`, of `hashCode`'s first two rules and of a non-`null` `toString` follow [Object]'s
+/// documentation as written. Some tests read it more strictly, each saying so in its own documentation, and each with
+/// an opt-out: [HashCodeMethodContract#hashCodeSpreadsUnequalValues()],
+/// [ToStringMethodContract#toStringDistinguishesUnequalValues()] and
+/// [ToStringMethodContract#toStringDescribesValue()].
 ///
 /// ## Thread Safety
 /// This contract interface does not provide any thread-safety guarantees. The thread safety of the

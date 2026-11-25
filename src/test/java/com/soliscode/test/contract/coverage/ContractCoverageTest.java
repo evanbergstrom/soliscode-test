@@ -64,6 +64,7 @@ import com.soliscode.test.breakable.BreakableMap;
 import com.soliscode.test.breakable.BreakableMapEntry;
 import com.soliscode.test.breakable.BreakableNavigableMap;
 import com.soliscode.test.breakable.BreakableNavigableSet;
+import com.soliscode.test.breakable.BreakableObject;
 import com.soliscode.test.breakable.BreakableQueue;
 import com.soliscode.test.breakable.BreakableSequencedCollection;
 import com.soliscode.test.breakable.BreakableSequencedSet;
@@ -107,6 +108,7 @@ import com.soliscode.test.contract.map.MapContract;
 import com.soliscode.test.contract.mapentry.MapEntryContract;
 import com.soliscode.test.contract.navigablemap.NavigableMapContract;
 import com.soliscode.test.contract.navigableset.NavigableSetContract;
+import com.soliscode.test.contract.object.ObjectContract;
 import com.soliscode.test.contract.object.SerializableContract;
 import com.soliscode.test.contract.queue.QueueContract;
 import com.soliscode.test.contract.sequencedcollection.SequencedCollectionContract;
@@ -302,6 +304,20 @@ public class ContractCoverageTest {
                         passes("TreeMap's entry",
                                 () -> new MapEntrySubjects.JdkEntry(MapEntryProviders.fromMap(TreeMap::new)),
                                 methods)));
+    }
+
+    @TestFactory
+    @DisplayName("ObjectContract")
+    Stream<DynamicNode> objectContract() {
+        List<Method> methods = ContractRuns.testMethods(ObjectContract.class, false);
+        return Stream.of(
+                coverage(ObjectContract.class, "String", ObjectSubjects::strings,
+                        ContractRuns.withSuperclasses(BreakableObject.class),
+                        (key, b) -> () -> ObjectSubjects.broken(b)),
+                Stream.of(passes("Integer", ObjectSubjects::integers, methods),
+                        passes("a record", ObjectSubjects::points, methods),
+                        passes("an ArrayList over a bounded element provider", ObjectSubjects::boundedList, methods)),
+                ObjectSubjects.namedChecks()).flatMap(s -> s);
     }
 
     @TestFactory
@@ -1052,7 +1068,7 @@ public class ContractCoverageTest {
                         () -> new BrokenSerializable(new BreakableCollection.Builder<>()), all),
                 fails("BreakableObject.EQUALS_ALWAYS_RETURNS_FALSE", () -> new BrokenSerializable(
                         new BreakableCollection.Builder<Integer>()
-                                .addBreak(com.soliscode.test.breakable.BreakableObject.EQUALS_ALWAYS_RETURNS_FALSE)),
+                                .addBreak(BreakableObject.EQUALS_ALWAYS_RETURNS_FALSE)),
                         all))));
     }
 

@@ -142,6 +142,11 @@ public final class CollectionProviders {
             }
 
             @Override
+            public long uniqueSizeLimit() {
+                return provider.uniqueSizeLimit();
+            }
+
+            @Override
             public W createSingleton() {
                 return wrapper.apply(provider.createSingleton());
             }

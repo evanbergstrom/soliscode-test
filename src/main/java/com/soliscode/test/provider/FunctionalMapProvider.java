@@ -88,6 +88,17 @@ public class FunctionalMapProvider<K, V, M extends Map<K, V>> extends Functional
         return createInstance(size, 0);
     }
 
+    /// Returns the seeds [#createInstance(long)] can serve: it asks the key and value providers for 10 unique instances
+    /// each from the seed up, so the smaller of their limits, less 9, or 0 if that is below 10
+    /// (#70). Over two unbounded providers it is `Long.MAX_VALUE - 9`.
+    ///
+    /// @return the limit
+    @Override
+    public long uniqueSizeLimit() {
+        return FunctionalCollectionProvider.seedLimit(
+                Math.min(keyProvider.uniqueSizeLimit(), valueProvider.uniqueSizeLimit()), DEFAULT_SIZE);
+    }
+
     @Override
     public M createInstance(final int size, final long seed) {
         M map = emptyInstance();

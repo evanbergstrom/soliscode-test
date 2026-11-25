@@ -9,6 +9,15 @@ For the full list of changes in each release, see [RELEASES.md](../../RELEASES.m
 3. Read the section below for each release between yours and the new one, and make the changes it lists.
 4. Build, and fix each use of a deprecated class or member that the compiler reports.
 
+## Upgrading to 0.1.7 from 0.1.6
+
+**Summary:** some tests of `ObjectContract`, which `IterableContract`, `MapContract` and every collection and map contract extend, now check what they did not, and may fail where they passed (T-0070).
+
+- **`equalsWithNullValueReturnsFalse` calls `equals(null)`.** It never did, so an `equals` that returned `true` for `null` passed. Fix `equals`.
+- **The hash code distribution test can fail.** It measured nothing before. It now puts 1000 values, distinct by `equals`, from `createInstance(seed)` with seeds drawn below `min(100_000, uniqueSizeLimit())`, into a table laid out as `HashMap`'s, and needs 90% of the buckets a uniform hash fills; it is skipped where the provider's limit is below 1000, or 10,000 seeds give fewer than 1000 distinct values. Fix the hash code, or, for a class whose hash code is legitimately constant or coarse, override `hashCodeSpreadsUnequalValues()` to return `false`. If a provider of your own throws for a seed below its `uniqueSizeLimit()`, make the limit say which seeds it serves.
+- **`toString` must not return `null`**, as `Object` requires: the new `toStringWhenCalledReturnsNonNull` checks it.
+- **New opt-outs** for the tests that read `Object` more strictly than it is written: `hashCodeSpreadsUnequalValues()`, `toStringDistinguishesUnequalValues()` and `toStringDescribesValue()`. Each is `true` by default, so what your test checks does not shrink.
+
 ## Upgrading to 0.1.6 from 0.1.5
 
 **Summary:** one new test may fail. `ThreadSafeCollectionContract` gains `clearWhenCalledDuringForEachDoesNotDisturbIt`: a collection that inherits `Iterable.forEach` over a fail-fast iterator, which its callers must lock by hand, now fails it; override `forEach` to hold the collection's lock. 0.1.6 also adds the performance test library, `com.soliscode.test.performance`, and with it two dependencies your tests get: `com.soliscode:soliscode-performance-api` (installed with the SolisCode parent) and `org.hdrhistogram:HdrHistogram`. It builds on the SolisCode parent 0.1.12, so install that first. `BreakableSequencedCollection.REVERSED_IS_NOT_THREAD_SAFE` now leaves the view `reversed()` returns without a lock; a test that relied on the old behaviour of that break may now fail.

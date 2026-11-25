@@ -76,6 +76,10 @@ final class UncheckedReasons {
             "SPLITERATOR_CHARACTERISTICS_LEAVE_OUT_ORDERED", "SPLITERATOR_CHARACTERISTICS_LEAVE_OUT_SIZED",
             "SPLITERATOR_GET_COMPARATOR_ALWAYS_THROWS");
 
+    /// The breaks of `BreakableObject` that act only between two distinct, equal instances (#70).
+    private static final Set<String> EQUAL_INSTANCE_BREAKS = Set.of("EQUALS_IS_NOT_SYMMETRIC",
+            "EQUALS_IS_NOT_TRANSITIVE", "EQUALS_IS_NOT_CONSISTENT", "HASH_CODE_DIFFERS_FOR_EQUAL_VALUES");
+
     private static final Pattern SORTED_MAP_METHOD_BREAK =
             Pattern.compile("(COMPARATOR|FIRST_KEY|LAST_KEY|HEAD_MAP|TAIL_MAP|SUB_MAP)_");
 
@@ -94,11 +98,26 @@ final class UncheckedReasons {
         String field = key.substring(key.indexOf('.') + 1);
         String reason = Stream.of(threadSafetyReason(contract, key), weakConsistencyReason(contract, field),
                         spliteratorReason(contract, field), spliteratorComparatorReason(contract, field),
-                        returnValueReason(contract, field), interleavingReason(field), orderReason(contract, field))
+                        returnValueReason(contract, field), interleavingReason(field), orderReason(contract, field),
+                        identityEqualityReason(contract, field))
                 .filter(Objects::nonNull)
                 .findFirst()
                 .orElse(null);
         return CHECKED.equals(reason) ? null : reason;
+    }
+
+    /// The reason for a break that acts only between distinct, equal instances, in a contract that keeps identity
+    /// equality, or `null` to look further (#70).
+    ///
+    /// @param contract the contract
+    /// @param field the break's field name
+    /// @return the reason, or `null`
+    private static String identityEqualityReason(final Class<?> contract, final String field) {
+        if (!EQUAL_INSTANCE_BREAKS.contains(field) || !BlockingQueueContract.class.isAssignableFrom(contract)) {
+            return null;
+        }
+        return "the contract keeps identity equality (equalsComparesValues() is false), so it compares no two "
+                + "distinct equal instances; ObjectContract checks the break";
     }
 
     /// The reason for a thread-safety break, [#CHECKED] if the contract checks it, or `null` to look further.

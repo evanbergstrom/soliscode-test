@@ -43,6 +43,9 @@ SolisCode Test reads no configuration file and no system property. A contract is
 |---|---|---|---|---|
 | `equalsComparesValues()` | override | `boolean` | `true`; `false` in the `BlockingQueue`, `BlockingDeque` and `TransferQueue` contracts | Whether `equals` compares contents. Return `false` for a class that keeps `Object`'s identity equality, as most queues do; the tests that hold for identity still run |
 | `consistencyRepeats()` | override | `int` | `10` | How many times a test repeats an operation it checks gives the same result each time, such as `equals` |
+| `hashCodeSpreadsUnequalValues()` | override | `boolean` | `true` | In `ObjectContract` and every contract that extends it: whether unequal values get distinct hash codes that spread across a hash table, which `Object` recommends but does not require. Return `false` for a class whose hash code is legitimately constant or coarse; the other `hashCode` tests still run |
+| `toStringDistinguishesUnequalValues()` | override | `boolean` | `true` | Whether unequal values get distinct strings. Return `false` for a class whose string shows only part of what `equals` compares |
+| `toStringDescribesValue()` | override | `boolean` | `true` | Whether `toString` describes the value: the same string on two calls in a row and for equal copies, and not `Object`'s own form. Return `false` for a string that legitimately changes, such as one with a call counter; the test that `toString` is not `null` still runs |
 
 ### Other interfaces
 
