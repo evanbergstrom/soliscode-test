@@ -48,7 +48,7 @@ flowchart LR
 
 ## Rules every change keeps
 
-The SolisCode architecture rules are a gate, checked in every build: no package cycles, no use of another package tree's `internal` package, and the rest, listed on the [parent's architecture page](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.14/docs/guide/03-gates/architecture.md#what-it-checks). The library's own rules are in [constitution.md](../../design/system/constitution.md#6-rules-every-change-keeps), section 6: a contract is shown to fail, a break is one fault, contracts respect what the class supports, and the others.
+The SolisCode architecture rules are a gate, checked in every build: no package cycles, no use of another package tree's `internal` package, and the rest, listed on the [parent's architecture page](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/guide/03-gates/architecture.md#what-it-checks). The library's own rules are in [constitution.md](../../design/system/constitution.md#6-rules-every-change-keeps), section 6: a contract is shown to fail, a break is one fault, contracts respect what the class supports, and the others.
 
 ## See also
 

@@ -2,7 +2,7 @@
 
 This guide is for people who want to **build, change or contribute to** SolisCode Test, and for the maintainers who release it. If you only want to *use* SolisCode Test, see the [User guide](../user-guide/README.md).
 
-SolisCode Test builds on the SolisCode parent, `com.soliscode:soliscode-parent` 0.1.14, which gives it its versions, its plugins and its gates. The [parent's user guide](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.14/docs/guide/README.md) describes them; this guide links to it rather than repeating it.
+SolisCode Test builds on the SolisCode parent, `com.soliscode:soliscode-parent` 0.1.17, which gives it its versions, its plugins and its gates. The [parent's user guide](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/guide/README.md) describes them; this guide links to it rather than repeating it.
 
 ## Path for new contributors
 

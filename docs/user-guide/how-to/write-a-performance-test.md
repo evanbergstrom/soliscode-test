@@ -5,7 +5,7 @@
 ## Before you start
 
 - SolisCode Test 0.1.6 or later
-- For a scenario: a project on the SolisCode parent with the performance gate turned on, as the parent's [Performance](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.14/docs/guide/03-gates/performance.md) page says. An allocation bound needs neither
+- For a scenario: a project on the SolisCode parent with the performance gate turned on, as the parent's [Performance](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/guide/03-gates/performance.md) page says. An allocation bound needs neither
 
 ## Steps
 
@@ -83,7 +83,7 @@
 
    The pacer times each operation from when it was due to be sent, not from when it started, so a slow operation makes the ones after it late, and their latency shows it. `run.metrics()` gives the latencies' percentiles and the rate achieved.
 
-3. Register the scenario: list its class's full name, one line, in `src/test/resources/META-INF/services/com.soliscode.performance.PerformanceScenario`. Then run the gate, `mvn -B soliscode-performance:run`. It runs each point `repeats()` times (at least 5), each in a JVM of its own, and compares each metric with the baseline you record, as the parent's [Performance](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.14/docs/guide/03-gates/performance.md) page and its [build-and-test.md, "Performance"](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.14/docs/design/reference/build-and-test.md#performance) say.
+3. Register the scenario: list its class's full name, one line, in `src/test/resources/META-INF/services/com.soliscode.performance.PerformanceScenario`. Then run the gate, `mvn -B soliscode-performance:run`. It runs each point `repeats()` times (at least 5), each in a JVM of its own, and compares each metric with the baseline you record, as the parent's [Performance](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/guide/03-gates/performance.md) page and its [build-and-test.md, "Performance"](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/design/reference/build-and-test.md#performance) say.
 
    > **Note:** the other parts of `com.soliscode.test.performance` are for larger scenarios: `LatencyRecorder` on its own, for latencies you time yourself; `ProcessTopology`, to start processes from jars, each ready before the next; `StageTaps`, for the latency of each stage of a pipeline; and `HeapSoak`, for the slope of a process's live heap over a long run.
 

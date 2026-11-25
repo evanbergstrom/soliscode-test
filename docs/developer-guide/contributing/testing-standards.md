@@ -35,14 +35,14 @@ A contract that never fails tests nothing. `ContractCoverageTest` (`src/test/jav
 
 ## Coverage
 
-The coverage gate fails the build when a module's line coverage is below its `jacoco.minimum.coverage`, or when any method misses more than 3 of its complexity ([the parent's coverage page](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.14/docs/guide/03-gates/coverage.md)).
+The coverage gate fails the build when a module's line coverage is below its `jacoco.minimum.coverage`, or when any method misses more than 3 of its complexity ([the parent's coverage page](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/guide/03-gates/coverage.md)).
 
 SolisCode Test's minimum is **0.70**, set in `pom.xml`.
 
 - Don't lower the minimum to make a change pass. Changing it is the maintainer's decision.
 - A new or changed class should not lower the coverage.
 - Coverage is a guide, not the goal. A meaningful assertion is worth more than a line run without one.
-- Never pass `-DskipTests` or `-Djacoco.skip=true` to a build you rely on: without tests, the coverage check passes without checking ([Ground rules](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.14/docs/guide/07-ground-rules.md#dont-skip-the-tests-or-the-coverage-check)).
+- Never pass `-DskipTests`, `-Dmaven.test.skip.exec=true` or `-Djacoco.skip=true` to a build you rely on: without tests, the coverage check passes without checking ([Ground rules](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/guide/07-ground-rules.md#dont-skip-the-tests-or-the-coverage-check)).
 
 ## Test organisation
 

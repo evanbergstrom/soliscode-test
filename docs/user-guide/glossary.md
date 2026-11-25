@@ -44,5 +44,5 @@
 
 ## See also
 
-- [The SolisCode parent's glossary](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.14/docs/guide/09-glossary.md)
+- [The SolisCode parent's glossary](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/guide/09-glossary.md)
 - [Concepts](concepts/README.md)

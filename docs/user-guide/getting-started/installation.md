@@ -16,7 +16,7 @@ Before 1.0.0, no SolisCode release is deployed to a remote repository. You build
 
 ### 1. The SolisCode parent
 
-SolisCode Test 0.1.6 builds on the SolisCode parent 0.1.12 (`main` builds on 0.1.14). Install the parent as its guide says, in [Installing a release on another machine](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.14/docs/guide/08-maintainers.md#installing-a-release-on-another-machine), at the version the release you install names. The parent's install also installs `com.soliscode:soliscode-performance-api`, which SolisCode Test depends on.
+SolisCode Test 0.1.6 builds on the SolisCode parent 0.1.12 (`main` builds on 0.1.17). Install the parent as its guide says, in [Installing a release on another machine](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/guide/08-maintainers.md#installing-a-release-on-another-machine), at the version the release you install names. The parent's install also installs `com.soliscode:soliscode-performance-api`, which SolisCode Test depends on.
 
 ### 2. SolisCode Test
 

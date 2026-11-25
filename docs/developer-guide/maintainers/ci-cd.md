@@ -21,19 +21,21 @@ SolisCode Test has **one** pipeline, and it builds nothing. The gates and the te
 
 ```mermaid
 flowchart LR
-    S[publish-javadoc.sh] --> B[Build the Javadoc from the tag]
+    S[publish-javadoc.sh] --> B[Build the Javadoc from the tag, no tests]
     B --> U[Store javadoc.zip in the package registry]
     U --> P[Start the pipeline with the versions]
     P --> J[pages job: unpack each version]
     J --> W[Site: one folder for each version, and latest]
 ```
 
+- The script builds the release's site on your Mac, from its tag, with `mvn -B -Drevision=0.1.N -DskipTests -Dmaven.test.skip.exec=true package site`. It runs no test: not the unit tests, not a suite a module's POM turns on itself, and not the tests the site's Surefire report would run again. The release ran them all, and a flaky test must not fail a publish.
+- The pipeline runs on the project's default branch, the one GitLab names in the project's settings (here `main`), and reads `.gitlab-ci.yml` from there. `scripts/publish-javadoc.sh --check` prints it.
 - `workflow:rules` runs a pipeline only when it is started through the API. A push, a merge request or a schedule starts none.
 - The pipeline's one input, `versions`, lists every stored version, separated by spaces.
 - The `pages` job, on a pinned `alpine` image, downloads each version's `javadoc.zip` with the job's token, and unzips it into `public/<version>/`. It writes `public/index.html`, which lists the versions, and copies the newest to `public/latest/`.
 - The job is in the resource group `pages`, so two deployments never run at once. The script refuses to start one while another pipeline is running.
 - A deployment replaces the whole site, so each one holds every version.
-- The script builds the release in a worktree of its tag with `mvn -B -Drevision=<version> package site`, which runs every test, about five minutes. Run no other build, and make no commit, until it ends: the git hooks start Maven.
+- The script builds the release in a worktree of its tag, so the working copy is not touched. Run no other build, and make no commit, until it ends: the git hooks start Maven.
 - Publish from one place at a time. Two publishers at once could deploy an older list of versions after a newer one. The script's last check finds that and fails; run it again, and it redeploys every stored version.
 
 ## The site
@@ -44,6 +46,8 @@ flowchart LR
 | `https://soliscode.gitlab.io/soliscode-test/<version>/` | One release's Javadoc, from 0.1.6 on |
 | `https://soliscode.gitlab.io/soliscode-test/latest/` | A full copy of the newest release's Javadoc. Links into the Javadoc from the docs go through it, so they don't go stale |
 
+What the site leaves out, such as generated packages and test-support or benchmark modules, is set in the root `pom.xml` with the parent's `soliscode.javadoc.site.excludePackageNames` and `soliscode.javadoc.site.skippedModules` (from soliscode-parent 0.1.17). This project sets neither: it has one module and no generated packages. The Javadoc gate still checks every package.
+
 Each release's Javadoc is stored once, as the generic package `javadoc`, version `<version>`, file `javadoc.zip`. To replace a stored version, delete that package version in GitLab first, then run the script again.
 
 ## Set up once
@@ -51,7 +55,7 @@ Each release's Javadoc is stored once, as the generic package `javadoc`, version
 A maintainer does these once, in the project's settings in GitLab, or with `glab api`. Each was done for #77, with the owner's approval:
 
 - **CI/CD on.** Every SolisCode project has it on.
-- **A project runner on each publisher's Mac.** The job is tagged `soliscode-pages`, so GitLab's own runners, whose free compute minutes run out, never take it. With Docker running, once per machine: `brew install gitlab-runner`, then `scripts/publish-javadoc.sh --register-runner`, which creates the runner in GitLab (the Maintainer role) and registers it in `~/.gitlab-runner/config.toml` without printing its token. The script starts it for each publish's one job, and it exits; nothing runs in the background.
+- **A project runner on each publisher's Mac.** The job is tagged `soliscode-pages`, so GitLab's own runners, whose free compute minutes run out, never take it. With Docker running, once per machine: `brew install gitlab-runner`, then `scripts/publish-javadoc.sh --register-runner`, which creates the runner in GitLab (the Maintainer role) and registers it in `~/.gitlab-runner/config.toml` without printing its token. The script starts it for each publish's one job, and it exits; nothing runs in the background. A runner paused in the project's Settings > CI/CD > Runners takes no job, so `--check` calls it not ready and a publish refuses until it is resumed.
 - **Pages access: everyone.** The script refuses a Pages site or a package registry that reaches wider than the repository: a library's Javadoc is never readable more widely than its source. So that everyone can read the Javadoc, SolisCode Test is a public project, with Pages `enabled`, which on a public project means everyone (the owner's decision on #77).
 - **Unique domain off**, so that the site's address is `https://soliscode.gitlab.io/<project>/`, here `https://soliscode.gitlab.io/soliscode-test`: `glab api --method PATCH projects/<id>/pages -f pages_unique_domain_enabled=false`. With it on, the address is one GitLab makes up, which the script prints. This is a settings change the project's owner approves.
 - **No change** to who may set pipeline variables. The pipeline takes its versions as an input, which that setting does not cover.
@@ -68,7 +72,7 @@ The pipeline needs none: its job reads the package registry with its own job tok
 
 ## Dependency updates
 
-No bot opens update requests. Versions of plugins and managed libraries come from the SolisCode parent, and change when `<parent>` moves to a new release ([Moving to a new release](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.14/docs/guide/05-new-release.md); in this project the parent's release is in five places, which [`CLAUDE.md`](../../../CLAUDE.md), "Moving the pin", lists). The vulnerability check runs on request: `mvn -B -P dependency-check -DskipTests verify`, with an NVD API key in `NVD_API_KEY` ([the parent's dependency check](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.14/docs/guide/03-gates/dependency-check.md)). It has not been run here yet.
+No bot opens update requests. Versions of plugins and managed libraries come from the SolisCode parent, and change when `<parent>` moves to a new release ([Moving to a new release](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/guide/05-new-release.md); in this project the parent's release is in five places, which [`CLAUDE.md`](../../../CLAUDE.md), "Moving the pin", lists). The vulnerability check runs on request: `mvn -B -P dependency-check -DskipTests verify`, with an NVD API key in `NVD_API_KEY` ([the parent's dependency check](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/guide/03-gates/dependency-check.md)). It has not been run here yet.
 
 ## See also
 

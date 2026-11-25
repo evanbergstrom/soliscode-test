@@ -12,13 +12,30 @@
 # it. The script runs that runner for the one job it queued (gitlab-runner run-single), so nothing runs in the
 # background and GitLab's compute minutes are not used. --check prints what the project's settings would let it
 # publish, and whether the runner is ready, and changes nothing. --store-only builds and stores the version, and
-# starts no pipeline (for a project whose main has no .gitlab-ci.yml yet). --register-runner, once per machine and project, creates that runner in GitLab and
+# starts no pipeline (for a project whose default branch has no .gitlab-ci.yml yet). The pipeline runs on the
+# project's default branch, as GitLab gives it. --register-runner, once per machine and project, creates that runner in GitLab and
 # registers it here (Docker executor, the job's image), printing no token.
 #
 # Usage: scripts/publish-javadoc.sh [--check | --store-only] <version>
 #        scripts/publish-javadoc.sh --register-runner
 
 set -euo pipefail
+
+# The site build's goals and switches, after -B and -Drevision: no test runs, neither a module's own, nor one whose
+# POM sets skipTests itself (which -DskipTests cannot reach, but skipExec does), nor the test phase the site's
+# Surefire report forks (documentation.md, section 3.2, step 4). The child project publish-javadoc-build builds with
+# the same line, which scripts/tests/test-publish-javadoc.sh checks.
+site_build=(-DskipTests -Dmaven.test.skip.exec=true package site)
+
+# The limits on reading the Pages site (#38), in seconds: each read's connect and total timeout, and the wait for
+# this pipeline's deployment, retried every interval up to the limit in all; and how often the pipeline's status is
+# read while it runs. Globals, not environment variables, so that the test, sourcing this file, cuts them and a
+# publisher's shell cannot.
+site_connect_timeout=10
+site_max_time=30
+site_poll_limit=120
+site_poll_interval=10
+pipeline_poll_interval=10
 
 die() { echo "publish-javadoc.sh: $*" >&2; exit 1; }
 say() { echo "publish-javadoc.sh: $*"; }
@@ -81,6 +98,18 @@ pages_audience() {
     else
         echo restricted
     fi
+}
+
+# Why the branch named $1 cannot carry the pipeline, or nothing: GitLab gave none (a project with no branch yet). Any
+# name GitLab gives is passed on as it is, inside the JSON body (pipeline_body).
+branch_refusal() {
+    [[ -n "$1" ]] || echo "GitLab gave no default branch for this project: push one first"
+}
+
+# The JSON body that starts the pipeline on the branch $1 with the input versions, the list $2.
+pipeline_body() {
+    python3 -I -c 'import json, sys; print(json.dumps({"ref": sys.argv[1], "inputs": {"versions": sys.argv[2]}}))' \
+        "$1" "$2"
 }
 
 # The JSON field of standard input's object, read with Python (no jq is assumed).
@@ -191,28 +220,38 @@ else:
 ' "$2" "$1"
 }
 
-# Whether GitLab still has a runner described as $2 for project $1: a runner deleted in GitLab but left in the local
-# config would take no job. Prints yes, no or unknown.
+# Whether GitLab still has a runner described as $2 for project $1, and takes jobs: a runner deleted in GitLab but left
+# in the local config would take no job, nor would one paused there (#38). Prints yes, paused (if any runner of that
+# description is: paused true, or active false, so that a paused duplicate is not hidden), no or unknown.
 runner_in_gitlab() {
     local listed
     listed=$(glab api --paginate "projects/$1/runners?type=project_type&per_page=100" 2> /dev/null) || { echo unknown; return 0; }
     python3 -I -c '
 import json, sys
-text, decoder, at, names = sys.stdin.read(), json.JSONDecoder(), 0, set()
+text, decoder, at, found = sys.stdin.read(), json.JSONDecoder(), 0, []
 while True:
     while at < len(text) and text[at].isspace():
         at += 1
     if at >= len(text):
         break
     page, at = decoder.raw_decode(text, at)
-    names.update(r.get("description") for r in page)
-print("yes" if sys.argv[1] in names else "no")' "$2" <<< "$listed" 2> /dev/null || echo unknown
+    found += [r for r in page if r.get("description") == sys.argv[1]]
+if any(r.get("paused") is True or r.get("active") is False for r in found):
+    print("paused")
+else:
+    print("yes" if found else "no")' "$2" <<< "$listed" 2> /dev/null || echo unknown
+}
+
+# What to do about a runner GitLab lists as paused, named $1.
+paused_advice() {
+    echo "GitLab lists runner $1 as paused, so it would take no job: resume it in the project's Settings > CI/CD >" \
+        "Runners, or delete it there if it is a duplicate no machine uses"
 }
 
 # Why this machine cannot run the pages job, or nothing. Arguments: the runner's name, its config file and the
 # project's ID.
 runner_refusal() {
-    local name=$1 config=$2 id=$3 found
+    local name=$1 config=$2 id=$3 found listed
     if ! command -v gitlab-runner > /dev/null; then
         echo "gitlab-runner is not installed (brew install gitlab-runner)"
         return 0
@@ -223,7 +262,10 @@ runner_refusal() {
         duplicate) echo "$config has two runners named $name: remove one (gitlab-runner unregister --name ...)" ;;
         "ok "*)
             # Docker as the runner reaches it, not as the Docker CLI's context does.
-            if [[ "$(runner_in_gitlab "$id" "$name")" != yes ]]; then
+            listed=$(runner_in_gitlab "$id" "$name")
+            if [[ "$listed" == paused ]]; then
+                paused_advice "$name"
+            elif [[ "$listed" != yes ]]; then
                 echo "GitLab has no runner $name for this project (deleted, or GitLab did not answer): remove the" \
                     "local entry (gitlab-runner unregister --name $name), then scripts/publish-javadoc.sh --register-runner"
             elif ! env -u DOCKER_CONTEXT DOCKER_HOST="${found#ok }" docker info > /dev/null 2>&1; then
@@ -239,13 +281,15 @@ runner_refusal() {
 # returns goes from one command to the next in the environment, and is never printed; a runner GitLab made that
 # cannot be registered here is deleted again. Arguments: the project's ID, the runner's name and the config file.
 register_runner() {
-    local id=$1 name=$2 config=$3 found
+    local id=$1 name=$2 config=$3 found listed
     command -v gitlab-runner > /dev/null || die "gitlab-runner is not installed (brew install gitlab-runner)"
     found=$(runner_lookup "$name" "$config")
     case "$found" in
         missing) ;;
         "ok "*)
-            [[ "$(runner_in_gitlab "$id" "$name")" == yes ]] || die "$config has a runner $name that GitLab no longer" \
+            listed=$(runner_in_gitlab "$id" "$name")
+            [[ "$listed" != paused ]] || die "not registering: $(paused_advice "$name")"
+            [[ "$listed" == yes ]] || die "$config has a runner $name that GitLab no longer" \
                 "has: remove the local entry (gitlab-runner unregister --name $name) and run this again"
             say "runner $name is registered already, in $config"
             return 0 ;;
@@ -278,9 +322,93 @@ cancel_pipeline() {
         || say "could not cancel pipeline $2; cancel it in GitLab before the next publish"
 }
 
-# The HTTP status of a page, read without credentials and without following a redirect.
+# curl on the Pages site, without credentials and without following a redirect, with a connect timeout and a total
+# one of $1 seconds, so that a server that accepts the connection and stalls fails the read rather than hanging the
+# script (#38). -q, first, keeps the publisher's .curlrc out of it: a --retry there would start each try with its
+# own --max-time and overrun the limits. No read uses -f: an HTTP status is an answer, not a failure. The arguments
+# after $1 are curl's.
+site_curl() {
+    local max=$1
+    shift
+    curl -q -s --connect-timeout "$site_connect_timeout" --max-time "$max" "$@"
+}
+
+# Why a read of $1 failed with curl's exit status $2, on standard error.
+read_failure() {
+    if [[ "$2" == 28 ]]; then
+        echo "publish-javadoc.sh: $1 did not answer: it timed out (connect ${site_connect_timeout}s, total" \
+            "${site_max_time}s)" >&2
+    else
+        echo "publish-javadoc.sh: $1 could not be read (curl exit $2)" >&2
+    fi
+}
+
+# The HTTP status of a page. A read that times out or fails says why on standard error and returns 1; the caller ends
+# the script (|| exit 1), so that it gives that one message.
 http_code() {
-    curl -s -o /dev/null -w '%{http_code}' "$1"
+    local code status=0
+    code=$(site_curl "$site_max_time" -o /dev/null -w '%{http_code}' "$1") || status=$?
+    (( status == 0 )) || { read_failure "$1" "$status"; return 1; }
+    echo "$code"
+}
+
+# The body of a page, as http_code reads it.
+site_text() {
+    local body status=0
+    body=$(site_curl "$site_max_time" "$1") || status=$?
+    (( status == 0 )) || { read_failure "$1" "$status"; return 1; }
+    printf '%s\n' "$body"
+}
+
+# The pipeline id of the deployment the site at $1 serves now, from its deployment.txt, or nothing: no site yet ($1
+# empty), a 404 (a first deployment), or a redirect where the audience, $2, is restricted (its sign-in; the probe
+# check does not run there). Any other answer (a 5xx, a redirect where it is everyone, a 200 that holds no id) or a
+# failed read says why on standard error and returns 1, since step 8's probe check would otherwise be skipped
+# without a word.
+previous_deployment() {
+    [[ -n "$1" ]] || return 0
+    local answer status=0 code body
+    answer=$(site_curl "$site_max_time" -w '\n%{http_code}' "$1/deployment.txt") || status=$?
+    (( status == 0 )) || { read_failure "$1/deployment.txt" "$status"; return 1; }
+    code=${answer##*$'\n'}
+    # The job writes the id with a newline after it, which the command substitution drops.
+    body=$(printf '%s' "${answer%$'\n'*}")
+    if [[ "$code" == 200 && "$body" =~ ^[0-9]+$ ]]; then
+        echo "$body"
+    elif [[ "$code" == 404 || "$2" == restricted && "$code" =~ ^3[0-9][0-9]$ ]]; then
+        return 0
+    else
+        echo "publish-javadoc.sh: $1/deployment.txt answered $code, which names no previous deployment" >&2
+        return 1
+    fi
+}
+
+# Waits until the site at $1 serves the deployment of pipeline $2, since Pages may serve the previous one for a while:
+# read every site_poll_interval seconds up to site_poll_limit in all, a deadline, so that the wait ends within it
+# whatever the server does. Each read's total timeout is cut to the time left, and with none left it fails without
+# reading (curl takes --max-time 0 as no limit). A read that times out or fails counts as a try.
+await_deployment() {
+    local deadline=$((SECONDS + site_poll_limit)) left got status last=""
+    while true; do
+        left=$((deadline - SECONDS))
+        (( left > 0 )) || die "$1/deployment.txt does not hold pipeline $2's deployment after $site_poll_limit" \
+            "seconds (the last read ${last:-was not made})"
+        (( left < site_max_time )) || left=$site_max_time
+        status=0
+        got=$(site_curl "$left" "$1/deployment.txt") || status=$?
+        if (( status == 28 )); then
+            last="timed out"
+        elif (( status != 0 )); then
+            last="failed, curl exit $status"
+        elif [[ "$got" == "$2" ]]; then
+            return 0
+        else
+            last="held '${got:0:40}'"
+        fi
+        left=$((deadline - SECONDS))
+        (( left < site_poll_interval )) || left=$site_poll_interval
+        (( left <= 0 )) || sleep "$left"
+    done
 }
 
 main() {
@@ -323,10 +451,16 @@ main() {
     pages=$(json_field pages_access_level <<< "$project")
     registry=$(json_field package_registry_access_level <<< "$project")
     repository=$(json_field repository_access_level <<< "$project")
+    # The branch the pipeline runs on and reads .gitlab-ci.yml from: the project's default, not a fixed main (#36).
+    local branch unbranched
+    branch=$(json_field default_branch <<< "$project")
+    unbranched=$(branch_refusal "$branch")
     refusal=$(exposure_refusal "$visibility" "$pages" "$registry" "$repository")
     say "$path (id $id): visibility $visibility, Pages $pages (readable by $(pages_audience "$visibility" "$pages")),"\
         "package registry $registry, repository $repository: ${refusal:-may publish}"
     [[ -z "$refusal" ]] || die "refused: $refusal"
+    say "pipeline branch: ${unbranched:-$branch}"
+    [[ "$check" == true || "$store_only" == true || -z "$unbranched" ]] || die "refused: $unbranched"
 
     # The project runner on this machine that runs the pages job (the job's tag, soliscode-pages).
     local runner config unready
@@ -362,8 +496,8 @@ main() {
         git worktree add -q --detach "$work/src" "v$version"
         say "building the site of v$version in $work/src (log: $log)"
         # package first: in this repository the site unpacks soliscode-build-tools, which a reactor build of it
-        # must have packaged (MDEP-98); in a child it only builds the jars.
-        (cd "$work/src" && mvn -B -Drevision="$version" package site) > "$log" 2>&1 \
+        # must have packaged (MDEP-98); in a child it only builds the jars. The release ran the tests; this runs none.
+        (cd "$work/src" && mvn -B -Drevision="$version" "${site_build[@]}") > "$log" 2>&1 \
             || { tail -40 "$log" >&2; die "the site build of v$version failed; its log: $log"; }
         local apidocs="$work/src/target/site/en/apidocs"
         [[ -f "$apidocs/index.html" ]] || die "the site has no Javadoc at target/site/en/apidocs"
@@ -389,17 +523,16 @@ main() {
     local url previous
     url=$(glab api "projects/$id/pages" 2> /dev/null | json_field url || true)
     url=${url%/}
-    previous=$([[ -n "$url" ]] && curl -sf "$url/deployment.txt" || true)
+    previous=$(previous_deployment "$url" "$(pages_audience "$visibility" "$pages")") || exit 1
 
     local body pipeline pid state=created waited=0
-    body=$(python3 -I -c 'import json, sys; print(json.dumps({"ref": "main", "inputs": {"versions": sys.argv[1]}}))' \
-        "$versions")
+    body=$(pipeline_body "$branch" "$versions")
     pipeline=$(glab api --method POST "projects/$id/pipeline" -H "Content-Type: application/json" \
         --input - <<< "$body") || die "GitLab refused the pipeline"
     pid=$(json_field id <<< "$pipeline")
     pending_project=$id
     pending_pipeline=$pid
-    say "pipeline $pid deploys javadoc $versions; running its job on $runner"
+    say "pipeline $pid on $branch deploys javadoc $versions; running its job on $runner"
 
     # The runner takes the one job and exits. It reads its URL, token and Docker settings from its own entry in the
     # config (-r), so the token never passes through this script. If it took no job, or failed, the pipeline is
@@ -430,8 +563,8 @@ main() {
     state=created
     while [[ "$state" =~ ^(created|waiting_for_resource|preparing|pending|running)$ ]]; do
         (( waited < 600 )) || die "pipeline $pid has not finished after ten minutes: $(json_field web_url <<< "$pipeline")"
-        sleep 10
-        waited=$((waited + 10))
+        sleep "$pipeline_poll_interval"
+        waited=$((waited + pipeline_poll_interval))
         pipeline=$(glab api "projects/$id/pipelines/$pid")
         state=$(json_field status <<< "$pipeline")
     done
@@ -441,37 +574,34 @@ main() {
     # A green pipeline alone does not show the site works: read it as a stranger would. The newest version first,
     # retried, since Pages may serve the previous deployment for a while; then latest/, then the older versions,
     # which show that the redeploy kept them.
-    local expected newest code page tries=0 deployed now
+    local expected newest code page deployed now latest
     url=$(glab api "projects/$id/pages" | json_field url)
     url=${url%/}
     [[ "$(pages_audience "$visibility" "$pages")" == everyone ]] && expected=200 || expected=302
     newest=$(tail -1 <<< "$stored")
-    if [[ "$expected" == 200 ]]; then
-        until [[ "$(curl -s "$url/deployment.txt")" == "$pid" ]]; do
-            (( tries++ < 12 )) || die "$url/ does not serve pipeline $pid's deployment after two minutes"
-            sleep 10
-        done
-    fi
-    code=$(http_code "$url/$newest/index.html")
+    [[ "$expected" != 200 ]] || await_deployment "$url" "$pid"
+    code=$(http_code "$url/$newest/index.html") || exit 1
     [[ "$code" == "$expected" ]] || die "$url/$newest/index.html answered $code, not $expected"
     if [[ "$expected" == 200 ]]; then
-        [[ "$(curl -s "$url/latest/VERSION")" == "$newest" ]] || die "$url/latest/ does not hold $newest"
+        latest=$(site_text "$url/latest/VERSION") || exit 1
+        [[ "$latest" == "$newest" ]] || die "$url/latest/ does not hold $newest"
     fi
     for page in latest/allclasses-index.html $(sed 's#[^ ]*#&/index.html#g' <<< "$versions"); do
-        code=$(http_code "$url/$page")
+        code=$(http_code "$url/$page") || exit 1
         [[ "$code" == "$expected" ]] || die "$url/$page answered $code, not $expected"
     done
     if [[ "$expected" == 200 ]]; then
         # The whole site: what the job deployed must be what the registry holds now, so that no list taken
         # before the lock stays deployed; and a deployment replaces the site, so the previous probe is gone.
-        deployed=$(curl -s "$url/versions.txt")
+        deployed=$(site_text "$url/versions.txt") || exit 1
         now=$(glab api --paginate "projects/$id/packages?package_type=generic&package_name=javadoc&per_page=100" \
             | javadoc_versions)
         [[ "$deployed" == "$now" ]] \
             || die "the site holds $(tr '\n' ' ' <<< "$deployed")but the registry $(tr '\n' ' ' <<< "$now")(another publish?); run again"
-        [[ "$(http_code "$url/deployment-$pid.txt")" == 200 ]] || die "this deployment's probe file is not served"
-        if [[ "$previous" =~ ^[0-9]+$ ]]; then
-            code=$(http_code "$url/deployment-$previous.txt")
+        code=$(http_code "$url/deployment-$pid.txt") || exit 1
+        [[ "$code" == 200 ]] || die "this deployment's probe file is not served"
+        if [[ -n "$previous" ]]; then
+            code=$(http_code "$url/deployment-$previous.txt") || exit 1
             [[ "$code" == 404 ]] || die "the previous deployment's probe answered $code: the site was not replaced"
         fi
     fi

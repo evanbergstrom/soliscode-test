@@ -21,7 +21,7 @@
 ### The build fails while you install it
 
 **Cause:** the install runs every test and gate. On a JDK older than 25, or Maven older than 3.9, the build stops at once.
-**Fix:** check `java -version` and `mvn -version`. For any other failure, the [parent's troubleshooting page](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.14/docs/guide/06-troubleshooting.md) explains each gate's message.
+**Fix:** check `java -version` and `mvn -version`. For any other failure, the [parent's troubleshooting page](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/guide/06-troubleshooting.md) explains each gate's message.
 
 ### `UnsupportedClassVersionError` when your tests run
 

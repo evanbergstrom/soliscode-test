@@ -52,7 +52,7 @@ flowchart LR
   scripts/publish-javadoc.sh 0.1.N
   ```
 
-  It builds the release's Javadoc in a worktree of its local tag, stores it in the project's package registry, and starts the Pages pipeline, whose one job runs on this Mac and puts every stored version into the site. Then it checks the site. The build runs every test, about five minutes: run no other build, and make no commit, until it ends. It needs `glab`, logged in, `zip`, `curl` and `python3` 3.11 or later, and the runner its job runs on: `gitlab-runner` and Docker, with the runner registered once on this Mac ([CI and the Javadoc site](ci-cd.md)). The pipeline reads `.gitlab-ci.yml` from GitLab's `main`, so push `main` first.
+  It builds the release's Javadoc in a worktree of its local tag (`mvn -B -Drevision=0.1.N -DskipTests -Dmaven.test.skip.exec=true package site`), running none of the tests, which the release ran already, stores it in the project's package registry, and starts the Pages pipeline, whose one job runs on this Mac and puts every stored version into the site. Then it checks the site. Run no other build, and make no commit, until it ends: the git hooks start Maven. It needs `glab`, logged in, `zip`, `curl` and `python3` 3.11 or later, and the runner its job runs on: `gitlab-runner` and Docker, with the runner registered once on this Mac ([CI and the Javadoc site](ci-cd.md)). The pipeline runs on the project's default branch as GitLab has it, `main`, and reads `.gitlab-ci.yml` from there, so push `main` first.
 - [ ] Open `https://soliscode.gitlab.io/soliscode-test/0.1.N/` and `https://soliscode.gitlab.io/soliscode-test/latest/`. The script prints the site's address.
 
 A failed publish does not undo the release: the tag and the installed artifacts stand. Run the script again; it skips a version already stored. `scripts/publish-javadoc.sh --check 0.1.N` prints what the project's settings let it publish, and changes nothing. [CI and the Javadoc site](ci-cd.md) has the detail.
@@ -70,4 +70,4 @@ There are no release branches and no back-ported fixes. A fault in a release is 
 
 - [CI and the Javadoc site](ci-cd.md)
 - [RELEASES.md](../../../RELEASES.md)
-- [Moving to a new release](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.14/docs/guide/05-new-release.md), in the parent's guide, for moving `<parent>`
+- [Moving to a new release](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/guide/05-new-release.md), in the parent's guide, for moving `<parent>`
