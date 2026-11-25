@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -1791,5 +1792,37 @@ public class BreakableMapTest extends AbstractTest {
         // Other methods should still work
         assertDoesNotThrow(map::isEmpty);
         assertDoesNotThrow(() -> map.get("key"));
+    }
+
+    /// Tests that each method whose support `BreakableMap` checks itself names that method when it is
+    /// unsupported (#28).
+    @Test
+    @DisplayName("An unsupported method's exception names that method")
+    public void unsupportedMethodsNameThemselves() {
+        assertUnsupportedNamesMethod(MapMethods.REMOVE, "remove(Object)", map -> map.remove("a"));
+        assertUnsupportedNamesMethod(MapMethods.KEY_SET, "keySet()", Map::keySet);
+        assertUnsupportedNamesMethod(MapMethods.VALUES, "values()", Map::values);
+        assertUnsupportedNamesMethod(MapMethods.ENTRY_SET, "entrySet()", Map::entrySet);
+        assertUnsupportedNamesMethod(MapMethods.FOR_EACH, "forEach(BiConsumer)", map -> map.forEach((k, v) -> { }));
+        assertUnsupportedNamesMethod(MapMethods.REPLACE_THREE_ARG, "replace(Object, Object, Object)",
+                map -> map.replace("a", 1, 2));
+        assertUnsupportedNamesMethod(MapMethods.COMPUTE_IF_PRESENT, "computeIfPresent(Object, BiFunction)",
+                map -> map.computeIfPresent("a", (k, v) -> v));
+        assertUnsupportedNamesMethod(MapMethods.COMPUTE, "compute(Object, BiFunction)",
+                map -> map.compute("a", (k, v) -> v));
+        assertUnsupportedNamesMethod(MapMethods.MERGE, "merge(Object, Object, BiFunction)",
+                map -> map.merge("a", 1, Integer::sum));
+    }
+
+    private static void assertUnsupportedNamesMethod(final MapMethods method,
+                                                     final String name,
+                                                     final Consumer<BreakableMap<String, Integer>> call) {
+        final BreakableMap<String, Integer> map = new BreakableMap.Builder<String, Integer>()
+                .add("a", 1)
+                .doesNotSupport(method)
+                .build();
+        final UnsupportedOperationException e =
+                assertThrows(UnsupportedOperationException.class, () -> call.accept(map), name);
+        assertEquals(name + " is not supported by Breakable", e.getMessage());
     }
 }

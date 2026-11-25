@@ -560,23 +560,20 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
     /// @see SequencedCollection#reversed
     @Override
     public SequencedCollection<E> reversed() {
-        if (supportsMethod(SequencedCollectionMethods.REVERSED)) {
-            if (hasBreak(REVERSED_DOES_NOT_REVERSE_COLLECTION)) {
-                return sequenced;
-            }
-            if (hasBreak(REVERSED_MODIFIES_THE_COLLECTION)) {
-                runWithBreakableSafety(REVERSED_IS_NOT_THREAD_SAFE, () -> Collections.reverse(sequenced));
-                return sequenced;
-            }
-            return getWithBreakableSafety(REVERSED_IS_NOT_THREAD_SAFE, () -> {
-                // A view: this collection's statuses and lock, none of its breaks (#52); no lock with the break (#22).
-                BreakableSequencedCollection<E> view = new BreakableSequencedCollection<>(sequenced.reversed(),
-                        DEFAULT_BREAKS, methodStatuses(), characteristics(), permits(), false, compatibleType());
-                return hasBreak(REVERSED_IS_NOT_THREAD_SAFE) ? view : sharingLockOf(view, this);
-            });
-        }  else {
-            throw new UnsupportedOperationException();
+        checkMethodSupport(SequencedCollectionMethods.REVERSED);
+        if (hasBreak(REVERSED_DOES_NOT_REVERSE_COLLECTION)) {
+            return sequenced;
         }
+        if (hasBreak(REVERSED_MODIFIES_THE_COLLECTION)) {
+            runWithBreakableSafety(REVERSED_IS_NOT_THREAD_SAFE, () -> Collections.reverse(sequenced));
+            return sequenced;
+        }
+        return getWithBreakableSafety(REVERSED_IS_NOT_THREAD_SAFE, () -> {
+            // A view: this collection's statuses and lock, none of its breaks (#52); no lock with the break (#22).
+            BreakableSequencedCollection<E> view = new BreakableSequencedCollection<>(sequenced.reversed(),
+                    DEFAULT_BREAKS, methodStatuses(), characteristics(), permits(), false, compatibleType());
+            return hasBreak(REVERSED_IS_NOT_THREAD_SAFE) ? view : sharingLockOf(view, this);
+        });
     }
 
     /// Implements the [addFirst][SequencedCollection#addFirst] method from the [SequencedCollection] interface. This
@@ -595,15 +592,12 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
     /// @see SequencedCollection#addFirst
     @Override
     public void addFirst(final E e) {
-        if (supportsMethod(SequencedCollectionMethods.ADD_FIRST)) {
-            checkNewElement(e);
-            if (hasBreak(ADD_FIRST_ADDS_TO_END)) {
-                runWithBreakableSafety(ADD_FIRST_IS_NOT_THREAD_SAFE, () -> sequenced.addLast(e));
-            } else if (!hasBreak(ADD_FIRST_DOES_NOT_ADD_ELEMENT)) {
-                runWithBreakableSafety(ADD_FIRST_IS_NOT_THREAD_SAFE, () -> sequenced.addFirst(e));
-            }
-        }  else {
-            throw new UnsupportedOperationException();
+        checkMethodSupport(SequencedCollectionMethods.ADD_FIRST);
+        checkNewElement(e);
+        if (hasBreak(ADD_FIRST_ADDS_TO_END)) {
+            runWithBreakableSafety(ADD_FIRST_IS_NOT_THREAD_SAFE, () -> sequenced.addLast(e));
+        } else if (!hasBreak(ADD_FIRST_DOES_NOT_ADD_ELEMENT)) {
+            runWithBreakableSafety(ADD_FIRST_IS_NOT_THREAD_SAFE, () -> sequenced.addFirst(e));
         }
     }
 
@@ -623,15 +617,12 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
     /// @see SequencedCollection#addLast
     @Override
     public void addLast(final E e) {
-        if (supportsMethod(SequencedCollectionMethods.ADD_LAST)) {
-            checkNewElement(e);
-            if (hasBreak(ADD_LAST_ADDS_TO_FRONT)) {
-                runWithBreakableSafety(ADD_LAST_IS_NOT_THREAD_SAFE, () -> sequenced.addFirst(e));
-            } else if (!hasBreak(ADD_LAST_DOES_NOT_ADD_ELEMENT)) {
-                runWithBreakableSafety(ADD_LAST_IS_NOT_THREAD_SAFE, () -> sequenced.addLast(e));
-            }
-        }  else {
-            throw new UnsupportedOperationException();
+        checkMethodSupport(SequencedCollectionMethods.ADD_LAST);
+        checkNewElement(e);
+        if (hasBreak(ADD_LAST_ADDS_TO_FRONT)) {
+            runWithBreakableSafety(ADD_LAST_IS_NOT_THREAD_SAFE, () -> sequenced.addFirst(e));
+        } else if (!hasBreak(ADD_LAST_DOES_NOT_ADD_ELEMENT)) {
+            runWithBreakableSafety(ADD_LAST_IS_NOT_THREAD_SAFE, () -> sequenced.addLast(e));
         }
     }
 
@@ -652,24 +643,21 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
     /// @see SequencedCollection#getFirst
     @Override
     public @Nullable E getFirst() {
-        if (supportsMethod(SequencedCollectionMethods.GET_FIRST)) {
-            if (hasBreak(GET_FIRST_RETURNS_NULL)) {
-                return null;
-            }
-            if (hasBreak(GET_FIRST_ALWAYS_THROWS)) {
-                throw new NoSuchElementException();
-            }
-            if (hasBreak(GET_FIRST_SKIPS_FIRST_ELEMENT)) {
-                return getWithBreakableSafety(GET_FIRST_IS_NOT_THREAD_SAFE, () -> {
-                    Iterator<E> i = iterator();
-                    i.next();
-                    return i.next();
-                });
-            }
-            return getWithBreakableSafety(GET_FIRST_IS_NOT_THREAD_SAFE, sequenced::getFirst);
-        }  else {
-            throw new UnsupportedOperationException();
+        checkMethodSupport(SequencedCollectionMethods.GET_FIRST);
+        if (hasBreak(GET_FIRST_RETURNS_NULL)) {
+            return null;
         }
+        if (hasBreak(GET_FIRST_ALWAYS_THROWS)) {
+            throw new NoSuchElementException();
+        }
+        if (hasBreak(GET_FIRST_SKIPS_FIRST_ELEMENT)) {
+            return getWithBreakableSafety(GET_FIRST_IS_NOT_THREAD_SAFE, () -> {
+                Iterator<E> i = iterator();
+                i.next();
+                return i.next();
+            });
+        }
+        return getWithBreakableSafety(GET_FIRST_IS_NOT_THREAD_SAFE, sequenced::getFirst);
     }
 
     /// Implements the [getLast][SequencedCollection#getLast] method from the [SequencedCollection] interface. This
@@ -688,24 +676,21 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
     /// @see SequencedCollection#getLast
     @Override
     public @Nullable E getLast() {
-        if (supportsMethod(SequencedCollectionMethods.GET_LAST)) {
-            if (hasBreak(GET_LAST_RETURNS_NULL)) {
-                return null;
-            }
-            if (hasBreak(GET_LAST_ALWAYS_THROWS)) {
-                throw new NoSuchElementException();
-            }
-            if (hasBreak(GET_LAST_SKIPS_LAST_ELEMENT)) {
-                return getWithBreakableSafety(GET_LAST_IS_NOT_THREAD_SAFE, () -> {
-                    Iterator<E> i = reversed().iterator();
-                    i.next();
-                    return i.next();
-                });
-            }
-            return getWithBreakableSafety(GET_LAST_IS_NOT_THREAD_SAFE, sequenced::getLast);
-        }  else {
-            throw new UnsupportedOperationException();
+        checkMethodSupport(SequencedCollectionMethods.GET_LAST);
+        if (hasBreak(GET_LAST_RETURNS_NULL)) {
+            return null;
         }
+        if (hasBreak(GET_LAST_ALWAYS_THROWS)) {
+            throw new NoSuchElementException();
+        }
+        if (hasBreak(GET_LAST_SKIPS_LAST_ELEMENT)) {
+            return getWithBreakableSafety(GET_LAST_IS_NOT_THREAD_SAFE, () -> {
+                Iterator<E> i = reversed().iterator();
+                i.next();
+                return i.next();
+            });
+        }
+        return getWithBreakableSafety(GET_LAST_IS_NOT_THREAD_SAFE, sequenced::getLast);
     }
 
     /// Implements the [removeFirst][SequencedCollection#removeFirst] method from the [SequencedCollection] interface.
@@ -724,20 +709,17 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
     /// @see SequencedCollection#removeFirst
     @Override
     public @Nullable E removeFirst() {
-        if (supportsMethod(SequencedCollectionMethods.REMOVE_FIRST)) {
-            if (hasBreak(REMOVE_FIRST_DOES_NOT_REMOVE_ELEMENT)) {
-                return getWithBreakableSafety(REMOVE_FIRST_IS_NOT_THREAD_SAFE, this::getFirst);
-            }
-            if (hasBreak(REMOVE_FIRST_RETURNS_NULL)) {
-                return null;
-            }
-            if (hasBreak(REMOVE_FIRST_ALWAYS_THROWS)) {
-                throw new NoSuchElementException();
-            }
-            return getWithBreakableSafety(REMOVE_FIRST_IS_NOT_THREAD_SAFE, sequenced::removeFirst);
-        }  else {
-            throw new UnsupportedOperationException();
+        checkMethodSupport(SequencedCollectionMethods.REMOVE_FIRST);
+        if (hasBreak(REMOVE_FIRST_DOES_NOT_REMOVE_ELEMENT)) {
+            return getWithBreakableSafety(REMOVE_FIRST_IS_NOT_THREAD_SAFE, this::getFirst);
         }
+        if (hasBreak(REMOVE_FIRST_RETURNS_NULL)) {
+            return null;
+        }
+        if (hasBreak(REMOVE_FIRST_ALWAYS_THROWS)) {
+            throw new NoSuchElementException();
+        }
+        return getWithBreakableSafety(REMOVE_FIRST_IS_NOT_THREAD_SAFE, sequenced::removeFirst);
     }
 
     /// Implements the [removeLast][SequencedCollection#removeLast] method from the [SequencedCollection] interface.
@@ -756,20 +738,17 @@ public class BreakableSequencedCollection<E> extends BreakableCollection<E> impl
     /// @see SequencedCollection#removeLast
     @Override
     public @Nullable E removeLast() {
-        if (supportsMethod(SequencedCollectionMethods.REMOVE_LAST)) {
-            if (hasBreak(REMOVE_LAST_DOES_NOT_REMOVE_ELEMENT)) {
-                return getWithBreakableSafety(REMOVE_LAST_IS_NOT_THREAD_SAFE, this::getLast);
-            }
-            if (hasBreak(REMOVE_LAST_RETURNS_NULL)) {
-                return null;
-            }
-            if (hasBreak(REMOVE_LAST_ALWAYS_THROWS)) {
-                throw new NoSuchElementException();
-            }
-            return getWithBreakableSafety(REMOVE_LAST_IS_NOT_THREAD_SAFE, sequenced::removeLast);
-        }  else {
-            throw new UnsupportedOperationException();
+        checkMethodSupport(SequencedCollectionMethods.REMOVE_LAST);
+        if (hasBreak(REMOVE_LAST_DOES_NOT_REMOVE_ELEMENT)) {
+            return getWithBreakableSafety(REMOVE_LAST_IS_NOT_THREAD_SAFE, this::getLast);
         }
+        if (hasBreak(REMOVE_LAST_RETURNS_NULL)) {
+            return null;
+        }
+        if (hasBreak(REMOVE_LAST_ALWAYS_THROWS)) {
+            throw new NoSuchElementException();
+        }
+        return getWithBreakableSafety(REMOVE_LAST_IS_NOT_THREAD_SAFE, sequenced::removeLast);
     }
 
     /// The builder for `BreakableSequencedCollection` objects.

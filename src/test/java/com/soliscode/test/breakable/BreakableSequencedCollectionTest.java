@@ -387,6 +387,19 @@ public class BreakableSequencedCollectionTest extends AbstractTest
 
     // ========== reversed Tests ==========
 
+    /// Test `reversed` fails, naming itself, when it is not supported (#28).
+    /// @see BreakableSequencedCollection#reversed()
+    @Test
+    @DisplayName("Test reversed method fails, naming itself, when not supported")
+    public void reversedFailsNamingItselfWhenNotSupported() {
+        BreakableSequencedCollection<Integer> collection = Breakables.buildSequencedCollection(1, 2, 3)
+                .doesNotSupport(SequencedCollectionMethods.REVERSED)
+                .build();
+
+        UnsupportedOperationException e = assertThrows(UnsupportedOperationException.class, collection::reversed);
+        org.junit.jupiter.api.Assertions.assertEquals("reversed() is not supported by Breakable", e.getMessage());
+    }
+
     /// Test that the `REVERSED_DOES_NOT_REVERSE_COLLECTION` break causes the `reversed` method to not reverse the
     /// collection.
     /// @see BreakableSequencedCollection#reversed()

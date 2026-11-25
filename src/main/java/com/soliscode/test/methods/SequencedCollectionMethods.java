@@ -21,10 +21,10 @@ public enum SequencedCollectionMethods implements InterfaceMethod {
     ADD_LAST("addLast(Object)"),
 
     /// The method [java.util.SequencedCollection#getFirst()].
-    GET_FIRST("getFirst)"),
+    GET_FIRST("getFirst()"),
 
     /// The method [java.util.SequencedCollection#getLast()].
-    GET_LAST("getlast()"),
+    GET_LAST("getLast()"),
 
     /// The optional method [java.util.SequencedCollection#removeFirst()].
     REMOVE_FIRST("removeFirst()"),

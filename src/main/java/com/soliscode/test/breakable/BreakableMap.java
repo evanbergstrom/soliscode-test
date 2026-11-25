@@ -1080,18 +1080,15 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     public @Nullable V remove(final Object key) {
         return getWithSafety(() -> {
             validateKey(key);
-            if (supportsMethod(MapMethods.REMOVE)) {
-                if (hasBreak(REMOVE_DOES_NOT_REMOVE_KEY)) {
-                    return map.get(key);
-                }
-                V previous = map.remove(key);
-                if (hasBreak(REMOVE_ALWAYS_RETURNS_NULL)) {
-                    return null;
-                }
-                return previous;
-            } else {
-                throw new UnsupportedOperationException("Unsupported method: remove(Object)");
+            checkMethodSupport(MapMethods.REMOVE);
+            if (hasBreak(REMOVE_DOES_NOT_REMOVE_KEY)) {
+                return map.get(key);
             }
+            V previous = map.remove(key);
+            if (hasBreak(REMOVE_ALWAYS_RETURNS_NULL)) {
+                return null;
+            }
+            return previous;
         });
     }
 
@@ -1175,20 +1172,17 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     @Override
     public @Nullable Set<K> keySet() {
         return getWithSafety(() -> {
-            if (supportsMethod(MapMethods.KEY_SET)) {
-                if (hasBreak(KEY_SET_RETURNS_EMPTY_SET)) {
-                    return Collections.emptySet();
-                }
-                if (hasBreak(KEY_SET_RETURNS_NULL_WHEN_EMPTY) && map.isEmpty()) {
-                    return null;
-                }
-                return sharingLockOf(
-                        BreakableSet.wrap(map.keySet(), collectionViewBreaks(),
-                                MapViews.statuses(this, methodStatuses()), BreakableSet.DEFAULT_CHARACTERISTICS,
-                                MapViews.keyPermits(this), false, Object.class), this);
-            } else {
-                throw new UnsupportedOperationException("Unsupported method: keySet()");
+            checkMethodSupport(MapMethods.KEY_SET);
+            if (hasBreak(KEY_SET_RETURNS_EMPTY_SET)) {
+                return Collections.emptySet();
             }
+            if (hasBreak(KEY_SET_RETURNS_NULL_WHEN_EMPTY) && map.isEmpty()) {
+                return null;
+            }
+            return sharingLockOf(
+                    BreakableSet.wrap(map.keySet(), collectionViewBreaks(),
+                            MapViews.statuses(this, methodStatuses()), BreakableSet.DEFAULT_CHARACTERISTICS,
+                            MapViews.keyPermits(this), false, Object.class), this);
         });
     }
 
@@ -1205,19 +1199,16 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     @SuppressWarnings("DataFlowIssue") // returns null on a break
     public @Nullable Collection<V> values() {
         return getWithSafety(() -> {
-            if (supportsMethod(MapMethods.VALUES)) {
-                if (hasBreak(VALUES_RETURNS_EMPTY_COLLECTION)) {
-                    return Collections.emptyList();
-                }
-                if (hasBreak(VALUES_RETURNS_NULL_WHEN_EMPTY) && map.isEmpty()) {
-                    return null;
-                }
-                return sharingLockOf(BreakableCollection.wrap(map.values(), collectionViewBreaks(),
-                        MapViews.statuses(this, methodStatuses()), BreakableCollection.DEFAULT_CHARACTERISTICS,
-                        MapViews.valuePermits(this), false, Object.class), this);
-            } else {
-                throw new UnsupportedOperationException("Unsupported method: values()");
+            checkMethodSupport(MapMethods.VALUES);
+            if (hasBreak(VALUES_RETURNS_EMPTY_COLLECTION)) {
+                return Collections.emptyList();
             }
+            if (hasBreak(VALUES_RETURNS_NULL_WHEN_EMPTY) && map.isEmpty()) {
+                return null;
+            }
+            return sharingLockOf(BreakableCollection.wrap(map.values(), collectionViewBreaks(),
+                    MapViews.statuses(this, methodStatuses()), BreakableCollection.DEFAULT_CHARACTERISTICS,
+                    MapViews.valuePermits(this), false, Object.class), this);
         });
     }
 
@@ -1234,19 +1225,16 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     @Override
     public @Nullable Set<Entry<K, V>> entrySet() {
         return getWithSafety(() -> {
-            if (supportsMethod(MapMethods.ENTRY_SET)) {
-                if (hasBreak(ENTRY_SET_RETURNS_EMPTY_SET)) {
-                    return Collections.emptySet();
-                }
-                if (hasBreak(ENTRY_SET_RETURNS_NULL_WHEN_EMPTY) && map.isEmpty()) {
-                    return null;
-                }
-                return sharingLockOf(BreakableSet.wrap(MapViews.entries(this, map.entrySet()), collectionViewBreaks(),
-                        MapViews.statuses(this, methodStatuses()), BreakableSet.DEFAULT_CHARACTERISTICS,
-                        MapViews.ENTRY_PERMITS, false, Object.class), this);
-            } else {
-                throw new UnsupportedOperationException("Unsupported method: entrySet()");
+            checkMethodSupport(MapMethods.ENTRY_SET);
+            if (hasBreak(ENTRY_SET_RETURNS_EMPTY_SET)) {
+                return Collections.emptySet();
             }
+            if (hasBreak(ENTRY_SET_RETURNS_NULL_WHEN_EMPTY) && map.isEmpty()) {
+                return null;
+            }
+            return sharingLockOf(BreakableSet.wrap(MapViews.entries(this, map.entrySet()), collectionViewBreaks(),
+                    MapViews.statuses(this, methodStatuses()), BreakableSet.DEFAULT_CHARACTERISTICS,
+                    MapViews.ENTRY_PERMITS, false, Object.class), this);
         });
     }
 
@@ -1295,32 +1283,29 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     public void forEach(final BiConsumer<? super K, ? super V> action) {
         runWithSafety(() -> {
             Objects.requireNonNull(action);
-            if (supportsMethod(MapMethods.FOR_EACH)) {
-                if (hasBreak(FOR_EACH_DOES_NOT_CALL_ACTION)) {
-                    return;
-                }
-                if (hasBreak(FOR_EACH_SKIPS_FIRST_PAIR)) {
-                    Iterator<Entry<K, V>> iterator = skipFirstIterator(map.entrySet());
-                    while (iterator.hasNext()) {
-                        Entry<K, V> entry = validateEntry(iterator.next());
-                        action.accept(entry.getKey(), entry.getValue());
-                    }
-                    return;
-                }
-                if (hasBreak(FOR_EACH_SKIPS_LAST_PAIR)) {
-                    Iterator<Entry<K, V>> iterator = skipLastIterator(map.entrySet());
-                    while (iterator.hasNext()) {
-                        Entry<K, V> entry = validateEntry(iterator.next());
-                        action.accept(entry.getKey(), entry.getValue());
-                    }
-                    return;
-                }
-                for (final Entry<K, V> kvEntry : map.entrySet()) {
-                    Entry<K, V> entry = validateEntry(kvEntry);
+            checkMethodSupport(MapMethods.FOR_EACH);
+            if (hasBreak(FOR_EACH_DOES_NOT_CALL_ACTION)) {
+                return;
+            }
+            if (hasBreak(FOR_EACH_SKIPS_FIRST_PAIR)) {
+                Iterator<Entry<K, V>> iterator = skipFirstIterator(map.entrySet());
+                while (iterator.hasNext()) {
+                    Entry<K, V> entry = validateEntry(iterator.next());
                     action.accept(entry.getKey(), entry.getValue());
                 }
-            } else {
-                throw new UnsupportedOperationException("Unsupported method: forEach(BiConsumeR)");
+                return;
+            }
+            if (hasBreak(FOR_EACH_SKIPS_LAST_PAIR)) {
+                Iterator<Entry<K, V>> iterator = skipLastIterator(map.entrySet());
+                while (iterator.hasNext()) {
+                    Entry<K, V> entry = validateEntry(iterator.next());
+                    action.accept(entry.getKey(), entry.getValue());
+                }
+                return;
+            }
+            for (final Entry<K, V> kvEntry : map.entrySet()) {
+                Entry<K, V> entry = validateEntry(kvEntry);
+                action.accept(entry.getKey(), entry.getValue());
             }
         });
     }
@@ -1469,31 +1454,28 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     public boolean replace(final K key, final V oldValue, final V newValue) {
         return getWithSafety(() -> {
             boolean replaced;
-            if (supportsMethod(MapMethods.REPLACE_THREE_ARG)) {
-                validateKey(key);
-                validateValue(oldValue);
-                validateValue(newValue);
-                if (hasBreak(REPLACE_3_ARG_DOES_NOT_REPLACE_VALUE)) {
-                    replaced = map.containsKey(key) && map.get(key).equals(oldValue);
-                } else if (hasBreak(REPLACE_3_ARG_ONLY_MATCHES_KEY)) {
-                    replaced = map.replace(key, newValue) != null;
-                } else {
-                    replaced = map.replace(key, oldValue, newValue);
-                }
-
-                if (hasBreak(REPLACE_3_ARG_ALWAYS_RETURNS_TRUE)) {
-                    return true;
-                }
-                if (hasBreak(REPLACE_3_ARG_ALWAYS_RETURNS_FALSE)) {
-                    return false;
-                }
-                if (hasBreak(REPLACE_3_ARG_ALWAYS_RETURNS_OPPOSITE_VALUE)) {
-                    return !replaced;
-                }
-                return replaced;
+            checkMethodSupport(MapMethods.REPLACE_THREE_ARG);
+            validateKey(key);
+            validateValue(oldValue);
+            validateValue(newValue);
+            if (hasBreak(REPLACE_3_ARG_DOES_NOT_REPLACE_VALUE)) {
+                replaced = map.containsKey(key) && map.get(key).equals(oldValue);
+            } else if (hasBreak(REPLACE_3_ARG_ONLY_MATCHES_KEY)) {
+                replaced = map.replace(key, newValue) != null;
             } else {
-                throw new UnsupportedOperationException("Unsupported method: replace(Object,Object)");
+                replaced = map.replace(key, oldValue, newValue);
             }
+
+            if (hasBreak(REPLACE_3_ARG_ALWAYS_RETURNS_TRUE)) {
+                return true;
+            }
+            if (hasBreak(REPLACE_3_ARG_ALWAYS_RETURNS_FALSE)) {
+                return false;
+            }
+            if (hasBreak(REPLACE_3_ARG_ALWAYS_RETURNS_OPPOSITE_VALUE)) {
+                return !replaced;
+            }
+            return replaced;
         });
     }
 
@@ -1593,27 +1575,24 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     public @Nullable V computeIfPresent(final K key,
                               final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         return getWithSafety(() -> {
-            if (supportsMethod(MapMethods.COMPUTE_IF_PRESENT)) {
-                validateKey(key);
-                Objects.requireNonNull(remappingFunction);
-                V computed;
-                if (hasBreak(COMPUTE_IF_PRESENT_NEVER_COMPUTES_VALUE)) {
-                    computed = null;
-                } else if (hasBreak(COMPUTE_IF_PRESENT_ALWAYS_COMPUTES_VALUE)) {
-                    // Computes even when the key is absent, which computeIfPresent must not.
-                    computed = validateValue(remappingFunction.apply(key, map.get(key)));
-                    map.put(key, computed);
-                } else {
-                    // A null result removes the mapping (Map#computeIfPresent), so it is not validated.
-                    computed = map.computeIfPresent(key, remappingFunction);
-                }
-                if (hasBreak(COMPUTE_IF_PRESENT_ALWAYS_RETURNS_NULL)) {
-                    return null;
-                } else {
-                    return computed;
-                }
+            checkMethodSupport(MapMethods.COMPUTE_IF_PRESENT);
+            validateKey(key);
+            Objects.requireNonNull(remappingFunction);
+            V computed;
+            if (hasBreak(COMPUTE_IF_PRESENT_NEVER_COMPUTES_VALUE)) {
+                computed = null;
+            } else if (hasBreak(COMPUTE_IF_PRESENT_ALWAYS_COMPUTES_VALUE)) {
+                // Computes even when the key is absent, which computeIfPresent must not.
+                computed = validateValue(remappingFunction.apply(key, map.get(key)));
+                map.put(key, computed);
             } else {
-                throw new UnsupportedOperationException("Unsupported method: computeIfPresent(Object, Function)");
+                // A null result removes the mapping (Map#computeIfPresent), so it is not validated.
+                computed = map.computeIfPresent(key, remappingFunction);
+            }
+            if (hasBreak(COMPUTE_IF_PRESENT_ALWAYS_RETURNS_NULL)) {
+                return null;
+            } else {
+                return computed;
             }
         });
     }
@@ -1637,23 +1616,20 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     public @Nullable V compute(final K key,
                      final BiFunction<? super K, ? super @Nullable V, ? extends V> remappingFunction) {
         return getWithSafety(() -> {
-            if (supportsMethod(MapMethods.COMPUTE)) {
-                validateKey(key);
-                Objects.requireNonNull(remappingFunction);
-                V computed;
-                if (hasBreak(COMPUTE_DOES_NOT_COMPUTE_VALUE)) {
-                    computed = map.get(key);
-                } else {
-                    // A null result removes the mapping (Map#compute), so it is not validated.
-                    computed = map.compute(key, remappingFunction);
-                }
-                if (hasBreak(COMPUTE_ALWAYS_RETURNS_NULL)) {
-                    return null;
-                } else {
-                    return computed;
-                }
+            checkMethodSupport(MapMethods.COMPUTE);
+            validateKey(key);
+            Objects.requireNonNull(remappingFunction);
+            V computed;
+            if (hasBreak(COMPUTE_DOES_NOT_COMPUTE_VALUE)) {
+                computed = map.get(key);
             } else {
-                throw new UnsupportedOperationException("Unsupported method: compute(Object, Function)");
+                // A null result removes the mapping (Map#compute), so it is not validated.
+                computed = map.compute(key, remappingFunction);
+            }
+            if (hasBreak(COMPUTE_ALWAYS_RETURNS_NULL)) {
+                return null;
+            } else {
+                return computed;
             }
         });
     }
@@ -1680,25 +1656,22 @@ public class BreakableMap<K, V> extends AbstractBreakable implements Map<K, V>, 
     public @Nullable V merge(final K key, final V value,
                    final BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
         return getWithSafety(() -> {
-            if (supportsMethod(MapMethods.MERGE)) {
-                validateKey(key);
-                validateValue(value);
-                Objects.requireNonNull(remappingFunction);
-                V merged;
-                if (hasBreak(MERGE_DOES_NOT_MERGE_THE_VALUES)) {
-                    merged = map.get(key);
-                } else {
-                    // A null result removes the mapping (Map#merge), so it is not validated.
-                    merged = map.merge(key, value, remappingFunction);
-                }
-
-                if (hasBreak(MERGE_ALWAYS_RETURNS_NULL)) {
-                    return null;
-                } else {
-                    return merged;
-                }
+            checkMethodSupport(MapMethods.MERGE);
+            validateKey(key);
+            validateValue(value);
+            Objects.requireNonNull(remappingFunction);
+            V merged;
+            if (hasBreak(MERGE_DOES_NOT_MERGE_THE_VALUES)) {
+                merged = map.get(key);
             } else {
-                throw new UnsupportedOperationException("Unsupported method: merge(Object, Object, BiFunction)");
+                // A null result removes the mapping (Map#merge), so it is not validated.
+                merged = map.merge(key, value, remappingFunction);
+            }
+
+            if (hasBreak(MERGE_ALWAYS_RETURNS_NULL)) {
+                return null;
+            } else {
+                return merged;
             }
         });
     }

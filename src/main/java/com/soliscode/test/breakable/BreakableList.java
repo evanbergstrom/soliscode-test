@@ -623,9 +623,7 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     public List<E> reversed() {
         return getWithBreakableSafety(REVERSED_IS_NOT_THREAD_SAFE, () -> {
             // The breaks are those of BreakableSequencedCollection#reversed().
-            if (!supportsMethod(SequencedCollectionMethods.REVERSED)) {
-                throw new UnsupportedOperationException("Unsupported method: reversed()");
-            }
+            checkMethodSupport(SequencedCollectionMethods.REVERSED);
             if (hasBreak(REVERSED_DOES_NOT_REVERSE_COLLECTION)) {
                 return this;
             }
@@ -678,41 +676,35 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     @Override
     public boolean addAll(final int index, final Collection<? extends E> c) {
         return getWithSafety(() -> {
-            if (supportsMethod(ListMethods.ADD_ALL_AT_INDEX)) {
-                // index == size() is valid: it appends (List#addAll(int, Collection)).
-                if ((index < 0 || index > list.size())
-                        && hasBreak(ADD_ALL_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX)) {
-                    throw new WrongException();
-                }
+            checkOptionalMethodSupport(ListMethods.ADD_ALL_AT_INDEX,
+                    ADD_ALL_AT_INDEX_THROWS_WRONG_EXCEPTION_IF_NOT_SUPPORTED);
+            // index == size() is valid: it appends (List#addAll(int, Collection)).
+            if ((index < 0 || index > list.size())
+                    && hasBreak(ADD_ALL_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX)) {
+                throw new WrongException();
+            }
 
-                if (c == null && hasBreak(ADD_ALL_AT_INDEX_THROWS_WRONG_EXCEPTION_WHEN_ARGUMENT_IS_NULL)) {
-                    throw new WrongException();
-                }
+            if (c == null && hasBreak(ADD_ALL_AT_INDEX_THROWS_WRONG_EXCEPTION_WHEN_ARGUMENT_IS_NULL)) {
+                throw new WrongException();
+            }
 
-                boolean result;
-                if (hasBreak(ADD_ALL_AT_INDEX_ADDS_TO_THE_END)) {
-                    result = list.addAll(c);
-                } else if (!hasBreak(ADD_ALL_AT_INDEX_DOES_NOT_ADD_ANY_ELEMENTS)) {
-                    result = list.addAll(index, c);
-                } else {
-                    result = false;
-                }
-
-                if (hasBreak(ADD_ALL_AT_INDEX_ALWAYS_RETURNS_TRUE)) {
-                    return true;
-                } else if (hasBreak(ADD_ALL_AT_INDEX_ALWAYS_RETURNS_FALSE)) {
-                    return false;
-                } else if (hasBreak(ADD_ALL_AT_INDEX_ALWAYS_RETURNS_OPPOSITE_VALUE)) {
-                    return !result;
-                } else {
-                    return result;
-                }
+            boolean result;
+            if (hasBreak(ADD_ALL_AT_INDEX_ADDS_TO_THE_END)) {
+                result = list.addAll(c);
+            } else if (!hasBreak(ADD_ALL_AT_INDEX_DOES_NOT_ADD_ANY_ELEMENTS)) {
+                result = list.addAll(index, c);
             } else {
-                if (hasBreak(ADD_ALL_AT_INDEX_THROWS_WRONG_EXCEPTION_IF_NOT_SUPPORTED)) {
-                    throw new WrongException();
-                } else {
-                    throw new UnsupportedOperationException();
-                }
+                result = false;
+            }
+
+            if (hasBreak(ADD_ALL_AT_INDEX_ALWAYS_RETURNS_TRUE)) {
+                return true;
+            } else if (hasBreak(ADD_ALL_AT_INDEX_ALWAYS_RETURNS_FALSE)) {
+                return false;
+            } else if (hasBreak(ADD_ALL_AT_INDEX_ALWAYS_RETURNS_OPPOSITE_VALUE)) {
+                return !result;
+            } else {
+                return result;
             }
         });
     }
@@ -739,25 +731,22 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     @Override
     public void replaceAll(final UnaryOperator<E> operator) {
         runWithSafety(() -> {
-            if (supportsMethod(ListMethods.REPLACE_ALL)) {
-                int start = 0;
-                int end = list.size();
-                if (hasBreak(REPLACE_ALL_SKIPS_FIRST_ELEMENT)) {
-                    start = 1;
-                } else if (hasBreak(REPLACE_ALL_SKIPS_LAST_ELEMENT)) {
-                    end = size() - 1;
-                } else if (hasBreak(REPLACE_ALL_DOES_NOT_REPLACE_ELEMENTS)) {
-                    return;
+            checkMethodSupport(ListMethods.REPLACE_ALL);
+            int start = 0;
+            int end = list.size();
+            if (hasBreak(REPLACE_ALL_SKIPS_FIRST_ELEMENT)) {
+                start = 1;
+            } else if (hasBreak(REPLACE_ALL_SKIPS_LAST_ELEMENT)) {
+                end = size() - 1;
+            } else if (hasBreak(REPLACE_ALL_DOES_NOT_REPLACE_ELEMENTS)) {
+                return;
+            }
+            for (int i = start; i < end; i++) {
+                E e = operator.apply(list.get(i));
+                if (e == null && !permitsNulls()) {
+                    throw new NullPointerException();
                 }
-                for (int i = start; i < end; i++) {
-                    E e = operator.apply(list.get(i));
-                    if (e == null && !permitsNulls()) {
-                        throw new NullPointerException();
-                    }
-                    list.set(i, e);
-                }
-            } else {
-                throw new UnsupportedOperationException("Unsupported method: addAll");
+                list.set(i, e);
             }
         });
     }
@@ -786,19 +775,16 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     @Override
     public void sort(final Comparator<? super E> c) {
         runWithSafety(() -> {
-            if (supportsMethod(ListMethods.SORT)) {
-                if (hasBreak(SORT_REVERSES_THE_ORDER)) {
-                    list.sort(c.reversed());
-                } else if (hasBreak(SORT_THROWS_ON_NULL_ARGUMENT)) {
-                    if (c == null) {
-                        throw new NullPointerException();
-                    }
-                    list.sort(c);
-                } else if (!hasBreak(SORT_DOES_NOT_SORT_THE_ELEMENTS)) {
-                    list.sort(c);
+            checkMethodSupport(ListMethods.SORT);
+            if (hasBreak(SORT_REVERSES_THE_ORDER)) {
+                list.sort(c.reversed());
+            } else if (hasBreak(SORT_THROWS_ON_NULL_ARGUMENT)) {
+                if (c == null) {
+                    throw new NullPointerException();
                 }
-            } else {
-                throw new UnsupportedOperationException("Unsupported method: sort");
+                list.sort(c);
+            } else if (!hasBreak(SORT_DOES_NOT_SORT_THE_ELEMENTS)) {
+                list.sort(c);
             }
         });
     }
@@ -829,29 +815,26 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     @Override
     public @Nullable E get(final int index) {
         return getWithSafety(() -> {
-            if (supportsMethod(ListMethods.GET)) {
-                if (hasBreak(GET_ALWAYS_RETURNS_NULL)) {
-                    return null;
-                } else if (hasBreak(GET_ALWAYS_RETURNS_THE_FIRST_ELEMENT)) {
-                    return list.getFirst();
-                } else if (hasBreak(GET_ALWAYS_RETURNS_THE_LAST_ELEMENT)) {
-                    return list.getLast();
-                } else if (hasBreak(GET_RETURNS_THE_NEXT_ELEMENT)) {
-                    return list.get(index + 1);
-                } else if (hasBreak(GET_RETURNS_THE_PREVIOUS_ELEMENT)) {
-                    return list.get(index - 1);
-                } else {
-                    if (index < 0 || index >= list.size()) {
-                        if (hasBreak(GET_RETURNS_NULL_ON_BAD_INDEX)) {
-                            return null;
-                        } else if (hasBreak(GET_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX)) {
-                            throw new IllegalArgumentException();
-                        }
-                    }
-                    return list.get(index);
-                }
+            checkMethodSupport(ListMethods.GET);
+            if (hasBreak(GET_ALWAYS_RETURNS_NULL)) {
+                return null;
+            } else if (hasBreak(GET_ALWAYS_RETURNS_THE_FIRST_ELEMENT)) {
+                return list.getFirst();
+            } else if (hasBreak(GET_ALWAYS_RETURNS_THE_LAST_ELEMENT)) {
+                return list.getLast();
+            } else if (hasBreak(GET_RETURNS_THE_NEXT_ELEMENT)) {
+                return list.get(index + 1);
+            } else if (hasBreak(GET_RETURNS_THE_PREVIOUS_ELEMENT)) {
+                return list.get(index - 1);
             } else {
-                throw new UnsupportedOperationException("Unsupported method: sort");
+                if (index < 0 || index >= list.size()) {
+                    if (hasBreak(GET_RETURNS_NULL_ON_BAD_INDEX)) {
+                        return null;
+                    } else if (hasBreak(GET_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX)) {
+                        throw new IllegalArgumentException();
+                    }
+                }
+                return list.get(index);
             }
         });
     }
@@ -882,36 +865,33 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     @Override
     public @Nullable E set(final int index, final E element) {
         return getWithSafety(() -> {
-            if (supportsMethod(ListMethods.SET)) {
-                if (element == null && !permitsNulls()) {
-                    throw new NullPointerException("set(int, E): this list does not permit null elements");
-                }
-                if (index < 0 || index >= list.size()) {
-                    if (hasBreak(SET_RETURNS_NULL_ON_BAD_INDEX)) {
-                        return null;
-                    } else if (hasBreak(SET_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX)) {
-                        throw new IllegalArgumentException();
-                    }
-                }
-
-                E result;
-                if (hasBreak(SET_CHANGES_THE_NEXT_ELEMENT)) {
-                    result = list.set(index + 1, element);
-                } else if (hasBreak(SET_CHANGES_THE_PREVIOUS_ELEMENT)) {
-                    result = list.set(index - 1, element);
-                } else if (hasBreak(SET_DOES_NOT_CHANGE_THE_ELEMENT)) {
-                    result = list.get(index);
-                } else {
-                    result = list.set(index, element);
-                }
-
-                if (hasBreak(SET_ALWAYS_RETURNS_NULL)) {
+            checkMethodSupport(ListMethods.SET);
+            if (element == null && !permitsNulls()) {
+                throw new NullPointerException("set(int, E): this list does not permit null elements");
+            }
+            if (index < 0 || index >= list.size()) {
+                if (hasBreak(SET_RETURNS_NULL_ON_BAD_INDEX)) {
                     return null;
-                } else {
-                    return result;
+                } else if (hasBreak(SET_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX)) {
+                    throw new IllegalArgumentException();
                 }
+            }
+
+            E result;
+            if (hasBreak(SET_CHANGES_THE_NEXT_ELEMENT)) {
+                result = list.set(index + 1, element);
+            } else if (hasBreak(SET_CHANGES_THE_PREVIOUS_ELEMENT)) {
+                result = list.set(index - 1, element);
+            } else if (hasBreak(SET_DOES_NOT_CHANGE_THE_ELEMENT)) {
+                result = list.get(index);
             } else {
-                throw new UnsupportedOperationException("Unsupported method: set");
+                result = list.set(index, element);
+            }
+
+            if (hasBreak(SET_ALWAYS_RETURNS_NULL)) {
+                return null;
+            } else {
+                return result;
             }
         });
     }
@@ -943,20 +923,17 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     @Override
     public void add(final int index, final E element) {
         runWithSafety(() -> {
-            if (supportsMethod(ListMethods.ADD_AT_INDEX)) {
-                // index == size() is valid: it appends (List#add(int, Object)).
-                boolean badIndex = index < 0 || index > list.size();
-                if (badIndex && hasBreak(ADD_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX)) {
-                    throw new IllegalArgumentException();
-                } else if (!badIndex && hasBreak(ADD_AT_INDEX_ADDS_AT_NEXT_POSITION)) {
-                    list.add(Math.min(index + 1, list.size()), element);
-                } else if (!badIndex && hasBreak(ADD_AT_INDEX_ADDS_AT_PREVIOUS_POSITION)) {
-                    list.add(Math.max(index - 1, 0), element);
-                } else if (!hasBreak(ADD_AT_INDEX_DOES_NOT_ADD_THE_ELEMENT)) {
-                    list.add(index, element);
-                }
-            } else {
-                throw new UnsupportedOperationException();
+            checkMethodSupport(ListMethods.ADD_AT_INDEX);
+            // index == size() is valid: it appends (List#add(int, Object)).
+            boolean badIndex = index < 0 || index > list.size();
+            if (badIndex && hasBreak(ADD_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX)) {
+                throw new IllegalArgumentException();
+            } else if (!badIndex && hasBreak(ADD_AT_INDEX_ADDS_AT_NEXT_POSITION)) {
+                list.add(Math.min(index + 1, list.size()), element);
+            } else if (!badIndex && hasBreak(ADD_AT_INDEX_ADDS_AT_PREVIOUS_POSITION)) {
+                list.add(Math.max(index - 1, 0), element);
+            } else if (!hasBreak(ADD_AT_INDEX_DOES_NOT_ADD_THE_ELEMENT)) {
+                list.add(index, element);
             }
         });
     }
@@ -986,33 +963,30 @@ public class BreakableList<E> extends BreakableSequencedCollection<E> implements
     @Override
     public @Nullable E remove(final int index) {
         return getWithSafety(() -> {
-            if (supportsMethod(ListMethods.REMOVE_AT_INDEX)) {
-                if (index < 0 || index >= list.size()) {
-                    if (hasBreak(REMOVE_AT_INDEX_RETURNS_NULL_ON_BAD_INDEX)) {
-                        return null;
-                    } else if (hasBreak(REMOVE_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX)) {
-                        throw new IllegalArgumentException();
-                    }
-                }
-
-                E result;
-                if (hasBreak(REMOVE_AT_INDEX_REMOVES_THE_NEXT_ELEMENT)) {
-                    result = list.remove(index + 1);
-                } else if (hasBreak(REMOVE_AT_INDEX_REMOVES_THE_PREVIOUS_ELEMENT)) {
-                    result = list.remove(index - 1);
-                } else if (hasBreak(REMOVE_AT_INDEX_DOES_NOT_REMOVE_THE_ELEMENT)) {
-                    result = list.get(index);
-                } else {
-                    result = list.remove(index);
-                }
-
-                if (hasBreak(REMOVE_AT_INDEX_ALWAYS_RETURNS_NULL)) {
+            checkMethodSupport(ListMethods.REMOVE_AT_INDEX);
+            if (index < 0 || index >= list.size()) {
+                if (hasBreak(REMOVE_AT_INDEX_RETURNS_NULL_ON_BAD_INDEX)) {
                     return null;
-                } else {
-                    return result;
+                } else if (hasBreak(REMOVE_AT_INDEX_THROWS_WRONG_EXCEPTION_ON_BAD_INDEX)) {
+                    throw new IllegalArgumentException();
                 }
+            }
+
+            E result;
+            if (hasBreak(REMOVE_AT_INDEX_REMOVES_THE_NEXT_ELEMENT)) {
+                result = list.remove(index + 1);
+            } else if (hasBreak(REMOVE_AT_INDEX_REMOVES_THE_PREVIOUS_ELEMENT)) {
+                result = list.remove(index - 1);
+            } else if (hasBreak(REMOVE_AT_INDEX_DOES_NOT_REMOVE_THE_ELEMENT)) {
+                result = list.get(index);
             } else {
-                throw new UnsupportedOperationException();
+                result = list.remove(index);
+            }
+
+            if (hasBreak(REMOVE_AT_INDEX_ALWAYS_RETURNS_NULL)) {
+                return null;
+            } else {
+                return result;
             }
         });
     }

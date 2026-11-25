@@ -12,15 +12,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.soliscode.test.AbstractTest;
+import com.soliscode.test.InterfaceMethod;
 import com.soliscode.test.contract.list.ListContract;
 import com.soliscode.test.contract.support.WithIntegerElement;
 import com.soliscode.test.methods.ListMethods;
+import com.soliscode.test.methods.SequencedCollectionMethods;
 import com.soliscode.test.provider.CollectionProvider;
 import com.soliscode.test.provider.FunctionalCollectionProvider;
 
@@ -757,6 +760,58 @@ public class BreakableListTest extends AbstractTest
 
         assertThrows(UnsupportedOperationException.class, () -> list.get(0));
         assertThrows(UnsupportedOperationException.class, () -> list.set(0, 99));
+    }
+
+    /// Test that each method whose support `BreakableList` or `BreakableSequencedCollection` checks names that method
+    /// when it is unsupported (#28).
+    @Test
+    @DisplayName("An unsupported method's exception names that method")
+    public void unsupportedMethodsNameThemselves() {
+        assertUnsupportedNamesMethod(ListMethods.GET, "get(int)", list -> list.get(0));
+        assertUnsupportedNamesMethod(ListMethods.SET, "set(int, Object)", list -> list.set(0, 9));
+        assertUnsupportedNamesMethod(ListMethods.SORT, "sort(Comparator)", list -> list.sort(null));
+        assertUnsupportedNamesMethod(ListMethods.REPLACE_ALL, "replaceAll(UnaryOperator)",
+                list -> list.replaceAll(e -> e));
+        assertUnsupportedNamesMethod(ListMethods.ADD_AT_INDEX, "add(int, Object)", list -> list.add(0, 9));
+        assertUnsupportedNamesMethod(ListMethods.ADD_ALL_AT_INDEX, "addAll(int, Collection)",
+                list -> list.addAll(0, List.of(9)));
+        assertUnsupportedNamesMethod(ListMethods.REMOVE_AT_INDEX, "remove(int)", list -> list.remove(0));
+        assertUnsupportedNamesMethod(SequencedCollectionMethods.REVERSED, "reversed()", BreakableList::reversed);
+        assertUnsupportedNamesMethod(SequencedCollectionMethods.ADD_FIRST, "addFirst(Object)",
+                list -> list.addFirst(9));
+        assertUnsupportedNamesMethod(SequencedCollectionMethods.ADD_LAST, "addLast(Object)", list -> list.addLast(9));
+        assertUnsupportedNamesMethod(SequencedCollectionMethods.GET_FIRST, "getFirst()", BreakableList::getFirst);
+        assertUnsupportedNamesMethod(SequencedCollectionMethods.GET_LAST, "getLast()", BreakableList::getLast);
+        assertUnsupportedNamesMethod(SequencedCollectionMethods.REMOVE_FIRST, "removeFirst()",
+                BreakableList::removeFirst);
+        assertUnsupportedNamesMethod(SequencedCollectionMethods.REMOVE_LAST, "removeLast()", BreakableList::removeLast);
+    }
+
+    /// Test that an unsupported `addAll(int, Collection)` under
+    /// `ADD_ALL_AT_INDEX_THROWS_WRONG_EXCEPTION_IF_NOT_SUPPORTED` throws the wrong exception, naming the method (#28).
+    @Test
+    @DisplayName("An unsupported addAll at an index throws the wrong exception, naming itself, under its break")
+    public void unsupportedAddAllAtIndexThrowsWrongExceptionNamingItself() {
+        final BreakableList<Integer> list = new BreakableList.Builder<Integer>()
+                .addElements(1, 2, 3)
+                .doesNotSupportMethod(ListMethods.ADD_ALL_AT_INDEX)
+                .addBreak(BreakableList.ADD_ALL_AT_INDEX_THROWS_WRONG_EXCEPTION_IF_NOT_SUPPORTED)
+                .build();
+        final WrongException e = assertThrows(WrongException.class, () -> list.addAll(0, List.of(9)));
+        org.junit.jupiter.api.Assertions.assertEquals("addAll(int, Collection) is not supported by Breakable",
+                e.getMessage());
+    }
+
+    private static void assertUnsupportedNamesMethod(final InterfaceMethod method,
+                                                     final String name,
+                                                     final Consumer<BreakableList<Integer>> call) {
+        final BreakableList<Integer> list = new BreakableList.Builder<Integer>()
+                .addElements(1, 2, 3)
+                .doesNotSupportMethod(method)
+                .build();
+        final UnsupportedOperationException e =
+                assertThrows(UnsupportedOperationException.class, () -> call.accept(list), name);
+        org.junit.jupiter.api.Assertions.assertEquals(name + " is not supported by Breakable", e.getMessage());
     }
 
     /// Test boundary conditions for index-based operations.
