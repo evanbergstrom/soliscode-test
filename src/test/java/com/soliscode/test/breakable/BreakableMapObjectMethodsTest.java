@@ -6,6 +6,8 @@
 package com.soliscode.test.breakable;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,8 +26,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /// Tests of [BreakableMap]'s implementations of [Object]'s methods `equals`, `hashCode` and `toString`, and of its
-/// `clone`: that equality and the string form follow the map's contents, that the hash code takes in its null
-/// policies, and that a clone copies the contents, breaks, null policies and method statuses without sharing them.
+/// `clone`: that equality, the hash code and the string form follow the map's contents only, and that a clone copies
+/// the contents, breaks, null policies and method statuses without sharing them.
 ///
 /// The map's other methods, its constructors, builder and views are tested in [BreakableMapTest], and the
 /// [java.util.Map] interface's default methods in [BreakableMapDefaultMethodsTest].
@@ -94,42 +96,45 @@ public class BreakableMapObjectMethodsTest extends AbstractTest {
 
     /// Tests the hashCode method implementation for BreakableMap.
     ///
-    /// Validates that BreakableMap correctly implements hashCode() by incorporating both the
-    /// underlying map content and the break/policy configuration. This ensures that maps with
-    /// the same data but different configurations have different hash codes when appropriate.
+    /// [java.util.Map#hashCode()] is the sum of the entries' hash codes, so that equal maps have equal hash codes.
+    /// [BreakableMap#equals(Object)] compares the mappings only, so the hash code is the mappings' only too: maps with
+    /// the same mappings and different null policies, breaks or method statuses have the same hash code, which is
+    /// that of a [HashMap] with those mappings. A hash code that took in the configuration would break the contract.
     ///
-    /// **Test Scenarios:**
-    /// 1. **Same Configuration**: Maps with identical data and configuration should have same hash code
-    /// 2. **Different Configuration**: Maps with same data but different null policies should have different hash codes
-    ///
-    /// **HashCode Behavior:**
-    /// - Incorporates underlying map content
-    /// - Includes null policy configuration
-    /// - Maintains consistency with equals() method
-    ///
-    /// **Assertions:**
-    /// - Consistency: `assertEquals(map1.hashCode(), map2.hashCode())` for same configuration
-    /// - Distinction: `assertNotEquals(map1.hashCode(), map3.hashCode())` for different configuration
+    /// None of the breaks or method statuses set here changes `hashCode` itself. A changed mapping does change it, so
+    /// that a hash code that ignored the mappings fails too.
     @Test
-    @DisplayName("Test hashCode method")
+    @DisplayName("hashCode() is the mappings' only: the null policies, breaks and method statuses do not change it")
     public void testHashCode() {
-        BreakableMap<String, Integer> map1 = new BreakableMap.Builder<String, Integer>()
+        BreakableMap<String, Integer> plain = new BreakableMap<>();
+        BreakableMap<String, Integer> noNulls = new BreakableMap.Builder<String, Integer>()
             .doesNotPermitNullKeys()
+            .doesNotPermitNullValues()
             .build();
-        BreakableMap<String, Integer> map2 = new BreakableMap.Builder<String, Integer>()
-            .doesNotPermitNullKeys()
+        BreakableMap<String, Integer> broken = new BreakableMap.Builder<String, Integer>()
+            .addBreak(GET_ALWAYS_RETURNS_NULL)
             .build();
-        BreakableMap<String, Integer> map3 = new BreakableMap<>(); // Different null policy
+        BreakableMap<String, Integer> unsupported = new BreakableMap<>();
+        unsupported.doesNotSupportMethod(MapMethods.GET);
+        HashMap<String, Integer> reference = new HashMap<>();
 
-        map1.put("key", 42);
-        map2.put("key", 42);
-        map3.put("key", 43);
+        for (final Map<String, Integer> map
+                : List.<Map<String, Integer>>of(plain, noNulls, broken, unsupported, reference)) {
+            map.put("one", 1);
+            map.put("two", 2);
+        }
 
-        // Maps with same data and configuration should have same hash code
-        assertEquals(map1.hashCode(), map2.hashCode());
+        assertEquals(reference.hashCode(), plain.hashCode(), "the default configuration");
+        assertEquals(reference.hashCode(), noNulls.hashCode(), "null keys and values not permitted");
+        assertEquals(reference.hashCode(), broken.hashCode(), "a break set");
+        assertEquals(reference.hashCode(), unsupported.hashCode(), "a method not supported");
+        assertEquals(plain, noNulls, "equals ignores the null policies too");
 
-        // Maps with different configuration should likely have different hash codes
-        assertNotEquals(map1.hashCode(), map3.hashCode());
+        int before = plain.hashCode();
+        plain.put("two", 3);
+        reference.put("two", 3);
+        assertNotEquals(before, plain.hashCode(), "a changed mapping changes the hash code");
+        assertEquals(reference.hashCode(), plain.hashCode(), "the changed mappings");
     }
 
     /// Tests the toString method implementation for BreakableMap.
