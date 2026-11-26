@@ -26,7 +26,6 @@ import com.soliscode.test.contract.support.ExecutorServiceContractSupport;
 import com.soliscode.test.safety.ContentionCoordinator;
 
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.fail;
 
 /// **Contract for `shutdown` of an `ExecutorService` under contention with `execute`**
 ///
@@ -129,7 +128,7 @@ public interface ThreadSafeShutdownContract<E extends ExecutorService> extends E
             coordinator.execute(executors);
             assertNull(failure.get(), failure::get);
             for (int r = 0; r < ROUNDS; r++) {
-                checkRound(executors.get(r), r, runs.get(r), outcomes.get(r), rejects, deadline);
+                ShutdownRound.check(executors.get(r), r, runs.get(r), outcomes.get(r), rejects, deadline);
             }
         } finally {
             for (final E executor : executors) {
@@ -165,45 +164,6 @@ public interface ThreadSafeShutdownContract<E extends ExecutorService> extends E
             accepted.incrementAndGet(round);
             if (!rejects && executor.isShutdown()) {
                 return;
-            }
-        }
-    }
-
-    /// Checks one round: its executor terminates within the time left, and each task ran as its outcome says.
-    ///
-    /// @param executor the round's executor
-    /// @param round    the round
-    /// @param runs     the times each task ran
-    /// @param outcomes each task's [ShutdownOutcome]
-    /// @param rejects  whether the class rejects tasks after shutdown ([#rejectsTasksAfterShutdown()])
-    /// @param deadline the run's deadline, in [System#nanoTime()]'s terms
-    private static void checkRound(final ExecutorService executor, final int round, final AtomicIntegerArray runs,
-            final AtomicIntegerArray outcomes, final boolean rejects, final long deadline) {
-        try {
-            if (!executor.awaitTermination(Math.max(0, deadline - System.nanoTime()), TimeUnit.NANOSECONDS)) {
-                fail("the executor of round " + round + " did not terminate within " + DEADLINE_MILLIS + " ms");
-            }
-        } catch (final InterruptedException e) {
-            Thread.currentThread().interrupt();
-            fail("interrupted while waiting for round " + round + " to terminate", e);
-        }
-        for (int id = 0; id < runs.length(); id++) {
-            int ran = runs.get(id);
-            int outcome = outcomes.get(id);
-            boolean mustRun = outcome == ShutdownOutcome.ACCEPTED_BEFORE_SHUTDOWN
-                    || (rejects && outcome == ShutdownOutcome.ACCEPTED);
-            if (ran > 1) {
-                fail("task " + id + " of round " + round + " ran " + ran + " times");
-            }
-            if (mustRun && ran == 0) {
-                fail("task " + id + " of round " + round + " was accepted"
-                        + (outcome == ShutdownOutcome.ACCEPTED_BEFORE_SHUTDOWN ? " before shutdown() was called" : "")
-                        + " and never ran");
-            }
-            boolean accepted = outcome == ShutdownOutcome.ACCEPTED
-                    || outcome == ShutdownOutcome.ACCEPTED_BEFORE_SHUTDOWN;
-            if (!accepted && ran != 0) {
-                fail("task " + id + " of round " + round + " was rejected, or never submitted, and ran");
             }
         }
     }
