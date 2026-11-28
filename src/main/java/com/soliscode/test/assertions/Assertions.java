@@ -209,7 +209,8 @@ public final class Assertions {
         if (messageSupplier == null) {
             org.junit.jupiter.api.Assertions.assertThrows(Throwable.class, executable);
         } else {
-            org.junit.jupiter.api.Assertions.assertThrows(Throwable.class, executable, messageSupplier);
+            // JUnit takes a Supplier<@Nullable String>, which a Supplier<String> is not: the lambda is one.
+            org.junit.jupiter.api.Assertions.assertThrows(Throwable.class, executable, () -> messageSupplier.get());
         }
     }
 

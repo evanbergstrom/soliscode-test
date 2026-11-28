@@ -1002,11 +1002,18 @@ public class BreakableCollection<E> extends BreakableIterable<E> implements Coll
             for (int i = 1; i < collection.size(); i++) {
                 array[i - 1] = array[i];
             }
-            array[collection.size() - 1] = null;
+            clearElement(array, collection.size() - 1);
         } else if (hasBreak(TO_ARRAY_STORE_MISSING_LAST_ELEMENT)) {
-            array[collection.size() - 1] = null;
+            clearElement(array, collection.size() - 1);
         }
         return array;
+    }
+
+    /// Sets an element of an array to `null`, for the breaks of [#toArray(Object\[\])] that leave out an element.
+    // NullAway: TO_ARRAY_STORE_MISSING_FIRST_ELEMENT and _LAST_ELEMENT write null into a T[] on purpose.
+    @SuppressWarnings("NullAway")
+    private static <T> void clearElement(final T[] array, final int index) {
+        array[index] = null;
     }
 
     /// Implements the [add][Collection#add] method from the [Collection] interface. This method can be broken using
