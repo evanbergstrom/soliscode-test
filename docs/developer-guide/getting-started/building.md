@@ -8,7 +8,7 @@ Run every command from the repository's root. Run one Maven build at a time: bui
 mvn -B verify
 ```
 
-That is the whole build, with every gate and every test of the default selection, in about five minutes. The jar is in `target/`. The [parent's guide](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/guide/04-everyday-work.md#the-whole-build) shows what its output means.
+That is the whole build, with every gate and every test of the default selection, in about five minutes. The jar is in `target/`. The [parent's guide](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.19/docs/guide/04-everyday-work.md#the-whole-build) shows what its output means.
 
 For a quicker check while you work, the install gate runs every gate but the tests and the coverage check:
 
@@ -23,7 +23,9 @@ It runs the enforcer, the licence check and Checkstyle, compiles the main code w
 | Command | What it does |
 |---|---|
 | `scripts/verify.sh` | The full build from clean, recorded. A release needs a green record for the tree it releases. Run it before you say a change is done |
-| `mvn -B verify` | The same build, not recorded |
+| `mvn -B verify` | The same build, not recorded: the full suite, every gate, the pre-release category |
+| `mvn -B -P soliscode-merge verify` | The pre-merge category: every gate, and the integration tests not tagged `release` |
+| `mvn -B -P soliscode-iterate verify` | The iteration category, after each change: Checkstyle, ErrorProne and NullAway, the unit tests. It installs nothing |
 | `mvn -B -Djacoco.check.skip=true -DskipTests install` | The install gate: every gate but the tests, the architecture rules and the coverage check |
 | `mvn -B clean` | Removes `target/` |
 | `mvn -B validate` | The gates that run before compiling: the enforcer, Checkstyle and the licence check |
@@ -31,11 +33,11 @@ It runs the enforcer, the licence check and Checkstyle, compiles the main code w
 | `mvn -B install` | Installs `0.1-SNAPSHOT` into `~/.m2`, for another library to try before a release |
 | `mvn -B dependency:analyze` | Libraries used but not declared, or declared but not used |
 
-The [parent's guide](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/guide/04-everyday-work.md#the-commands) lists the commands every SolisCode library shares, with their output. This project's own list, with each command's detail, is [build-and-test.md](../../design/reference/build-and-test.md#commands), "Commands".
+The [parent's guide](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.19/docs/guide/04-everyday-work.md#the-commands) lists the commands every SolisCode library shares, with their output. This project's own list, with each command's detail, is [build-and-test.md](../../design/reference/build-and-test.md#commands), "Commands".
 
 ## What the build needs
 
-The SolisCode parent at 0.1.17, and `com.soliscode:soliscode-performance-api` 0.1.17, which the parent's install installs with it, in `~/.m2` ([Development environment](dev-environment.md#local-setup)). The POM's version is `${revision}`, `0.1-SNAPSHOT` unless a release sets it with `-Drevision`.
+The SolisCode parent at 0.1.19, and `com.soliscode:soliscode-performance-api` 0.1.19, which the parent's install installs with it, in `~/.m2` ([Development environment](dev-environment.md#local-setup)). The POM's version is `${revision}`, `0.1-SNAPSHOT` unless a release sets it with `-Drevision`.
 
 The parent sets every plugin and the version of each library it manages. Don't add a version of your own for either: the build refuses a change to a gate's plugin, and a managed library is named without a `<version>`. This project adds no plugin and no plugin configuration of its own; what it does add to the parent's build is in [build-and-test.md](../../design/reference/build-and-test.md#what-this-project-adds), "What this project adds".
 
@@ -53,4 +55,4 @@ flowchart LR
 ## See also
 
 - [Running tests](running-tests.md)
-- [The gates](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/guide/03-gates/README.md), in the parent's guide
+- [The gates](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.19/docs/guide/03-gates/README.md), in the parent's guide

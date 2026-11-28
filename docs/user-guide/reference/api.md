@@ -4,7 +4,7 @@ The complete API reference is the Javadoc, generated from the source code. The n
 
 ### [SolisCode Test API reference](https://soliscode.gitlab.io/soliscode-test/latest/)
 
-Each release's Javadoc from 0.1.6 on stays published at `https://soliscode.gitlab.io/soliscode-test/<version>/`, such as `https://soliscode.gitlab.io/soliscode-test/0.1.6/` for 0.1.6. `https://soliscode.gitlab.io/soliscode-test/` lists every version. The Javadoc of `main`, the next release, is not published: build it from a clone, as [Building the reference locally](#building-the-reference-locally) says.
+The Javadoc of each of the newest three releases, from 0.1.6 on, is at `https://soliscode.gitlab.io/soliscode-test/<version>/`, such as `https://soliscode.gitlab.io/soliscode-test/0.1.6/` for 0.1.6; an older release leaves the site. `https://soliscode.gitlab.io/soliscode-test/` lists the versions it keeps. The Javadoc of `main`, the next release, is not published: build it from a clone, as [Building the reference locally](#building-the-reference-locally) says.
 
 ## Packages
 

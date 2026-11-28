@@ -21,7 +21,7 @@ No CI runs the tests. They run on your machine, and the record shows they passed
 | One tag | `mvn -B test -Dgroups=concurrency` | `src/test/java` | A JUnit tag expression |
 | Architecture rules | `mvn -B verify` (Surefire's execution `soliscode-architecture`, at `prepare-package`) | the parent's rules, on the main classes | Not run by `mvn test` |
 
-Surefire runs the classes named `*Test`, and no others.
+Surefire runs the classes named `*Test`, and no others. Failsafe runs the classes named `*IT` after them, by their JUnit tag: untagged before every merge, `@Tag("release")` before a release, `@Tag("on-demand")` only when asked. Integration tests do not count for coverage. This library has none yet. The [parent's categories](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.19/docs/design/reference/categories.md) say which run when.
 
 ### Test tags
 

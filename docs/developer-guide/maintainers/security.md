@@ -25,7 +25,7 @@ flowchart LR
 4. **Release** the fix in the next release ([Release process](release-process.md)). Only the newest release gets fixes before 1.0.0.
 5. **Disclose:** once the release is out, make the issue public if the reporter agrees, and credit them if they wish.
 
-A vulnerability in a dependency is found with the parent's [dependency check](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/guide/03-gates/dependency-check.md). A fix to a managed dependency's version is made in the SolisCode parent, and reaches SolisCode Test when `<parent>` moves.
+A vulnerability in a dependency is found with the parent's [dependency check](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.19/docs/guide/03-gates/dependency-check.md). A fix to a managed dependency's version is made in the SolisCode parent, and reaches SolisCode Test when `<parent>` moves.
 
 ## Who responds
 

@@ -23,7 +23,7 @@
 
 These pages describe `main`, the next release.
 
-The Javadoc of each release from 0.1.6 on is at `https://soliscode.gitlab.io/soliscode-test/<version>/`, and the newest at [https://soliscode.gitlab.io/soliscode-test/latest/](https://soliscode.gitlab.io/soliscode-test/latest/).
+The Javadoc of each of the newest releases, from 0.1.6 on, is at `https://soliscode.gitlab.io/soliscode-test/<version>/`, and the newest at [https://soliscode.gitlab.io/soliscode-test/latest/](https://soliscode.gitlab.io/soliscode-test/latest/).
 
 The pages as they were at a release are in the repository at its tag, `v<version>`. What changed in each release is in [RELEASES.md](../RELEASES.md).
 

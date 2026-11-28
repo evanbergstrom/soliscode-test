@@ -14,7 +14,7 @@
 
 ## Local setup
 
-1. Install the SolisCode parent at 0.1.17 into your local Maven repository, as its guide says in [Installing a release on another machine](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/guide/08-maintainers.md#installing-a-release-on-another-machine). The parent's version is the `<parent>` in `pom.xml`. Its install also installs the parent's performance API jar, `com.soliscode:soliscode-performance-api` 0.1.17, released with the parent and not on its own, which the performance test library uses ([architecture.md](../../design/system/architecture.md), section 8).
+1. Install the SolisCode parent at 0.1.19 into your local Maven repository, as its guide says in [Installing a release on another machine](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.19/docs/guide/08-maintainers.md#installing-a-release-on-another-machine). The parent's version is the `<parent>` in `pom.xml`. Its install also installs the parent's performance API jar, `com.soliscode:soliscode-performance-api` 0.1.19, released with the parent and not on its own, which the performance test library uses ([architecture.md](../../design/system/architecture.md), section 8).
 2. SolisCode Test depends on no SolisCode library besides the parent's release, so there is nothing more to install first. Every other dependency comes from Maven Central ([dependency-management.md](../../design/reference/dependency-management.md)).
 3. Clone this repository, and install its git hooks:
 

@@ -4,8 +4,8 @@
 # The project's one pipeline: it publishes the Javadoc that scripts/publish-javadoc.sh built on a developer's
 # machine and stored in the project's generic package registry, to GitLab Pages. It builds nothing and runs no
 # gate; the gates run locally (docs/design/reference/documentation.md, section 3.3). Only a pipeline created
-# through the API runs: a push, a merge request or a schedule starts none. A child that publishes has a copy,
-# installed by soliscode:docs from the tag of its parent version.
+# through the API runs: a push, a merge request or a schedule starts none. A child that publishes has a copy, and
+# one of scripts/pages-site.sh, which the job runs, both installed by soliscode:docs from the tag of its parent version.
 spec:
   inputs:
     versions:
@@ -37,29 +37,8 @@ pages:
       - public
   variables:
     VERSIONS: $[[ inputs.versions ]]
+  # The job's work is scripts/pages-site.sh (#41), from this checkout of the default branch: it unpacks the versions,
+  # points latest/ at the newest, and refuses a site over GitLab.com's Pages caps before GitLab does
+  # (docs/design/reference/documentation.md, section 3.8). POSIX sh, as the image has no Bash.
   script:
-    - test -n "$VERSIONS" || { echo "no versions given"; exit 1; }
-    - mkdir -p public
-    - |
-      latest=""
-      for version in $VERSIONS; do
-        wget -q --header "JOB-TOKEN: $CI_JOB_TOKEN" -O javadoc.zip \
-          "$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/generic/javadoc/$version/javadoc.zip"
-        mkdir -p "public/$version"
-        unzip -q javadoc.zip -d "public/$version"
-        rm javadoc.zip
-        latest=$version
-      done
-      cp -R "public/$latest" public/latest
-      echo "$latest" > public/latest/VERSION
-      for version in $VERSIONS; do echo "$version"; done > public/versions.txt
-      echo "$CI_PIPELINE_ID" > public/deployment.txt
-      : > "public/deployment-$CI_PIPELINE_ID.txt"
-      {
-        echo '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">'
-        echo "<title>$CI_PROJECT_TITLE API reference</title></head><body>"
-        echo "<h1>$CI_PROJECT_TITLE API reference</h1><ul>"
-        echo "<li><a href=\"latest/\">latest</a> ($latest)</li>"
-        for version in $VERSIONS; do echo "<li><a href=\"$version/\">$version</a></li>"; done
-        echo '</ul></body></html>'
-      } > public/index.html
+    - sh scripts/pages-site.sh

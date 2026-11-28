@@ -37,6 +37,10 @@ site_poll_limit=120
 site_poll_interval=10
 pipeline_poll_interval=10
 
+# How many of the newest stored versions the site keeps when the root POM sets no soliscode.javadoc.site.versions:
+# the parent's own value, which the test checks against the parent's pom.xml (#41; documentation.md, section 3.8).
+site_versions_default=3
+
 die() { echo "publish-javadoc.sh: $*" >&2; exit 1; }
 say() { echo "publish-javadoc.sh: $*"; }
 
@@ -132,6 +136,74 @@ while True:
     for package in page:
         if package.get("name") == "javadoc" and re.fullmatch(r"[0-9]+(\.[0-9]+)*", package.get("version", "")):
             found.add(package["version"])
+for version in sorted(found, key=lambda v: [int(part) for part in v.split(".")]):
+    print(version)
+'
+}
+
+# K, the number of the newest stored versions the site keeps, from the root POM $1, with where it came from: "<K> pom"
+# or "<K> default", or "refused <why>". It reads the root POM's own <properties> with ElementTree, without Maven, in
+# any namespace or none, the value with the whitespace around it removed; an element of that name anywhere else in
+# the POM (a profile's <properties>) refuses, as does a value that is not a whole number from 1 to 10000, a bound far
+# above any site GitLab would take, which keeps tail's offset in range (#41).
+site_versions() {
+    python3 -I -c '
+import re, sys
+import xml.etree.ElementTree as ET
+name, default = "soliscode.javadoc.site.versions", sys.argv[2]
+try:
+    root = ET.parse(sys.argv[1]).getroot()
+except (OSError, ET.ParseError) as e:
+    print("refused the root POM %s cannot be read: %s" % (sys.argv[1], e))
+    sys.exit(0)
+local = lambda e: e.tag.rsplit("}", 1)[-1] if isinstance(e.tag, str) else ""
+props = [p for p in root if local(p) == "properties"]
+own = [e for p in props for e in p if local(e) == name]
+others = [e for e in root.iter() if local(e) == name and not any(e is o for o in own)]
+if others:
+    print("refused %s is set in the root POM outside its <properties> (a profile, say), which this script does not read" % name)
+elif len(own) > 1:
+    print("refused %s is set twice in the root POM" % name)
+elif not own:
+    print(default + " default")
+else:
+    value = (own[0].text or "").strip()
+    if re.fullmatch(r"[0-9]{1,5}", value) and 1 <= int(value) <= 10000:
+        print("%d pom" % int(value))
+    else:
+        print("refused %s in the root POM is %r, not a whole number from 1 to 10000" % (name, value))
+' "$1" "$site_versions_default"
+}
+
+# The id of the pages job of pipeline $2 in project $1, or nothing.
+pages_job_id() {
+    glab api "projects/$1/pipelines/$2/jobs" 2> /dev/null | python3 -I -c '
+import json, sys
+print(next((j["id"] for j in json.load(sys.stdin) if j.get("name") == "pages"), ""))' 2> /dev/null || true
+}
+
+# The pages-site.sh lines of job $2's trace in project $1, cleaned (#41): a raw trace holds ANSI escapes and section
+# markers, may end lines with \r and may put a timestamp first, so a line counts where it holds "pages-site.sh: "
+# anywhere, and is printed from there. The command's echo, "$ sh scripts/pages-site.sh", has no such marker. Returns 1
+# if GitLab gives no trace.
+job_lines() {
+    local trace
+    trace=$(glab api "projects/$1/jobs/$2/trace" 2> /dev/null) || return 1
+    python3 -I -c '
+import re, sys
+text = re.sub(r"\x1b\[[0-9;]*[A-Za-z]", "", sys.stdin.read())
+for line in re.split(r"[\r\n]+", text):
+    at = line.find("pages-site.sh: ")
+    if at >= 0:
+        print(line[at:].rstrip())' <<< "$trace"
+}
+
+# The versions on standard input, one per line, sorted as javadoc_versions sorts them, by every part as a number, with
+# blank lines and repeats dropped: the order the newest K is taken in, before the upload and after it (#41).
+sort_versions() {
+    python3 -I -c '
+import sys
+found = {line.strip() for line in sys.stdin if line.strip()}
 for version in sorted(found, key=lambda v: [int(part) for part in v.split(".")]):
     print(version)
 '
@@ -411,6 +483,41 @@ await_deployment() {
     done
 }
 
+# Where the audience is everyone, that latest/ at $1 points at the newest version, $2 (#41): latest/ answers the job's
+# page naming ../<newest>/, or the newest's own index.html (a child's old job, which copies it); latest without the
+# slash redirects to latest/; a deep link under latest/, which the rewrite serves, is the newest's page; and the
+# newest's own marker, soliscode-version.txt, read through latest/, names the newest, which a deep link the same in two
+# versions cannot show. An old job's copy has no marker: there latest/ is the newest's own index page.
+latest_check() {
+    local url=$1 newest=$2 page own answer status=0 code location copy=false
+    page=$(site_text "$url/latest/") || exit 1
+    if [[ "$page" != *"../$newest/"* ]]; then
+        copy=true
+        own=$(site_text "$url/$newest/index.html") || exit 1
+        [[ "$page" == "$own" ]] || die "$url/latest/ neither sends the reader to ../$newest/ nor is $newest's index page"
+    fi
+    answer=$(site_curl "$site_max_time" -o /dev/null -w '%{http_code} %{redirect_url}' "$url/latest") || status=$?
+    (( status == 0 )) || { read_failure "$url/latest" "$status"; exit 1; }
+    code=${answer%% *}
+    location=${answer#* }
+    [[ "$code" =~ ^30[1278]$ && "$location" == */latest/ ]] \
+        || die "$url/latest answered $code ${location:-with no redirect}, not a redirect to latest/"
+    local deep versioned
+    deep=$(site_text "$url/latest/allclasses-index.html") || exit 1
+    versioned=$(site_text "$url/$newest/allclasses-index.html") || exit 1
+    [[ "$deep" == "$versioned" ]] \
+        || die "$url/latest/allclasses-index.html is not $newest's: the rewrite does not point at the newest"
+    local marker
+    code=$(http_code "$url/latest/soliscode-version.txt") || exit 1
+    if [[ "$code" == 200 ]]; then
+        marker=$(site_text "$url/latest/soliscode-version.txt") || exit 1
+        [[ "$marker" == "$newest" ]] \
+            || die "$url/latest/soliscode-version.txt holds '${marker:0:40}', not $newest: the rewrite does not point at the newest"
+    elif [[ "$code" != 404 || "$copy" == false ]]; then
+        die "$url/latest/soliscode-version.txt answered $code: the rewrite does not serve the newest's marker"
+    fi
+}
+
 main() {
     trap on_exit EXIT
     local check=false store_only=false register=false version=""
@@ -460,6 +567,14 @@ main() {
         "package registry $registry, repository $repository: ${refusal:-may publish}"
     [[ -z "$refusal" ]] || die "refused: $refusal"
     say "pipeline branch: ${unbranched:-$branch}"
+
+    # K, read and checked before any build, upload or pipeline, --store-only included (#41).
+    local kept keep keep_source
+    kept=$(site_versions "$root/pom.xml")
+    [[ "$kept" != refused* ]] || die "refused: ${kept#refused }"
+    keep=${kept%% *}
+    [[ "${kept#* }" == pom ]] && keep_source="soliscode.javadoc.site.versions in pom.xml" || keep_source="the default"
+    say "site versions: $keep ($keep_source)"
     [[ "$check" == true || "$store_only" == true || -z "$unbranched" ]] || die "refused: $unbranched"
 
     # The project runner on this machine that runs the pages job (the job's tag, soliscode-pages).
@@ -505,11 +620,15 @@ main() {
         glab api --method PUT "projects/$id/packages/generic/javadoc/$version/javadoc.zip" \
             --input "$work/javadoc.zip" > /dev/null || die "the upload of javadoc $version failed"
         say "stored javadoc $version ($(du -h "$work/javadoc.zip" | cut -f1))"
-        stored=$(printf '%s\n%s\n' "$stored" "$version" | sed '/^$/d' | sort -t. -k1,1n -k2,2n -k3,3n)
+        stored=$(printf '%s\n%s\n' "$stored" "$version" | sort_versions)
     fi
     [[ "$store_only" == false ]] || { say "stored; no pipeline started (--store-only)"; return 0; }
-    local versions
-    versions=$(tr '\n' ' ' <<< "$stored" | sed 's/ *$//')
+    # The site keeps the newest K stored versions; older ones stay in the registry (#41).
+    local deployed_list versions
+    deployed_list=$(tail -n "$keep" <<< "$stored")
+    versions=$(tr '\n' ' ' <<< "$deployed_list" | sed 's/ *$//')
+    grep -qxF "$version" <<< "$deployed_list" \
+        || say "javadoc $version is stored, but is not among the newest $keep ($versions); the site keeps those"
 
     # A deployment with an older list must not finish after one with a newer list (the job's resource_group
     # serialises the jobs; this keeps a stale list from being queued).
@@ -568,6 +687,30 @@ main() {
         pipeline=$(glab api "projects/$id/pipelines/$pid")
         state=$(json_field status <<< "$pipeline")
     done
+    # The job's own lines, the site's size among them, from its trace (#41).
+    local job_id lines="" refusal_line=""
+    job_id=$(pages_job_id "$id" "$pid")
+    if [[ -n "$job_id" ]] && lines=$(job_lines "$id" "$job_id"); then
+        [[ -z "$lines" ]] || printf '%s\n' "$lines"
+        refusal_line=$(grep -m1 '^pages-site.sh: refused: the site of versions' <<< "$lines" || true)
+    else
+        say "GitLab gave no trace of the pages job, so its lines are not shown"
+    fi
+    if [[ -n "$refusal_line" ]]; then
+        # A smaller K helps only where the site of the newest alone fits and more than one version was deployed: K
+        # above the number stored deploys the same list (#41).
+        local advice deployed_count
+        deployed_count=$(wc -l <<< "$deployed_list" | tr -d ' ')
+        if [[ "$refusal_line" == *", within the caps" && "$deployed_count" -gt 1 ]]; then
+            advice="lower soliscode.javadoc.site.versions (now $keep, $keep_source) in the root pom.xml, below the"
+            advice+=" $deployed_count versions deployed"
+        else
+            advice="no smaller soliscode.javadoc.site.versions helps (now $keep, $keep_source)"
+        fi
+        die "the pages job refused the site, and GitLab deployed nothing: $advice; or leave more out of the" \
+            "Javadoc (soliscode.javadoc.site.excludePackageNames, soliscode.javadoc.site.skippedModules), which" \
+            "shrinks the site from the next release on, since a stored version is never rebuilt"
+    fi
     [[ "$state" == success ]] \
         || die "pipeline $pid ended $state: $(json_field web_url <<< "$pipeline"); the runner's log: $runlog"
 
@@ -578,13 +721,14 @@ main() {
     url=$(glab api "projects/$id/pages" | json_field url)
     url=${url%/}
     [[ "$(pages_audience "$visibility" "$pages")" == everyone ]] && expected=200 || expected=302
-    newest=$(tail -1 <<< "$stored")
+    newest=$(tail -1 <<< "$deployed_list")
     [[ "$expected" != 200 ]] || await_deployment "$url" "$pid"
     code=$(http_code "$url/$newest/index.html") || exit 1
     [[ "$code" == "$expected" ]] || die "$url/$newest/index.html answered $code, not $expected"
     if [[ "$expected" == 200 ]]; then
         latest=$(site_text "$url/latest/VERSION") || exit 1
         [[ "$latest" == "$newest" ]] || die "$url/latest/ does not hold $newest"
+        latest_check "$url" "$newest"
     fi
     for page in latest/allclasses-index.html $(sed 's#[^ ]*#&/index.html#g' <<< "$versions"); do
         code=$(http_code "$url/$page") || exit 1
@@ -595,7 +739,7 @@ main() {
         # before the lock stays deployed; and a deployment replaces the site, so the previous probe is gone.
         deployed=$(site_text "$url/versions.txt") || exit 1
         now=$(glab api --paginate "projects/$id/packages?package_type=generic&package_name=javadoc&per_page=100" \
-            | javadoc_versions)
+            | javadoc_versions | tail -n "$keep")
         [[ "$deployed" == "$now" ]] \
             || die "the site holds $(tr '\n' ' ' <<< "$deployed")but the registry $(tr '\n' ' ' <<< "$now")(another publish?); run again"
         code=$(http_code "$url/deployment-$pid.txt") || exit 1

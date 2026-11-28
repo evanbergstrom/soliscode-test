@@ -6,15 +6,15 @@ Every build runs the SolisCode parent's gates. A gate fails the build like a com
 
 | Gate | What it checks | When |
 |---|---|---|
-| [Checkstyle](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/guide/03-gates/checkstyle.md) | Layout, naming, the copyright header, method complexity and length, in main and test code | `validate` |
-| [The enforcer](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/guide/03-gates/enforcer.md) | Java 25, Maven 3.9, dependency convergence, no duplicate classes, no `system` scope, the coverage minimum set | `validate` |
-| [Licences](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/guide/03-gates/licences.md) | Every dependency under an OSI-approved licence | `validate` |
-| [ErrorProne and NullAway](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/guide/03-gates/errorprone-nullaway.md) | Common bugs, and null safety, in main code | `compile` |
-| [Architecture](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/guide/03-gates/architecture.md) | Package cycles, `internal` packages, standard streams, logging and the other rules, in main code | `prepare-package` |
-| [Javadoc](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/guide/03-gates/javadoc.md) | A well-formed comment on every public and protected member | `verify` |
-| [Coverage](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/guide/03-gates/coverage.md) | Line coverage, and each method's missed complexity | `verify` |
+| [Checkstyle](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.19/docs/guide/03-gates/checkstyle.md) | Layout, naming, the copyright header, method complexity and length, in main and test code | `validate` |
+| [The enforcer](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.19/docs/guide/03-gates/enforcer.md) | Java 25, Maven 3.9, dependency convergence, no duplicate classes, no `system` scope, the coverage minimum set; since 0.1.19, no dependency older than another asks for, no version ranges, no banned artifacts | `validate` |
+| [Licences](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.19/docs/guide/03-gates/licences.md) | Every dependency under an OSI-approved licence; since 0.1.19, no strong copyleft in what the library ships | `validate` |
+| [ErrorProne and NullAway](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.19/docs/guide/03-gates/errorprone-nullaway.md) | Common bugs, and null safety, in main code | `compile` |
+| [Architecture](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.19/docs/guide/03-gates/architecture.md) | Package cycles, `internal` packages, standard streams, logging and the other rules, in main code | `prepare-package` |
+| [Javadoc](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.19/docs/guide/03-gates/javadoc.md) | A well-formed comment on every public and protected member | `verify` |
+| [Coverage](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.19/docs/guide/03-gates/coverage.md) | Line coverage, and each method's missed complexity | `verify` |
 
-[The gates](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/guide/03-gates/README.md) says when each runs. [Ground rules](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/guide/07-ground-rules.md) says what you must not do to a gate (skip it, narrow it, configure its plugin), and how to ask for a change to one. A failed build is explained in the parent's [Troubleshooting](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/guide/06-troubleshooting.md). This project's list of the flags never to use without the maintainer's approval is in [`CLAUDE.md`](../../../CLAUDE.md), "Static-analysis gates", and how each gate stands here is in [build-and-test.md](../../design/reference/build-and-test.md#gates), "Gates".
+[The gates](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.19/docs/guide/03-gates/README.md) says when each runs. [Ground rules](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.19/docs/guide/07-ground-rules.md) says what you must not do to a gate (skip it, narrow it, configure its plugin), and how to ask for a change to one. A failed build is explained in the parent's [Troubleshooting](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.19/docs/guide/06-troubleshooting.md). This project's list of the flags never to use without the maintainer's approval is in [`CLAUDE.md`](../../../CLAUDE.md), "Static-analysis gates", and how each gate stands here is in [build-and-test.md](../../design/reference/build-and-test.md#gates), "Gates".
 
 The git hooks run the early gates when you commit; `scripts/verify.sh` runs them all.
 
@@ -65,7 +65,7 @@ Where the code does on purpose what an ErrorProne or NullAway check warns agains
 
 ### Dependencies
 
-- A new third-party library is named without a version, and only once the parent manages it. Ask for one in an [issue of the parent](https://gitlab.com/soliscode/soliscode-parent/-/issues), as [Ground rules](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/guide/07-ground-rules.md#a-new-managed-library-or-a-new-version) says.
+- A new third-party library is named without a version, and only once the parent manages it. Ask for one in an [issue of the parent](https://gitlab.com/soliscode/soliscode-parent/-/issues), as [Ground rules](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.19/docs/guide/07-ground-rules.md#a-new-managed-library-or-a-new-version) says.
 - A new compile-scope dependency is the maintainer's decision: every library that tests with SolisCode Test gets it. [dependency-management.md](../../design/reference/dependency-management.md) lists those there are, and why.
 
 ## Public API design

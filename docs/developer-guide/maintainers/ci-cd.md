@@ -17,7 +17,7 @@ SolisCode Test has **one** pipeline, and it builds nothing. The gates and the te
 
 | Pipeline | Started by | Definition | What it does |
 |---|---|---|---|
-| Pages | `scripts/publish-javadoc.sh`, through GitLab's API | `.gitlab-ci.yml` | Puts every stored version of the Javadoc into the Pages site |
+| Pages | `scripts/publish-javadoc.sh`, through GitLab's API | `.gitlab-ci.yml` | Puts the newest stored versions of the Javadoc into the Pages site, and refuses a site too large for it |
 
 ```mermaid
 flowchart LR
@@ -31,20 +31,21 @@ flowchart LR
 - The script builds the release's site on your Mac, from its tag, with `mvn -B -Drevision=0.1.N -DskipTests -Dmaven.test.skip.exec=true package site`. It runs no test: not the unit tests, not a suite a module's POM turns on itself, and not the tests the site's Surefire report would run again. The release ran them all, and a flaky test must not fail a publish.
 - The pipeline runs on the project's default branch, the one GitLab names in the project's settings (here `main`), and reads `.gitlab-ci.yml` from there. `scripts/publish-javadoc.sh --check` prints it.
 - `workflow:rules` runs a pipeline only when it is started through the API. A push, a merge request or a schedule starts none.
-- The pipeline's one input, `versions`, lists every stored version, separated by spaces.
-- The `pages` job, on a pinned `alpine` image, downloads each version's `javadoc.zip` with the job's token, and unzips it into `public/<version>/`. It writes `public/index.html`, which lists the versions, and copies the newest to `public/latest/`.
+- The pipeline's one input, `versions`, lists the newest stored versions, separated by spaces: three, unless the root `pom.xml` sets `soliscode.javadoc.site.versions` in its own `<properties>` to another number (this project does not). Older versions stay in the package registry; raising the number brings them back at the next publish.
+- The `pages` job, on a pinned `alpine` image, runs `scripts/pages-site.sh`, which comes from the SolisCode templates with `.gitlab-ci.yml`: commit the two together. It downloads each version's `javadoc.zip` with the job's token, and unzips it into `public/<version>/`. It writes `public/index.html`, which lists the versions, and points `latest/` at the newest without copying it.
+- Then the job measures the site. GitLab.com refuses a Pages site over 1 GB or 200,000 files; the job refuses one whose upload could be over 10^9 bytes, or one over 200,000 entries, first, so GitLab deploys nothing and the previous site stays. It warns above 80% of either. `scripts/publish-javadoc.sh` prints the job's lines, the site's size among them, and when the job refuses, what to change: a smaller `soliscode.javadoc.site.versions`, or more left out of the Javadoc, which shrinks the site from the next release on, since a stored version is never rebuilt.
 - The job is in the resource group `pages`, so two deployments never run at once. The script refuses to start one while another pipeline is running.
-- A deployment replaces the whole site, so each one holds every version.
+- A deployment replaces the whole site, so each one holds every version it lists.
 - The script builds the release in a worktree of its tag, so the working copy is not touched. Run no other build, and make no commit, until it ends: the git hooks start Maven.
-- Publish from one place at a time. Two publishers at once could deploy an older list of versions after a newer one. The script's last check finds that and fails; run it again, and it redeploys every stored version.
+- Publish from one place at a time. Two publishers at once could deploy an older list of versions after a newer one. The script's last check finds that and fails; run it again, and it redeploys the newest stored versions.
 
 ## The site
 
 | Address | What |
 |---|---|
 | `https://soliscode.gitlab.io/soliscode-test/` | The list of versions |
-| `https://soliscode.gitlab.io/soliscode-test/<version>/` | One release's Javadoc, from 0.1.6 on |
-| `https://soliscode.gitlab.io/soliscode-test/latest/` | A full copy of the newest release's Javadoc. Links into the Javadoc from the docs go through it, so they don't go stale |
+| `https://soliscode.gitlab.io/soliscode-test/<version>/` | One release's Javadoc, from 0.1.6 on, for each of the newest releases the site keeps |
+| `https://soliscode.gitlab.io/soliscode-test/latest/` | The newest release's Javadoc: `latest/` itself sends you on to `<version>/`, and every page under it, such as `latest/allclasses-index.html`, is the newest release's page at its `latest/` address. Links into the Javadoc from the docs go through it, so they don't go stale. Bookmark `latest/`, not the address it sends you to |
 
 What the site leaves out, such as generated packages and test-support or benchmark modules, is set in the root `pom.xml` with the parent's `soliscode.javadoc.site.excludePackageNames` and `soliscode.javadoc.site.skippedModules` (from soliscode-parent 0.1.17). This project sets neither: it has one module and no generated packages. The Javadoc gate still checks every package.
 
@@ -72,7 +73,7 @@ The pipeline needs none: its job reads the package registry with its own job tok
 
 ## Dependency updates
 
-No bot opens update requests. Versions of plugins and managed libraries come from the SolisCode parent, and change when `<parent>` moves to a new release ([Moving to a new release](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/guide/05-new-release.md); in this project the parent's release is in five places, which [`CLAUDE.md`](../../../CLAUDE.md), "Moving the pin", lists). The vulnerability check runs on request: `mvn -B -P dependency-check -DskipTests verify`, with an NVD API key in `NVD_API_KEY` ([the parent's dependency check](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/guide/03-gates/dependency-check.md)). It has not been run here yet.
+No bot opens update requests. Versions of plugins and managed libraries come from the SolisCode parent, and change when `<parent>` moves to a new release ([Moving to a new release](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.19/docs/guide/05-new-release.md); in this project the parent's release is in five places, which [`CLAUDE.md`](../../../CLAUDE.md), "Moving the pin", lists). The vulnerability check runs on request: `mvn -B -P dependency-check -DskipTests verify`, with an NVD API key in `NVD_API_KEY` ([the parent's dependency check](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.19/docs/guide/03-gates/dependency-check.md)). It has not been run here yet.
 
 ## See also
 

@@ -1,6 +1,6 @@
 # CLA signatures
 
-Who has signed the [SolisCode Individual Contributor License Agreement](CLA.md). [The developer guide's commit conventions](docs/developer-guide/contributing/commit-conventions.md#the-cla) say how to sign. The check that reads this file runs before every merge (soliscode-parent's [licensing.md](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/design/reference/licensing.md), "The check"): keep the two tables' columns as they are.
+Who has signed the [SolisCode Individual Contributor License Agreement](CLA.md). [The developer guide's commit conventions](docs/developer-guide/contributing/commit-conventions.md#the-cla) say how to sign. The check that reads this file runs before every merge (soliscode-parent's [licensing.md](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.19/docs/design/reference/licensing.md), "The check"): keep the two tables' columns as they are.
 
 ## Copyright holder
 

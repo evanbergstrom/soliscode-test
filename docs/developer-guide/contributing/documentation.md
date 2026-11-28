@@ -22,7 +22,7 @@ The API reference is the Javadoc, built from the comments in the source. **Never
 
 ### What the Javadoc gate checks
 
-The [Javadoc gate](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/guide/03-gates/javadoc.md) runs the `javadoc` tool on the main code with every `doclint` check on, and fails the build on any warning. So every public and protected class, constructor, method and field has a comment, with an `@param` for each parameter, an `@return` and an `@throws` where they apply, valid HTML and links that resolve. Test code is not checked.
+The [Javadoc gate](https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.19/docs/guide/03-gates/javadoc.md) runs the `javadoc` tool on the main code with every `doclint` check on, and fails the build on any warning. So every public and protected class, constructor, method and field has a comment, with an `@param` for each parameter, an `@return` and an `@throws` where they apply, valid HTML and links that resolve. Test code is not checked.
 
 ### What a good comment has
 
@@ -83,7 +83,7 @@ A page's example, and the README's, is a test class in `src/test/java/com/solisc
 
 - One H1 for each file, matching the page's title.
 - Relative links between pages. Link to the Javadoc for the detail of a class or method, through `https://soliscode.gitlab.io/soliscode-test/latest/`. A class newer than the latest release is not there yet: name it in code font, and say which package it is in.
-- Link to the SolisCode parent's guide at the parent's tag, `https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.17/docs/guide/...`, rather than describing a gate again. When `<parent>` moves to a new release, move these links with it.
+- Link to the SolisCode parent's guide at the parent's tag, `https://gitlab.com/soliscode/soliscode-parent/-/blob/v0.1.19/docs/guide/...`, rather than describing a gate again. When `<parent>` moves to a new release, move these links with it.
 - A language on every fenced code block. Commands use `sh`, output uses `text`.
 - Diagrams in Mermaid, in fenced `mermaid` blocks, kept small. No semicolons in a diagram: Mermaid reads one as the end of a statement.
 - Images in `docs/assets/`, with alt text that describes them.
