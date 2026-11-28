@@ -32,6 +32,12 @@ As a task merges, it adds what a user of the library will see differently under 
 
 ## Unreleased
 
+## 0.1.7 — 2026-11-28
+
+Commit `7dfeb2e`. Full verify: Tests run: 10613, Failures: 0, Errors: 0.
+
+Install coordinates: `com.soliscode:soliscode-test:0.1.7`.
+
 ### Changes
 - **Parent 0.1.13 (T-0071)**, from 0.1.12. What a user of this library sees: the Javadoc's footer names the copyright holder, `Copyright © 2025 Evan Bergstrom.`, from the parent's `<organization>` (it printed no holder, and the range `2025–1980`); and `com.soliscode:soliscode-performance-api`, which this library depends on, now carries `META-INF/LICENSE.txt` and `META-INF/NOTICE`. The parent's other changes don't reach you: its Checkstyle rule for copyright headers is why this library's files changed (below); the plugin's CLA check before a merge passed here and did nothing, since this project had no `CLA-SIGNATURES.md` until T-0075; and its performance gate, now run before a release only, is for a project that turns it on, which this library does not.
 - **Every source file carries the SolisCode copyright header (T-0071)**, `Copyright 2025 Evan Bergstrom` and `SPDX-License-Identifier: Apache-2.0`: the 603 main files, which the sources jar holds, and the tests. #71 changed 776 files, 447 of which had the 15-line Apache 2.0 header (with the year 2024, 2025 or 2026), now replaced. The licence is unchanged, Apache 2.0. Line numbers in a stack trace through this library move: down by 5 in a file that had no header, up by 10 or 11 in one that had the old one.
