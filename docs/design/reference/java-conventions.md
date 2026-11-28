@@ -13,7 +13,7 @@ Related: [build-and-test.md](build-and-test.md) for how the gates run, [dependen
 
 ## Packages
 
-Built (#9). Every package is under `com.soliscode.test` (moved from `org.soliscode.test` by #9). Package names are lowercase. Every main package has a `package-info.java` (45 today) that says what it holds and is `@NullMarked`; a new package gets one. Test packages have none, except `contract.coverage`.
+Built (#9). Every package is under `com.soliscode.test` (moved from `org.soliscode.test` by #9). Package names are lowercase. Every main package has a `package-info.java` (49 on 2026-11-26, #46, with `contract.lock` and `contract.readwritelock`; this said 45 until then, a count #69's performance packages had left behind) that says what it holds and is `@NullMarked`; a new package gets one. Test packages have none, except `contract.coverage`.
 
 ## Public API
 
@@ -66,7 +66,7 @@ The user's decision (2026-11-08, on #9): where the code does on purpose what an 
 - with a one-line comment directly above it, `// Check: reason`;
 - no disguised workaround (a cast, a helper or a narrowed type whose only purpose is to quiet the check). An agent once narrowed the providers' return types to interfaces to avoid `NonApiType`; that removed providers users had (`provideLinkedList` could no longer back a `Queue` or `Deque` contract), and was reverted.
 
-A finding that points at a fault is fixed, not suppressed. Built (#9, #30, #32, #33, #34, #35, #36, #37, #38, #44, #45, #59, #70): main code has 104 such suppressions (annotations; the table counts each check an annotation names, 105), of these kinds:
+A finding that points at a fault is fixed, not suppressed. Built (#9, #30, #32, #33, #34, #35, #36, #37, #38, #44, #45, #46, #59, #70): main code has 108 such suppressions (annotations; the table counts each check an annotation names, 109), of these kinds:
 
 | Check | Count | Where, and why |
 |-------|-------|----------------|
@@ -78,7 +78,8 @@ A finding that points at a fault is fixed, not suppressed. Built (#9, #30, #32, 
 | `DoNotCall` | 6 | Contract tests that call `addFirst` or `addLast` on a `SortedSet` on purpose, to check that they throw (`SortedAddFirstContract`, `SortedAddLastContract`; the user's decision on #30) |
 | `UnusedVariable` | 1 | `AbstractBreakable.serialPersistentFields`, which serialization reads by reflection, and which keeps the serialized form compatible with 0.1.4 (the user's decision on #59) |
 | `EqualsGetClass` | 1 | `BreakableObject`'s exact-class equality, which keeps `equals` symmetric |
-| `ThreadPriorityCheck` | 6 | `Thread.yield()` in `ContentionCoordinator.yieldToScheduler` (#12), which makes contention likelier, and which its phase wait also calls on a machine with no more cores than workers, so as not to keep the awaited worker off its core (#54); in `HandOffRun.yieldToScheduler` (#54), the transfer tests' own loops, for the same reason, at the same rate; in `BreakableFuture`'s `cancel` and thread-unsafe wait (#44), where it widens the window of the fault its thread-unsafe breaks simulate; and in `ThreadSafeGetContract`'s completer (#44), whose spin for a getter must not starve it on a single core; and in `BreakableExecutorService.enqueue` (#45), where it widens the window of the faults `SUBMIT_IS_NOT_THREAD_SAFE` and `SHUTDOWN_IS_NOT_THREAD_SAFE` simulate |
+| `ThreadPriorityCheck` | 9 | `Thread.yield()` in `ContentionCoordinator.yieldToScheduler` (#12), which makes contention likelier, and which its phase wait also calls on a machine with no more cores than workers, so as not to keep the awaited worker off its core (#54); in `HandOffRun.yieldToScheduler` (#54), the transfer tests' own loops, for the same reason, at the same rate; in `BreakableFuture`'s `cancel` and thread-unsafe wait (#44), where it widens the window of the fault its thread-unsafe breaks simulate; and in `ThreadSafeGetContract`'s completer (#44), whose spin for a getter must not starve it on a single core; and in `BreakableExecutorService.enqueue` (#45), where it widens the window of the faults `SUBMIT_IS_NOT_THREAD_SAFE` and `SHUTDOWN_IS_NOT_THREAD_SAFE` simulate; and in `BreakableLock.takeAfterYielding` and `BreakableReadWriteLock`'s `enterAfterYielding` and `releaseReadUnsafely` (#46), for the faults their thread-unsafe breaks simulate |
+| `JavaUtilDate` | 1 | `BreakableLock`'s condition's `awaitUntil(Date)`, whose `Date` parameter is `Condition`'s own signature (the user's decision on #46, 2026-11-26) |
 
 A new suppression of one of these kinds follows the rule; a new kind is the user's decision.
 
@@ -87,13 +88,13 @@ Not covered by the decision, and left from before #9: javac's own `unchecked`, `
 ## Javadoc and comments
 
 - Built (#9): every public and protected type, method, constructor and field has a doc comment; the Javadoc gate (doclint all, `failOnWarnings`) fails a missing one, a broken link, a missing `@param` or bad HTML. The custom block tags are `@apiNote`, `@implSpec`, `@implNote` and `@complexity`; any other fails.
-- Markdown `///` comments (JEP 467), with Markdown rather than HTML. 572 of the 575 main files use them; 14 still have a classic `/** ... */` comment. A new comment uses `///`.
+- Markdown `///` comments (JEP 467), with Markdown rather than HTML. 628 of the 631 main files use them (2026-11-26, #46); 14 still have a classic `/** ... */` comment. A new comment uses `///`.
 - Checkstyle cannot read `///` comments, so it counts an import that only a `///` comment uses as unused. Write such a reference fully qualified (`@throws org.opentest4j.AssertionFailedError`).
 - Habit: a public class's comment has a summary sentence, a description, and, where they apply, `## Usage Examples` (a ```` ```java ```` block), `## Thread Safety` and `## Implementation Notes`. `@param` and `@throws` name each argument's constraint and each exception's cause.
 - Habit: a `Break` constant's comment gives its **Purpose** (the fault it simulates), **Effect** (how the method's behaviour changes), and **Affected Methods**, with a `@see` to the method (`BreakableCollection`, `BreakableList`, `BreakableSequencedCollection` follow it; not every breakable does yet).
 - Habit: a contract's comment names the JDK method it tests, with a `@see`, and what its provider must supply.
 - Inline comments say why, not what. Built (#10): `FIXME:`, `HACK:` and `XXX:` fail Checkstyle; empty blocks need a comment.
-- Every Java file, main and test, starts with the SolisCode copyright header, before the `package` line and before a `package-info.java`'s `///` comment (793 files: the 776 #71 gave it to, the test class #71 split off, the 15 of the user guide's examples, #74, and the README's, #76; `LICENSE.txt`). Built (#71, parent 0.1.13): Checkstyle's `[CopyrightHeader]` fails a file without it. Put it on new files, exactly:
+- Every Java file, main and test, starts with the SolisCode copyright header, before the `package` line and before a `package-info.java`'s `///` comment (833 files on 2026-11-26, #46: the 776 #71 gave it to and every file added since, among them the test class #71 split off, the 15 of the user guide's examples, #74, the README's, #76, and #46's 34; `LICENSE.txt`). Built (#71, parent 0.1.13): Checkstyle's `[CopyrightHeader]` fails a file without it. Put it on new files, exactly:
 
   ```java
   /*

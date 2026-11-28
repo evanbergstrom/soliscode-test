@@ -24,7 +24,7 @@ The library has three goals:
 What you get:
 
 - **Contracts**: implement one interface in a test class, and it tests your class against what the JDK's documentation of that interface requires, method by method, with no test methods of your own.
-- **Contracts that can fail**: each contract passes against a JDK class and fails against a *breakable*, an implementation broken on purpose in one way for each fault it must catch. `ContractCoverageTest` checks this for 44 contracts, `ObjectContract` among them: all but `IntegerContract`. The breakables are yours to use too, to test a test of your own.
+- **Contracts that can fail**: each contract passes against a JDK class and fails against a *breakable*, an implementation broken on purpose in one way for each fault it must catch. `ContractCoverageTest` checks this for 48 contracts, `ObjectContract` among them: all but `IntegerContract`. The breakables are yours to use too, to test a test of your own.
 - **Assertions**: on collections, strings, ordering, exceptions, actions on elements and deadlocks.
 - **Concurrency support**: `ContentionCoordinator`, which runs operations on one object from many threads at once, bounded in time, and `assertNoDeadlocks`.
 - **Providers and helpers**: providers of the instances and elements a contract tests, and classes that implement only one interface, to test code against nothing more than that interface.
@@ -33,6 +33,7 @@ It has contracts for these interfaces:
 - `Object` (`equals`, `hashCode`, `toString`) and `Serializable`
 - `Comparable`, `Comparator` and `CharSequence`
 - `Future` and `ExecutorService`, and their thread-safe forms
+- `Lock` and `ReadWriteLock`, and their thread-safe forms
 - `AutoCloseable` and `Closeable`
 - `Iterable`, `Iterator`, `ListIterator`, weakly consistent iterators, and `Spliterator` with `Spliterator.OfInt`, `OfLong` and `OfDouble`
 - `Collection` and thread-safe collections; `SequencedCollection` and its thread-safe form, and `List`; `Set`, `SequencedSet`, `SortedSet` and `NavigableSet`

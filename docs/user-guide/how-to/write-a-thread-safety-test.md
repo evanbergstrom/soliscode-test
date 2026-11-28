@@ -97,7 +97,7 @@
    }
    ```
 
-   The `ExecutorService` and `Future` contracts have thread-safety forms too: `ThreadSafeExecutorServiceContract` and `ThreadSafeFutureContract`.
+   The `ExecutorService`, `Future`, `Lock` and `ReadWriteLock` contracts have thread-safety forms too: `ThreadSafeExecutorServiceContract`, `ThreadSafeFutureContract`, `ThreadSafeLockContract` and `ThreadSafeReadWriteLockContract`.
 
 ## Check that it worked
 

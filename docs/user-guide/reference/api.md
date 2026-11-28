@@ -62,6 +62,8 @@ Each contract tests one JDK interface, as the JDK's Javadoc documents it, and ex
 | `CloseableContract` | `java.io.Closeable` | `contract.closeable` |
 | `FutureContract` | `java.util.concurrent.Future` | `contract.future` |
 | `ExecutorServiceContract` | `java.util.concurrent.ExecutorService` | `contract.executorservice` |
+| `LockContract` | `java.util.concurrent.locks.Lock` | `contract.lock` |
+| `ReadWriteLockContract` | `java.util.concurrent.locks.ReadWriteLock` | `contract.readwritelock` |
 
 The thread-safety contracts extend these with tests under contention:
 
@@ -75,12 +77,14 @@ The thread-safety contracts extend these with tests under contention:
 | `ThreadSafeConcurrentMapContract` | `ConcurrentMapContract` | `contract.concurrentmap` |
 | `ThreadSafeFutureContract` | `FutureContract` | `contract.future` |
 | `ThreadSafeExecutorServiceContract` | `ExecutorServiceContract` | `contract.executorservice` |
+| `ThreadSafeLockContract` | `LockContract` | `contract.lock` |
+| `ThreadSafeReadWriteLockContract` | `ReadWriteLockContract` | `contract.readwritelock` |
 
 Each package also holds the contracts of the interface's single methods (`contract.list.GetContract`, `contract.map.PutContract`), which the interface's contract combines; implement one alone to run only its tests.
 
 ## Breakables
 
-For the interfaces above, in `com.soliscode.test.breakable`: `BreakableIterable`, `BreakableCollection`, `BreakableSequencedCollection`, `BreakableList`, `BreakableSet`, `BreakableSequencedSet`, `BreakableSortedSet`, `BreakableNavigableSet`, `BreakableQueue`, `BreakableDeque`, `BreakableBlockingQueue`, `BreakableBlockingDeque`, `BreakableTransferQueue`, `BreakableMap`, `BreakableSortedMap`, `BreakableNavigableMap`, `BreakableConcurrentMap`, `BreakableConcurrentNavigableMap`, `BreakableMapEntry`, `BreakableIterator`, `BreakableListIterator`, `BreakableSpliterator` and its `OfInt`, `OfLong` and `OfDouble` forms, `BreakableComparable`, `BreakableComparator`, `BreakableCharSequence`, `BreakableCloseable`, `BreakableFuture`, `BreakableExecutorService` and `BreakableObject`. Some serve more than one contract: `BreakableSortedMap` breaks `SequencedMapContract`, `BreakableCloseable` breaks `AutoCloseableContract` too, and `BreakableIterator`'s breaks for a changed source break `WeaklyConsistentIteratorContract`. `Serializable` and `Number` have none of their own. Each class's Javadoc lists its breaks.
+For the interfaces above, in `com.soliscode.test.breakable`: `BreakableIterable`, `BreakableCollection`, `BreakableSequencedCollection`, `BreakableList`, `BreakableSet`, `BreakableSequencedSet`, `BreakableSortedSet`, `BreakableNavigableSet`, `BreakableQueue`, `BreakableDeque`, `BreakableBlockingQueue`, `BreakableBlockingDeque`, `BreakableTransferQueue`, `BreakableMap`, `BreakableSortedMap`, `BreakableNavigableMap`, `BreakableConcurrentMap`, `BreakableConcurrentNavigableMap`, `BreakableMapEntry`, `BreakableIterator`, `BreakableListIterator`, `BreakableSpliterator` and its `OfInt`, `OfLong` and `OfDouble` forms, `BreakableComparable`, `BreakableComparator`, `BreakableCharSequence`, `BreakableCloseable`, `BreakableFuture`, `BreakableExecutorService`, `BreakableLock`, `BreakableReadWriteLock` and `BreakableObject`. Some serve more than one contract: `BreakableSortedMap` breaks `SequencedMapContract`, `BreakableCloseable` breaks `AutoCloseableContract` too, and `BreakableIterator`'s breaks for a changed source break `WeaklyConsistentIteratorContract`. `Serializable` and `Number` have none of their own. Each class's Javadoc lists its breaks.
 
 ## Stability and versioning
 

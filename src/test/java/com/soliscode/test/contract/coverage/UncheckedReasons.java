@@ -6,6 +6,7 @@
 package com.soliscode.test.contract.coverage;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -16,6 +17,8 @@ import com.soliscode.test.breakable.BreakableBlockingQueue;
 import com.soliscode.test.breakable.BreakableConcurrentMap;
 import com.soliscode.test.breakable.BreakableExecutorService;
 import com.soliscode.test.breakable.BreakableFuture;
+import com.soliscode.test.breakable.BreakableLock;
+import com.soliscode.test.breakable.BreakableReadWriteLock;
 import com.soliscode.test.breakable.BreakableSequencedCollection;
 import com.soliscode.test.breakable.BreakableTransferQueue;
 import com.soliscode.test.contract.blockingdeque.ThreadSafeBlockingDequeContract;
@@ -28,6 +31,8 @@ import com.soliscode.test.contract.executorservice.ThreadSafeExecutorServiceCont
 import com.soliscode.test.contract.future.ThreadSafeFutureContract;
 import com.soliscode.test.contract.iterator.IteratorContract;
 import com.soliscode.test.contract.iterator.WeaklyConsistentIteratorContract;
+import com.soliscode.test.contract.lock.ThreadSafeLockContract;
+import com.soliscode.test.contract.readwritelock.ThreadSafeReadWriteLockContract;
 import com.soliscode.test.contract.sequencedcollection.ThreadSafeSequencedCollectionContract;
 import com.soliscode.test.contract.sequencedmap.SequencedMapContract;
 import com.soliscode.test.contract.set.SetContract;
@@ -80,6 +85,14 @@ final class UncheckedReasons {
     private static final Set<String> EQUAL_INSTANCE_BREAKS = Set.of("EQUALS_IS_NOT_SYMMETRIC",
             "EQUALS_IS_NOT_TRANSITIVE", "EQUALS_IS_NOT_CONSISTENT", "HASH_CODE_DIFFERS_FOR_EQUAL_VALUES");
 
+    /// The breakables whose thread-safety breaks their own thread-safety contract checks, and no other: each a
+    /// breakable of its own, which no other contract runs against.
+    private static final Map<Class<?>, Class<?>> OWN_THREAD_SAFETY_CONTRACTS = Map.of(
+            BreakableFuture.class, ThreadSafeFutureContract.class,
+            BreakableExecutorService.class, ThreadSafeExecutorServiceContract.class,
+            BreakableLock.class, ThreadSafeLockContract.class,
+            BreakableReadWriteLock.class, ThreadSafeReadWriteLockContract.class);
+
     private static final Pattern SORTED_MAP_METHOD_BREAK =
             Pattern.compile("(COMPARATOR|FIRST_KEY|LAST_KEY|HEAD_MAP|TAIL_MAP|SUB_MAP)_");
 
@@ -129,7 +142,7 @@ final class UncheckedReasons {
         if (!key.endsWith(THREAD_SAFETY_BREAK)) {
             return null;
         }
-        return Stream.of(futureOrExecutorReason(contract, key),
+        return Stream.of(ownBreakableReason(contract, key),
                         ownThreadSafetyReason(contract, key, ThreadSafeConcurrentMapContract.class,
                                 BreakableConcurrentMap.class, List.of(BreakableConcurrentMap.class),
                                 "not a fault for a BreakableConcurrentMap: its store is a concurrent map, and the "
@@ -177,19 +190,20 @@ final class UncheckedReasons {
                 .orElse(null);
     }
 
-    /// The reason for a thread-safety break of a [BreakableFuture] or a [BreakableExecutorService]: their own
-    /// thread-safety contract checks it, and no other.
+    /// The reason for a thread-safety break of a [BreakableFuture], a [BreakableExecutorService], a [BreakableLock]
+    /// or a [BreakableReadWriteLock]: their own thread-safety contract checks it, and no other.
     ///
     /// @param contract the contract
     /// @param key the break, as `SimpleClassName.FIELD`
     /// @return the reason, [#CHECKED] or `null` to look further
-    private static String futureOrExecutorReason(final Class<?> contract, final String key) {
-        boolean futureBreak = isBreakOf(key, BreakableFuture.class);
-        if (!futureBreak && !isBreakOf(key, BreakableExecutorService.class)) {
-            return null;
-        }
-        Class<?> own = futureBreak ? ThreadSafeFutureContract.class : ThreadSafeExecutorServiceContract.class;
-        return contract == own ? CHECKED : "a thread-safety break: " + own.getSimpleName() + " checks it";
+    private static String ownBreakableReason(final Class<?> contract, final String key) {
+        return OWN_THREAD_SAFETY_CONTRACTS.entrySet().stream()
+                .filter(e -> isBreakOf(key, e.getKey()))
+                .map(Map.Entry::getValue)
+                .findFirst()
+                .map(own -> contract == own ? CHECKED
+                        : "a thread-safety break: " + own.getSimpleName() + " checks it")
+                .orElse(null);
     }
 
     /// The reason for a thread-safety break against a breakable's own thread-safety contract, or for that

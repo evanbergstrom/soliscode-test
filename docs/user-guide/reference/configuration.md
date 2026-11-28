@@ -58,6 +58,8 @@ SolisCode Test reads no configuration file and no system property. A contract is
 | `closeIsIdempotent()` | `AutoCloseableContract` | `boolean` | `true` | Return `false` for a class whose second `close` has an effect. `CloseableContract` tests it whatever this returns, as `Closeable` requires |
 | `permitsNullResult()` | `FutureContract` | `boolean` | `true` | Return `false` for a future whose result cannot be `null` |
 | `rejectsTasksAfterShutdown()` | `ExecutorServiceContract` | `boolean` | `true` | Return `false` for an executor that discards tasks after shutdown rather than throwing `RejectedExecutionException` |
+| `supportsConditions()` | `LockContract` | `boolean` | `true` | Return `false` for a lock whose `newCondition()` throws `UnsupportedOperationException`, as `StampedLock`'s views do; the test of `newCondition()` then expects it, and the condition tests are skipped |
+| `interruptsLockAcquisition()` | `LockContract` | `boolean` | `true` | Return `false` for a lock whose waiting acquisition cannot be interrupted, or that waits by spinning rather than parking; the while-waiting interrupt tests then check only that an interrupted waiter throws `InterruptedException` or acquires the lock once it is released |
 
 ### `ContentionCoordinator`
 

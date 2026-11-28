@@ -104,6 +104,8 @@ import com.soliscode.test.contract.iterator.IteratorContract;
 import com.soliscode.test.contract.iterator.WeaklyConsistentIteratorContract;
 import com.soliscode.test.contract.list.ListContract;
 import com.soliscode.test.contract.listiterator.ListIteratorContract;
+import com.soliscode.test.contract.lock.LockContract;
+import com.soliscode.test.contract.lock.ThreadSafeLockContract;
 import com.soliscode.test.contract.map.MapContract;
 import com.soliscode.test.contract.mapentry.MapEntryContract;
 import com.soliscode.test.contract.navigablemap.NavigableMapContract;
@@ -111,6 +113,8 @@ import com.soliscode.test.contract.navigableset.NavigableSetContract;
 import com.soliscode.test.contract.object.ObjectContract;
 import com.soliscode.test.contract.object.SerializableContract;
 import com.soliscode.test.contract.queue.QueueContract;
+import com.soliscode.test.contract.readwritelock.ReadWriteLockContract;
+import com.soliscode.test.contract.readwritelock.ThreadSafeReadWriteLockContract;
 import com.soliscode.test.contract.sequencedcollection.SequencedCollectionContract;
 import com.soliscode.test.contract.sequencedcollection.ThreadSafeSequencedCollectionContract;
 import com.soliscode.test.contract.sequencedmap.SequencedMapContract;
@@ -387,6 +391,34 @@ public class ContractCoverageTest {
     Stream<DynamicNode> threadSafeExecutorServiceContract() {
         return ExecutorServiceSubjects.threadSafeChecks(k -> k.endsWith(THREAD_SAFETY_BREAK)
                 && uncheckedReason(ThreadSafeExecutorServiceContract.class, k) == null);
+    }
+
+    @TestFactory
+    @DisplayName("LockContract")
+    Stream<DynamicNode> lockContract() {
+        return LockSubjects.lockChecks(k -> uncheckedReason(LockContract.class, k) == null);
+    }
+
+    @TestFactory
+    @VerySlow
+    @DisplayName("ThreadSafeLockContract")
+    Stream<DynamicNode> threadSafeLockContract() {
+        return LockSubjects.threadSafeLockChecks(k -> k.endsWith(THREAD_SAFETY_BREAK)
+                && uncheckedReason(ThreadSafeLockContract.class, k) == null);
+    }
+
+    @TestFactory
+    @DisplayName("ReadWriteLockContract")
+    Stream<DynamicNode> readWriteLockContract() {
+        return LockSubjects.readWriteLockChecks(k -> uncheckedReason(ReadWriteLockContract.class, k) == null);
+    }
+
+    @TestFactory
+    @VerySlow
+    @DisplayName("ThreadSafeReadWriteLockContract")
+    Stream<DynamicNode> threadSafeReadWriteLockContract() {
+        return LockSubjects.threadSafeReadWriteLockChecks(k -> k.endsWith(THREAD_SAFETY_BREAK)
+                && uncheckedReason(ThreadSafeReadWriteLockContract.class, k) == null);
     }
 
     @TestFactory
